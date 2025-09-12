@@ -148,8 +148,15 @@ jobs:
           /p:FileVersion=${{ env.FILE_VERSION }}
           /p:PackageVersion=${{ env.PACKAGE_VERSION }}
 
-      - name: Test (Release)
-        run: dotnet test PatternKit.sln --configuration Release --no-build --verbosity normal
+      - name: Test with coverage (Release)
+        run: |
+          dotnet test PatternKit.sln \
+            --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*"
+
 
       - name: Pack (all packable projects)
         run: >
@@ -172,6 +179,17 @@ jobs:
           path: |
             ./artifacts/*.nupkg
             ./artifacts/*.snupkg
+            
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: |
+            **/TestResults/*/coverage.cobertura.xml
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Create and push git tag
         shell: bash
