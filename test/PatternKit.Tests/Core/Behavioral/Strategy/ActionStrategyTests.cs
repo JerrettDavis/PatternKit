@@ -16,9 +16,9 @@ public sealed class ActionStrategyTests(ITestOutputHelper output) : TinyBddXunit
     {
         var log = new List<string>();
         var s = ActionStrategy<int>.Create()
-            .When((in int i) => i > 0).Then((in int i) => log.Add($"+{i}"))
-            .When((in int i) => i < 0).Then((in int i) => log.Add($"{i}"))
-            .Default((in int _) => log.Add("zero"))
+            .When((in i) => i > 0).Then((in i) => log.Add($"+{i}"))
+            .When((in i) => i < 0).Then((in i) => log.Add($"{i}"))
+            .Default((in _) => log.Add("zero"))
             .Build();
         return new Ctx(s, log);
     }
@@ -27,8 +27,8 @@ public sealed class ActionStrategyTests(ITestOutputHelper output) : TinyBddXunit
     {
         var log = new List<string>();
         var s = ActionStrategy<int>.Create()
-            .When((in int i) => i > 0).Then((in int i) => log.Add($"+{i}"))
-            .When((in int i) => i < 0).Then((in int i) => log.Add($"{i}"))
+            .When((in i) => i > 0).Then((in i) => log.Add($"+{i}"))
+            .When((in i) => i < 0).Then((in i) => log.Add($"{i}"))
             .Build();
         return new Ctx(s, log);
     }
@@ -91,7 +91,7 @@ public sealed class ActionStrategyTests(ITestOutputHelper output) : TinyBddXunit
             {
                 var log = new List<string>();
                 var s = ActionStrategy<int>.Create()
-                    .When((in int i) => i % 2 == 0).Then((in int i) => log.Add($"even:{i}"))
+                    .When((in i) => i % 2 == 0).Then((in i) => log.Add($"even:{i}"))
                     .Build();
                 return new Ctx(s, log);
             })
@@ -128,9 +128,9 @@ public sealed class ActionStrategyTests(ITestOutputHelper output) : TinyBddXunit
             {
                 var log = new List<string>();
                 var s = ActionStrategy<int>.Create()
-                    .When((in int i) => i % 2 == 0).Then((in int _) => log.Add("first"))
-                    .When((in int i) => i >= 0).Then((in int _) => log.Add("second"))
-                    .Default((in int _) => log.Add("default"))
+                    .When((in i) => i % 2 == 0).Then((in _) => log.Add("first"))
+                    .When((in i) => i >= 0).Then((in _) => log.Add("second"))
+                    .Default((in _) => log.Add("default"))
                     .Build();
                 return new Ctx(s, log);
             })

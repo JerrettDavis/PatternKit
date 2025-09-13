@@ -53,7 +53,7 @@ public sealed class Strategy<TIn, TOut>
     private readonly bool _hasDefault;
     private readonly Handler _default;
 
-    private static Handler DefaultResult => static (in TIn _) => default!;
+    private static Handler DefaultResult => static (in _) => default!;
 
     private Strategy(Predicate[] predicates, Handler[] handlers, bool hasDefault, Handler @default)
         => (_predicates, _handlers, _hasDefault, _default) = (predicates, handlers, hasDefault, @default);

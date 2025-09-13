@@ -1,12 +1,51 @@
 <Project>
     <PropertyGroup>
-        <TargetFrameworks>netstandard2.1;net8.0;net9.0</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net8.0;net9.0</TargetFrameworks>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>preview</LangVersion>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
         <Deterministic>true</Deterministic>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <Authors>Jerrett Davis and contributors</Authors>
+        <Company>JDH Productions LLC.</Company>
+        <Product>PatternKit</Product>
+        <Description>PatternKit is a collection of design patterns implemented in a fluent API style for .NET, enabling developers to easily integrate common design patterns into their applications with readable and maintainable code.</Description>
+        <PackageTags>design-patterns;fluent;fluent-api;dotnet;</PackageTags>
+
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/JerrettDavis/PatternKit</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/JerrettDavis/PatternKit</PackageProjectUrl>
+
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>tiny.png</PackageIcon>
+
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+
+        <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsPackable Condition="$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Tests'))">false</IsPackable>
+        <IsPackable Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('TinyBDD'))">true</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\"/>
+
+        <None Include="$(MSBuildThisFileDirectory)docs/images/tiny.png"
+              Pack="true"
+              PackagePath="tiny.png"/>
+    </ItemGroup>
 </Project>

@@ -44,7 +44,7 @@ public sealed class ResultChain<TIn, TOut>
         public ResultChain<TIn, TOut> Build()
         {
             // terminal: no result
-            Next next = static (in TIn _, out TOut? r) =>
+            Next next = static (in _, out r) =>
             {
                 r = default;
                 return false;
@@ -54,14 +54,14 @@ public sealed class ResultChain<TIn, TOut>
             {
                 var t = _tail;
                 var prev = next;
-                next = (in TIn x, out TOut? r) => t(in x, out r, prev);
+                next = (in x, out r) => t(in x, out r, prev);
             }
 
             for (var i = _handlers.Count - 1; i >= 0; i--)
             {
                 var h = _handlers[i];
                 var prev = next;
-                next = (in TIn x, out TOut? r) => h(in x, out r, prev);
+                next = (in x, out r) => h(in x, out r, prev);
             }
 
             return new ResultChain<TIn, TOut>(next);
@@ -77,7 +77,7 @@ public sealed class ResultChain<TIn, TOut>
             public Builder Do(TryHandler handler)
             {
                 var pred = _pred;
-                _owner.Use((in TIn x, out TOut? r, Next next)
+                _owner.Use((in x, out r, next)
                     => pred(in x)
                         ? handler(in x, out r, next)
                         : next(in x, out r));
@@ -87,7 +87,7 @@ public sealed class ResultChain<TIn, TOut>
             public Builder Then(Func<TIn, TOut> produce)
             {
                 var pred = _pred;
-                _owner.Use((in TIn x, out TOut? r, Next next) =>
+                _owner.Use((in x, out r, next) =>
                 {
                     if (!pred(in x))
                         return next(in x, out r);

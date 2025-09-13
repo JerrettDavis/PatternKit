@@ -14,12 +14,12 @@ public static class AuthLoggingDemo
 
         var chain = ActionChain<HttpRequest>.Create()
             // request id (continue)
-            .When(static (in HttpRequest r) => r.Headers.ContainsKey("X-Request-Id"))
+            .When(static (in r) => r.Headers.ContainsKey("X-Request-Id"))
             .ThenContinue(r => log.Add($"reqid={r.Headers["X-Request-Id"]}"))
 
             // admin requires auth (stop)
-            .When(static (in HttpRequest r) => r.Path.StartsWith("/admin", StringComparison.Ordinal)
-                                               && !r.Headers.ContainsKey("Authorization"))
+            .When(static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal)
+                                   && !r.Headers.ContainsKey("Authorization"))
             .ThenStop(r => log.Add("deny: missing auth"))
 
             // finally always logs method/path

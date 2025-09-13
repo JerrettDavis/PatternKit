@@ -25,6 +25,8 @@ public static class RoslynTestHelpers
             RefFromTPA("System.Linq.dll"),
             RefFromTPA("System.Memory.dll"),
             RefFromTPA("System.Runtime.Extensions.dll"),
+            RefFromTPA("PatternKit.Generators.Abstractions.dll"),
+            RefFromTPA("netstandard.dll"),
         };
         if (extra is not null) refs.AddRange(extra);
 
@@ -38,7 +40,7 @@ public static class RoslynTestHelpers
 
     private static MetadataReference RefFromTPA(string simpleName)
     {
-        var tpa = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)!
+        var tpa = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!)
             .Split(Path.PathSeparator);
         var path = tpa.First(p => string.Equals(Path.GetFileName(p), simpleName, OrdIgnoreCase));
         return MetadataReference.CreateFromFile(path);

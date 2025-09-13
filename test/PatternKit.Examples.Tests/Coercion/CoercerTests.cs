@@ -4,7 +4,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Examples.Coercion;
+namespace PatternKit.Examples.Tests.Coercion;
 
 [Feature("Coercer<T> (Strategy-based coercion)")]
 public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -81,7 +81,7 @@ public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
     {
         await Given("json true", SourceJsonTrue)
             .When("coercing to bool", je => Coercer<bool>.From(je))
-            .Then("should be true", v => v == true)
+            .Then("should be true", v => v)
             .AssertPassed();
     }
 
@@ -145,6 +145,17 @@ public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
         await Given("int 11 as object", () => (object)11)
             .When("coercing to int?", CoerceIntNullable)
             .Then("should be 11", v => v == 11)
+            .AssertPassed();
+    }
+    
+    // ---------- Floating-point precision ----------
+    [Scenario("Floating-point precision")]
+    [Fact]
+    public async Task FloatingPointPrecision()
+    {
+        await Given("float 1.23456789", () => (object)1.23456789)
+            .When("coercing to double", CoerceFloat)
+            .Then("should be around 1.2345678", v => v is > 1.234567f and < 1.234569f)
             .AssertPassed();
     }
 

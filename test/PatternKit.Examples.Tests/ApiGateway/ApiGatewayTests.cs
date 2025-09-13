@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Examples.ApiGateway;
+namespace PatternKit.Examples.Tests.ApiGateway;
 
 [Feature("Mini API Gateway routing & middleware")]
 public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -14,52 +14,52 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
         string? requestId = null)
     {
         var d = new Dictionary<string, string>();
-        if (!string.IsNullOrEmpty(accept)) d["Accept"] = accept!;
-        if (!string.IsNullOrEmpty(auth)) d["Authorization"] = auth!;
-        if (!string.IsNullOrEmpty(requestId)) d["X-Request-Id"] = requestId!;
+        if (!string.IsNullOrEmpty(accept)) d["Accept"] = accept;
+        if (!string.IsNullOrEmpty(auth)) d["Authorization"] = auth;
+        if (!string.IsNullOrEmpty(requestId)) d["X-Request-Id"] = requestId;
         return d;
     }
 
     private static MiniRouter DefaultRouter()
         => MiniRouter.Create()
-            // middleware: first match wins (side-effects only — not asserted here)
+            // middleware: first match wins (side effects only — not asserted here)
             .Use(
-                static (in Request r) => r.Headers.ContainsKey("X-Request-Id"),
-                static (in Request r) => Console.WriteLine($"reqid={r.Headers["X-Request-Id"]}"))
+                static (in r) => r.Headers.ContainsKey("X-Request-Id"),
+                static (in r) => Console.WriteLine($"reqid={r.Headers["X-Request-Id"]}"))
             .Use(
-                static (in Request r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
-                                         !r.Headers.ContainsKey("Authorization"),
-                static (in Request _) => Console.WriteLine("Denied: missing Authorization"))
+                static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
+                                 !r.Headers.ContainsKey("Authorization"),
+                static (in _) => Console.WriteLine("Denied: missing Authorization"))
             // routes
             .Map(
-                static (in Request r) => r is { Method: "GET", Path: "/health" },
-                static (in Request _) => Responses.Text(200, "OK"))
+                static (in r) => r is { Method: "GET", Path: "/health" },
+                static (in _) => Responses.Text(200, "OK"))
             .Map(
-                static (in Request r) => r.Method == "GET" && r.Path.StartsWith("/users/", StringComparison.Ordinal),
-                static (in Request r) =>
+                static (in r) => r.Method == "GET" && r.Path.StartsWith("/users/", StringComparison.Ordinal),
+                static (in r) =>
                 {
                     var idStr = r.Path["/users/".Length..];
-                    return int.TryParse(idStr, out var id) 
-                        ? Responses.Json(200, $"{{\"id\":{id},\"name\":\"user{id}\"}}") 
+                    return int.TryParse(idStr, out var id)
+                        ? Responses.Json(200, $"{{\"id\":{id},\"name\":\"user{id}\"}}")
                         : Responses.Text(404, "User not found");
                 })
             .Map(
-                static (in Request r) => r is { Method: "POST", Path: "/users" },
-                static (in Request _) => Responses.Json(201, "{\"ok\":true}"))
+                static (in r) => r is { Method: "POST", Path: "/users" },
+                static (in _) => Responses.Json(201, "{\"ok\":true}"))
             .Map(
-                static (in Request r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
-                                         !r.Headers.ContainsKey("Authorization"),
-                static (in Request _) => Responses.Unauthorized())
-            .NotFound(static (in Request _) => Responses.NotFound())
+                static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
+                                 !r.Headers.ContainsKey("Authorization"),
+                static (in _) => Responses.Unauthorized())
+            .NotFound(static (in _) => Responses.NotFound())
             .Build();
 
     // A router with a route that returns an empty content-type to exercise negotiation.
     private static MiniRouter NegotiatingRouter()
         => MiniRouter.Create()
             .Map(
-                static (in Request r) => r is { Method: "GET", Path: "/neg" },
-                static (in Request _) => new Response(200, "", "ok"))
-            .NotFound(static (in Request _) => new Response(404, "", "nope"))
+                static (in r) => r is { Method: "GET", Path: "/neg" },
+                static (in _) => new Response(200, "", "ok"))
+            .NotFound(static (in _) => new Response(404, "", "nope"))
             .Build();
 
     // --- scenarios -----------------------------------------------------------
@@ -153,10 +153,10 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
 
         MiniRouter Build()
             => MiniRouter.Create()
-                .Use(static (in Request r) => r.Path.StartsWith("/a"), (in Request _) => hits.Add("A"))
-                .Use(static (in Request r) => r.Path.StartsWith("/a"), (in Request _) => hits.Add("B")) // also matches but should NOT run
-                .Map(static (in Request _) => true, static (in Request _) => Responses.Text(200, "ok"))
-                .NotFound(static (in Request _) => Responses.NotFound())
+                .Use(static (in r) => r.Path.StartsWith("/a"), (in _) => hits.Add("A"))
+                .Use(static (in r) => r.Path.StartsWith("/a"), (in _) => hits.Add("B")) // also matches but should NOT run
+                .Map(static (in _) => true, static (in _) => Responses.Text(200, "ok"))
+                .NotFound(static (in _) => Responses.NotFound())
                 .Build();
 
         await Given("a router with two matching middleware branches", Build)

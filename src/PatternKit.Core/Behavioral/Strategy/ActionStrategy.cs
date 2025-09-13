@@ -61,7 +61,7 @@ public sealed class ActionStrategy<TIn>
     private readonly bool _hasDefault;
     private readonly ActionHandler _default;
 
-    private static ActionHandler Noop => static (in TIn _) => { };
+    private static ActionHandler Noop => static (in _) => { };
 
 
     private ActionStrategy(Predicate[] predicates, ActionHandler[] actions, bool hasDefault, ActionHandler @default)

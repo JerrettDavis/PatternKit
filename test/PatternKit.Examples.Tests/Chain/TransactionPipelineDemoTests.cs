@@ -7,7 +7,7 @@ using TinyBDD.Xunit;
 using Xunit.Abstractions;
 using PaymentPipeline = PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline;
 
-namespace PatternKit.Tests.Examples.Chain;
+namespace PatternKit.Examples.Tests.Chain;
 
 [Feature("Config-driven transaction pipeline (DI + fluent chains)")]
 public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)

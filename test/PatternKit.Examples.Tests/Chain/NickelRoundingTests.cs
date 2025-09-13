@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Examples.Chain;
+namespace PatternKit.Examples.Tests.Chain;
 
 [Feature("Nickel rounding")]
 public sealed class NickelRoundingTests(ITestOutputHelper output) : TinyBddXunitBase(output)

@@ -2,24 +2,24 @@
 
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
-      <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
-                  OutputItemType="Analyzer"
-                  ReferenceOutputAssembly="false" />
+        <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj"/>
+        <ProjectReference Include="..\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj"/>
+        <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
+                          OutputItemType="Analyzer"
+                          PrivateAssets="All"
+                          ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
+
     <ItemGroup>
-      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9" />
-      <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.9"/>
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.9"/>
     </ItemGroup>
 
 </Project>

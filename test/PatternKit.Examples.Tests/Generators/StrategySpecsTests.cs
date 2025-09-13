@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 // OrderRouter, ScoreLabeler, IntParser
 
-namespace PatternKit.Tests.Examples.Generators;
+namespace PatternKit.Examples.Tests.Generators;
 
 [Feature("Generated strategies (Action / Result / Try)")]
 public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -16,9 +16,9 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
     {
         var log = new List<string>();
         var router = OrderRouter.Create()
-            .When((in char c) => char.IsLetter(c)).Then((in char c) => log.Add($"L:{c}"))
-            .When((in char c) => char.IsDigit(c)).Then((in char c) => log.Add($"D:{c}"))
-            .Default((in char c) => log.Add($"O:{c}"))
+            .When((in c) => char.IsLetter(c)).Then((in c) => log.Add($"L:{c}"))
+            .When((in c) => char.IsDigit(c)).Then((in c) => log.Add($"D:{c}"))
+            .Default((in c) => log.Add($"O:{c}"))
             .Build();
         return (router, log);
     }
@@ -34,15 +34,15 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
 
     private static ScoreLabeler BuildLabeler() =>
         ScoreLabeler.Create()
-            .When(static (in int x) => x > 0).Then(static (in int _) => "pos")
-            .When(static (in int x) => x < 0).Then(static (in int _) => "neg")
-            .Default(static (in int _) => "zero")
+            .When(static (in x) => x > 0).Then(static (in _) => "pos")
+            .When(static (in x) => x < 0).Then(static (in _) => "neg")
+            .Default(static (in _) => "zero")
             .Build();
 
     private static ScoreLabeler BuildLabeler_NoDefault() =>
         ScoreLabeler.Create()
-            .When(static (in int x) => x > 0).Then(static (in int _) => "pos")
-            .When(static (in int x) => x < 0).Then(static (in int _) => "neg")
+            .When(static (in x) => x > 0).Then(static (in _) => "pos")
+            .When(static (in x) => x < 0).Then(static (in _) => "neg")
             .Build();
 
     private static string Label(ScoreLabeler s, int x) => s.Execute(x);
@@ -50,7 +50,7 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
     private static (bool Ok, int Value) ParseOnly(string input)
     {
         var p = IntParser.Create()
-            .Always(static (in string s, out int? r) =>
+            .Always(static (in s, out r) =>
             {
                 if (int.TryParse(s, out var tmp)) { r = tmp; return true; }
                 r = null; return false;
@@ -64,12 +64,12 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
     private static (bool Ok, int Value) ParseWithFallback(string input)
     {
         var p = IntParser.Create()
-            .Always(static (in string s, out int? r) =>
+            .Always(static (in s, out r) =>
             {
                 if (int.TryParse(s, out var tmp)) { r = tmp; return true; }
                 r = null; return false;
             })
-            .Finally(static (in string _, out int? r) => { r = 0; return true; })
+            .Finally(static (in _, out r) => { r = 0; return true; })
             .Build();
 
         var ok = p.Execute(input, out var res);
@@ -102,7 +102,7 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
     {
         await Given("router with only letter branch",
                 () => OrderRouter.Create()
-                      .When(static (in char c) => char.IsLetter(c)).Then(static (in char _) => { })
+                      .When(static (in c) => char.IsLetter(c)).Then(static (in _) => { })
                       .Build())
             .When("TryExecute '!'", r => r.TryExecute('!'))
             .Then("should be false", ok => ok == false)
@@ -115,7 +115,7 @@ public sealed class StrategySpecsTests(ITestOutputHelper output) : TinyBddXunitB
     {
         await Given("router with only letter branch",
                 () => OrderRouter.Create()
-                      .When(static (in char c) => char.IsLetter(c)).Then(static (in char _) => { })
+                      .When(static (in c) => char.IsLetter(c)).Then(static (in _) => { })
                       .Build())
             .When("Execute '!'", r => ExecuteAndCapture(r, '!'))
             .Then("is InvalidOperationException", ex => ex is InvalidOperationException)

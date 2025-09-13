@@ -58,7 +58,7 @@ public sealed class MiniRouter
         if (string.IsNullOrWhiteSpace(res.ContentType)
             && _negotiate.Execute(in req, out var ct) 
             && ct is { Length: > 0 })
-            return res with { ContentType = ct! };
+            return res with { ContentType = ct };
 
         return res;
     }
@@ -102,7 +102,7 @@ public sealed class MiniRouter
         public MiniRouter Build()
         {
             // Middleware default: do nothing if nothing matched
-            _mw.Default(static (in Request _) => { });
+            _mw.Default(static (in _) => { });
 
             var mw = _mw.Build();
             var routes = _routes.Build();
@@ -117,7 +117,7 @@ public sealed class MiniRouter
             //  - if Accept contains "text/plain" -> pick text
             //  - else default to json
             return TryStrategy<Request, string>.Create()
-                .Always(static (in Request r, out string? ct) =>
+                .Always(static (in r, out ct) =>
                 {
                     if (r.Headers.TryGetValue("Accept", out var a) &&
                         a.Contains("application/json", StringComparison.OrdinalIgnoreCase))
@@ -129,7 +129,7 @@ public sealed class MiniRouter
                     ct = null;
                     return false;
                 })
-                .Or.Always(static (in Request r, out string? ct) =>
+                .Or.Always(static (in r, out ct) =>
                 {
                     if (r.Headers.TryGetValue("Accept", out var a) &&
                         a.Contains("text/plain", StringComparison.OrdinalIgnoreCase))
@@ -141,7 +141,7 @@ public sealed class MiniRouter
                     ct = null;
                     return false;
                 })
-                .Finally(static (in Request _, out string? ct) =>
+                .Finally(static (in _, out ct) =>
                 {
                     ct = "application/json; charset=utf-8";
                     return true;

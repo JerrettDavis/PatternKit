@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Examples.ApiGateway;
+namespace PatternKit.Examples.Tests.ApiGateway;
 
 [Feature("ApiGateway Demo.Run prints expected responses and middleware output")]
 public sealed class DemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)

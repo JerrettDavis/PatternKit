@@ -47,20 +47,20 @@ public sealed class ActionChain<TCtx>
         public ActionChain<TCtx> Build()
         {
             // terminal "no-op" continuation
-            Next next = static (in TCtx _) => { };
+            Next next = static (in _) => { };
 
             if (_tail is not null)
             {
                 var t = _tail;
                 var prev = next;
-                next = (in TCtx c) => t(in c, prev);
+                next = (in c) => t(in c, prev);
             }
 
             for (var i = _handlers.Count - 1; i >= 0; i--)
             {
                 var h = _handlers[i];
                 var prev = next;
-                next = (in TCtx c) => h(in c, prev);
+                next = (in c) => h(in c, prev);
             }
 
             return new ActionChain<TCtx>(next);
@@ -75,7 +75,7 @@ public sealed class ActionChain<TCtx>
             public Builder Do(Handler handler)
             {
                 var pred = _pred; // avoid capturing 'this'
-                _owner.Use((in TCtx c, Next next) =>
+                _owner.Use((in c, next) =>
                 {
                     if (pred(in c)) handler(in c, next);
                     else next(in c);
@@ -86,7 +86,7 @@ public sealed class ActionChain<TCtx>
             public Builder ThenStop(Action<TCtx> action)
             {
                 var pred = _pred;
-                _owner.Use((in TCtx c, Next next) =>
+                _owner.Use((in c, next) =>
                 {
                     if (pred(in c))
                     {
@@ -102,7 +102,7 @@ public sealed class ActionChain<TCtx>
             public Builder ThenContinue(Action<TCtx> action)
             {
                 var pred = _pred;
-                _owner.Use((in TCtx c, Next next) =>
+                _owner.Use((in c, next) =>
                 {
                     if (pred(in c)) action(c);
                     next(in c);
