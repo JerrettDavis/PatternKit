@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Core.Creational.Builder;
+namespace PatternKit.Tests.Creational.Builder;
 
 [Feature("Creational - MutableBuilder<T>")]
 public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunitBase(output)

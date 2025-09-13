@@ -3,7 +3,8 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Core.Behavioral.Strategy;
+namespace PatternKit.Tests.Behavioral.Strategy;
+
 
 [Feature("Strategy (Selector)")]
 public class SelectorStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)

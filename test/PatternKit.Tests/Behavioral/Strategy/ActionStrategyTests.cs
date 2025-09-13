@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Core.Behavioral.Strategy;
+namespace PatternKit.Tests.Behavioral.Strategy;
 
 [Feature("ActionStrategy<TIn> (first-match-wins action pipeline)")]
 public sealed class ActionStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)

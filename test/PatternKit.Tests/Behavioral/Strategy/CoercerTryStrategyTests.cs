@@ -4,7 +4,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Core.Behavioral.Strategy;
+namespace PatternKit.Tests.Behavioral.Strategy;
 
 [Feature("Coercer (JsonElement -> primitives)")]
 public class CoercerTryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -47,18 +47,19 @@ public class CoercerTryStrategyTests(ITestOutputHelper output) : TinyBddXunitBas
     {
         await Given("a TryStrategy<JsonElement, object> coercer", BuildCoercer)
             .When("coercing 123", s => Execute(s, JsonDocument.Parse("123").RootElement))
-            .Then("should return 123 (int)", v => v is int and 123)
+            .Then("should return 123 (int)", v => v is 123)
             .AssertPassed();
 
         await Given("same coercer", BuildCoercer)
             .When("coercing true", s => Execute(s, JsonDocument.Parse("true").RootElement))
-            .Then("should return true (bool)", v => v is bool and true)
+            .Then("should return true (bool)", v => v is true)
             .AssertPassed();
 
         await Given("same coercer", BuildCoercer)
             .When("coercing \"hello\"", s => Execute(s, JsonDocument.Parse("\"hello\"").RootElement))
-            .Then("should return \"hello\" (string)", v => v is string and "hello")
+            .Then("should return \"hello\" (string)", v => v is "hello")
             .AssertPassed();
+        return;
 
         static TryStrategy<JsonElement, object> BuildCoercer()
             => TryStrategy<JsonElement, object>.Create()

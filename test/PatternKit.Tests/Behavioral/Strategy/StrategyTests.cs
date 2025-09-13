@@ -3,7 +3,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Core.Behavioral.Strategy;
+namespace PatternKit.Tests.Behavioral.Strategy;
 
 [Feature("Strategy (Try)")]
 public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -94,6 +94,7 @@ public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
             .And("classifying -2", s => Execute(s, -2))
             .Then("should fall through to fallback 'other'", r => r is { Matched: true, Value: "other" })
             .AssertPassed();
+        return;
 
         static TryStrategy<int, string> BuildWithFlag(bool includeNegative)
             => TryStrategy<int, string>.Create()
@@ -114,6 +115,7 @@ public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
             .When("classifying 7", s => Execute(s, 7))
             .Then("should not match", r => r is { Matched: false, Value: null })
             .AssertPassed();
+        return;
 
         static TryStrategy<int, string> BuildNoFallback()
             => TryStrategy<int, string>.Create()
