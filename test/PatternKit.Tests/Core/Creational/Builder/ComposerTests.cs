@@ -67,7 +67,7 @@ public sealed class ComposerTests(ITestOutputHelper output) : TinyBddXunitBase(o
                 c.With(SetAge30).Require(ValidateNameRequired))
             .And("building to DTO (should throw)", c => Record.Exception(() => c.Build(Project)))
             .Then("throws InvalidOperationException with 'Name is required.'",
-                ex => ex is InvalidOperationException ioe && ioe.Message == "Name is required.")
+                ex => ex is InvalidOperationException { Message: "Name is required." })
             .AssertPassed();
     }
 
@@ -83,7 +83,7 @@ public sealed class ComposerTests(ITestOutputHelper output) : TinyBddXunitBase(o
                 c.Require(FirstFailure).Require(SecondFailure))
             .And("building to DTO", c => Record.Exception(() => c.Build(Project)))
             .Then("the first validator's message is thrown",
-                ex => ex is InvalidOperationException ioe && ioe.Message == "boom 1")
+                ex => ex is InvalidOperationException { Message: "boom 1" })
             .AssertPassed();
     }
 
@@ -129,8 +129,7 @@ public sealed class ComposerTests(ITestOutputHelper output) : TinyBddXunitBase(o
                     .Require(ValidateAge0To130))
             .And("building to DTO", c => Record.Exception(() => c.Build(Project)))
             .Then("should throw with range message",
-                ex => ex is InvalidOperationException ioe &&
-                      ioe.Message == "Age must be within [0, 130] but was -5.")
+                ex => ex is InvalidOperationException { Message: "Age must be within [0, 130] but was -5." })
             .AssertPassed();
     }
 

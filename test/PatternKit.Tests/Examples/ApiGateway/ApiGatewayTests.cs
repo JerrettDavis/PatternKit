@@ -32,7 +32,7 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
                 static (in Request _) => Console.WriteLine("Denied: missing Authorization"))
             // routes
             .Map(
-                static (in Request r) => r.Method == "GET" && r.Path == "/health",
+                static (in Request r) => r is { Method: "GET", Path: "/health" },
                 static (in Request _) => Responses.Text(200, "OK"))
             .Map(
                 static (in Request r) => r.Method == "GET" && r.Path.StartsWith("/users/", StringComparison.Ordinal),
@@ -44,7 +44,7 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
                         : Responses.Text(404, "User not found");
                 })
             .Map(
-                static (in Request r) => r.Method == "POST" && r.Path == "/users",
+                static (in Request r) => r is { Method: "POST", Path: "/users" },
                 static (in Request _) => Responses.Json(201, "{\"ok\":true}"))
             .Map(
                 static (in Request r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
@@ -57,7 +57,7 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
     private static MiniRouter NegotiatingRouter()
         => MiniRouter.Create()
             .Map(
-                static (in Request r) => r.Method == "GET" && r.Path == "/neg",
+                static (in Request r) => r is { Method: "GET", Path: "/neg" },
                 static (in Request _) => new Response(200, "", "ok"))
             .NotFound(static (in Request _) => new Response(404, "", "nope"))
             .Build();

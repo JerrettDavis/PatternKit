@@ -74,7 +74,7 @@ public sealed class TransactionPipelineBuilder
 
     // deps
     private IDeviceBus _devices = new DeviceBus();
-    private readonly List<ITenderHandler> _tenderHandlers = new();
+    private readonly List<ITenderHandler> _tenderHandlers = [];
 
     private IReadOnlyList<IRoundingRule> _roundingRules =
     [
@@ -323,7 +323,7 @@ public sealed class TransactionContext
     public required Customer Customer { get; init; }
 
     public Tender? Tender { get; set; }
-    public List<Tender> Tenders { get; init; } = new();
+    public List<Tender> Tenders { get; init; } = [];
 
     public required List<LineItem> Items { get; init; }
 
@@ -343,7 +343,7 @@ public sealed class TransactionContext
     public decimal AuthorizationAmount { get; set; }
 
     // Side-effects & logs
-    public List<string> Log { get; } = new();
+    public List<string> Log { get; } = [];
 
     // Terminal outcome
     public TxResult? Result { get; set; }

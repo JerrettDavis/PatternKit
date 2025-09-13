@@ -27,9 +27,9 @@ public interface ITenderHandler
 // ---- Config model (what to run & in what order) ----
 public sealed class PipelineOptions
 {
-    public List<string> DiscountRules { get; init; } = new(); // keys in order
-    public List<string> Rounding { get; init; } = new();      // keys in order
-    public List<string> TenderOrder { get; init; } = new();   // optional, for display
+    public List<string> DiscountRules { get; init; } = []; // keys in order
+    public List<string> Rounding { get; init; } = [];      // keys in order
+    public List<string> TenderOrder { get; init; } = [];   // optional, for display
 }
 
 // --- Discount rules ---

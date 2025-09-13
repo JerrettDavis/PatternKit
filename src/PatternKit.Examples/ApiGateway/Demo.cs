@@ -31,7 +31,7 @@ public static class Demo
                     return Responses.Text(404, "User not found");
                 })
             .Map(
-                static (in Request r) => r.Method == "POST" && r.Path == "/users",
+                static (in Request r) => r is { Method: "POST", Path: "/users" },
                 
                 // pretend to create the user from r.Body...
                 static (in Request _) => Responses.Json(201, "{\"ok\":true}"))

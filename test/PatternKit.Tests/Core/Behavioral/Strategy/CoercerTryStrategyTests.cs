@@ -47,17 +47,17 @@ public class CoercerTryStrategyTests(ITestOutputHelper output) : TinyBddXunitBas
     {
         await Given("a TryStrategy<JsonElement, object> coercer", BuildCoercer)
             .When("coercing 123", s => Execute(s, JsonDocument.Parse("123").RootElement))
-            .Then("should return 123 (int)", v => v is int i && i == 123)
+            .Then("should return 123 (int)", v => v is int and 123)
             .AssertPassed();
 
         await Given("same coercer", BuildCoercer)
             .When("coercing true", s => Execute(s, JsonDocument.Parse("true").RootElement))
-            .Then("should return true (bool)", v => v is bool b && b)
+            .Then("should return true (bool)", v => v is bool and true)
             .AssertPassed();
 
         await Given("same coercer", BuildCoercer)
             .When("coercing \"hello\"", s => Execute(s, JsonDocument.Parse("\"hello\"").RootElement))
-            .Then("should return \"hello\" (string)", v => v is string s2 && s2 == "hello")
+            .Then("should return \"hello\" (string)", v => v is string and "hello")
             .AssertPassed();
 
         static TryStrategy<JsonElement, object> BuildCoercer()

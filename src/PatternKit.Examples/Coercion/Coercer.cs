@@ -171,7 +171,7 @@ public static class Coercer<T>
     /// </returns>
     private static bool FromJsonStringArray(in object v, out T? r)
     {
-        if (v is JsonElement je && je.ValueKind == JsonValueKind.Array)
+        if (v is JsonElement { ValueKind: JsonValueKind.Array } je)
         {
             var list = new List<string>();
             foreach (var e in je.EnumerateArray()) list.Add(e.ToString());

@@ -107,12 +107,12 @@ public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
     {
         await Given("json [\"a\",\"b\",\"c\"]", SourceJsonStringArray)
             .When("coercing to string[]", je => Coercer<string[]>.From(je))
-            .Then("should be [a,b,c]", arr => arr is { Length: 3 } a && a[0] == "a" && a[1] == "b" && a[2] == "c")
+            .Then("should be [a,b,c]", arr => arr is ["a", "b", "c"])
             .AssertPassed();
 
         await Given("single string \"one\"", () => (object)"one")
             .When("coercing to string[]", CoerceStringArray)
-            .Then("should be [\"one\"]", arr => arr is { Length: 1 } a && a[0] == "one")
+            .Then("should be [\"one\"]", arr => arr is ["one"])
             .AssertPassed();
     }
 

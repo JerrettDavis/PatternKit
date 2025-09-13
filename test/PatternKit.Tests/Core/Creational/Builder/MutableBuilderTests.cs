@@ -13,7 +13,7 @@ public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunit
     {
         public string? Name { get; set; }
         public int Age { get; set; }
-        public List<string> Steps { get; } = new();
+        public List<string> Steps { get; } = [];
     }
 
     // ---------- Factories ----------
@@ -59,8 +59,7 @@ public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunit
                       .RequireNotEmpty(static p => p.Name, nameof(Person.Name)))
             .And("attempting to build", b => Record.Exception(() => b.Build()))
             .Then("should throw InvalidOperationException with expected message",
-                ex => ex is InvalidOperationException ioe &&
-                      ioe.Message == "Name must be non-empty.")
+                ex => ex is InvalidOperationException { Message: "Name must be non-empty." })
             .AssertPassed();
     }
 
@@ -81,8 +80,7 @@ public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunit
                                }))
             .And("attempting to build", b => Record.Exception(() => b.Build()))
             .Then("should throw with range message",
-                ex => ex is InvalidOperationException ioe &&
-                      ioe.Message == "Age must be within [40, 120] but was 30.")
+                ex => ex is InvalidOperationException { Message: "Age must be within [40, 120] but was 30." })
             .AssertPassed();
     }
 
@@ -96,8 +94,7 @@ public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunit
                       .RequireRange(static p => p.Age, 0, 130, nameof(Person.Age)))
             .And("attempting to build", b => Record.Exception(() => b.Build()))
             .Then("should throw with inclusive bounds message",
-                ex => ex is InvalidOperationException ioe &&
-                      ioe.Message == "Age must be within [0, 130] but was -1.")
+                ex => ex is InvalidOperationException { Message: "Age must be within [0, 130] but was -1." })
             .AssertPassed();
     }
 
@@ -135,7 +132,7 @@ public sealed class MutableBuilderTests(ITestOutputHelper output) : TinyBddXunit
         await Given("a fresh builder with default factory", NewBuilder)
             .When("building immediately", BuildPerson)
             .Then("result is a Person with default values",
-                p => p is { Name: null, Age: 0 } && p.Steps.Count == 0)
+                p => p is { Name: null, Age: 0, Steps.Count: 0 })
             .AssertPassed();
     }
 }

@@ -22,7 +22,7 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
         for (var i = 0; i < rounding.Length; i++)
             dict[$"Payment:Pipeline:Rounding:{i}"] = rounding[i];
 
-        return new ConfigurationBuilder().AddInMemoryCollection(dict!).Build();
+        return new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
     }
 
     private static PaymentPipeline BuildPipeline(string[] discounts, string[] rounding)
@@ -41,7 +41,7 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
         {
             Customer = customer ?? new Customer(null, 35),
             Items = items.ToList(),
-            Tenders = (tenders ?? Array.Empty<Tender>()).ToList()
+            Tenders = (tenders ?? []).ToList()
         };
 
     // item helper: choose price so total (with 8.75% tax) == 24.98
@@ -53,11 +53,11 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
     [Fact]
     public async Task MixedTender_NoNickelRounding()
     {
-        PaymentPipeline Pipe() => BuildPipeline(discounts: Array.Empty<string>(),
-                                               rounding: new[] { "round:nickel-cash-only" });
+        PaymentPipeline Pipe() => BuildPipeline(discounts: [],
+            rounding: ["round:nickel-cash-only"]);
 
         var ctx = Ctx(
-            items: [Item_22_97],                     // Subtotal 22.97 -> tax 2.01 -> total 24.98
+            items: [Item_22_97], // Subtotal 22.97 -> tax 2.01 -> total 24.98
             tenders:
             [
                 new Tender(PaymentKind.Cash, CashGiven: 20m),
@@ -73,7 +73,7 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
             .And("grand total remains 24.98", _ => ctx.GrandTotal == 24.98m)
             .And("cash payment applied first ($20.00)", _ => ctx.Log.Any(x => x.Contains("paid: cash $20.00")))
             .And("card captures the remainder ($4.98)", _ => ctx.Log.Any(x => x.Contains("auth: captured via Visa $4.98")))
-            .And("paid in full", _ => ctx.RemainderDue == 0m && ctx.AmountPaid == 24.98m && ctx.Result!.Value.Code == "paid")
+            .And("paid in full", _ => ctx is { RemainderDue: 0m, AmountPaid: 24.98m } && ctx.Result!.Value.Code == "paid")
             .AssertPassed();
     }
 
@@ -81,12 +81,12 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
     [Fact]
     public async Task CashOnly_NickelRounding_Up()
     {
-        PaymentPipeline Pipe() => BuildPipeline(discounts: Array.Empty<string>(),
-                                               rounding: new[] { "round:nickel-cash-only" });
+        PaymentPipeline Pipe() => BuildPipeline(discounts: [],
+            rounding: ["round:nickel-cash-only"]);
 
         var ctx = Ctx(
-            items: new[] { Item_22_97 },                        // pre-round total 24.98
-            tenders: new[] { new Tender(PaymentKind.Cash, CashGiven: 25m) });
+            items: [Item_22_97], // pre-round total 24.98
+            tenders: [new Tender(PaymentKind.Cash, CashGiven: 25m)]);
 
         await Given("a pipeline with nickel rounding only", Pipe)
             .When("the pipeline runs", p => p.Run(ctx))
@@ -94,7 +94,7 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
             .And("pre-round total is 24.98", _ => Math.Round(ctx.Subtotal - ctx.DiscountTotal + ctx.TaxTotal, 2) == 24.98m)
             .And("nickel rounding adds $0.02", _ => ctx.RoundingDelta == 0.02m && ctx.Log.Any(x => x.Contains("nickel (cash-only) +$0.02")))
             .And("grand total becomes $25.00", _ => ctx.GrandTotal == 25.00m)
-            .And("cash pays $25.00", _ => ctx.AmountPaid == 25.00m && !ctx.CashChange.HasValue)
+            .And("cash pays $25.00", _ => ctx is { AmountPaid: 25.00m, CashChange: null })
             .And("result is paid", _ => ctx.RemainderDue == 0m && ctx.Result!.Value.Code == "paid")
             .AssertPassed();
     }
@@ -103,16 +103,13 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
     [Fact]
     public async Task Charity_RoundUp_Works()
     {
-        PaymentPipeline Pipe() => BuildPipeline(discounts: Array.Empty<string>(),
-                                               rounding: new[] { "round:charity" });
-
         var ctx = Ctx(
-            items: new[]
-            {
+            items:
+            [
                 Item_22_97,
                 new LineItem("CHARITY:RedCross", 0m) // signal charity
-            },
-            tenders: new[] { new Tender(PaymentKind.Card, CardAuthType.Chip, CardVendor.Visa) });
+            ],
+            tenders: [new Tender(PaymentKind.Card, CardAuthType.Chip, CardVendor.Visa)]);
 
         await Given("a pipeline with charity round-up only", Pipe)
             .When("the pipeline runs", p => p.Run(ctx))
@@ -125,23 +122,28 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
             })
             .And("paid by card", _ => ctx.Result!.Value.Code == "paid" && ctx.Log.Any(x => x.Contains("auth: captured")))
             .AssertPassed();
+        return;
+
+        PaymentPipeline Pipe() => BuildPipeline(discounts: [],
+            rounding: ["round:charity"]);
     }
 
     [Scenario("Preauth: age-restricted item blocks underage customer")]
     [Fact]
     public async Task Preauth_AgeBlock()
     {
-        PaymentPipeline Pipe() => BuildPipeline(discounts: Array.Empty<string>(), rounding: Array.Empty<string>());
-
         var ctx = Ctx(
             items: [new LineItem("CIGS", 9.99m, AgeRestricted: true)],
             customer: new Customer(null, 19));
 
         await Given("a default pipeline (no discounts/rounding)", Pipe)
             .When("the pipeline runs", p => p.Run(ctx))
-            .Then("fails preauth", r => !r.Result.Ok && r.Result.Code == "age")
+            .Then("fails preauth", r => r.Result is { Ok: false, Code: "age" })
             .And("log mentions age block", _ => ctx.Log.Any(x => x.Contains("age")))
             .AssertPassed();
+        return;
+
+        PaymentPipeline Pipe() => BuildPipeline(discounts: [], rounding: []);
     }
 
     [Scenario("No tenders -> insufficient funds")]
