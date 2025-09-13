@@ -5,38 +5,104 @@ using Microsoft.Extensions.Options;
 namespace PatternKit.Examples.Chain.ConfigDriven;
 
 // ---- Strategy contracts ----
+
+/// <summary>
+/// Represents a discount rule that can mutate a <see cref="TransactionContext"/> by applying a discount.
+/// </summary>
+/// <remarks>
+/// Implementations should be deterministic and idempotent within a single pipeline run.
+/// </remarks>
 public interface IDiscountRule
 {
+    /// <summary>
+    /// Unique key used to reference this rule from configuration (e.g., "discount:cash-2pc").
+    /// </summary>
     string Key { get; }
+
+    /// <summary>
+    /// Applies the discount to the provided <paramref name="ctx"/> (if applicable).
+    /// </summary>
+    /// <param name="ctx">The transaction context.</param>
     void Apply(TransactionContext ctx);
 }
 
+/// <summary>
+/// Represents a rounding strategy that can adjust the <see cref="TransactionContext.GrandTotal"/> via rounding.
+/// </summary>
 public interface IRoundingStrategy
 {
+    /// <summary>
+    /// Unique key used to reference this strategy from configuration (e.g., "round:charity").
+    /// </summary>
     string Key { get; }
+
+    /// <summary>
+    /// Applies rounding to the provided <paramref name="ctx"/> (if applicable).
+    /// </summary>
+    /// <param name="ctx">The transaction context.</param>
     void Apply(TransactionContext ctx);
 }
 
+/// <summary>
+/// Handler that determines if it can process a given tender and performs the handling.
+/// </summary>
 public interface ITenderHandler
 {
+    /// <summary>
+    /// Unique key for display/configuration (e.g., "tender:cash", "tender:card").
+    /// </summary>
     string Key { get; } // e.g. "cash", "card:visa", etc.
+
+    /// <summary>
+    /// Returns <see langword="true"/> if this handler can process <paramref name="t"/> in <paramref name="ctx"/>.
+    /// </summary>
+    /// <param name="ctx">The transaction context.</param>
+    /// <param name="t">The tender candidate.</param>
     bool CanHandle(TransactionContext ctx, Tender t);
+
+    /// <summary>
+    /// Performs tender handling and returns the outcome.
+    /// </summary>
+    /// <param name="ctx">The transaction context.</param>
+    /// <param name="t">The tender to process.</param>
+    /// <returns>A <see cref="TxResult"/> describing the outcome.</returns>
     TxResult Handle(TransactionContext ctx, Tender t);
 }
 
 // ---- Config model (what to run & in what order) ----
+
+/// <summary>
+/// Options that describe which pipeline components to run and in what order.
+/// </summary>
 public sealed class PipelineOptions
 {
+    /// <summary>
+    /// Discount rule keys in execution order.
+    /// </summary>
     public List<string> DiscountRules { get; init; } = []; // keys in order
+
+    /// <summary>
+    /// Rounding strategy keys in execution order.
+    /// </summary>
     public List<string> Rounding { get; init; } = [];      // keys in order
+
+    /// <summary>
+    /// Optional tender display order (purely informational).
+    /// </summary>
     public List<string> TenderOrder { get; init; } = [];   // optional, for display
 }
 
 // --- Discount rules ---
+
+/// <summary>
+/// Applies a 2% discount when the first tender is cash.
+/// </summary>
 public sealed class Cash2Pct : IDiscountRule
 {
+    /// <inheritdoc />
     public string Key => "discount:cash-2pc";
 
+    /// <inheritdoc />
     public void Apply(TransactionContext ctx)
     {
         // FIRST tender being cash is a simple proxy for "cash-driven promo"
@@ -49,10 +115,15 @@ public sealed class Cash2Pct : IDiscountRule
     }
 }
 
+/// <summary>
+/// Applies a 5% discount when a loyalty ID is present.
+/// </summary>
 public sealed class Loyalty5Pct : IDiscountRule
 {
+    /// <inheritdoc />
     public string Key => "discount:loyalty-5pc";
 
+    /// <inheritdoc />
     public void Apply(TransactionContext ctx)
     {
         if (!string.IsNullOrWhiteSpace(ctx.Customer.LoyaltyId))
@@ -63,10 +134,15 @@ public sealed class Loyalty5Pct : IDiscountRule
     }
 }
 
+/// <summary>
+/// Applies a $1 off per bundled item when the same bundle key reaches a quantity of two or more.
+/// </summary>
 public sealed class Bundle1OffEach : IDiscountRule
 {
+    /// <inheritdoc />
     public string Key => "discount:bundle-1off";
 
+    /// <inheritdoc />
     public void Apply(TransactionContext ctx)
     {
         var off = ctx.Items
@@ -79,10 +155,16 @@ public sealed class Bundle1OffEach : IDiscountRule
 }
 
 // --- Rounding strategies ---
+
+/// <summary>
+/// Rounds up to the next dollar when a "CHARITY:*" SKU is present.
+/// </summary>
 public sealed class CharityRoundUp : IRoundingStrategy
 {
+    /// <inheritdoc />
     public string Key => "round:charity";
 
+    /// <inheritdoc />
     public void Apply(TransactionContext ctx)
     {
         var charity = ctx.Items.FirstOrDefault(i =>
@@ -96,10 +178,15 @@ public sealed class CharityRoundUp : IRoundingStrategy
     }
 }
 
+/// <summary>
+/// Rounds to the nearest nickel when the transaction is cash-only and includes the "ROUND:NICKEL" SKU.
+/// </summary>
 public sealed class NickelCashOnly : IRoundingStrategy
 {
+    /// <inheritdoc />
     public string Key => "round:nickel-cash-only";
 
+    /// <inheritdoc />
     public void Apply(TransactionContext ctx)
     {
         if (!ctx.IsCashOnlyTransaction)
@@ -116,15 +203,23 @@ public sealed class NickelCashOnly : IRoundingStrategy
 }
 
 // --- Tender handlers ---
+
+/// <summary>
+/// Handles cash tenders by opening the drawer, applying payment, and computing change.
+/// </summary>
 public sealed class CashTender : ITenderHandler
 {
     private readonly IDeviceBus _devices;
+    /// <summary>Creates a new cash tender handler.</summary>
     public CashTender(IDeviceBus devices) => _devices = devices;
 
+    /// <inheritdoc />
     public string Key => "tender:cash";
 
+    /// <inheritdoc />
     public bool CanHandle(TransactionContext ctx, Tender t) => t.Kind == PaymentKind.Cash;
 
+    /// <inheritdoc />
     public TxResult Handle(TransactionContext ctx, Tender t)
     {
         _devices.OpenCashDrawer();
@@ -142,15 +237,22 @@ public sealed class CashTender : ITenderHandler
     }
 }
 
+/// <summary>
+/// Handles card tenders by authorizing and capturing the remainder due.
+/// </summary>
 public sealed class CardTender : ITenderHandler
 {
     private readonly CardProcessors _processors;
+    /// <summary>Creates a new card tender handler.</summary>
     public CardTender(CardProcessors processors) => _processors = processors;
 
+    /// <inheritdoc />
     public string Key => "tender:card";
 
+    /// <inheritdoc />
     public bool CanHandle(TransactionContext ctx, Tender t) => t.Kind == PaymentKind.Card;
 
+    /// <inheritdoc />
     public TxResult Handle(TransactionContext ctx, Tender t)
     {
         ctx.AuthorizationAmount = ctx.RemainderDue;
@@ -178,8 +280,21 @@ public sealed class CardTender : ITenderHandler
     }
 }
 
+/// <summary>
+/// DI-friendly configuration and registration helpers for the config-driven transaction pipeline.
+/// </summary>
 public static class ConfigDrivenPipelineDemo
 {
+    /// <summary>
+    /// Registers a config-driven transaction pipeline into the service collection and returns it.
+    /// </summary>
+    /// <param name="services">The service collection to add services to.</param>
+    /// <param name="config">Application configuration containing "Payment:Pipeline" section.</param>
+    /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    /// <remarks>
+    /// This method wires up device bus, card processors, strategies (discounts, rounding, tenders),
+    /// and builds a shared <see cref="TransactionPipeline"/> using <see cref="PipelineOptions"/>.
+    /// </remarks>
     public static IServiceCollection AddPaymentPipeline(this IServiceCollection services, IConfiguration config)
     {
         services.AddOptions<PipelineOptions>()
@@ -240,6 +355,11 @@ public static class ConfigDrivenPipelineDemo
     /// </summary>
     public sealed class PaymentPipeline(TransactionPipeline pipeline)
     {
+        /// <summary>
+        /// Executes the registered pipeline against the provided context.
+        /// </summary>
+        /// <param name="ctx">The transaction context to process.</param>
+        /// <returns>The terminal result and the (mutated) context.</returns>
         public (TxResult Result, TransactionContext Ctx) Run(TransactionContext ctx)
             => pipeline.Run(ctx);
     }

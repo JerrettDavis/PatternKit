@@ -8,38 +8,38 @@ public static class Demo
             // --- middleware (first-match-wins) ---
             // capture request-id when present
             .Use(
-                static (in Request r) => r.Headers.ContainsKey("X-Request-Id"),
-                static (in Request r) => Console.WriteLine($"reqid={r.Headers["X-Request-Id"]}"))
+                static (in r) => r.Headers.ContainsKey("X-Request-Id"),
+                static (in r) => Console.WriteLine($"reqid={r.Headers["X-Request-Id"]}"))
             // auth short-circuit: /admin requires bearer token
             .Use(
-                static (in Request r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
-                                         !r.Headers.ContainsKey("Authorization"),
-                static (in Request _) => Console.WriteLine("Denied: missing Authorization"))
+                static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
+                                 !r.Headers.ContainsKey("Authorization"),
+                static (in _) => Console.WriteLine("Denied: missing Authorization"))
             // default is noop (set in Build)
 
             // --- routes (first-match-wins) ---
             .Map(
-                static (in Request r) => r is { Method: "GET", Path: "/health" },
-                static (in Request _) => Responses.Text(200, "OK"))
+                static (in r) => r is { Method: "GET", Path: "/health" },
+                static (in _) => Responses.Text(200, "OK"))
             .Map(
-                static (in Request r) => r.Method == "GET" && r.Path.StartsWith("/users/", StringComparison.Ordinal),
-                static (in Request r) =>
+                static (in r) => r.Method == "GET" && r.Path.StartsWith("/users/", StringComparison.Ordinal),
+                static (in r) =>
                 {
                     var idStr = r.Path["/users/".Length..];
-                    if (int.TryParse(idStr, out var id))
-                        return Responses.Json(200, $"{{\"id\":{id},\"name\":\"user{id}\"}}");
-                    return Responses.Text(404, "User not found");
+                    return int.TryParse(idStr, out var id)
+                        ? Responses.Json(200, $"{{\"id\":{id},\"name\":\"user{id}\"}}")
+                        : Responses.Text(404, "User not found");
                 })
             .Map(
-                static (in Request r) => r is { Method: "POST", Path: "/users" },
-                
+                static (in r) => r is { Method: "POST", Path: "/users" },
+
                 // pretend to create the user from r.Body...
-                static (in Request _) => Responses.Json(201, "{\"ok\":true}"))
+                static (in _) => Responses.Json(201, "{\"ok\":true}"))
             .Map(
-                static (in Request r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
-                                         !r.Headers.ContainsKey("Authorization"),
-                static (in Request _) => Responses.Unauthorized())
-            .NotFound(static (in Request _) => Responses.NotFound())
+                static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal) &&
+                                 !r.Headers.ContainsKey("Authorization"),
+                static (in _) => Responses.Unauthorized())
+            .NotFound(static (in _) => Responses.NotFound())
             .Build();
 
         // --- simulate a few calls ---
@@ -51,7 +51,7 @@ public static class Demo
         Print(router.Handle(new Request("GET", "/admin/metrics", new Dictionary<string, string>()))); // unauthorized
         Print(router.Handle(new Request("POST", "/users", commonHeaders, "{\"name\":\"Ada\"}")));
         Print(router.Handle(new Request("GET", "/nope", commonHeaders)));
-        
+
         return;
 
         static void Print(Response res)

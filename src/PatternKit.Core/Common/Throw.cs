@@ -43,7 +43,7 @@ public static class Throw
     /// be used in expression contexts requiring a value.
     /// </returns>
     /// <exception cref="InvalidOperationException">
-    /// Always thrown with the message <c>"No strategy matched and no default provided."</c>.
+    /// Always thrown with the message <c>"No strategy matched and no default provided."</c>
     /// </exception>
     /// <remarks>
     /// <para>
