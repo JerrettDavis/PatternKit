@@ -1,4 +1,5 @@
 using PatternKit.Common;
+using PatternKit.Creational.Builder;
 
 namespace PatternKit.Behavioral.Strategy;
 
@@ -52,6 +53,8 @@ public sealed class Strategy<TIn, TOut>
     private readonly bool _hasDefault;
     private readonly Handler _default;
 
+    private static Handler DefaultResult => static (in TIn _) => default!;
+
     private Strategy(Predicate[] predicates, Handler[] handlers, bool hasDefault, Handler @default)
         => (_predicates, _handlers, _hasDefault, _default) = (predicates, handlers, hasDefault, @default);
 
@@ -102,86 +105,31 @@ public sealed class Strategy<TIn, TOut>
     /// </remarks>
     public sealed class Builder
     {
-        private readonly List<Predicate> _preds = new(8);
-        private readonly List<Handler> _handlers = new(8);
-        private Handler? _default;
+        private readonly BranchBuilder<Predicate, Handler> _core = BranchBuilder<Predicate, Handler>.Create();
 
-        /// <summary>
-        /// Starts a new conditional branch by specifying a <paramref name="predicate"/>.
-        /// </summary>
-        /// <param name="predicate">The condition to test against the input.</param>
-        /// <returns>
-        /// A <see cref="WhenBuilder"/> that allows chaining a <see cref="WhenBuilder.Then(Handler)"/> call
-        /// to associate a handler with this predicate.
-        /// </returns>
-        /// <remarks>
-        /// Each call to <see cref="When(Predicate)"/> represents a separate branch in the strategy.
-        /// </remarks>
         public WhenBuilder When(Predicate predicate) => new(this, predicate);
 
-        /// <summary>
-        /// Sets a default handler to use when no predicates match.
-        /// </summary>
-        /// <param name="handler">The handler to invoke when no branch matches.</param>
-        /// <returns>The current <see cref="Builder"/> instance for chaining.</returns>
         public Builder Default(Handler handler)
         {
-            _default = handler;
+            _core.Default(handler);
             return this;
         }
 
-        /// <summary>
-        /// Builds an immutable <see cref="Strategy{TIn, TOut}"/> from the configured branches.
-        /// </summary>
-        /// <returns>
-        /// A <see cref="Strategy{TIn, TOut}"/> containing all added predicate/handler pairs and
-        /// an optional default handler.
-        /// </returns>
-        /// <remarks>
-        /// The returned <see cref="Strategy{TIn, TOut}"/> is thread-safe and can be reused across calls.
-        /// </remarks>
         public Strategy<TIn, TOut> Build()
-        {
-            var predicates = _preds.ToArray();
-            var handlers = _handlers.ToArray();
-            var defaultHandler = _default ?? (static TOut (in TIn _) => default!);
+            => _core.Build(
+                fallbackDefault: DefaultResult,
+                projector: static (predicates, handlers, hasDefault, @default)
+                    => new Strategy<TIn, TOut>(predicates, handlers, hasDefault, @default));
 
-            return new Strategy<TIn, TOut>(
-                predicates,
-                handlers,
-                _default is not null,
-                defaultHandler);
-        }
-
-        /// <summary>
-        /// Builder context returned from <see cref="When(Predicate)"/> that allows pairing
-        /// a predicate with a handler.
-        /// </summary>
         public sealed class WhenBuilder
         {
             private readonly Builder _owner;
             private readonly Predicate _pred;
+            internal WhenBuilder(Builder owner, Predicate pred) => (_owner, _pred) = (owner, pred);
 
-            internal WhenBuilder(Builder owner, Predicate pred)
-                => (_owner, _pred) = (owner, pred);
-
-            /// <summary>
-            /// Associates the current predicate with a <paramref name="handler"/> and returns the parent builder.
-            /// </summary>
-            /// <param name="handler">The handler to execute when the predicate matches.</param>
-            /// <returns>The parent <see cref="Builder"/> instance for chaining.</returns>
-            /// <example>
-            /// <code language="csharp">
-            /// var strategy = Strategy&lt;int, string&gt;.Create()
-            ///     .When(i =&gt; i &gt; 0).Then(i =&gt; "positive")
-            ///     .When(i =&gt; i &lt; 0).Then(i =&gt; "negative")
-            ///     .Build();
-            /// </code>
-            /// </example>
             public Builder Then(Handler handler)
             {
-                _owner._preds.Add(_pred);
-                _owner._handlers.Add(handler);
+                _owner._core.Add(_pred, handler);
                 return _owner;
             }
         }

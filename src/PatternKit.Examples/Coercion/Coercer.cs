@@ -20,8 +20,8 @@ namespace PatternKit.Examples.Coercion;
 /// At runtime, <see cref="From(object?)"/> performs:
 /// </para>
 /// <list type="number">
-///   <item><description>Fast path: direct cast when <paramref name="v"/> is already <typeparamref name="T"/>.</description></item>
-///   <item><description>Strategy chain execution: first matching handler transforms <paramref name="v"/> to <typeparamref name="T"/>.</description></item>
+///   <item><description>Fast path: direct cast when input is already <typeparamref name="T"/>.</description></item>
+///   <item><description>Strategy chain execution: first matching handler transforms input to <typeparamref name="T"/>.</description></item>
 ///   <item><description>Default: returns <see langword="default"/> when no handler matches.</description></item>
 /// </list>
 /// <para>
@@ -34,7 +34,7 @@ namespace PatternKit.Examples.Coercion;
 ///   <item><description><see cref="JsonElement"/> boolean → <see cref="bool"/>.</description></item>
 ///   <item>
 ///     <description>
-///       Convertible fallback: if <paramref name="v"/> is <see cref="IConvertible"/> and the target underlying type is
+///       Convertible fallback: if input is <see cref="IConvertible"/> and the target underlying type is
 ///       primitive or <see cref="decimal"/>, uses <see cref="Convert.ChangeType(object?, System.Type, IFormatProvider?)"/> with
 ///       <see cref="CultureInfo.InvariantCulture"/>.
 ///     </description>

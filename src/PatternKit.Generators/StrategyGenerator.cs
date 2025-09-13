@@ -1,0 +1,329 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace PatternKit.Generators;
+
+[Generator]
+public sealed class StrategyGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext ctx)
+    {
+        // 1) Inject the attribute + enum so the user project always has them.
+        ctx.RegisterPostInitializationOutput(pi =>
+        {
+            pi.AddSource("GenerateStrategyAttribute.g.cs", AttributeSource);
+            pi.AddSource("StrategyKind.g.cs", StrategyKindSource);
+        });
+
+        // 2) Find every *occurrence* of our attribute.
+        var occurrences = ctx.SyntaxProvider.ForAttributeWithMetadataName(
+            fullyQualifiedMetadataName: "PatternKit.Generators.GenerateStrategyAttribute",
+            predicate: static (node, _) => node is ClassDeclarationSyntax,
+            transform: static (gasc, _) => gasc // one per attribute usage
+        );
+
+        // 3) Generate one class for each attribute.
+        ctx.RegisterSourceOutput(occurrences.Collect(), static (spc, items) =>
+        {
+            foreach (var occ in items)
+            {
+                // Each 'occ' should correspond to a single attribute instance.
+                // But GeneratorAttributeSyntaxContext.Attributes may contain several attrs on symbol,
+                // so pick the one matching the syntax we were triggered for.
+                var attr = GetExactAttributeForOccurrence(occ);
+                if (attr is null)
+                {
+                    Report(spc, "PKGEN001", "Unable to find matching attribute instance.", DiagnosticSeverity.Warning, occ.TargetNode.GetLocation());
+                    continue;
+                }
+
+                if (!TryRead(attr, out var name, out var inType, out var outType, out var kind, out var error))
+                {
+                    Report(spc, "PKGEN002", error ?? "Invalid attribute arguments.", DiagnosticSeverity.Warning, occ.TargetNode.GetLocation());
+                    continue;
+                }
+
+                var ns = occ.TargetSymbol.ContainingNamespace.IsGlobalNamespace
+                    ? "GlobalNamespace"
+                    : occ.TargetSymbol.ContainingNamespace.ToDisplayString();
+
+                var src = kind switch
+                {
+                    StrategyKind.Action => EmitAction(ns, name, inType),
+                    StrategyKind.Result => EmitResult(ns, name, inType, outType!),
+                    StrategyKind.Try => EmitTry(ns, name, inType, outType!),
+                    _ => null
+                };
+
+                if (!string.IsNullOrEmpty(src))
+                {
+                    spc.AddSource($"{Sanitize(name)}.g.cs", src!);
+                }
+            }
+        });
+    }
+
+    private static AttributeData? GetExactAttributeForOccurrence(GeneratorAttributeSyntaxContext occ)
+    {
+        // We were triggered by a specific AttributeSyntax; match it back to AttributeData
+        var targetAttrSyntax = (AttributeSyntax)occ.Attributes[0].ApplicationSyntaxReference!.GetSyntax();
+        foreach (var a in occ.Attributes)
+        {
+            var syn = a.ApplicationSyntaxReference?.GetSyntax();
+            if (syn is AttributeSyntax attrSyn && attrSyn == targetAttrSyntax)
+                return a;
+        }
+
+        return null;
+    }
+
+    private static bool TryRead(
+        AttributeData a,
+        out string name,
+        out string inType,
+        out string? outType,
+        out StrategyKind kind,
+        out string? error)
+    {
+        name = default!;
+        inType = default!;
+        outType = null;
+        kind = default;
+        error = null;
+
+        try
+        {
+            if (a.ConstructorArguments.Length == 3)
+            {
+                // (string name, Type inType, StrategyKind kind)
+                name = (string)a.ConstructorArguments[0].Value!;
+                inType = ((INamedTypeSymbol)a.ConstructorArguments[1].Value!).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                kind = (StrategyKind)(int)a.ConstructorArguments[2].Value!;
+            }
+            else if (a.ConstructorArguments.Length == 4)
+            {
+                // (string name, Type inType, Type outType, StrategyKind kind)
+                name = (string)a.ConstructorArguments[0].Value!;
+                inType = ((INamedTypeSymbol)a.ConstructorArguments[1].Value!).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                outType = ((INamedTypeSymbol)a.ConstructorArguments[2].Value!).ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                kind = (StrategyKind)(int)a.ConstructorArguments[3].Value!;
+            }
+            else
+            {
+                error = "Unexpected constructor arity for GenerateStrategyAttribute.";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
+        }
+    }
+
+    private static string EmitAction(string ns, string name, string inType)
+    {
+        return $$"""
+                 #nullable enable
+                 // <auto-generated />
+                 using PatternKit.Creational.Builder;
+
+                 namespace {{ns}};
+
+                 public sealed partial class {{name}}
+                 {
+                     public delegate bool Predicate(in {{inType}} input);
+                     public delegate void ActionHandler(in {{inType}} input);
+
+                     private readonly Predicate[] _preds;
+                     private readonly ActionHandler[] _actions;
+                     private readonly bool _hasDefault;
+                     private readonly ActionHandler _default;
+
+                     private static ActionHandler Noop => static (in {{inType}} _) => { };
+
+                     private {{name}}(Predicate[] p, ActionHandler[] a, bool hasDef, ActionHandler def)
+                         => (_preds, _actions, _hasDefault, _default) = (p, a, hasDef, def);
+
+                     public void Execute(in {{inType}} input)
+                     {
+                         var p = _preds;
+                         for (int i = 0; i < p.Length; i++)
+                             if (p[i](in input)) { _actions[i](in input); return; }
+                         if (_hasDefault) { _default(in input); return; }
+                         PatternKit.Common.Throw.NoStrategyMatched();
+                     }
+
+                     public bool TryExecute(in {{inType}} input)
+                     {
+                         var p = _preds;
+                         for (int i = 0; i < p.Length; i++)
+                             if (p[i](in input)) { _actions[i](in input); return true; }
+                         if (_hasDefault) { _default(in input); return true; }
+                         return false;
+                     }
+
+                     public sealed class Builder
+                     {
+                         private readonly BranchBuilder<Predicate, ActionHandler> _core = BranchBuilder<Predicate, ActionHandler>.Create();
+                         public WhenBuilder When(Predicate pred) => new(this, pred);
+                         public Builder Default(ActionHandler action) { _core.Default(action); return this; }
+                         public {{name}} Build() => _core.Build(Noop, static (p, a, hasDef, def) => new {{name}}(p, a, hasDef, def));
+
+                         public sealed class WhenBuilder
+                         {
+                             private readonly Builder _owner; private readonly Predicate _pred;
+                             internal WhenBuilder(Builder owner, Predicate pred) { _owner = owner; _pred = pred; }
+                             public Builder Then(ActionHandler action) { _owner._core.Add(_pred, action); return _owner; }
+                         }
+                     }
+
+                     public static Builder Create() => new();
+                 }
+                 """;
+    }
+
+    private static string EmitResult(string ns, string name, string inType, string outType)
+    {
+        return $$"""
+                 #nullable enable
+                 // <auto-generated />
+                 using PatternKit.Creational.Builder;
+
+                 namespace {{ns}};
+
+                 public sealed partial class {{name}}
+                 {
+                     public delegate bool Predicate(in {{inType}} input);
+                     public delegate {{outType}} Handler(in {{inType}} input);
+
+                     private readonly Predicate[] _preds;
+                     private readonly Handler[] _handlers;
+                     private readonly bool _hasDefault;
+                     private readonly Handler _default;
+
+                     private static Handler DefaultRes => static (in {{inType}} _) => default!;
+
+                     private {{name}}(Predicate[] p, Handler[] h, bool hasDef, Handler def)
+                         => (_preds, _handlers, _hasDefault, _default) = (p, h, hasDef, def);
+
+                     public {{outType}} Execute(in {{inType}} input)
+                     {
+                         var p = _preds;
+                         for (int i = 0; i < p.Length; i++)
+                             if (p[i](in input)) return _handlers[i](in input);
+                         return _hasDefault ? _default(in input) : PatternKit.Common.Throw.NoStrategyMatched<{{outType}}>();
+                     }
+
+                     public sealed class Builder
+                     {
+                         private readonly BranchBuilder<Predicate, Handler> _core = BranchBuilder<Predicate, Handler>.Create();
+                         public WhenBuilder When(Predicate pred) => new(this, pred);
+                         public Builder Default(Handler handler) { _core.Default(handler); return this; }
+                         public {{name}} Build() => _core.Build(DefaultRes, static (p, h, hasDef, def) => new {{name}}(p, h, hasDef, def));
+
+                         public sealed class WhenBuilder
+                         {
+                             private readonly Builder _owner; private readonly Predicate _pred;
+                             internal WhenBuilder(Builder owner, Predicate pred) { _owner = owner; _pred = pred; }
+                             public Builder Then(Handler handler) { _owner._core.Add(_pred, handler); return _owner; }
+                         }
+                     }
+
+                     public static Builder Create() => new();
+                 }
+                 """;
+    }
+
+    private static string EmitTry(string ns, string name, string inType, string outType)
+    {
+        return $$"""
+                 #nullable enable
+                 // <auto-generated />
+                 using PatternKit.Creational.Builder;
+
+                 namespace {{ns}};
+
+                 public sealed partial class {{name}}
+                 {
+                     public delegate bool TryHandler(in {{inType}} input, out {{outType}}? result);
+
+                     private readonly TryHandler[] _handlers;
+                     private {{name}}(TryHandler[] handlers) => _handlers = handlers;
+
+                     public bool Execute(in {{inType}} input, out {{outType}}? result)
+                     {
+                         foreach (var h in _handlers)
+                             if (h(in input, out result))
+                                 return true;
+                         result = default;
+                         return false;
+                     }
+
+                     public sealed class Builder
+                     {
+                         private readonly PatternKit.Creational.Builder.ChainBuilder<TryHandler> _core
+                             = PatternKit.Creational.Builder.ChainBuilder<TryHandler>.Create();
+
+                         public Builder Always(TryHandler handler) { _core.Add(handler); return this; }
+                         public WhenBuilder When(bool condition) => new(this, condition);
+                         public Builder Finally(TryHandler handler) { _core.Add(handler); return this; }
+                         public Builder Or => this;
+
+                         public {{name}} Build() => _core.Build(static hs => new {{name}}(hs));
+
+                         public readonly struct WhenBuilder
+                         {
+                             private readonly Builder _owner; private readonly bool _cond;
+                             internal WhenBuilder(Builder owner, bool cond) { _owner = owner; _cond = cond; }
+                             public WhenBuilder Add(TryHandler handler) { _owner._core.AddIf(_cond, handler); return this; }
+                             public WhenBuilder And(TryHandler handler) => Add(handler);
+                             public Builder End => _owner;
+                             public Builder Or => _owner;
+                             public Builder Finally(TryHandler handler) => _owner.Finally(handler);
+                         }
+                     }
+
+                     public static Builder Create() => new();
+                 }
+                 """;
+    }
+
+    private static string Sanitize(string s)
+        => s.Replace('<', '_').Replace('>', '_').Replace('.', '_');
+
+    private static void Report(SourceProductionContext spc, string id, string message, DiagnosticSeverity severity, Location? loc)
+    {
+        var descriptor = new DiagnosticDescriptor(id, id, message, "PatternKit.Generators", severity, isEnabledByDefault: true);
+        spc.ReportDiagnostic(Diagnostic.Create(descriptor, loc));
+    }
+
+    private const string AttributeSource = """
+                                           // <auto-generated />
+                                           #nullable enable
+                                           namespace PatternKit.Generators;
+                                           [System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+                                           public sealed class GenerateStrategyAttribute : System.Attribute
+                                           {
+                                               public string Name { get; }
+                                               public System.Type InType { get; }
+                                               public System.Type? OutType { get; }
+                                               public StrategyKind Kind { get; }
+
+                                               public GenerateStrategyAttribute(string name, System.Type inType, StrategyKind kind)
+                                               { Name = name; InType = inType; Kind = kind; }
+
+                                               public GenerateStrategyAttribute(string name, System.Type inType, System.Type outType, StrategyKind kind)
+                                               { Name = name; InType = inType; OutType = outType; Kind = kind; }
+                                           }
+                                           """;
+
+    private const string StrategyKindSource = """
+                                              // <auto-generated />
+                                              #nullable enable
+                                              namespace PatternKit.Generators;
+                                              public enum StrategyKind { Action, Result, Try }
+                                              """;
+}

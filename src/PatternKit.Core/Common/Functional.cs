@@ -13,7 +13,7 @@ namespace PatternKit.Common;
 /// <list type="bullet">
 ///   <item><description><see cref="Some(T)"/> to create a present value.</description></item>
 ///   <item><description><see cref="None"/> to represent absence.</description></item>
-///   <item><description><see cref="OrDefault(T?)"/> / <see cref="OrThrow(string?)"/> / <see cref="Map{TOut}(System.Func{T?, TOut?})"/> for use.</description></item>
+///   <item><description><see cref="OrDefault(T?)"/> / <see cref="OrThrow(string?)"/> / <see cref="Map{TOut}"/> for use.</description></item>
 /// </list>
 /// <para>It is immutable and does not box primitives.</para>
 /// </remarks>

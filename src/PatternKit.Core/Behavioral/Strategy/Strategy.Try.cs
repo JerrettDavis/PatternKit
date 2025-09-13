@@ -1,3 +1,5 @@
+using PatternKit.Creational.Builder;
+
 namespace PatternKit.Behavioral.Strategy;
 
 /// <summary>
@@ -87,97 +89,49 @@ public sealed class TryStrategy<TIn, TOut>
     /// </remarks>
     public sealed class Builder
     {
-        private readonly List<TryHandler> _handlers = new(8);
+        private readonly ChainBuilder<TryHandler> _core = ChainBuilder<TryHandler>.Create();
 
-        /// <summary>
-        /// Adds a handler that is always included in the pipeline.
-        /// </summary>
-        /// <param name="handler">The handler delegate to add.</param>
-        /// <returns>The current <see cref="Builder"/> instance for chaining.</returns>
-        /// <remarks>Handlers are evaluated in the order they are added.</remarks>
         public Builder Always(TryHandler handler)
         {
-            _handlers.Add(handler);
+            _core.Add(handler);
             return this;
         }
 
-        /// <summary>
-        /// Starts a conditional block where handlers are added only if the <paramref name="condition"/> evaluates to <see langword="true"/>.
-        /// </summary>
-        /// <param name="condition">
-        /// A function evaluated once during build time to determine whether
-        /// handlers inside the block should be added.
-        /// </param>
-        /// <returns>A <see cref="WhenBuilder"/> for adding conditional handlers.</returns>
         public WhenBuilder When(Func<bool> condition) => new(this, condition());
 
-        /// <summary>
-        /// Adds a handler to the end of the pipeline, typically as a fallback.
-        /// </summary>
-        /// <param name="handler">The handler to append.</param>
-        /// <returns>The current <see cref="Builder"/> instance for chaining.</returns>
         public Builder Finally(TryHandler handler)
         {
-            _handlers.Add(handler);
+            _core.Add(handler);
             return this;
         }
 
-        /// <summary>
-        /// Provides syntactic sugar for chaining fluent calls.
-        /// </summary>
         public Builder Or => this;
 
-        /// <summary>
-        /// Builds the immutable <see cref="TryStrategy{TIn, TOut}"/> from the collected handlers.
-        /// </summary>
-        /// <returns>A compiled <see cref="TryStrategy{TIn, TOut}"/> ready for execution.</returns>
-        public TryStrategy<TIn, TOut> Build() => new(_handlers.ToArray());
+        public TryStrategy<TIn, TOut> Build()
+            => _core.Build(static hs => new TryStrategy<TIn, TOut>(hs));
 
-        /// <summary>
-        /// Represents a conditional builder context for adding handlers when a
-        /// <see cref="When(Func{bool})"/> condition is <see langword="true"/>.
-        /// </summary>
         public readonly struct WhenBuilder
         {
             private readonly Builder _owner;
             private readonly bool _cond;
 
-            internal WhenBuilder(Builder owner, bool cond) => (_owner, _cond) = (owner, cond);
+            internal WhenBuilder(Builder owner, bool cond)
+            {
+                _owner = owner;
+                _cond = cond;
+            }
 
-            /// <summary>
-            /// Adds a handler to the conditional block.
-            /// </summary>
-            /// <param name="handler">The handler to add.</param>
-            /// <returns>The current <see cref="WhenBuilder"/> instance for further chaining.</returns>
-            /// <remarks>Ignored if the condition supplied to <see cref="Builder.When(Func{bool})"/> was <see langword="false"/>.</remarks>
             public WhenBuilder Add(TryHandler handler)
             {
-                if (_cond) _owner._handlers.Add(handler);
+                _owner._core.AddIf(_cond, handler);
                 return this;
             }
 
-            /// <summary>
-            /// Adds an additional handler in the same conditional block.
-            /// </summary>
-            /// <param name="handler">The handler to add.</param>
-            /// <returns>The current <see cref="WhenBuilder"/> instance for further chaining.</returns>
             public WhenBuilder And(TryHandler handler) => Add(handler);
 
-            /// <summary>
-            /// Returns control back to the parent <see cref="Builder"/> to continue chaining.
-            /// </summary>
             public Builder End => _owner;
-
-            /// <summary>
-            /// Alias for <see cref="End"/> for more natural chaining.
-            /// </summary>
             public Builder Or => _owner;
 
-            /// <summary>
-            /// Adds a final (fallback) handler and returns the parent <see cref="Builder"/>.
-            /// </summary>
-            /// <param name="handler">The handler to add.</param>
-            /// <returns>The parent <see cref="Builder"/>.</returns>
             public Builder Finally(TryHandler handler) => _owner.Finally(handler);
         }
     }

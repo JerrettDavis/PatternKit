@@ -31,7 +31,7 @@ namespace PatternKit.Common;
 /// }
 /// </code>
 /// </example>
-static class Throw
+public static class Throw
 {
     /// <summary>
     /// Throws an <see cref="InvalidOperationException"/> indicating that no strategy branch matched
