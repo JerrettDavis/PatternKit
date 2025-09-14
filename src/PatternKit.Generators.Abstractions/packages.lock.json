@@ -16,9 +16,6 @@
         "resolved": "1.1.0",
         "contentHash": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A=="
       }
-    },
-    ".NETStandard,Version=v2.1": {},
-    "net8.0": {},
-    "net9.0": {}
+    }
   }
 }
