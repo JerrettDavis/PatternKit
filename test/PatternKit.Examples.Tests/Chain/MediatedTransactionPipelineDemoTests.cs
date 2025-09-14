@@ -5,6 +5,8 @@ using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.Chain;
 
+
+[Collection("Culture")]
 [Feature("Mediated Transaction pipeline – cash + loyalty + cigarettes")]
 public sealed class MediatedTransactionPipelineDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {

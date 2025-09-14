@@ -9,6 +9,8 @@ using PaymentPipeline = PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipel
 
 namespace PatternKit.Examples.Tests.Chain;
 
+
+[Collection("Culture")]
 [Feature("Config-driven transaction pipeline (DI + fluent chains)")]
 public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
