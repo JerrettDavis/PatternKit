@@ -35,11 +35,13 @@
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
+
     <PropertyGroup>
         <IsPackable>false</IsPackable>
         <IsPackable Condition="$([System.String]::Copy('$(MSBuildProjectName)').EndsWith('.Tests'))">false</IsPackable>
-        <IsPackable Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('TinyBDD'))">true</IsPackable>
+        <IsPackable Condition="$([System.String]::Copy('$(MSBuildProjectName)').StartsWith('PatternKit'))">true</IsPackable>
     </PropertyGroup>
+
 
     <ItemGroup>
         <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\"/>
