@@ -37,11 +37,11 @@ jobs:
           dotnet tool restore
 
       - name: Build (Release)
-        run: dotnet build PatternKit.sln --configuration Release --no-restore /p:ContinuousIntegrationBuild=true
+        run: dotnet build PatternKit.slnx --configuration Release --no-restore /p:ContinuousIntegrationBuild=true
 
       - name: Test with coverage
         run: |
-          dotnet test PatternKit.sln \
+          dotnet test PatternKit.slnx \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
@@ -139,7 +139,7 @@ jobs:
 
       - name: Build (Release)
         run: >
-          dotnet build PatternKit.sln
+          dotnet build PatternKit.slnx
           --configuration Release
           --no-restore
           /p:ContinuousIntegrationBuild=true
@@ -150,7 +150,7 @@ jobs:
 
       - name: Test with coverage (Release)
         run: |
-          dotnet test PatternKit.sln \
+          dotnet test PatternKit.slnx \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
@@ -160,7 +160,7 @@ jobs:
 
       - name: Pack (all packable projects)
         run: >
-          dotnet pack PatternKit.sln
+          dotnet pack PatternKit.slnx
           --configuration Release
           --no-build
           --output ./artifacts
