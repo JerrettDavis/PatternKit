@@ -8,7 +8,7 @@ namespace PatternKit.Creational.Builder;
 /// <typeparam name="THandler">Delegate type of the handler (e.g., TOut Handler(in TIn) or void Action(in TIn)).</typeparam>
 public sealed class BranchBuilder<TPred, THandler>
 {
-    private readonly List<TPred> _preds = new(8);
+    private readonly List<TPred> _predicates = new(8);
     private readonly List<THandler> _handlers = new(8);
     private THandler? _default;
 
@@ -21,7 +21,7 @@ public sealed class BranchBuilder<TPred, THandler>
     /// <summary>Adds a predicate/handler pair.</summary>
     public BranchBuilder<TPred, THandler> Add(TPred predicate, THandler handler)
     {
-        _preds.Add(predicate);
+        _predicates.Add(predicate);
         _handlers.Add(handler);
         return this;
     }
@@ -46,10 +46,10 @@ public sealed class BranchBuilder<TPred, THandler>
         THandler fallbackDefault,
         Func<TPred[], THandler[], bool, THandler, TProduct> projector)
     {
-        var preds = _preds.ToArray();
+        var predicates = _predicates.ToArray();
         var handlers = _handlers.ToArray();
         var hasDefault = _default is not null;
         var def = _default ?? fallbackDefault;
-        return projector(preds, handlers, hasDefault, def);
+        return projector(predicates, handlers, hasDefault, def);
     }
 }

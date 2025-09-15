@@ -5,140 +5,134 @@ using Xunit.Abstractions;
 
 namespace PatternKit.Tests.Behavioral.Strategy;
 
-[Feature("Strategy (Try)")]
-public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)
+[Feature("Strategy<TIn,TOut> (first-match-wins, returns value)")]
+public sealed class StrategyTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
-    private readonly record struct TryResult<TOut>(bool Matched, TOut? Value);
-
-    private static bool IsEven(in int x) => (x & 1) == 0;
-    private static bool IsDiv3(in int x) => x % 3 == 0;
+    // ---------- Shared predicate/handler method pointers ----------
+    private static bool IsPositive(in int x) => x > 0;
     private static bool IsNegative(in int x) => x < 0;
-    private static bool IsNull<T>(in T? x) => x is null;
-    
-    private static string HandleNull(in object? _) => "NULL";
+    private static bool IsNonNegative(in int x) => x >= 0;
+    private static bool IsEven(in int x)       => (x & 1) == 0;
 
-    private static bool EvenHandler(in int x, out string? label)
+    private static string LabelPositive(in int x) => $"pos:{x}";
+    private static string LabelNegative(in int x) => $"neg:{x}";
+    private static string LabelFirst   (in int _) => "first";
+    private static string LabelSecond  (in int _) => "second";
+    private static string LabelZero    (in int _) => "zero";
+    private static string LabelOther   (in int _) => "other";
+    private static string LabelEven    (in int _) => "even";
+
+    // Context keeps the strategy + last result/exception so TinyBDD type stays stable
+    private sealed record Ctx(Strategy<int, string> S, string? Last = null, Exception? Ex = null);
+
+    // ---------- Builders ----------
+    private static Ctx Build_PosNeg_DefaultZero()
+        => new(
+            Strategy<int, string>.Create()
+                .When(IsPositive).Then(LabelPositive)
+                .When(IsNegative).Then(LabelNegative)
+                .Default(LabelZero)
+                .Build());
+
+    private static Ctx Build_PosOnly_NoDefault()
+        => new(
+            Strategy<int, string>.Create()
+                .When(IsPositive).Then(LabelPositive)
+                .Build());
+
+    private static Ctx Build_Order_NonNeg_Then_Even()
+        => new(
+            Strategy<int, string>.Create()
+                .When(IsNonNegative).Then(LabelFirst)
+                .When(IsEven).Then(LabelSecond)
+                .Default(LabelOther)
+                .Build());
+
+    private static Ctx Build_Order_Even_Then_NonNeg()
+        => new(
+            Strategy<int, string>.Create()
+                .When(IsEven).Then(LabelFirst)
+                .When(IsNonNegative).Then(LabelSecond)
+                .Default(LabelOther)
+                .Build());
+
+    private static Ctx Build_Even_With_DefaultOther()
+        => new(
+            Strategy<int, string>.Create()
+                .When(IsEven).Then(LabelEven)
+                .Default(LabelOther)
+                .Build());
+
+    // ---------- Helpers ----------
+    private static Ctx Exec(Ctx c, int x)
     {
-        if (IsEven(in x))
+        var v = x; // need a variable for 'in'
+        var r = c.S.Execute(in v);
+        return c with { Last = r, Ex = null };
+    }
+
+    private static Ctx ExecCatch(Ctx c, int x)
+    {
+        try
         {
-            label = "even";
-            return true;
+            var v = x; // need a variable for 'in'
+            var r = c.S.Execute(in v);
+            return c with { Last = r, Ex = null };
         }
-
-        label = null;
-        return false;
-    }
-
-    private static bool Div3Handler(in int x, out string? label)
-    {
-        if (IsDiv3(in x))
+        catch (Exception ex)
         {
-            label = "div3";
-            return true;
+            return c with { Ex = ex };
         }
-
-        label = null;
-        return false;
     }
 
-    private static bool NegativeHandler(in int x, out string? label)
-    {
-        if (IsNegative(in x))
-        {
-            label = "neg";
-            return true;
-        }
+    // ---------- Scenarios ----------
 
-        label = null;
-        return false;
-    }
-
-    private static bool Fallback(in int _, out string? label)
-    {
-        label = "other";
-        return true;
-    }
-
-    [Scenario("First matching handler wins, order respected")]
+    [Scenario("First matching branch wins; default runs when none match")]
     [Fact]
-    public async Task FirstMatchWins()
+    public async Task FirstMatch_And_Default()
     {
-        await Given("a TryStrategy that checks even, then div3, then fallback", BuildPipeline)
-            .When("classifying 6", s => Execute(s, 6))
-            .Then("should match 'even' (even comes before div3)", r => r is { Matched: true, Value: "even" })
+        await Given("a strategy with >0, <0, and default 'zero'", Build_PosNeg_DefaultZero)
+            .When("executing with 5", c => Exec(c, 5))
+            .Then("returns 'pos:5'", c => c.Last == "pos:5")
+            .When("executing with -3", c => Exec(c, -3))
+            .Then("returns 'neg:-3'", c => c.Last == "neg:-3")
+            .When("executing with 0", c => Exec(c, 0))
+            .Then("returns 'zero'", c => c.Last == "zero")
             .AssertPassed();
-
-        static TryStrategy<int, string> BuildPipeline()
-            => TryStrategy<int, string>.Create()
-                .Always(EvenHandler) // 6 is even; should match here
-                .Or.When(() => true).Add(Div3Handler)
-                .Finally(Fallback)
-                .Build();
-
-        static TryResult<string> Execute(TryStrategy<int, string> s, int x)
-            => s.Execute(in x, out var label) ? new(true, label) : new(false, null);
     }
 
-    [Scenario("Conditional .When adds handlers only when condition is true")]
+    [Scenario("Execute throws when nothing matches and no default is configured")]
     [Fact]
-    public async Task ConditionalWhen()
+    public async Task Throws_Without_Default()
     {
-        await Given("a flag that enables NEGATIVE handler", () => true)
-            .When("building the pipeline with that flag", BuildWithFlag)
-            .And("classifying -2", s => Execute(s, -2))
-            .Then("should match 'neg' because the conditional handler was included", r => r is { Matched: true, Value: "neg" })
+        await Given("a strategy with only >0 branch (no default)", Build_PosOnly_NoDefault)
+            .When("executing with 0", c => ExecCatch(c, 0))
+            .Then("captures InvalidOperationException", c => c.Ex is InvalidOperationException)
             .AssertPassed();
-
-        await Given("a flag that disables NEGATIVE handler", () => false)
-            .When("building the pipeline with that flag", BuildWithFlag)
-            .And("classifying -2", s => Execute(s, -2))
-            .Then("should fall through to fallback 'other'", r => r is { Matched: true, Value: "other" })
-            .AssertPassed();
-        return;
-
-        static TryStrategy<int, string> BuildWithFlag(bool includeNegative)
-            => TryStrategy<int, string>.Create()
-                .When(() => includeNegative).Add(NegativeHandler).Or
-                .Always(Div3Handler)
-                .Finally(Fallback)
-                .Build();
-
-        static TryResult<string> Execute(TryStrategy<int, string> s, int x)
-            => s.Execute(in x, out var label) ? new(true, label) : new(false, null);
     }
 
-    [Scenario("No handler matches and no fallback -> returns false")]
+    [Scenario("Registration order is preserved; only the first matching handler executes")]
     [Fact]
-    public async Task NoMatchReturnsFalse()
+    public async Task Order_Preserved_First_Match_Only()
     {
-        await Given("a TryStrategy without fallback (only matches even)", BuildNoFallback)
-            .When("classifying 7", s => Execute(s, 7))
-            .Then("should not match", r => r is { Matched: false, Value: null })
+        await Given("NonNegative before Even", Build_Order_NonNeg_Then_Even)
+            .When("executing with 2 (matches both)", c => Exec(c, 2))
+            .Then("result is from the first branch", c => c.Last == "first")
             .AssertPassed();
-        return;
 
-        static TryStrategy<int, string> BuildNoFallback()
-            => TryStrategy<int, string>.Create()
-                .Always(EvenHandler)
-                .Build();
-
-        static TryResult<string> Execute(TryStrategy<int, string> s, int x)
-            => s.Execute(in x, out var label) ? new(true, label) : new(false, null);
+        await Given("Even before NonNegative", Build_Order_Even_Then_NonNeg)
+            .When("executing with 2 (matches both)", c => Exec(c, 2))
+            .Then("result is from the first (even) branch", c => c.Last == "first")
+            .AssertPassed();
     }
-    
-    [Scenario("No handler matched and no default -> throws")]
+
+    [Scenario("Default returns a value when all predicates fail")]
     [Fact]
-    public Task NoHandlerMatchesNoDefault_Throws()
+    public async Task Default_Returns_Value()
     {
-        return Given("a Strategy without default (only matches null)", BuildNoDefault)
-            .When("executing with 42", s => Record.Exception(() => s.Execute(42)))
-            .Then("should throw NoStrategyMatchedException", ex => ex is InvalidOperationException)
+        await Given("a strategy with only Even branch plus default 'other'", Build_Even_With_DefaultOther)
+            .When("executing with 3 (no predicate match)", c => Exec(c, 3))
+            .Then("returns 'other'", c => c.Last == "other")
             .AssertPassed();
-
-        static Strategy<object?, string> BuildNoDefault()
-            => Strategy<object?, string>.Create()
-                .When(IsNull).Then(HandleNull)
-                .Build();
     }
-    
 }

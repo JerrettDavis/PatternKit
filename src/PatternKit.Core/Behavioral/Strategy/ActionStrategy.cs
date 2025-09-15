@@ -118,13 +118,12 @@ public sealed class ActionStrategy<TIn>
                 return true;
             }
 
-        if (_hasDefault)
-        {
-            _default(in input);
-            return true;
-        }
+        if (!_hasDefault)
+            return false;
+        
+        _default(in input);
+        return true;
 
-        return false;
     }
 
     /// <summary>

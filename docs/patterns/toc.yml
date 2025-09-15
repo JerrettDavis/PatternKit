@@ -1,0 +1,33 @@
+- name: Patterns
+  href: index.md
+  items:
+    - name: Behavioral
+      items:
+        - name: Chain
+          items:
+            - name: Behavioral.Chain.ActionChain
+              href: behavioral/chain/actionchain.md
+            - name: Behavioral.Chain.ResultChain
+              href: behavioral/chain/resultchain.md
+        - name: Strategy
+          items:
+            - name: Behavioral.Strategy.Strategy
+              href: behavioral/strategy/strategy.md
+            - name: Behavioral.Strategy.TryStrategy
+              href: behavioral/strategy/trystrategy.md
+            - name: Behavioral.Strategy.ActionStrategy
+              href: behavioral/strategy/actionstrategy.md
+            - name: Behavioral.Strategy.AsyncStrategy
+              href: behavioral/strategy/asyncstrategy.md
+    - name: Creational
+      items:
+        - name: Builder
+          items:
+            - name: Creational.Builder.BranchBuilder
+              href: creational/builder/branchbuilder.md
+            - name: Creational.Builder.ChainBuilder
+              href: creational/builder/chainbuilder.md
+            - name: Creational.Builder.Composer
+              href: creational/builder/composer.md
+            - name: Creational.Builder.MutableBuilder
+              href: creational/builder/mutablebuilder.md

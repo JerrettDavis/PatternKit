@@ -1,0 +1,20 @@
+- name: Examples & Demos
+  href: index.md
+  
+- name: Auth & Logging with `ActionChain<HttpRequest>`
+  href: auth-logging-chain.md
+  
+- name: Strategy-Based Data Coercion
+  href: coercer.md
+  
+- name: Composed, Preference-Aware Notification Strategy (Email/SMS/Push/IM)
+  href: composed-notification-strategy.md
+  
+- name: Mediated Transaction Pipeline 
+  href: mediated-transaction-pipeline.md
+  
+- name: Configuration-Driven Transaction Pipeline
+  href: config-driven-transaction-pipeline.md
+  
+- name: Minimal Web Request Router
+  href: mini-router.md

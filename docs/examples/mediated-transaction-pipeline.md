@@ -144,26 +144,24 @@ Always logs `"done."`.
 
 ## End-to-end scenario (from tests)
 
-**Feature:** Cash + loyalty + two cigarettes
-**Given:** customer age 25, loyalty `"LOYAL-123"`, tenders: `$50` cash, items:
 
-* `CIGS` \$10.96 × 1 (age-restricted, bundle `CIGS`)
-* `CIGS` \$10.97 × 1 (age-restricted, bundle `CIGS`)
+- **Feature:** Cash + loyalty + two cigarettes
+  - **Given:** customer age 25, loyalty `"LOYAL-123"`, tenders: `$50` cash, items:
+    * `CIGS` \$10.96 × 1 (age-restricted, bundle `CIGS`)
+    * `CIGS` \$10.97 × 1 (age-restricted, bundle `CIGS`)
+  - **Then** the pipeline computes:
+    * Subtotal = **21.93**
+    * Discounts:
 
-**Then** the pipeline computes:
-
-* Subtotal = **21.93**
-* Discounts:
-
-    * Cash 2% = **0.44**
-    * Loyalty 5% = **1.10**
-    * Bundle deal = **2.00**
-    * **Total discounts = 3.54**
-* Tax (8.75% of 21.93 − 3.54 = 18.39) = **1.61**
-* Grand total = **20.00**
-* Cash given 50 → Change = **30.00**
-* Terminal result = **Ok=true, Code="paid"**
-* Log contains: `"preauth: ok"`, individual discount entries, `"tax:"`, `"total:"`, and `"done."`
+      * Cash 2% = **0.44**
+      * Loyalty 5% = **1.10**
+      * Bundle deal = **2.00**
+      * **Total discounts = 3.54**
+    * Tax (8.75% of 21.93 − 3.54 = 18.39) = **1.61**
+    * Grand total = **20.00**
+    * Cash given 50 → Change = **30.00**
+    * Terminal result = **Ok=true, Code="paid"**
+    * Log contains: `"preauth: ok"`, individual discount entries, `"tax:"`, `"total:"`, and `"done."`
 
 > This is codified in `MediatedTransactionPipelineDemoTests` using TinyBDD.
 

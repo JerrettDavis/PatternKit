@@ -3,4 +3,12 @@
 
 - name: API Reference
   href: api/
-  homepage: api/toc.md
+  homepage: api/
+  
+- name: Patterns
+  href: patterns/
+  homepage: patterns/
+  
+- name: Examples
+  href: examples/
+  homepage: examples/
