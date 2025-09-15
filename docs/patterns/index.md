@@ -58,6 +58,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Creational.Builder.MutableBuilder](creational/builder/mutablebuilder.md)**
   A lightweight base for fluent, mutable configuration objects.
 
+* **[Creational.Factory](creational/factory/factory.md)**
+  Key → creator mapping with optional default; immutable and allocation-light.
+
 ---
 
 ## Where to see them in action

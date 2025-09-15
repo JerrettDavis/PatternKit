@@ -31,3 +31,7 @@
               href: creational/builder/composer.md
             - name: Creational.Builder.MutableBuilder
               href: creational/builder/mutablebuilder.md
+        - name: Factory
+          items:
+            - name: Creational.Factory
+              href: creational/factory/factory.md

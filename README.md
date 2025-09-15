@@ -102,17 +102,6 @@ We keep tests **behavior-driven**, **readable**, and **high coverage**.
 
 ---
 
-## 🏗 Roadmap
-
-* [x] `Strategy<TIn, TOut>` and `TryStrategy<TIn, TOut>`
-* [x] `Coercer<T>` example for declarative type conversion pipelines
-* [ ] Chain of Responsibility (fluent `.Next(...)`)
-* [ ] Source generator for Factory pattern (`IFooFactory` → auto-registration)
-* [ ] Observer pattern with strongly-typed events
-* [ ] Facade & Adapter code-gen helpers
-* [ ] Documentation site powered by DocFX
-
----
 
 ## 💡 Design Goals
 
