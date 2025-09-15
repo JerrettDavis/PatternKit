@@ -62,10 +62,10 @@ if (parser.Execute("123", out var value))
 
 PatternKit will ultimately support the full spectrum of **creational**, **structural**, and **behavioral** patterns:
 
-| Category       | Patterns ✓ = Implemented                                                                                                                                                                                                                                                                                                                       |
-| -------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory](xref:PatternKit.Creational) (planned) • [Builder](xref:PatternKit.Creational.Builder) (planned) • Prototype (planned) • Singleton (planned)                                                                                                                                                                                          |
-| **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                    |
+| Category       | Patterns ✓ = Implemented                                                                                                                                                                                                                                                                                                                    |
+| -------------- |---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Creational** | Factory (planned) • [Builder](xref:PatternKit.Creational.Builder) (planned) • Prototype (planned) • Singleton (planned)                                                                                                                                                                                          |
+| **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                 |
 | **Behavioral** | [Strategy](xref:PatternKit.Behavioral.Strategy.Strategy`2) ✓ • [TryStrategy](xref:PatternKit.Behavioral.Strategy.TryStrategy`2) ✓ • Chain of Responsibility (planned) • Command (planned) • Iterator (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
 Each pattern ships with:
@@ -97,15 +97,4 @@ public class StrategyTests : TinyBddXunitBase
     }
 }
 ```
-
----
-
-## 🔗 Explore the API
-
-* [Behavioral Patterns](xref:PatternKit.Behavioral)
-* [Creational Patterns](xref:PatternKit.Creational)
-* [Structural Patterns](xref:PatternKit.Structural)
-* [Common Utilities](xref:PatternKit.Common)
-
-> **Tip:** Use the search bar in the left navigation panel to quickly find classes, methods, and examples.
 

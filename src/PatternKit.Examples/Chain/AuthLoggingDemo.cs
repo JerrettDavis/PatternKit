@@ -14,13 +14,6 @@ namespace PatternKit.Examples.Chain;
 public readonly record struct HttpRequest(string Method, string Path, IReadOnlyDictionary<string, string> Headers);
 
 /// <summary>
-/// Minimal HTTP-ish response. Included for completeness; not used by this specific demo.
-/// </summary>
-/// <param name="Status">HTTP status code.</param>
-/// <param name="Body">Payload body (if any).</param>
-public readonly record struct HttpResponse(int Status, string Body);
-
-/// <summary>
 /// Demonstrates an <see cref="ActionChain{T}"/> over <see cref="HttpRequest"/> that composes
 /// request-id logging and an auth gate for <c>/admin/*</c> without <c>if</c>/<c>else</c> ladders.
 /// </summary>
@@ -32,19 +25,19 @@ public readonly record struct HttpResponse(int Status, string Body);
 ///   <item>
 ///     <description>
 ///       <b>Conditional log (continue):</b> If <c>X-Request-Id</c> is present,
-///       log <c>reqid=&lt;id&gt;</c> and <i>continue</i> (via <see cref="ActionChain{T}.ThenContinue(System.Action{T})"/>).
+///       log <c>reqid=&lt;id&gt;</c> and <i>continue</i> (via <see cref="ActionChain{T}.Builder.WhenBuilder.ThenContinue(System.Action{T})"/>).
 ///     </description>
 ///   </item>
 ///   <item>
 ///     <description>
 ///       <b>Auth gate (stop):</b> If the path starts with <c>/admin</c> and no <c>Authorization</c> header exists,
 ///       log <c>deny: missing auth</c> and <i>stop</i> the chain early
-///       (via <see cref="ActionChain{T}.ThenStop(System.Action{T})"/>).
+///       (via <see cref="ActionChain{T}.Builder.WhenBuilder.ThenStop(System.Action{T})"/>).
 ///     </description>
 ///   </item>
 ///   <item>
 ///     <description>
-///       <b>Tail log (finally-on-continue):</b> In <see cref="ActionChain{T}.Finally(System.Action{T, Action{T}})"/>
+///       <b>Tail log (finally-on-continue):</b> In <see cref="ActionChain{T}.Builder.Finally"/>
 ///       we log <c>{Method} {Path}</c>. This <em>runs only if no prior step called <c>ThenStop</c></em>
 ///       (strict-stop semantics). In other words, a <c>Stop</c> short-circuits the chain and
 ///       prevents this tail from running.
@@ -113,7 +106,7 @@ public static class AuthLoggingDemo
             // admin requires auth (stop)
             .When(static (in r) => r.Path.StartsWith("/admin", StringComparison.Ordinal)
                                    && !r.Headers.ContainsKey("Authorization"))
-            .ThenStop(r => log.Add("deny: missing auth"))
+            .ThenStop(_ => log.Add("deny: missing auth"))
 
             // tail log (runs only if the chain wasn't stopped earlier)
             .Finally((in r, next) =>
