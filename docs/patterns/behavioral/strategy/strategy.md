@@ -153,7 +153,7 @@ public async Task Strategy_FirstMatch_Default()
 
 ## See also
 
-* **TryStrategy\<TIn, TOut>** — first-match with `bool` success + `out` result (no throw on no match).
-* **ActionStrategy\<TIn>** — first-match, side-effect only (no result).
-* **AsyncStrategy\<TIn, TOut>** — first-match with async handlers returning `ValueTask<TOut>`.
-* **BranchBuilder** — the low-level composer used by all strategies.
+* [TryStrategy](./trystrategy.md) — first-match with `bool` success + `out` result (no throw on no match).
+* [ActionStrategy](./actionstrategy.md) — first-match, side-effect only (no result).
+* [AsyncStrategy](./asyncstrategy.md) — first-match with async handlers returning `ValueTask<TOut>`.
+* [BranchBuilder](../../creational/builder/branchbuilder.md) — the low-level composer used by all strategies.

@@ -146,7 +146,7 @@ public sealed class BranchBuilder<TPred, THandler>
 
 ## See also
 
-* `Behavioral.Strategy.ActionStrategy` – first-match actions.
-* `Behavioral.Strategy.Strategy` – first-match handlers that return values.
-* `Behavioral.Strategy.AsyncStrategy` – async first-match strategy.
-* `Behavioral.Chain.ActionChain` / `Behavioral.Chain.ResultChain` – chain style (middleware) alternatives.
+* [ActionStrategy](../../behavioral/strategy/actionstrategy.md) – first-match actions.
+* [Strategy](../../behavioral/strategy/strategy.md) – first-match handlers that return values.
+* [AsyncStrategy](../../behavioral/strategy/asyncstrategy.md) – async first-match strategy.
+* [ActionChain](../../behavioral/chain/actionchain.md) / [ResultChain](../../behavioral/chain/resultchain.md) – chain style (middleware) alternatives.

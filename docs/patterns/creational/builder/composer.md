@@ -148,6 +148,6 @@ public sealed class Composer<TState, TOut>
 
 ## See also
 
-* **ChainBuilder\<T>** – collect items, project to a product.
-* **BranchBuilder\<TPred,THandler>** – collect predicate/handler pairs + optional default.
-* **Strategy / TryStrategy / AsyncStrategy** – consumers of these creational patterns.
+* [ChainBuilder](./chainbuilder.md) – collect items, project to a product.
+* [BranchBuilder](./branchbuilder.md) – collect predicate/handler pairs + optional default.
+* [Strategy](../../behavioral/strategy/strategy.md) / [TryStrategy](../../behavioral/strategy/trystrategy.md) / [AsyncStrategy](../../behavioral/strategy/asyncstrategy.md) – consumers of these creational patterns.

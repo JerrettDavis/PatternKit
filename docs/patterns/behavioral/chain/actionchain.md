@@ -174,6 +174,6 @@ await Given("a chain that denies /admin without auth", () =>
 
 ## See also
 
-* **ResultChain** – like ActionChain, but steps return a result and short-circuit on failure.
-* **BranchBuilder** – zero-`if` router (predicate → step) for first-match-wins dispatch.
-* **Strategy / TryStrategy** – single-choice or first-success selection for handlers/parsers.
+* [ResultChain](./resultchain.md) – like ActionChain, but steps return a result and short-circuit on failure.
+* [BranchBuilder](../../creational/builder/branchbuilder.md) – zero-`if` router (predicate → step) for first-match-wins dispatch.
+* [Strategy](../strategy/strategy.md) / [TryStrategy](../strategy/trystrategy.md) – single-choice or first-success selection for handlers/parsers.

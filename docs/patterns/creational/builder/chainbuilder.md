@@ -115,6 +115,6 @@ public sealed class ChainBuilder<T>
 
 ## See also
 
-* `BranchBuilder<TPred,THandler>` – collect predicate/handler pairs + optional default, then project.
-* `Behavioral.Chain.ActionChain` / `Behavioral.Chain.ResultChain` – real pipelines built atop these patterns.
-* `Behavioral.Strategy.TryStrategy` – uses `ChainBuilder<TryHandler>` for first-success execution.
+* [BranchBuilder](./branchbuilder.md) – collect predicate/handler pairs + optional default, then project.
+* [Behavioral.Chain.ActionChain](../../behavioral/chain/actionchain.md) / [Behavioral.Chain.ResultChain](../../behavioral/chain/resultchain.md) – real pipelines built atop these patterns.
+* [Behavioral.Strategy.TryStrategy](../../behavioral/strategy/trystrategy.md) – uses `ChainBuilder<TryHandler>` for first-success execution.
