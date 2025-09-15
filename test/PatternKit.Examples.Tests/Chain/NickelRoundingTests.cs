@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 namespace PatternKit.Examples.Tests.Chain;
 
 [Feature("Nickel rounding")]
+[Collection("Culture")]
 public sealed class NickelRoundingTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     [Scenario("Total 22.97 subtotal; first tender cash triggers 2% discount; then card pays remainder; no nickel rounding")]
