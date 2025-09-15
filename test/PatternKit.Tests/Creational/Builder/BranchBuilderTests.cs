@@ -135,8 +135,8 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
             })
             .Then("P1 has 1 pair; P2 has 2 pairs", t =>
             {
-                Assert.Equal(1, t.P1.Preds.Length);
-                Assert.Equal(1, t.P1.Handlers.Length);
+                Assert.Single(t.P1.Preds);
+                Assert.Single(t.P1.Handlers);
                 Assert.Equal(2, t.P2.Preds.Length);
                 Assert.Equal(2, t.P2.Handlers.Length);
 
