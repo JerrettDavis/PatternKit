@@ -3,6 +3,7 @@
     <File Path=".gitignore" />
     <File Path="Directory.Build.props" />
     <File Path="README.md" />
+    <File Path=".github\workflows\ci.yml" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/PatternKit.Core/PatternKit.Core.csproj" />
