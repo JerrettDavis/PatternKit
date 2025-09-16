@@ -6,11 +6,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj"/>
-        <ProjectReference Include="..\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj"/>
         <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
-                          OutputItemType="Analyzer"
-                          PrivateAssets="All"
-                          ReferenceOutputAssembly="false"/>
+                          OutputItemType="Analyzer"/>
     </ItemGroup>
 
 

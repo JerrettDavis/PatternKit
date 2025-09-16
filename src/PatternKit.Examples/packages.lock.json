@@ -63,10 +63,18 @@
         "resolved": "9.0.9",
         "contentHash": "z4pyMePOrl733ltTowbN565PxBw1oAr8IHmIXNDiDqd22nFpYltX9KhrNC/qBWAG1/Zx5MHX+cOYhWJQYCO/iw=="
       },
-      "patternkit.core": {
-        "type": "Project"
+      "System.Collections.Immutable": {
+        "type": "Transitive",
+        "resolved": "9.0.9",
+        "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
       },
-      "patternkit.generators.abstractions": {
+      "patternkit.core": {
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
+      },
+      "patternkit.generators": {
         "type": "Project"
       }
     },
@@ -132,10 +140,18 @@
         "resolved": "9.0.9",
         "contentHash": "z4pyMePOrl733ltTowbN565PxBw1oAr8IHmIXNDiDqd22nFpYltX9KhrNC/qBWAG1/Zx5MHX+cOYhWJQYCO/iw=="
       },
-      "patternkit.core": {
-        "type": "Project"
+      "System.Collections.Immutable": {
+        "type": "Transitive",
+        "resolved": "9.0.9",
+        "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
       },
-      "patternkit.generators.abstractions": {
+      "patternkit.core": {
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
+      },
+      "patternkit.generators": {
         "type": "Project"
       }
     }

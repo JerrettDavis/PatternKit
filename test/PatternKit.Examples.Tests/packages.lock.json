@@ -50,6 +50,12 @@
           "Microsoft.TestPlatform.TestHost": "17.14.1"
         }
       },
+      "System.Collections.Immutable": {
+        "type": "Direct",
+        "requested": "[9.0.9, )",
+        "resolved": "9.0.9",
+        "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
+      },
       "TinyBDD.Xunit": {
         "type": "Direct",
         "requested": "[0.8.3, )",
@@ -196,11 +202,6 @@
         "type": "Transitive",
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
-      },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
       },
       "System.Diagnostics.DiagnosticSource": {
         "type": "Transitive",
@@ -253,7 +254,10 @@
         }
       },
       "patternkit.core": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
       },
       "patternkit.examples": {
         "type": "Project",
@@ -264,10 +268,10 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[9.0.9, )",
           "Microsoft.Extensions.Options.DataAnnotations": "[9.0.9, )",
           "PatternKit.Core": "[1.0.0, )",
-          "PatternKit.Generators.Abstractions": "[1.0.0, )"
+          "PatternKit.Generators": "[1.0.0, )"
         }
       },
-      "patternkit.generators.abstractions": {
+      "patternkit.generators": {
         "type": "Project"
       }
     },
@@ -319,6 +323,12 @@
           "Microsoft.CodeCoverage": "17.14.1",
           "Microsoft.TestPlatform.TestHost": "17.14.1"
         }
+      },
+      "System.Collections.Immutable": {
+        "type": "Direct",
+        "requested": "[9.0.9, )",
+        "resolved": "9.0.9",
+        "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
@@ -465,11 +475,6 @@
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
       },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
-      },
       "System.Reflection.Metadata": {
         "type": "Transitive",
         "resolved": "8.0.0",
@@ -516,7 +521,10 @@
         }
       },
       "patternkit.core": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
       },
       "patternkit.examples": {
         "type": "Project",
@@ -527,10 +535,10 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[9.0.9, )",
           "Microsoft.Extensions.Options.DataAnnotations": "[9.0.9, )",
           "PatternKit.Core": "[1.0.0, )",
-          "PatternKit.Generators.Abstractions": "[1.0.0, )"
+          "PatternKit.Generators": "[1.0.0, )"
         }
       },
-      "patternkit.generators.abstractions": {
+      "patternkit.generators": {
         "type": "Project"
       }
     }

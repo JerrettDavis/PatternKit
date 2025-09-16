@@ -9,7 +9,6 @@
     <Project Path="src/PatternKit.Core/PatternKit.Core.csproj" />
     <Project Path="src/PatternKit.Examples/PatternKit.Examples.csproj" />
     <Project Path="src/PatternKit.Generators/PatternKit.Generators.csproj" />
-    <Project Path="src\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" Type="Classic C#" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/PatternKit.Tests/PatternKit.Tests.csproj" />
