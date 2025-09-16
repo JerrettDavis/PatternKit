@@ -1,4 +1,4 @@
-# Creational.Factory
+# Factory\<TKey, TOut> and Factory\<TKey, TIn, TOut>
 
 A tiny, immutable, low-overhead factory you configure once, then use everywhere. Map a key to a creator delegate and optionally set a default. Two shapes:
 

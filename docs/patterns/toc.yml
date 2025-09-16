@@ -3,36 +3,39 @@
   items:
     - name: Behavioral
       items:
-        - name: Chain
+        - name: Chain of Responsibility
           items:
-            - name: Behavioral.Chain.ActionChain
+            - name: ActionChain
               href: behavioral/chain/actionchain.md
-            - name: Behavioral.Chain.ResultChain
+            - name: ResultChain
               href: behavioral/chain/resultchain.md
         - name: Strategy
           items:
-            - name: Behavioral.Strategy.Strategy
+            - name: Strategy
               href: behavioral/strategy/strategy.md
-            - name: Behavioral.Strategy.TryStrategy
+            - name: TryStrategy
               href: behavioral/strategy/trystrategy.md
-            - name: Behavioral.Strategy.ActionStrategy
+            - name: ActionStrategy
               href: behavioral/strategy/actionstrategy.md
-            - name: Behavioral.Strategy.AsyncStrategy
+            - name: AsyncStrategy
               href: behavioral/strategy/asyncstrategy.md
     - name: Creational
       items:
         - name: Builder
           items:
-            - name: Creational.Builder.BranchBuilder
+            - name: BranchBuilder
               href: creational/builder/branchbuilder.md
-            - name: Creational.Builder.ChainBuilder
+            - name: ChainBuilder
               href: creational/builder/chainbuilder.md
-            - name: Creational.Builder.Composer
+            - name: Composer
               href: creational/builder/composer.md
-            - name: Creational.Builder.MutableBuilder
+            - name: MutableBuilder
               href: creational/builder/mutablebuilder.md
         - name: Factory
           items:
-            - name: Creational.Factory
+            - name: Factory
               href: creational/factory/factory.md
-
+        - name: Prototype
+          items:
+            - name: Prototype
+              href: creational/prototype/prototype.md

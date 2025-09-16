@@ -190,10 +190,7 @@
         }
       },
       "patternkit.core": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[9.0.9, )"
-        }
+        "type": "Project"
       },
       "patternkit.examples": {
         "type": "Project",
@@ -208,7 +205,10 @@
         }
       },
       "patternkit.generators": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
       }
     },
     "net9.0": {
@@ -400,10 +400,7 @@
         }
       },
       "patternkit.core": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[9.0.9, )"
-        }
+        "type": "Project"
       },
       "patternkit.examples": {
         "type": "Project",
@@ -418,7 +415,10 @@
         }
       },
       "patternkit.generators": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "System.Collections.Immutable": "[9.0.9, )"
+        }
       }
     }
   }
