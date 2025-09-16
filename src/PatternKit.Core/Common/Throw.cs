@@ -8,9 +8,7 @@ namespace PatternKit.Common;
 /// <remarks>
 /// <para>
 /// These helpers are intended for use in hot paths where throwing is exceptional but must
-/// terminate execution predictably. They are marked with
-/// <see cref="System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute"/> so analyzers and the
-/// compiler know execution never continues after calling them.
+/// terminate execution predictably. 
 /// </para>
 /// <para>
 /// Typical usage is within strategy engines or fluent builders when no handler, predicate,

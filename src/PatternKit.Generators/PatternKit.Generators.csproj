@@ -6,11 +6,13 @@
         <IsRoslynComponent>true</IsRoslynComponent>
         <IncludeBuildOutput>false</IncludeBuildOutput>
         <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
+        <IsPackable>true</IsPackable>
+        <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)PatternKit.Generators.dll"
-              Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
     </ItemGroup>
 
     <ItemGroup>
