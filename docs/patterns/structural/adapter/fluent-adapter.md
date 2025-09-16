@@ -1,6 +1,6 @@
 # Adapter — Adapter<TIn,TOut>
 
-A tiny, fluent adapter that maps an input TIn to an output TOut via ordered mapping steps and optional validations. Build once, then call Adapt or TryAdapt. No reflection, no magic—just arrays of delegates composed at Build().
+A tiny, fluent adapter that maps an input TIn to an output TOut via ordered mapping steps and optional validations. Build once, then Adapt or TryAdapt. No reflection, no magic—just arrays of delegates composed at Build().
 
 - Map steps mutate an output instance in registration order
 - Seed the destination from a parameterless factory or from the input
@@ -12,7 +12,7 @@ A tiny, fluent adapter that maps an input TIn to an output TOut via ordered mapp
 ## TL;DR
 
 ```csharp
-using PatternKit.Creational.Adapter;
+using PatternKit.Structural.Adapter;
 
 public sealed record Source(string First, string Last, int Age);
 public sealed class Dest { public string? FullName; public int Age; public bool Adult; }
@@ -105,4 +105,3 @@ See PatternKit.Tests/Structural/Adapter/AdapterTests.cs for TinyBDD specs coveri
 - First validator failure wins (Adapt throws, TryAdapt returns false)
 - SeedFrom semantics
 - Adapter reuse producing distinct outputs
-
