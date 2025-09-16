@@ -25,7 +25,7 @@ public static class RoslynTestHelpers
             RefFromTPA("System.Linq.dll"),
             RefFromTPA("System.Memory.dll"),
             RefFromTPA("System.Runtime.Extensions.dll"),
-            RefFromTPA("PatternKit.Generators.Abstractions.dll"),
+            RefFromTPA("PatternKit.Generators.dll"),
             RefFromTPA("netstandard.dll"),
         };
         if (extra is not null) refs.AddRange(extra);
