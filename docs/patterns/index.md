@@ -73,6 +73,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Structural.Adapter.Adapter](structural/adapter/fluent-adapter.md)**
   Fluent in-place mapping with ordered validation for DTO projection.
 
+* **[Structural.Bridge.Bridge](structural/bridge/bridge.md)**
+  Abstraction/implementation split with fluent pre/post hooks and validations.
+
 ---
 
 ## Where to see them in action
