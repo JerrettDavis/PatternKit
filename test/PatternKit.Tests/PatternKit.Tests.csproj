@@ -32,4 +32,8 @@
         <ProjectReference Include="..\..\src\PatternKit.Examples\PatternKit.Examples.csproj"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Structural\" />
+    </ItemGroup>
+
 </Project>

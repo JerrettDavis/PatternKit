@@ -67,6 +67,12 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Creational.Singleton](creational/singleton/singleton.md)**
   Fluent, thread-safe singleton with lazy/eager modes and init hooks.
 
+
+## Structural
+
+* **[Structural.Adapter.Adapter](structural/adapter/fluent-adapter.md)**
+  Fluent in-place mapping with ordered validation for DTO projection.
+
 ---
 
 ## Where to see them in action
