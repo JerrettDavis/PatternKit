@@ -69,13 +69,13 @@
         "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
       },
       "patternkit.core": {
+        "type": "Project"
+      },
+      "patternkit.generators": {
         "type": "Project",
         "dependencies": {
           "System.Collections.Immutable": "[9.0.9, )"
         }
-      },
-      "patternkit.generators": {
-        "type": "Project"
       }
     },
     "net9.0": {
@@ -146,13 +146,13 @@
         "contentHash": "/kpkgDxH984e3J3z5v/DIFi+0TWbUJXS8HNKUYBy3YnXtK09JVGs3cw5aOV6fDSw5NxbWLWlGrYjRteu6cjX3w=="
       },
       "patternkit.core": {
+        "type": "Project"
+      },
+      "patternkit.generators": {
         "type": "Project",
         "dependencies": {
           "System.Collections.Immutable": "[9.0.9, )"
         }
-      },
-      "patternkit.generators": {
-        "type": "Project"
       }
     }
   }

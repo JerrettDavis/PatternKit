@@ -3,6 +3,10 @@
 > **Fluent Design Patterns for Modern .NET**  
 > Elegant, declarative, allocation-light implementations of classic patterns—optimized for .NET 9.
 
+
+[![CI](https://github.com/JerrettDavis/PatternKit/actions/workflows/ci.yml/badge.svg)](https://github.com/JerrettDavis/PatternKit/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/JerrettDavis/PatternKit/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/JerrettDavis/PatternKit/security/code-scanning)
+[![codecov](https://codecov.io/gh/JerrettDavis/PatternKit/graph/badge.svg?token=I0LO3HLUTP)](https://codecov.io/gh/JerrettDavis/PatternKit)
 [![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
 
 ---
@@ -64,11 +68,11 @@ if (parse.Execute("123", out var n))
 
 PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral** patterns with fluent, discoverable APIs:
 
-| Category       | Patterns ✓ = implemented                                                                                                                                                                                                                                   |
-| -------------- |------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | Factory (planned) • Builder (planned) • Prototype (planned) • Singleton (planned)                                                                                                                                                                          |
-| **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                |
-| **Behavioral** | Strategy ✓ • TryStrategy ✓ • ActionStrategy ✓ • Chain of Responsibility (planned) • Command (planned) • Iterator (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
+| Category       | Patterns ✓ = implemented                                                                                                                                                                                                                              |
+| -------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Creational** | [Factory]( ✓ • Builder ✓ • Prototype ✓ • Singleton (planned)                                                                                                                                                                                          |
+| **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                           |
+| **Behavioral** | Strategy ✓ • TryStrategy ✓ • ActionStrategy ✓ • ActionChain ✓ • ResultChain ✓• Command (planned) • Iterator (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
 Each pattern will ship with:
 
