@@ -39,3 +39,7 @@
           items:
             - name: Prototype
               href: creational/prototype/prototype.md
+        - name: Singleton
+          items:
+            - name: Singleton
+              href: creational/singleton/singleton.md

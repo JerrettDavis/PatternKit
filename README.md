@@ -70,7 +70,7 @@ PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral**
 
 | Category       | Patterns ✓ = implemented                                                                                                                                                                                                                              |
 | -------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • Builder ✓ • Prototype ✓ • Singleton (planned)                                                                                                                                             |
+| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • Builder ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                             |
 | **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                           |
 | **Behavioral** | Strategy ✓ • TryStrategy ✓ • ActionStrategy ✓ • ActionChain ✓ • ResultChain ✓ • Command (planned) • Iterator (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
@@ -155,5 +155,3 @@ PatternKit is inspired by:
 * The **Gang of Four** design patterns
 * Fluent APIs from **ASP.NET Core**, **System.Linq**, and modern libraries
 * The desire to make patterns **readable**, **performant**, and **fun** to use in 2025+
-
-

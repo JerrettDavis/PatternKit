@@ -61,6 +61,12 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Creational.Factory](creational/factory/factory.md)**
   Key → creator mapping with optional default; immutable and allocation-light.
 
+* **[Creational.Prototype](creational/prototype/prototype.md)**
+  Clone-and-tweak via fluent builders and keyed registries.
+
+* **[Creational.Singleton](creational/singleton/singleton.md)**
+  Fluent, thread-safe singleton with lazy/eager modes and init hooks.
+
 ---
 
 ## Where to see them in action
