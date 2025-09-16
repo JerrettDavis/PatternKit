@@ -18,3 +18,6 @@
   
 - name: Minimal Web Request Router
   href: mini-router.md
+  
+- name: POS App State Singleton
+  href: pos-app-state-singleton.md
