@@ -70,7 +70,7 @@ PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral**
 
 | Category       | Patterns ✓ = implemented                                                                                                                                                                                                                              |
 | -------------- |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory]( ✓ • Builder ✓ • Prototype ✓ • Singleton (planned)                                                                                                                                                                                          |
+| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • Builder ✓ • Prototype ✓ • Singleton (planned)                                                                                                                                             |
 | **Structural** | Adapter (planned) • Bridge (planned) • Composite (planned) • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                           |
 | **Behavioral** | Strategy ✓ • TryStrategy ✓ • ActionStrategy ✓ • ActionChain ✓ • ResultChain ✓• Command (planned) • Iterator (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
