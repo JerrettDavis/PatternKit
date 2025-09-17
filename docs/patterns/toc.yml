@@ -43,3 +43,11 @@
           items:
             - name: Singleton
               href: creational/singleton/singleton.md
+    - name: Structural
+      items:
+        - name: Adapter
+          href: structural/adapter/fluent-adapter.md
+        - name: Bridge
+          href: structural/bridge/bridge.md
+        - name: Composite
+          href: structural/composite/composite.md

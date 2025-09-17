@@ -38,9 +38,9 @@
       },
       "TinyBDD": {
         "type": "Direct",
-        "requested": "[0.8.3, )",
-        "resolved": "0.8.3",
-        "contentHash": "cUd2UGU5WoBmy/s4N5hI3lw4AVfuZXeuXrFJlP4RBdcF2YB5Tc3yL9jKsMfcLalXC2Tb0M+uublpyqE/cGfs8Q=="
+        "requested": "[0.9.0, )",
+        "resolved": "0.9.0",
+        "contentHash": "2bgdzYwfDeTwrSr62P9gXu42/QPVhtYDVj+QP7bS2O7HSDfsC1tzyBd7H9ffFrqkPN1r68ZT0GdHHko2IqI7sw=="
       },
       "xunit": {
         "type": "Direct",
@@ -264,9 +264,9 @@
       },
       "TinyBDD": {
         "type": "Direct",
-        "requested": "[0.8.3, )",
-        "resolved": "0.8.3",
-        "contentHash": "cUd2UGU5WoBmy/s4N5hI3lw4AVfuZXeuXrFJlP4RBdcF2YB5Tc3yL9jKsMfcLalXC2Tb0M+uublpyqE/cGfs8Q=="
+        "requested": "[0.9.0, )",
+        "resolved": "0.9.0",
+        "contentHash": "2bgdzYwfDeTwrSr62P9gXu42/QPVhtYDVj+QP7bS2O7HSDfsC1tzyBd7H9ffFrqkPN1r68ZT0GdHHko2IqI7sw=="
       },
       "xunit": {
         "type": "Direct",

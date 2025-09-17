@@ -76,6 +76,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Structural.Bridge.Bridge](structural/bridge/bridge.md)**
   Abstraction/implementation split with fluent pre/post hooks and validations.
 
+* **[Structural.Composite.Composite](structural/composite/composite.md)**
+  Uniform treatment of leaves and compositions via seed+combine folding.
+
 ---
 
 ## Where to see them in action

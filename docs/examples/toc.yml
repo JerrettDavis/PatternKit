@@ -21,3 +21,6 @@
   
 - name: POS App State Singleton
   href: pos-app-state-singleton.md
+  
+- name: Pricing Calculator (Async Sources, Loyalty, Rounding)
+  href: pricing-calculator.md
