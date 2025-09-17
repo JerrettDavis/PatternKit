@@ -4,12 +4,12 @@
         <RootNamespace>PatternKit</RootNamespace>
     </PropertyGroup>
 
-    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
-    </ItemGroup>
-
     <ItemGroup>
       <Folder Include="Structural\" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+      <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.6.3" />
     </ItemGroup>
 
 </Project>

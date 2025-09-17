@@ -1,5 +1,6 @@
 using PatternKit.Behavioral.Chain;
 using TinyBDD;
+using TinyBDD.Assertions;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
@@ -155,43 +156,35 @@ public sealed class ActionChainTests(ITestOutputHelper output) : TinyBddXunitBas
 
     [Scenario("Order: Use handlers run in registration order; tail runs last when not short-circuited")]
     [Fact]
-    public async Task OrderAndTail()
-    {
-        await Given("A, then B, then TAIL", Build_Order_With_Tail)
+    public Task OrderAndTail()
+        => Given("A, then B, then TAIL", Build_Order_With_Tail)
             .When("executing the chain", s => Exec(s))
-            .Then("log is A|B|TAIL", s => string.Join('|', s.Log) == "A|B|TAIL")
+            .Then("log is A|B|TAIL", s => Expect.For(string.Join('|', s.Log)).ToBe("A|B|TAIL"))
             .AssertPassed();
-    }
 
     [Scenario("ThenStop short-circuits: subsequent handlers and tail do not run")]
     [Fact]
-    public async Task ThenStopShortCircuits()
-    {
-        await Given("PRE, ThenStop(true), POST, TAIL", Build_Stop_ShortCircuits)
+    public Task ThenStopShortCircuits()
+        => Given("PRE, ThenStop(true), POST, TAIL", Build_Stop_ShortCircuits)
             .When("executing the chain", s => Exec(s))
-            .Then("log is PRE|STOP", s => string.Join('|', s.Log) == "PRE|STOP")
+            .Then("log is PRE|STOP", s => Expect.For(string.Join('|', s.Log)).ToBe("PRE|STOP"))
             .AssertPassed();
-    }
 
     [Scenario("ThenContinue runs action and still proceeds to later handlers/tail")]
     [Fact]
-    public async Task ThenContinueProceeds()
-    {
-        await Given("ThenContinue(true), TAIL", Build_Continue_Then_Tail)
+    public Task ThenContinueProceeds()
+        => Given("ThenContinue(true), TAIL", Build_Continue_Then_Tail)
             .When("executing the chain", s => Exec(s))
-            .Then("log is CONT|TAIL", s => string.Join('|', s.Log) == "CONT|TAIL")
+            .Then("log is CONT|TAIL", s => Expect.For(string.Join('|', s.Log)).ToBe("CONT|TAIL"))
             .AssertPassed();
-    }
 
     [Scenario("When(false) auto-continues without invoking the guarded action")]
     [Fact]
-    public async Task WhenFalseAutoContinues()
-    {
-        await Given("When(c.Flag) ThenStop(NEVER) + TAIL", Build_When_False_AutoContinue)
+    public Task WhenFalseAutoContinues()
+        => Given("When(c.Flag) ThenStop(NEVER) + TAIL", Build_When_False_AutoContinue)
             .When("executing with Flag=false", s => Exec(s, flag: false))
-            .Then("log is TAIL", s => string.Join('|', s.Log) == "TAIL")
+            .Then("log is TAIL", s => Expect.For(string.Join('|', s.Log)).ToBe("TAIL"))
             .AssertPassed();
-    }
 
     [Scenario("Tail is skipped when an earlier handler returns without calling next")]
     [Fact]
@@ -199,7 +192,7 @@ public sealed class ActionChainTests(ITestOutputHelper output) : TinyBddXunitBas
     {
         await Given("first handler logs and short-circuits; tail exists", Build_Handler_ShortCircuits_Skips_Tail)
             .When("executing the chain", s => Exec(s))
-            .Then("log is ONLY", s => string.Join('|', s.Log) == "ONLY")
+            .Then("log is ONLY", s => Expect.For(string.Join('|', s.Log)).ToBe("ONLY"))
             .AssertPassed();
     }
 
@@ -226,13 +219,13 @@ public sealed class ActionChainTests(ITestOutputHelper output) : TinyBddXunitBas
             {
                 var (_, _, log) = t;
                 // logs so far: first run (A)
-                return log[0] == "A";
+                return Expect.For(log[0]).ToBe("A");
             })
             .And("second execution added A|B|TAIL", t =>
             {
                 var (_, _, log) = t;
                 // full log list: ["A", "A", "B", "TAIL"]
-                return string.Join('|', log) == "A|A|B|TAIL";
+                return Expect.For(string.Join('|', log)).ToBe("A|A|B|TAIL");
             })
             .AssertPassed();
     }
