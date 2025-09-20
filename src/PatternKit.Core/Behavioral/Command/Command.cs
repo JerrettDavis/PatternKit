@@ -121,12 +121,12 @@ public sealed class Command<TCtx>
                 for (var i = 0; i < items.Length; i++)
                 {
                     var vt = items[i].Execute(in ctx, ct);
-                    if (!vt.IsCompletedSuccessfully)
-                    {
-                        // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
-                        var copy = ctx;
-                        return AwaitNext(i, vt, copy, ct, items);
-                    }
+                    if (vt.IsCompletedSuccessfully)
+                        continue;
+                    
+                    // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
+                    var copy = ctx;
+                    return AwaitNext(i, vt, copy, ct, items);
                 }
 
                 return default;
@@ -150,14 +150,11 @@ public sealed class Command<TCtx>
             {
                 for (var i = items.Length - 1; i >= 0; i--)
                 {
-                    if (items[i].TryUndo(in ctx, ct, out var vt))
-                    {
-                        if (!vt.IsCompletedSuccessfully)
-                        {
-                            var copy = ctx;
-                            return AwaitUndo(i, vt, copy, ct, items);
-                        }
-                    }
+                    if (!items[i].TryUndo(in ctx, ct, out var vt) || vt.IsCompletedSuccessfully)
+                        continue;
+                    
+                    var copy = ctx;
+                    return AwaitUndo(i, vt, copy, ct, items);
                 }
 
                 return default;
@@ -167,11 +164,12 @@ public sealed class Command<TCtx>
                     await pending.ConfigureAwait(false);
                     for (var j = startIndex - 1; j >= 0; j--)
                     {
-                        if (itemsArr[j].TryUndo(in localCtx, ct2, out var t))
-                        {
-                            if (!t.IsCompletedSuccessfully)
-                                await t.ConfigureAwait(false);
-                        }
+                        if (!itemsArr[j].TryUndo(in localCtx, ct2, out var t) || 
+                            t.IsCompletedSuccessfully)
+                            continue;
+                        
+                        // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
+                        await t.ConfigureAwait(false);
                     }
                 }
             }

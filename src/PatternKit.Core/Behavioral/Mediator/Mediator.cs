@@ -110,10 +110,10 @@ public sealed class Mediator // mark partial to allow future surface extension w
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The handler produced response.</returns>
     /// <exception cref="InvalidOperationException">Thrown if no handler exists or the result cannot be cast to <typeparamref name="TResponse"/>.</exception>
-    public ValueTask<TResponse> Send<TRequest, TResponse>(in TRequest request, CancellationToken ct = default)
+    public ValueTask<TResponse?> Send<TRequest, TResponse>(in TRequest request, CancellationToken ct = default)
         => Core<TRequest, TResponse>(request, ct);
 
-    private async ValueTask<TResponse> Core<TRequest, TResponse>(TRequest request, CancellationToken ct)
+    private async ValueTask<TResponse?> Core<TRequest, TResponse>(TRequest request, CancellationToken ct)
     {
         if (!_commands.TryGetValue(typeof(TRequest), out var handler))
             throw new InvalidOperationException($"No command handler registered for request type '{typeof(TRequest)}'.");
@@ -135,10 +135,13 @@ public sealed class Mediator // mark partial to allow future surface extension w
         foreach (var b in _post)
             await b(in boxed, obj, ct).ConfigureAwait(false);
 
-        if (obj is TResponse r) return r;
-        if (obj is null) return default(TResponse)!;
-        throw new InvalidOperationException(
-            $"Handler returned incompatible result for '{typeof(TRequest)}' -> expected '{typeof(TResponse)}', got '{obj.GetType()}'.");
+        return obj switch
+        {
+            TResponse r => r,
+            null => default,
+            _ => throw new InvalidOperationException(
+                $"Handler returned incompatible result for '{typeof(TRequest)}' -> expected '{typeof(TResponse)}', got '{obj.GetType()}'.")
+        };
     }
 
     /// <summary>
