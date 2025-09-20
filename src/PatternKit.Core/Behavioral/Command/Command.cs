@@ -168,7 +168,6 @@ public sealed class Command<TCtx>
                             t.IsCompletedSuccessfully)
                             continue;
                         
-                        // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
                         await t.ConfigureAwait(false);
                     }
                 }
