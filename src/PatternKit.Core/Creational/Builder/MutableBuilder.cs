@@ -154,19 +154,14 @@ public sealed class MutableBuilder<T>
         string? Validate(TValue value);
     }
 
-    private sealed class FuncValidator : IValidator<T>
+    private sealed class FuncValidator(Func<T, string?> f) : IValidator<T>
     {
-        private readonly Func<T, string?> _f;
-        public FuncValidator(Func<T, string?> f) => _f = f;
-        public string? Validate(T value) => _f(value);
+        public string? Validate(T value) => f(value);
     }
 
-    private sealed class StatefulValidator<TState> : IValidator<T>
+    private sealed class StatefulValidator<TState>(TState state, Func<T, TState, string?> f) : IValidator<T>
     {
-        private readonly TState _state;
-        private readonly Func<T, TState, string?> _f;
-        public StatefulValidator(TState state, Func<T, TState, string?> f) => (_state, _f) = (state, f);
-        public string? Validate(T value) => _f(value, _state);
+        public string? Validate(T value) => f(value, state);
     }
 }
 

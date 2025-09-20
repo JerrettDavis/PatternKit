@@ -75,8 +75,7 @@ public sealed class Composite<TIn, TOut>
             return _leaf!(in input);
         }
         var acc = _seed!(in input);
-        var kids = _children;
-        foreach (var child in kids)
+        foreach (var child in _children)
         {
             var childResult = child.Execute(in input);
             acc = _combine!(in input, acc, childResult);

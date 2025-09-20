@@ -38,9 +38,20 @@ public sealed class Factory<TKey, TOut> where TKey : notnull
     /// <summary>Try to create an instance for <paramref name="key"/>. Returns false only if no mapping and no default.</summary>
     public bool TryCreate(TKey key, out TOut value)
     {
-        if (_creators.TryGetValue(key, out var ctor)) { value = ctor(); return true; }
-        if (_hasDefault) { value = _default(); return true; }
-        value = default!; return false;
+        if (_creators.TryGetValue(key, out var ctor))
+        {
+            value = ctor();
+            return true;
+        }
+
+        if (_hasDefault)
+        {
+            value = _default();
+            return true;
+        }
+
+        value = default!;
+        return false;
     }
 
     private static void ThrowNoMapping(TKey key)
@@ -62,7 +73,11 @@ public sealed class Factory<TKey, TOut> where TKey : notnull
         }
 
         /// <summary>Set or replace the default creator used when no key mapping exists.</summary>
-        public Builder Default(Creator creator) { _default = creator; return this; }
+        public Builder Default(Creator creator)
+        {
+            _default = creator;
+            return this;
+        }
 
         /// <summary>Build an immutable factory snapshot.</summary>
         public Factory<TKey, TOut> Build()
@@ -114,9 +129,20 @@ public sealed class Factory<TKey, TIn, TOut> where TKey : notnull
     /// <summary>Try to create an instance for <paramref name="key"/> using <paramref name="input"/>. Returns false only if no mapping and no default.</summary>
     public bool TryCreate(TKey key, in TIn input, out TOut value)
     {
-        if (_creators.TryGetValue(key, out var ctor)) { value = ctor(in input); return true; }
-        if (_hasDefault) { value = _default(in input); return true; }
-        value = default!; return false;
+        if (_creators.TryGetValue(key, out var ctor))
+        {
+            value = ctor(in input);
+            return true;
+        }
+
+        if (_hasDefault)
+        {
+            value = _default(in input);
+            return true;
+        }
+
+        value = default!;
+        return false;
     }
 
     private static void ThrowNoMapping(TKey key)
@@ -138,7 +164,11 @@ public sealed class Factory<TKey, TIn, TOut> where TKey : notnull
         }
 
         /// <summary>Set or replace the default creator used when no key mapping exists.</summary>
-        public Builder Default(Creator creator) { _default = creator; return this; }
+        public Builder Default(Creator creator)
+        {
+            _default = creator;
+            return this;
+        }
 
         /// <summary>Build an immutable factory snapshot.</summary>
         public Factory<TKey, TIn, TOut> Build()

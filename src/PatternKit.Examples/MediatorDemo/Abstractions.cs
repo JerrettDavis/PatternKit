@@ -113,6 +113,7 @@ public static class ServiceCollectionExtensions
 {
     /// <summary>
     /// Scan the supplied assemblies for mediator abstractions (handlers, behaviors) and register them.
+    /// Uses a Strategy-based scanner (<see cref="MediatorAssemblyScanner"/>) to avoid deep nested conditionals.
     /// </summary>
     /// <param name="services">Service collection.</param>
     /// <param name="assemblies">Assemblies to scan (defaults to executing assembly if empty).</param>
@@ -125,73 +126,10 @@ public static class ServiceCollectionExtensions
         if (assemblies is null || assemblies.Length == 0)
             assemblies = [Assembly.GetExecutingAssembly()];
 
-        var commands = new List<(Type, Type, Type)>();
-        var notes = new List<(Type, Type)>();
-        var streams = new List<(Type, Type, Type)>();
-        var behaviors = new List<(Type, Type, Type)>();
+        // Delegate actual discovery to strategy-based scanner.
+        var registry = MediatorAssemblyScanner.Scan(assemblies, services);
 
-        foreach (var asm in assemblies.Distinct())
-        {
-            foreach (var t in asm.GetTypes())
-            {
-                if (t.IsAbstract || t.IsInterface) continue;
-                foreach (var it in t.GetInterfaces())
-                {
-                    if (!it.IsGenericType)
-                        continue;
-
-                    var def = it.GetGenericTypeDefinition();
-                    var args = it.GetGenericArguments();
-
-                    if (def == typeof(ICommandHandler<,>))
-                    {
-                        services.AddTransient(it, t);
-                        services.AddTransient(t); // allow resolving by concrete type if needed
-                        commands.Add((args[0], args[1], t));
-                    }
-                    else if (def == typeof(INotificationHandler<>))
-                    {
-                        services.AddTransient(it, t);
-                        services.AddTransient(t); // allow resolving by concrete type if needed
-                        notes.Add((args[0], t));
-                    }
-#if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
-                    else if (def == typeof(IStreamRequestHandler<,>))
-                    {
-                        services.AddTransient(it, t);
-                        services.AddTransient(t); // allow resolving by concrete type if needed
-                        streams.Add((args[0], args[1], t));
-                    }
-#endif
-                    else if (def == typeof(IPipelineBehavior<,>))
-                    {
-                        // Behaviors can be open generic or closed; avoid invalid DI registrations for open generics.
-                        if (t.IsGenericTypeDefinition)
-                        {
-                            // Skip registering open-generic behavior as a concrete service mapping.
-                            // We'll resolve a closed instance via ActivatorUtilities when executing the pipeline.
-                        }
-                        else
-                        {
-                            // Closed/concrete behavior: allow DI to construct it if needed.
-                            services.AddTransient(it, t);
-                            services.AddTransient(t);
-                        }
-
-                        behaviors.Add((t, args[0], args[1]));
-                    }
-                }
-            }
-        }
-
-        services.AddSingleton(new MediatorRegistry
-        {
-            Commands = commands.ToArray(),
-            Notifications = notes.ToArray(),
-            Streams = streams.ToArray(),
-            Behaviors = behaviors.ToArray(),
-        });
-
+        services.AddSingleton(registry);
         services.AddScoped<IAppMediator, AppMediator>();
         return services;
     }

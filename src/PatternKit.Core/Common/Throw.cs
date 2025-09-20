@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace PatternKit.Common;
 
@@ -74,4 +75,9 @@ public static class Throw
     [DoesNotReturn]
     public static void NoStrategyMatched() =>
         throw new InvalidOperationException("No strategy matched and no default provided.");
+    
+    public static void ArgumentNullWhenNull([CallerMemberName] object? arg = null)
+    {
+        if (arg is null) throw new ArgumentNullException(nameof(arg));
+    }
 }
