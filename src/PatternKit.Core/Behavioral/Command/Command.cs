@@ -124,7 +124,7 @@ public sealed class Command<TCtx>
                     if (vt.IsCompletedSuccessfully)
                         continue;
                     
-                    // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
+                    // Not completed successfully: enter slow path (await then continue); copy ctx to avoid capturing 'in' in async state machine
                     var copy = ctx;
                     return AwaitNext(i, vt, copy, ct, items);
                 }
@@ -168,7 +168,6 @@ public sealed class Command<TCtx>
                             t.IsCompletedSuccessfully)
                             continue;
                         
-                        // Slow path: await then continue; copy ctx to avoid capturing 'in' in async state machine
                         await t.ConfigureAwait(false);
                     }
                 }
