@@ -19,6 +19,10 @@
               href: behavioral/strategy/actionstrategy.md
             - name: AsyncStrategy
               href: behavioral/strategy/asyncstrategy.md
+        - name: Mediator
+          href: behavioral/mediator/mediator.md
+        - name: Command
+          href: behavioral/command/command.md
     - name: Creational
       items:
         - name: Builder

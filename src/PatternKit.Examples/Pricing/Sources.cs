@@ -16,7 +16,7 @@ public sealed class DbPricingSource : IPricingSource
     public ValueTask<decimal?> TryGetUnitPriceAsync(Sku sku, Location loc, CancellationToken ct)
     {
         _ = ct; // demo
-        return new(_prices.TryGetValue((sku.Id, loc.Region), out var p) ? p : (decimal?)null);
+        return new(_prices.TryGetValue((sku.Id, loc.Region), out var p) ? p : null);
     }
 }
 
@@ -28,7 +28,7 @@ public sealed class ApiPricingSource(Dictionary<string, decimal> prices) : IPric
     public async ValueTask<decimal?> TryGetUnitPriceAsync(Sku sku, Location loc, CancellationToken ct)
     {
         _ = loc; await Task.Delay(5, ct); // simulate latency
-        return prices.TryGetValue(sku.Id, out var p) ? p : (decimal?)null;
+        return prices.TryGetValue(sku.Id, out var p) ? p : null;
     }
 }
 
@@ -40,7 +40,7 @@ public sealed class FilePricingSource(Dictionary<string, decimal> prices) : IPri
     public async ValueTask<decimal?> TryGetUnitPriceAsync(Sku sku, Location loc, CancellationToken ct)
     {
         _ = loc; await Task.Delay(1, ct);
-        return prices.TryGetValue(sku.Id, out var p) ? p : (decimal?)null;
+        return prices.TryGetValue(sku.Id, out var p) ? p : null;
     }
 }
 
@@ -86,9 +86,9 @@ public static class DefaultSourceRouting
 {
     public static SourceRouter Build(DbPricingSource db, ApiPricingSource api, FilePricingSource file)
         => SourceRouter.Create()
-            .When(static (in Sku s) => s.HasTag("price:db"), () => db)
-            .When(static (in Sku s) => s.HasTag("price:api"), () => api)
-            .When(static (in Sku s) => s.HasTag("price:file"), () => file)
+            .When(static (in s) => s.HasTag("price:db"), () => db)
+            .When(static (in s) => s.HasTag("price:api"), () => api)
+            .When(static (in s) => s.HasTag("price:file"), () => file)
             .Default(() => db)
             .Build();
 }

@@ -59,6 +59,11 @@
         "resolved": "3.1.4",
         "contentHash": "5mj99LvCqrq3CNi06xYdyIAXOEh+5b33F2nErCzI5zWiDdLHXiPXEWFSUAF8zlIv0ZWqjZNCwHTQeAPYbF3pCg=="
       },
+      "JetBrains.Annotations": {
+        "type": "Transitive",
+        "resolved": "2025.2.2",
+        "contentHash": "0X56ZRizuHdrnPpgXjWV7f2tQO1FlQg5O1967OGKnI/4ZRNOK642J8L7brM1nYvrxTTU5TP1yRyXLRLaXLPQ8A=="
+      },
       "Microsoft.CodeAnalysis.Analyzers": {
         "type": "Transitive",
         "resolved": "3.11.0",
@@ -211,6 +216,7 @@
       "patternkit.examples": {
         "type": "Project",
         "dependencies": {
+          "JetBrains.Annotations": "[2025.2.2, )",
           "Microsoft.Extensions.Configuration.Abstractions": "[9.0.9, )",
           "Microsoft.Extensions.Configuration.Binder": "[9.0.9, )",
           "Microsoft.Extensions.Options": "[9.0.9, )",
@@ -284,6 +290,11 @@
         "requested": "[3.1.4, )",
         "resolved": "3.1.4",
         "contentHash": "5mj99LvCqrq3CNi06xYdyIAXOEh+5b33F2nErCzI5zWiDdLHXiPXEWFSUAF8zlIv0ZWqjZNCwHTQeAPYbF3pCg=="
+      },
+      "JetBrains.Annotations": {
+        "type": "Transitive",
+        "resolved": "2025.2.2",
+        "contentHash": "0X56ZRizuHdrnPpgXjWV7f2tQO1FlQg5O1967OGKnI/4ZRNOK642J8L7brM1nYvrxTTU5TP1yRyXLRLaXLPQ8A=="
       },
       "Microsoft.CodeAnalysis.Analyzers": {
         "type": "Transitive",
@@ -434,6 +445,7 @@
       "patternkit.examples": {
         "type": "Project",
         "dependencies": {
+          "JetBrains.Annotations": "[2025.2.2, )",
           "Microsoft.Extensions.Configuration.Abstractions": "[9.0.9, )",
           "Microsoft.Extensions.Configuration.Binder": "[9.0.9, )",
           "Microsoft.Extensions.Options": "[9.0.9, )",

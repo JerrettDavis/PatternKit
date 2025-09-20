@@ -15,7 +15,7 @@ public sealed class AdapterTests(ITestOutputHelper output) : TinyBddXunitBase(ou
         public string? FullName { get; set; }
         public int Age { get; set; }
         public bool Adult { get; set; }
-        public List<string> Log { get; } = new();
+        public List<string> Log { get; } = [];
     }
 
     private static Adapter<Source, Dest> BuildBasic()
@@ -33,7 +33,7 @@ public sealed class AdapterTests(ITestOutputHelper output) : TinyBddXunitBase(ou
     public Task Map_Order_And_Validate_Pass()
         => Given("a basic adapter", BuildBasic)
             .When("adapting (Ada Lovelace, 30)", a => a.Adapt(new Source("Ada", "Lovelace", 30)))
-            .Then("full name and fields set", d => d.FullName == "Ada Lovelace" && d.Age == 30 && d.Adult)
+            .Then("full name and fields set", d => d.FullName == "Ada Lovelace" && d is { Age: 30, Adult: true })
             .And("log shows 3 maps in order", d => string.Join("|", d.Log) == "map:name|map:age|map:adult")
             .AssertPassed();
 

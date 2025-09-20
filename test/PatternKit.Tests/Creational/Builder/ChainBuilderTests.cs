@@ -60,7 +60,7 @@ public sealed class ChainBuilderTests(ITestOutputHelper output) : TinyBddXunitBa
             .Then("only the true branch item exists", c =>
             {
                 var arr = (int[])c.Result!;
-                return arr.Length == 1 && arr[0] == 42;
+                return arr is [42];
             })
             .AssertPassed();
     }

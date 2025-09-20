@@ -14,7 +14,7 @@ public sealed class BridgeTests(ITestOutputHelper output) : TinyBddXunitBase(out
     {
         public string Name { get; } = name;
         public int OpCalls; // count operations
-        public List<string> Log { get; } = new();
+        public List<string> Log { get; } = [];
     }
 
     private static Bridge<Job, string, Renderer> BuildBasic()

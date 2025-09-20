@@ -40,7 +40,7 @@ public sealed class PosAppState
     public required DeviceRegistry Devices { get; init; }
 
     // handy for verifying creation/init sequencing in examples
-    public List<string> Log { get; } = new();
+    public List<string> Log { get; } = [];
 }
 
 /// <summary>

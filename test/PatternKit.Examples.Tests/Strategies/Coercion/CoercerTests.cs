@@ -1,10 +1,10 @@
 using System.Text.Json;
-using PatternKit.Examples.Coercion;
+using PatternKit.Examples.Strategies.Coercion;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Examples.Tests.Coercion;
+namespace PatternKit.Examples.Tests.Strategies.Coercion;
 
 [Feature("Coercer<T> (Strategy-based coercion)")]
 public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
@@ -147,7 +147,7 @@ public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
             .Then("should be 11", v => v == 11)
             .AssertPassed();
     }
-    
+
     // ---------- Floating-point precision ----------
     [Scenario("Floating-point precision")]
     [Fact]

@@ -40,10 +40,10 @@ public sealed class PricingContext
     public required Location Location { get; init; }
     public required PaymentKind Payment { get; init; }
     public required List<LineItem> Items { get; init; }
-    public List<LoyaltyMembership> Loyalty { get; } = new();
-    public List<Coupon> Coupons { get; } = new();
+    public List<LoyaltyMembership> Loyalty { get; } = [];
+    public List<Coupon> Coupons { get; } = [];
 
-    public List<string> Log { get; } = new();
+    public List<string> Log { get; } = [];
 }
 
 public sealed class PricingResult
@@ -52,6 +52,6 @@ public sealed class PricingResult
     public decimal Discounts;    // sum of all discounts
     public decimal Taxes;        // sum of all taxes
     public decimal Total;        // Subtotal - Discounts + Taxes + Adjustments
-    public List<string> Log { get; } = new();
+    public List<string> Log { get; } = [];
 }
 

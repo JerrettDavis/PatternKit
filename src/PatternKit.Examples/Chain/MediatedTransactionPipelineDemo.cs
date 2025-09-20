@@ -1,3 +1,4 @@
+using JetBrains.Annotations;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Creational.Builder;
 using PatternKit.Examples.Chain.ConfigDriven;
@@ -66,7 +67,7 @@ public static class TenderRouterFactory
         }
 
         return bb.Build<TenderRouter>(
-            fallbackDefault: static (ctx, in t)
+            fallbackDefault: static (_, in t)
                 => TxResult.Fail("route", $"no handler for {t.Kind}"),
             projector: static (predicates, steps, _, @default) =>
             {
@@ -610,6 +611,7 @@ public sealed class TransactionContext
 /// <param name="Ok">True for success; false for failure.</param>
 /// <param name="Code">Machine-readable code (e.g., "paid", "age").</param>
 /// <param name="Message">Human-readable message.</param>
+[UsedImplicitly]
 public readonly record struct TxResult(bool Ok, string Code, string Message)
 {
     /// <summary>
@@ -831,23 +833,7 @@ public sealed class CardTenderStrategy(CardProcessors processors) : ITenderStrat
     }
 }
 
-/// <summary>
-/// Small registry that resolves a single <see cref="ITenderStrategy"/> by <see cref="PaymentKind"/>.
-/// </summary>
-public sealed class TenderStrategyRegistry
-{
-    private readonly Dictionary<PaymentKind, ITenderStrategy> _map;
 
-    /// <summary>Creates a registry from the provided strategies.</summary>
-    public TenderStrategyRegistry(IEnumerable<ITenderStrategy> strategies)
-        => _map = strategies.ToDictionary(s => s.Kind);
-
-    /// <summary>Resolves the strategy for the specified <paramref name="kind"/>.</summary>
-    public ITenderStrategy Resolve(PaymentKind kind)
-        => _map.TryGetValue(kind, out var s)
-            ? s
-            : throw new InvalidOperationException($"No strategy for {kind}");
-}
 
 /// <summary>
 /// Rounds up to the next dollar when a charity SKU is present and notifies a tracker.
