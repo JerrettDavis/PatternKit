@@ -4,7 +4,7 @@ using System.Text.Json;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Common;
 
-namespace PatternKit.Examples.Coercion;
+namespace PatternKit.Examples.Strategies.Coercion;
 
 /// <summary>
 /// Provides strategy-driven, allocation-light coercion from <see cref="object"/> to <typeparamref name="T"/>.

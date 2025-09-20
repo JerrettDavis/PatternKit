@@ -1,43 +1,102 @@
-using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Behavioral.Mediator;
 
 namespace PatternKit.Examples.MediatorDemo;
 
-// Marker request/response abstractions (MediatR-like)
-public interface ICommand<TResponse> { }
-public interface INotification { }
-public interface IStreamRequest<TItem> { }
+/// <summary>
+/// Marker interface representing a command that yields a response value of <typeparamref name="TResponse"/>.
+/// Commands are handled by a single <see cref="ICommandHandler{TRequest,TResponse}"/>.
+/// </summary>
+/// <typeparam name="TResponse">Response value type.</typeparam>
+public interface ICommand<TResponse>
+{
+}
 
-// Handlers
+/// <summary>
+/// Marker interface representing a notification published in a fire-and-forget fan-out model.
+/// Zero or more <see cref="INotificationHandler{TNotification}"/> instances may handle a notification.
+/// </summary>
+public interface INotification
+{
+}
+
+/// <summary>
+/// Marker interface representing a streaming request which yields an asynchronous sequence of <typeparamref name="TItem"/> items.
+/// </summary>
+/// <typeparam name="TItem">Item element type produced by the stream handler.</typeparam>
+public interface IStreamRequest<TItem>
+{
+}
+
+/// <summary>
+/// Handles a command request producing a <typeparamref name="TResponse"/>.
+/// </summary>
+/// <typeparam name="TRequest">Concrete command type.</typeparam>
+/// <typeparam name="TResponse">Response type.</typeparam>
 public interface ICommandHandler<in TRequest, TResponse> where TRequest : ICommand<TResponse>
 {
+    /// <summary>Handle the command.</summary>
+    /// <param name="request">Request instance.</param>
+    /// <param name="ct">Cancellation token.</param>
     ValueTask<TResponse> Handle(TRequest request, CancellationToken ct);
 }
 
+/// <summary>
+/// Handles a notification instance in a fan-out publish model.
+/// </summary>
+/// <typeparam name="TNotification">Notification type.</typeparam>
 public interface INotificationHandler<in TNotification> where TNotification : INotification
 {
+    /// <summary>Handle the notification.</summary>
+    /// <param name="notification">Notification instance.</param>
+    /// <param name="ct">Cancellation token.</param>
     ValueTask Handle(TNotification notification, CancellationToken ct);
 }
 
+/// <summary>
+/// Handles a streaming request yielding an async sequence of items.
+/// </summary>
+/// <typeparam name="TRequest">Stream request type.</typeparam>
+/// <typeparam name="TItem">Produced item type.</typeparam>
 public interface IStreamRequestHandler<in TRequest, out TItem> where TRequest : IStreamRequest<TItem>
 {
+    /// <summary>Handle the stream request producing a sequence.</summary>
+    /// <param name="request">Request instance.</param>
+    /// <param name="ct">Cancellation token.</param>
     IAsyncEnumerable<TItem> Handle(TRequest request, CancellationToken ct);
 }
 
-// Pipeline behavior (request/response)
+/// <summary>
+/// Pipeline behavior for a command providing around advice similar to middleware.
+/// </summary>
+/// <typeparam name="TRequest">Command type.</typeparam>
+/// <typeparam name="TResponse">Response type.</typeparam>
 public interface IPipelineBehavior<TRequest, TResponse> where TRequest : ICommand<TResponse>
 {
+    /// <summary>
+    /// Invoke the behavior supplying a continuation to execute the next behavior or underlying handler.
+    /// </summary>
+    /// <param name="request">Request instance.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <param name="next">Continuation delegate invoking the remainder of the pipeline.</param>
     ValueTask<TResponse> Handle(TRequest request, CancellationToken ct, Func<TRequest, CancellationToken, ValueTask<TResponse>> next);
 }
 
-// Simple IMediator facade used by the demo
+/// <summary>
+/// Application-facing mediator facade exposing high-level send/publish/stream operations.
+/// </summary>
 public interface IAppMediator
 {
+    /// <summary>Send a command to a single handler and receive a typed response.</summary>
     ValueTask<TResponse> Send<TResponse>(ICommand<TResponse> request, CancellationToken ct = default);
+
+    /// <summary>Publish a notification to zero or more handlers (no throw if none).</summary>
     ValueTask Publish(INotification notification, CancellationToken ct = default);
 #if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
+    /// <summary>Execute a streaming request yielding an async sequence of items.</summary>
     IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken ct = default);
 #endif
 }
@@ -52,6 +111,15 @@ internal sealed class MediatorRegistry
 
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Scan the supplied assemblies for mediator abstractions (handlers, behaviors) and register them.
+    /// </summary>
+    /// <param name="services">Service collection.</param>
+    /// <param name="assemblies">Assemblies to scan (defaults to executing assembly if empty).</param>
+    /// <returns>The modified collection.</returns>
+    /// <remarks>
+    /// Open-generic behaviors are stored for runtime closure and executed without direct DI registration to avoid container leakage.
+    /// </remarks>
     public static IServiceCollection AddPatternKitMediator(this IServiceCollection services, params Assembly[] assemblies)
     {
         if (assemblies is null || assemblies.Length == 0)
@@ -71,7 +139,7 @@ public static class ServiceCollectionExtensions
                 {
                     if (!it.IsGenericType)
                         continue;
-                    
+
                     var def = it.GetGenericTypeDefinition();
                     var args = it.GetGenericArguments();
 
@@ -109,6 +177,7 @@ public static class ServiceCollectionExtensions
                             services.AddTransient(it, t);
                             services.AddTransient(t);
                         }
+
                         behaviors.Add((t, args[0], args[1]));
                     }
                 }
@@ -139,6 +208,11 @@ internal sealed class AppMediator : IAppMediator
     private readonly Dictionary<Type, Func<object, CancellationToken, IAsyncEnumerable<object?>>> _streamInvokers = new();
 #endif
 
+    /// <summary>
+    /// Create an <see cref="AppMediator"/> using discovered registration metadata.
+    /// </summary>
+    /// <param name="sp">Root service provider.</param>
+    /// <param name="reg">Discovered registry of mediator components.</param>
     public AppMediator(IServiceProvider sp, MediatorRegistry reg)
     {
         _sp = sp;
@@ -175,6 +249,7 @@ internal sealed class AppMediator : IAppMediator
         _mediator = b.Build();
     }
 
+    /// <inheritdoc />
     public async ValueTask<TResponse> Send<TResponse>(ICommand<TResponse> request, CancellationToken ct = default)
     {
         var t = request.GetType();
@@ -184,23 +259,28 @@ internal sealed class AppMediator : IAppMediator
         return obj is TResponse r ? r : default!;
     }
 
+    /// <inheritdoc />
     public ValueTask Publish(INotification notification, CancellationToken ct = default)
-        => _publishInvokers.TryGetValue(notification.GetType(), out var inv) 
-            ? inv(notification, ct) 
+        => _publishInvokers.TryGetValue(notification.GetType(), out var inv)
+            ? inv(notification, ct)
             : default;
 
 #if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
+    /// <inheritdoc />
     public IAsyncEnumerable<TItem> Stream<TItem>(IStreamRequest<TItem> request, CancellationToken ct = default)
     {
         var t = request.GetType();
-        return _streamInvokers.TryGetValue(t, out var inv) 
-            ? Adapt<TItem>(inv(request, ct), ct) 
+        return _streamInvokers.TryGetValue(t, out var inv)
+            ? AdaptStream<TItem>(inv(request, ct), ct)
             : throw new InvalidOperationException($"No stream handler for request type {t}");
 
-        static async IAsyncEnumerable<TItem> Adapt<TItem>(IAsyncEnumerable<object?> src, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken token)
+        static async IAsyncEnumerable<TChild> AdaptStream<TChild>(
+            IAsyncEnumerable<object?> src,
+            [EnumeratorCancellation]
+            CancellationToken token)
         {
             await foreach (var o in src.WithCancellation(token).ConfigureAwait(false))
-                yield return o is TItem i ? i : default!;
+                yield return o is TChild i ? i : default!;
         }
     }
 #endif
@@ -224,43 +304,47 @@ internal sealed class AppMediator : IAppMediator
     private Func<object, CancellationToken, ValueTask> CreatePublishInvokerGeneric<TNotification>() where TNotification : INotification
         => (obj, ct) => _mediator.Publish((TNotification)obj, ct);
 
-#if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
     private Func<object, CancellationToken, IAsyncEnumerable<object?>> CreateStreamInvoker(Type reqT, Type itemT)
     {
         var mi = typeof(AppMediator).GetMethod(nameof(CreateStreamInvokerGeneric), BindingFlags.NonPublic | BindingFlags.Instance)!;
         return (Func<object, CancellationToken, IAsyncEnumerable<object?>>)mi.MakeGenericMethod(reqT, itemT).Invoke(this, null)!;
     }
 
-    private Func<object, CancellationToken, IAsyncEnumerable<object?>> CreateStreamInvokerGeneric<TRequest, TItem>() where TRequest : IStreamRequest<TItem>
+    private Func<object, CancellationToken, IAsyncEnumerable<object?>> CreateStreamInvokerGeneric<TRequest, TItem>()
+        where TRequest : IStreamRequest<TItem>
         => (obj, ct) => Adapt(_mediator.Stream<TRequest, TItem>((TRequest)obj, ct), ct);
 
-    private static async IAsyncEnumerable<object?> Adapt<T>(IAsyncEnumerable<T> src, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct)
+    private static async IAsyncEnumerable<object?> Adapt<T>(
+        IAsyncEnumerable<T> src,
+        [EnumeratorCancellation] CancellationToken ct)
     {
         await foreach (var x in src.WithCancellation(ct).ConfigureAwait(false))
             yield return x;
     }
-#endif
 
+    [UsedImplicitly]
     private void RegisterCommand(Mediator.Builder b, Type reqT, Type resT, Type handlerT)
     {
         var method = typeof(AppMediator).GetMethod(nameof(RegisterCommandGeneric), BindingFlags.NonPublic | BindingFlags.Instance)!
-            .MakeGenericMethod(reqT, resT, handlerT);
-        method.Invoke(this, new object[] { b });
+            .MakeGenericMethod(reqT, resT);
+        method.Invoke(this, [b]);
     }
 
+    [UsedImplicitly]
     private void RegisterNotification(Mediator.Builder b, Type noteT, Type handlerT)
     {
         var method = typeof(AppMediator).GetMethod(nameof(RegisterNotificationGeneric), BindingFlags.NonPublic | BindingFlags.Instance)!
-            .MakeGenericMethod(noteT, handlerT);
-        method.Invoke(this, new object[] { b });
+            .MakeGenericMethod(noteT);
+        method.Invoke(this, [b]);
     }
 
 #if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
+    [UsedImplicitly]
     private void RegisterStream(Mediator.Builder b, Type reqT, Type itemT, Type handlerT)
     {
         var method = typeof(AppMediator).GetMethod(nameof(RegisterStreamGeneric), BindingFlags.NonPublic | BindingFlags.Instance)!
-            .MakeGenericMethod(reqT, itemT, handlerT);
-        method.Invoke(this, new object[] { b });
+            .MakeGenericMethod(reqT, itemT);
+        method.Invoke(this, [b]);
     }
 #endif
 
@@ -268,28 +352,32 @@ internal sealed class AppMediator : IAppMediator
     {
         var method = typeof(AppMediator).GetMethod(nameof(RegisterBehaviorGeneric), BindingFlags.NonPublic | BindingFlags.Instance)!
             .MakeGenericMethod(behaviorT, requestT, responseT);
-        method.Invoke(this, new object[] { b });
+        method.Invoke(this, [b]);
     }
 
     private void RegisterBehaviorOpenGeneric(Mediator.Builder b, Type openBehavior)
     {
         b.Whole((in reqObj, ct, next) =>
         {
-            var reqType = reqObj.GetType();
+            var reqType = reqObj!.GetType();
             var cmdIface = reqType.GetInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICommand<>));
             if (cmdIface is null)
                 return next(in reqObj, ct);
             var resType = cmdIface.GetGenericArguments()[0];
             var closedBehavior = openBehavior.IsGenericTypeDefinition ? openBehavior.MakeGenericType(reqType, resType) : openBehavior;
             // Resolve behavior via ActivatorUtilities to avoid requiring concrete registrations
-            var beh = Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance(_sp, closedBehavior);
+            var beh = ActivatorUtilities.CreateInstance(_sp, closedBehavior);
             var mi = typeof(AppMediator).GetMethod(nameof(InvokeBehavior), BindingFlags.NonPublic | BindingFlags.Instance)!
                 .MakeGenericMethod(reqType, resType, closedBehavior);
-            return (ValueTask<object?>)mi.Invoke(this, new object[] { beh, reqObj, ct, next })!;
+            return (ValueTask<object?>)mi.Invoke(this, [beh, reqObj, ct, next])!;
         });
     }
 
-    private ValueTask<object?> InvokeBehavior<TRequest, TResponse, TBehavior>(object behavior, object reqObj, CancellationToken ct, Mediator.MediatorNext next)
+    private ValueTask<object?> InvokeBehavior<TRequest, TResponse, TBehavior>(
+        object behavior,
+        object reqObj,
+        CancellationToken ct,
+        Mediator.MediatorNext next)
         where TRequest : ICommand<TResponse>
         where TBehavior : IPipelineBehavior<TRequest, TResponse>
     {
@@ -299,22 +387,20 @@ internal sealed class AppMediator : IAppMediator
         ValueTask<TResponse> TypedNext(TRequest r, CancellationToken c)
         {
             object o = r;
-            return MediatorHelpersUnbox.Unbox<TResponse>(next(in o, c));
+            return BoxHelper.Unbox<TResponse>(next(in o, c));
         }
     }
 
     // ----- Generic helpers (closed at runtime) -----
 
-    private void RegisterCommandGeneric<TRequest, TResponse, THandler>(Mediator.Builder b)
+    private void RegisterCommandGeneric<TRequest, TResponse>(Mediator.Builder b)
         where TRequest : ICommand<TResponse>
-        where THandler : class, ICommandHandler<TRequest, TResponse>
     {
         b.Command((in TRequest req, CancellationToken ct) => _sp.GetRequiredService<ICommandHandler<TRequest, TResponse>>().Handle(req, ct));
     }
 
-    private void RegisterNotificationGeneric<TNotification, THandler>(Mediator.Builder b)
+    private void RegisterNotificationGeneric<TNotification>(Mediator.Builder b)
         where TNotification : INotification
-        where THandler : class, INotificationHandler<TNotification>
     {
         b.Notification((in TNotification n, CancellationToken ct) =>
         {
@@ -332,9 +418,8 @@ internal sealed class AppMediator : IAppMediator
     }
 
 #if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
-    private void RegisterStreamGeneric<TRequest, TItem, THandler>(Mediator.Builder b)
+    private void RegisterStreamGeneric<TRequest, TItem>(Mediator.Builder b)
         where TRequest : IStreamRequest<TItem>
-        where THandler : class, IStreamRequestHandler<TRequest, TItem>
     {
         b.Stream((in TRequest r, CancellationToken ct) => _sp.GetRequiredService<IStreamRequestHandler<TRequest, TItem>>().Handle(r, ct));
     }
@@ -349,37 +434,29 @@ internal sealed class AppMediator : IAppMediator
             if (reqObj is TRequest req)
             {
                 // Resolve behavior via ActivatorUtilities to avoid requiring concrete registrations
-                var beh = Microsoft.Extensions.DependencyInjection.ActivatorUtilities.CreateInstance<TBehavior>(_sp);
+                var beh = ActivatorUtilities.CreateInstance<TBehavior>(_sp);
                 return BoxHelper.Box(beh.Handle(req, ct, TypedNext));
 
                 ValueTask<TResponse> TypedNext(TRequest r, CancellationToken c)
                 {
-                    object o = r!;
-                    return MediatorHelpersUnbox.Unbox<TResponse>(next(in o, c));
+                    object o = r;
+                    return BoxHelper.Unbox<TResponse>(next(in o, c));
                 }
             }
+
             return next(in reqObj, ct);
         });
     }
 }
 
-internal static class MediatorHelpersUnbox
-{
-    public static ValueTask<T> Unbox<T>(ValueTask<object?> vt)
-    {
-        if (vt.IsCompletedSuccessfully)
-            return new ValueTask<T>((T)vt.Result!);
-        return Await(vt);
-        static async ValueTask<T> Await(ValueTask<object?> v)
-        {
-            var o = await v.ConfigureAwait(false);
-            return o is null ? default! : (T)o;
-        }
-    }
-}
-
 internal static class BoxHelper
 {
+    /// <summary>
+    /// Box a <see cref="ValueTask{T}"/> into a <see cref="ValueTask{Object}"/> without extra heap allocation where possible.
+    /// </summary>
+    /// <typeparam name="T">Value type.</typeparam>
+    /// <param name="vt">Original value task.</param>
+    /// <returns>Boxed value task.</returns>
     public static ValueTask<object?> Box<T>(ValueTask<T> vt)
     {
         return vt.IsCompletedSuccessfully ? new ValueTask<object?>(vt.Result) : Await(vt);
@@ -391,14 +468,20 @@ internal static class BoxHelper
         }
     }
 
-    public static ValueTask<object?> UnsafeBox<T>(ValueTask vt)
+    /// <summary>
+    /// Unbox a previously boxed <see cref="ValueTask{Object}"/> back to a strongly typed <see cref="ValueTask{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">Target type.</typeparam>
+    /// <param name="vt">Boxed task.</param>
+    /// <returns>Typed value task.</returns>
+    public static ValueTask<T> Unbox<T>(ValueTask<object?> vt)
     {
-        // ValueTask (non-generic) boxing helper for reflected calls; used only for Send wrapper
-        return Await(vt);
-        static async ValueTask<object?> Await(ValueTask v)
+        return vt.IsCompletedSuccessfully ? new ValueTask<T>((T)vt.Result!) : Await(vt);
+
+        static async ValueTask<T> Await(ValueTask<object?> v)
         {
-            await v.ConfigureAwait(false);
-            return null;
+            var o = await v.ConfigureAwait(false);
+            return o is null ? default! : (T)o;
         }
     }
 }

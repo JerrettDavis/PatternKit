@@ -45,7 +45,7 @@ public sealed class SingletonTests(ITestOutputHelper output) : TinyBddXunitBase(
     [Fact]
     public async Task Thread_Safety_Single_Factory_Invocation()
     {
-        int calls = 0;
+        var calls = 0;
         var singleton = Singleton<Thing>.Create(() => { Interlocked.Increment(ref calls); return NewThing(); }).Build();
 
         await Given("32 concurrent Instance reads", () => singleton)

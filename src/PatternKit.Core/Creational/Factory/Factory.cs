@@ -10,7 +10,7 @@ namespace PatternKit.Creational.Factory;
 /// <typeparam name="TOut">The constructed product type.</typeparam>
 public sealed class Factory<TKey, TOut> where TKey : notnull
 {
-    /// <summary>Creator delegate that constructs a <typeparamref name="TOut"/>.</summary>
+    /// <summary>Creator delegate that constructs the given type.</summary>
     public delegate TOut Creator();
 
     private readonly IReadOnlyDictionary<TKey, Creator> _creators;
@@ -86,7 +86,7 @@ public sealed class Factory<TKey, TOut> where TKey : notnull
 /// <typeparam name="TOut">The constructed product type.</typeparam>
 public sealed class Factory<TKey, TIn, TOut> where TKey : notnull
 {
-    /// <summary>Creator delegate that constructs a <typeparamref name="TOut"/> from an input context.</summary>
+    /// <summary>Creator delegate that constructs an object from an input context.</summary>
     public delegate TOut Creator(in TIn input);
 
     private readonly IReadOnlyDictionary<TKey, Creator> _creators;

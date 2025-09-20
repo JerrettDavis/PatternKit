@@ -58,7 +58,7 @@ public sealed class Command<TCtx>
         /// <summary>Set sync Do handler (adapter).</summary>
         public Builder Do(Action<TCtx> @do)
         {
-            _do = (in TCtx c, CancellationToken _) =>
+            _do = (in c, _) =>
             {
                 @do(c);
                 return default;
@@ -76,7 +76,7 @@ public sealed class Command<TCtx>
         /// <summary>Set sync Undo handler (adapter).</summary>
         public Builder Undo(Action<TCtx> undo)
         {
-            _undo = (in TCtx c, CancellationToken _) =>
+            _undo = (in c, _) =>
             {
                 undo(c);
                 return default;
@@ -118,7 +118,7 @@ public sealed class Command<TCtx>
             ValueTask Do(in TCtx ctx, CancellationToken ct)
             {
                 // Fast path: all complete synchronously
-                for (int i = 0; i < items.Length; i++)
+                for (var i = 0; i < items.Length; i++)
                 {
                     var vt = items[i].Execute(in ctx, ct);
                     if (!vt.IsCompletedSuccessfully)
@@ -134,7 +134,7 @@ public sealed class Command<TCtx>
                 static async ValueTask AwaitNext(int index, ValueTask pending, TCtx localCtx, CancellationToken ct2, Command<TCtx>[] itemsArr)
                 {
                     await pending.ConfigureAwait(false);
-                    for (int j = index + 1; j < itemsArr.Length; j++)
+                    for (var j = index + 1; j < itemsArr.Length; j++)
                     {
                         var vt = itemsArr[j].Execute(in localCtx, ct2);
                         if (!vt.IsCompletedSuccessfully)
@@ -148,7 +148,7 @@ public sealed class Command<TCtx>
             // undo: run in reverse; skip items without undo
             ValueTask Undo(in TCtx ctx, CancellationToken ct)
             {
-                for (int i = items.Length - 1; i >= 0; i--)
+                for (var i = items.Length - 1; i >= 0; i--)
                 {
                     if (items[i].TryUndo(in ctx, ct, out var vt))
                     {
@@ -165,7 +165,7 @@ public sealed class Command<TCtx>
                 static async ValueTask AwaitUndo(int startIndex, ValueTask pending, TCtx localCtx, CancellationToken ct2, Command<TCtx>[] itemsArr)
                 {
                     await pending.ConfigureAwait(false);
-                    for (int j = startIndex - 1; j >= 0; j--)
+                    for (var j = startIndex - 1; j >= 0; j--)
                     {
                         if (itemsArr[j].TryUndo(in localCtx, ct2, out var t))
                         {

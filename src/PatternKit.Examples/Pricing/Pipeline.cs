@@ -4,14 +4,11 @@ namespace PatternKit.Examples.Pricing;
 
 public delegate ValueTask PricingStep(PricingContext ctx, CancellationToken ct);
 
-public sealed class PricingPipeline
+public sealed class PricingPipeline(PricingStep[] steps)
 {
-    private readonly PricingStep[] _steps;
-    public PricingPipeline(PricingStep[] steps) => _steps = steps;
-
     public async ValueTask<PricingResult> RunAsync(PricingContext ctx, CancellationToken ct = default)
     {
-        foreach (var step in _steps) await step(ctx, ct);
+        foreach (var step in steps) await step(ctx, ct);
 
         // Summarize
         var res = new PricingResult();
@@ -22,6 +19,7 @@ public sealed class PricingPipeline
             res.Taxes += li.UnitTax * li.Qty;
             res.Total += li.LineNet; // includes adjustment
         }
+
         res.Log.AddRange(ctx.Log);
         ctx.Log.Add($"summary: subtotal={res.Subtotal:0.00} discounts={res.Discounts:0.00} taxes={res.Taxes:0.00} total={res.Total:0.00}");
         return res;
@@ -34,7 +32,11 @@ public sealed class PricingPipelineBuilder
 
     public static PricingPipelineBuilder New() => new();
 
-    public PricingPipelineBuilder Add(PricingStep step) { _steps.Add(step); return this; }
+    public PricingPipelineBuilder Add(PricingStep step)
+    {
+        _steps.Add(step);
+        return this;
+    }
 
     public PricingPipeline Build() => _steps.Build(arr => new PricingPipeline(arr));
 
@@ -83,6 +85,7 @@ public sealed class PricingPipelineBuilder
                     if (!rule.CanStack) appliedExclusive = true;
                 }
             }
+
             return ValueTask.CompletedTask;
         });
 
@@ -96,6 +99,7 @@ public sealed class PricingPipelineBuilder
                 var d = Math.Round(li.BasePrice * pct, 2);
                 li.UnitDiscount += d;
             }
+
             ctx.Log.Add($"paydisc:{ctx.Payment}:{pct:P0}");
             return ValueTask.CompletedTask;
         });
@@ -112,6 +116,7 @@ public sealed class PricingPipelineBuilder
                     li.UnitDiscount += unitOff;
                     ctx.Log.Add($"bundle:{key}:{li.Sku.Id}:-{unitOff:0.00}");
                 }
+
             return ValueTask.CompletedTask;
         });
 
@@ -129,6 +134,7 @@ public sealed class PricingPipelineBuilder
                     ctx.Log.Add($"coupon:{c.Code}:{li.Sku.Id}:-{d:0.00}");
                 }
             }
+
             return ValueTask.CompletedTask;
         });
 
@@ -143,6 +149,7 @@ public sealed class PricingPipelineBuilder
                 li.UnitTax += t;
                 ctx.Log.Add($"tax:{li.Sku.Id}:+{t:0.00}");
             }
+
             return ValueTask.CompletedTask;
         });
 
@@ -151,28 +158,28 @@ public sealed class PricingPipelineBuilder
         {
             _ = ct;
             // compute total pre-rounding
-            decimal total = 0m;
-            foreach (var li in ctx.Items) total += li.UnitNet * li.Qty;
+            var total = ctx.Items.Sum(li => li.UnitNet * li.Qty);
 
             foreach (var r in rules)
             {
-                if (r.ShouldApply(ctx, total))
+                if (!r.ShouldApply(ctx, total))
+                    continue;
+
+                var delta = r.ComputeDelta(ctx, total);
+                if (delta != 0m)
                 {
-                    var delta = r.ComputeDelta(ctx, total);
-                    if (delta != 0m)
+                    // find a target line to absorb delta
+                    var target = r.ChooseTargetLine(ctx) ?? ctx.Items.FirstOrDefault();
+                    if (target is not null)
                     {
-                        // find a target line to absorb delta
-                        var target = r.ChooseTargetLine(ctx) ?? ctx.Items.FirstOrDefault();
-                        if (target is not null)
-                        {
-                            target.PriceAdjustment += delta; // applied once per line
-                            ctx.Log.Add($"round:{r.Key}:{delta:+0.00;-0.00}");
-                            total += delta;
-                        }
+                        target.PriceAdjustment += delta; // applied once per line
+                        ctx.Log.Add($"round:{r.Key}:{delta:+0.00;-0.00}");
                     }
-                    break; // first-match wins
                 }
+
+                break; // first-match wins
             }
+
             return ValueTask.CompletedTask;
         });
 }
@@ -187,16 +194,14 @@ public interface ILoyaltyRule
     decimal ComputeUnitDiscount(LineItem item, PricingContext ctx);
 }
 
-public sealed class PercentLoyaltyRule : ILoyaltyRule
+public sealed class PercentLoyaltyRule(string program, bool canStack, decimal pct, Func<LineItem, PricingContext, bool>? pred = null)
+    : ILoyaltyRule
 {
-    public string Program { get; }
-    public bool CanStack { get; }
-    private readonly Func<LineItem, PricingContext, bool> _pred;
-    private readonly decimal _pct;
-    public PercentLoyaltyRule(string program, bool canStack, decimal pct, Func<LineItem, PricingContext, bool>? pred = null)
-    { Program = program; CanStack = canStack; _pct = pct; _pred = pred ?? ((_, _) => true); }
+    public string Program { get; } = program;
+    public bool CanStack { get; } = canStack;
+    private readonly Func<LineItem, PricingContext, bool> _pred = pred ?? ((_, _) => true);
     public bool AppliesTo(LineItem item, PricingContext ctx) => _pred(item, ctx);
-    public decimal ComputeUnitDiscount(LineItem item, PricingContext ctx) => Math.Round(item.BasePrice * _pct, 2);
+    public decimal ComputeUnitDiscount(LineItem item, PricingContext ctx) => Math.Round(item.BasePrice * pct, 2);
 }
 
 // ---- Taxes ----
@@ -206,16 +211,16 @@ public interface ITaxPolicy
     decimal ComputeUnitTax(LineItem item, PricingContext ctx);
 }
 
-public sealed class RegionCategoryTaxPolicy : ITaxPolicy
+public sealed class RegionCategoryTaxPolicy(Dictionary<string, decimal> regionRate, IEnumerable<string>? exemptCats = null)
+    : ITaxPolicy
 {
-    private readonly Dictionary<string, decimal> _regionRate; // region -> pct
-    private readonly HashSet<string> _exemptCategories;
-    public RegionCategoryTaxPolicy(Dictionary<string, decimal> regionRate, IEnumerable<string>? exemptCats = null)
-    { _regionRate = regionRate; _exemptCategories = new HashSet<string>(exemptCats ?? Array.Empty<string>(), StringComparer.OrdinalIgnoreCase); }
+    // region -> pct
+    private readonly HashSet<string> _exemptCategories = new(exemptCats ?? [], StringComparer.OrdinalIgnoreCase);
+
     public decimal ComputeUnitTax(LineItem item, PricingContext ctx)
     {
         if (item.Sku.Category is not null && _exemptCategories.Contains(item.Sku.Category)) return 0m;
-        if (!_regionRate.TryGetValue(ctx.Location.Region, out var pct) || pct <= 0) return 0m;
+        if (!regionRate.TryGetValue(ctx.Location.Region, out var pct) || pct <= 0) return 0m;
         // tariffs via tag e.g. tariff:0.05
         var tariff = 0m;
         var tag = item.Sku.Tags?.FirstOrDefault(t => t.StartsWith("tariff:", StringComparison.OrdinalIgnoreCase));
@@ -240,23 +245,25 @@ public sealed class CharityRoundUpRule : IRoundingRule
 {
     public string Key => "charity-up";
     public bool ShouldApply(PricingContext ctx, decimal total) => ctx.Items.Any(li => li.Sku.HasTag("charity"));
+
     public decimal ComputeDelta(PricingContext ctx, decimal total)
     {
         var next = Math.Ceiling(total);
         return Math.Round(next - total, 2);
     }
+
     public LineItem? ChooseTargetLine(PricingContext ctx) => ctx.Items.FirstOrDefault(li => li.Sku.HasTag("charity"));
 }
 
 public sealed class NickelCashOnlyRule : IRoundingRule
 {
     public string Key => "nickel";
+
     public bool ShouldApply(PricingContext ctx, decimal total)
         => ctx.Payment == PaymentKind.Cash && ctx.Items.Any(li => li.Sku.HasTag("round:nickel"));
+
     public decimal ComputeDelta(PricingContext ctx, decimal total)
     {
-        // Round to nearest $0.05
-        var cents = (int)Math.Round((total * 100m) % 5m, 0);
         // compute nearest nickel delta
         var remainder = (total * 100m) % 5m; // 0..4.999
         var down = remainder;
@@ -264,6 +271,6 @@ public sealed class NickelCashOnlyRule : IRoundingRule
         var deltaCents = (up <= down) ? up : -down;
         return Math.Round(deltaCents / 100m, 2);
     }
+
     public LineItem? ChooseTargetLine(PricingContext ctx) => ctx.Items.FirstOrDefault(li => li.Sku.HasTag("round:nickel"));
 }
-

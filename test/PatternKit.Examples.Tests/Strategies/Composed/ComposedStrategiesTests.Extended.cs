@@ -4,7 +4,7 @@ using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 
-namespace PatternKit.Examples.Tests.ComposedStrategiesTests
+namespace PatternKit.Examples.Tests.Strategies.Composed
 {
     // Service spies to verify short-circuit behavior in Push/IM gates.
     sealed class SpyIdentity : IIdentityService

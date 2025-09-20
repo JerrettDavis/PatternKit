@@ -16,8 +16,8 @@ public sealed class AuthLoggingDemoTests(ITestOutputHelper output) : TinyBddXuni
         string? auth = null)
     {
         var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        if (!string.IsNullOrWhiteSpace(requestId)) d["X-Request-Id"] = requestId!;
-        if (!string.IsNullOrWhiteSpace(auth)) d["Authorization"] = auth!;
+        if (!string.IsNullOrWhiteSpace(requestId)) d["X-Request-Id"] = requestId;
+        if (!string.IsNullOrWhiteSpace(auth)) d["Authorization"] = auth;
         return d;
     }
 
@@ -98,7 +98,7 @@ public sealed class AuthLoggingDemoTests(ITestOutputHelper output) : TinyBddXuni
                 chain.Execute(new HttpRequest("GET", "/admin/metrics", H(auth: "Bearer token")));
                 return log;
             })
-            .Then("single line is method/path", log => log.SequenceEqual(new[] { "GET /admin/metrics" }))
+            .Then("single line is method/path", log => log.SequenceEqual(["GET /admin/metrics"]))
             .AssertPassed();
 
     [Scenario("Order with both: X-Request-Id then deny then method/path")]

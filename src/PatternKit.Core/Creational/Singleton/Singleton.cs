@@ -1,5 +1,3 @@
-using System.Threading;
-
 namespace PatternKit.Creational.Singleton;
 
 /// <summary>
@@ -14,7 +12,6 @@ public sealed class Singleton<T>
 
     private readonly Factory _factory;
     private readonly Action<T>? _init;
-    private readonly bool _eager;
 
     private T _value = default!;
     private bool _created; // guarded via Volatile.Read/Write
@@ -24,40 +21,33 @@ public sealed class Singleton<T>
     {
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         _init = init;
-        _eager = eager;
 
-        if (_eager)
-        {
-            // Eagerly create and initialize once during construction
-            var v = _factory();
-            _init?.Invoke(v);
-            _value = v;
-            Volatile.Write(ref _created, true);
-        }
+        if (!eager)
+            return;
+        
+        // Eagerly create and initialize once during construction
+        var v = _factory();
+        _init?.Invoke(v);
+        _value = v;
+        Volatile.Write(ref _created, true);
     }
 
     /// <summary>Gets the singleton instance, creating it on first access when configured for lazy creation.</summary>
-    public T Instance
-    {
-        get
-        {
-            if (Volatile.Read(ref _created)) return _value;
-            return CreateSlow();
-        }
-    }
+    public T Instance => Volatile.Read(ref _created) ? _value : CreateSlow();
 
     private T CreateSlow()
     {
         if (Volatile.Read(ref _created)) return _value; // re-check
         lock (_sync)
         {
-            if (!_created)
-            {
-                var v = _factory();
-                _init?.Invoke(v);
-                _value = v;
-                Volatile.Write(ref _created, true);
-            }
+            if (_created)
+                return _value;
+            
+            var v = _factory();
+            _init?.Invoke(v);
+            _value = v;
+            Volatile.Write(ref _created, true);
+
             return _value;
         }
     }

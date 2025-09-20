@@ -45,7 +45,7 @@ public static class PricingDemo
         };
 
         // Taxes: region base + optional per-SKU tariff:0.xx and category exemptions
-        var taxes = new RegionCategoryTaxPolicy(new() { ["US-NE"] = 0.0875m }, new[] { "Medicine" });
+        var taxes = new RegionCategoryTaxPolicy(new() { ["US-NE"] = 0.0875m }, ["Medicine"]);
 
         // Rounding rules (first-match wins)
         var rounding = new IRoundingRule[] { new CharityRoundUpRule(), new NickelCashOnlyRule() };
@@ -70,13 +70,16 @@ public static class PricingDemo
         {
             Location = new Location("US-NE", Country: "US", State: "NE"),
             Payment = PaymentKind.Cash,
-            Items = new()
-            {
+            Items =
+            [
                 new LineItem { Sku = new("SKU-APPLE", "Apple", Category: "Grocery", Tags: ["price:db"]), Qty = 2 },
                 new LineItem { Sku = new("SKU-MILK", "Milk", Category: "Grocery", Tags: ["price:db", "coupon:eligible"]), Qty = 1 },
                 new LineItem { Sku = new("SKU-CHARITY", "Charity", Category: "Misc", Tags: ["price:db", "charity", "no-subtotal"]), Qty = 1 },
-                new LineItem { Sku = new("SKU-NICKEL", "NickelRounder", Category: "Misc", BundleKey: "BNDL", Tags: ["price:db", "round:nickel"]), Qty = 2 },
-            }
+                new LineItem
+                {
+                    Sku = new("SKU-NICKEL", "NickelRounder", Category: "Misc", BundleKey: "BNDL", Tags: ["price:db", "round:nickel"]), Qty = 2
+                }
+            ]
         };
 
         ctx.Loyalty.Add(new("LOY-5"));

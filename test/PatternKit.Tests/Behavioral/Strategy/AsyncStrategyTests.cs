@@ -65,7 +65,7 @@ public sealed class AsyncStrategyTests(ITestOutputHelper output) : TinyBddXunitB
             .Default(static _ => "other")
             .Build();
 
-        return new Ctx(s, new List<string>());
+        return new Ctx(s, []);
     }
 
     private static Ctx Build_OrderLog()
@@ -105,7 +105,7 @@ public sealed class AsyncStrategyTests(ITestOutputHelper output) : TinyBddXunitB
             })
             .Build();
 
-        return new Ctx(s, new List<string>());
+        return new Ctx(s, []);
     }
 
     private static async Task<Ctx> ExecAsync(Ctx c, int n, CancellationToken ct = default)

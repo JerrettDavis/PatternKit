@@ -95,8 +95,8 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
     public Task With_Input_Mapping_And_Default()
         => Given("a factory where 'double' maps to x*2; default returns x", () =>
                 NewWithInput()
-                    .Map("double", static (in int x) => x * 2)
-                    .Default(static (in int x) => x)
+                    .Map("double", static (in x) => x * 2)
+                    .Default(static (in x) => x)
                     .Build())
             .When("creating for 'double' and 'other'", f => (d: f.Create("double", 5), o: f.Create("other", 7)))
             .Then("double maps to 10", r => r.d == 10)
@@ -107,7 +107,7 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
     [Fact]
     public Task With_Input_TryCreate_NoDefault()
         => Given("a factory without default and only 'triple'", () =>
-                NewWithInput().Map("triple", static (in int x) => x * 3).Build())
+                NewWithInput().Map("triple", static (in x) => x * 3).Build())
             .When("TryCreate on missing key", f => f.TryCreate("quad", 4, out var _))
             .Then("returns false", ok => ok == false)
             .AssertPassed();
@@ -116,7 +116,7 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
     [Fact]
     public Task With_Input_Create_NoDefault_Throws()
         => Given("a factory without default and only 'double'", () =>
-                NewWithInput().Map("double", static (in int x) => x * 2).Build())
+                NewWithInput().Map("double", static (in x) => x * 2).Build())
             .When("calling Create on missing key", f => Record.Exception(() => f.Create("noop", 1)))
             .Then("throws InvalidOperationException", ex => ex is InvalidOperationException)
             .AssertPassed();
@@ -134,7 +134,7 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
     [Fact]
     public Task Null_Key_Throws_ArgumentNull_WithInput()
         => Given("a factory with a default", () =>
-                NewWithInput().Default(static (in int x) => x).Build())
+                NewWithInput().Default(static (in x) => x).Build())
             .When("calling Create(null, 1)", f => Record.Exception(() => f.Create(null!, 1)))
             .Then("throws ArgumentNullException", ex => ex is ArgumentNullException)
             .AssertPassed();

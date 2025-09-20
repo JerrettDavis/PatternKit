@@ -16,7 +16,7 @@ public sealed class MediatorTests(ITestOutputHelper output) : TinyBddXunitBase(o
 #if NET8_0_OR_GREATER
     private static async IAsyncEnumerable<int> Range(int start, int count)
     {
-        for (int i = 0; i < count; i++) { await Task.Yield(); yield return start + i; }
+        for (var i = 0; i < count; i++) { await Task.Yield(); yield return start + i; }
     }
 #endif
 

@@ -63,7 +63,7 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
                 return true;
             })
             .And("HasDefault=false and Default==fallback", p =>
-                p.HasDefault == false && ReferenceEquals(p.Default, (Handler)Fallback))
+                !p.HasDefault && ReferenceEquals(p.Default, (Handler)Fallback))
             .AssertPassed();
     }
 
@@ -79,7 +79,7 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
                 return BuildProduct(b, HandleDefaultA);
             })
             .Then("HasDefault=true and Default==configured A (not fallback)", p =>
-                p.HasDefault == true && ReferenceEquals(p.Default, (Handler)HandleDefaultA))
+                p.HasDefault && ReferenceEquals(p.Default, (Handler)HandleDefaultA))
             .AssertPassed();
     }
 
@@ -96,7 +96,7 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
                 return BuildProduct(b);
             })
             .Then("HasDefault=true and Default==B", p =>
-                p.HasDefault == true && ReferenceEquals(p.Default, (Handler)HandleDefaultB))
+                p.HasDefault && ReferenceEquals(p.Default, (Handler)HandleDefaultB))
             .AssertPassed();
     }
 
@@ -112,7 +112,7 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
             .Then("arrays are empty; HasDefault=false; Default==fallback", p =>
                 p.Preds.Length == 0 &&
                 p.Handlers.Length == 0 &&
-                p.HasDefault == false &&
+                !p.HasDefault &&
                 ReferenceEquals(p.Default, (Handler)Fallback))
             .AssertPassed();
     }
