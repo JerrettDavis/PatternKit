@@ -25,12 +25,15 @@ namespace PatternKit.Behavioral.Iterator;
 ///   <item><description><b>Lookahead</b>: inspect future elements without advancing (parser / tokenizer friendly).</description></item>
 ///   <item><description><b>LINQ interop</b>: any cursor can be projected to an <see cref="IEnumerable{T}"/> without changing its own position.</description></item>
 /// </list>
-/// <para><b>Not thread-safe.</b> Treat instance + its cursors as confined to one logical thread of use.</para>
+/// <para><b>Thread-safety:</b> Concurrent readers (cursors / enumeration) are supported; the first-touch buffering
+/// operation is synchronized so elements are pulled from the underlying enumerator at most once. Writes only occur
+/// during initial enumeration into the internal buffer; after exhaustion the buffer is immutable.</para>
 /// </remarks>
 public sealed class ReplayableSequence<T>
 {
-    private readonly List<T> _buffer = [];
+    private readonly List<T> _buffer = new();
     private IEnumerator<T>? _source; // null when exhausted / disposed
+    private readonly object _sync = new();
 
     private ReplayableSequence(IEnumerable<T> source) => _source = source.GetEnumerator();
 
@@ -54,22 +57,41 @@ public sealed class ReplayableSequence<T>
         }
     }
 
+    /// <summary>Exposes the sequence as an <see cref="IAsyncEnumerable{T}"/> (synchronous push under the hood).</summary>
+#if !NETSTANDARD2_0
+    public async IAsyncEnumerable<T> AsAsyncEnumerable([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+    {
+        var c = GetCursor();
+        while (c.TryNext(out var v, out var next))
+        {
+            ct.ThrowIfCancellationRequested();
+            yield return v;
+            c = next;
+            await Task.Yield(); // minimal fairness for async pipelines
+        }
+    }
+#endif
     internal bool EnsureBuffered(int index)
     {
         if (index < _buffer.Count) return true; // already present
         if (_source is null) return false;      // already exhausted
-
-        while (index >= _buffer.Count)
+        lock (_sync)
         {
-            if (_source.MoveNext())
+            if (index < _buffer.Count) return true; // check again under lock
+            if (_source is null) return false;      // check again under lock
+
+            while (index >= _buffer.Count)
             {
-                _buffer.Add(_source.Current);
-            }
-            else
-            {
-                _source.Dispose();
-                _source = null;
-                return false;
+                if (_source.MoveNext())
+                {
+                    _buffer.Add(_source.Current);
+                }
+                else
+                {
+                    _source.Dispose();
+                    _source = null;
+                    return false;
+                }
             }
         }
 
