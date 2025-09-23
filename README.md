@@ -91,6 +91,35 @@ if (fork.TryNext(out var v3, out fork) && fork.TryNext(out var v4, out fork))
 var evens = c3.Where(x => x % 2 == 0).ToList(); // [2,4] using a snapshot enumeration
 ```
 
+### WindowSequence (sliding / striding windows)
+```csharp
+using PatternKit.Behavioral.Iterator;
+
+// Full sliding windows (size 3, stride 1)
+var slides = Enumerable.Range(1,7)
+    .Windows(size:3)
+    .Select(w => string.Join(',', w.ToArray()))
+    .ToList(); // ["1,2,3","2,3,4","3,4,5","4,5,6","5,6,7"]
+
+// Stride 2 (skip one between window starts)
+var stride = Enumerable.Range(1,9)
+    .Windows(size:4, stride:2)
+    .Select(w => string.Join('-', w.ToArray()))
+    .ToList(); // ["1-2-3-4","3-4-5-6","5-6-7-8"]
+
+// Include trailing partial
+var partial = new[]{1,2,3,4,5}
+    .Windows(size:3, stride:3, includePartial:true)
+    .Select(w => (Vals: w.ToArray(), w.IsPartial))
+    .ToList(); // [ ([1,2,3], false), ([4,5], true) ]
+
+// Reuse buffer (zero alloc per full window) – copy if you persist
+var reused = Enumerable.Range(1,6)
+    .Windows(size:3, reuseBuffer:true)
+    .Select(w => w.ToArray()) // snapshot copy each window
+    .ToList();
+```
+
 ---
 
 ## 📘 Pattern Quick Reference
@@ -292,7 +321,7 @@ PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral**
 | -------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • [Composer](docs/patterns/creational/builder/composer.md) ✓ • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                                                                                                                                                                                                                                                                                               |
 | **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                                   |
-| **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • Command (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
+| **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) ✓ • Command (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
 Each pattern will ship with:
 
