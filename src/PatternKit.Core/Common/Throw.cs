@@ -75,6 +75,33 @@ public static class Throw
     [DoesNotReturn]
     public static void NoStrategyMatched() =>
         throw new InvalidOperationException("No strategy matched and no default provided.");
+
+
+    /// <summary>
+    /// Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative.
+    /// </summary>
+    /// <param name="value">The value to check.</param>
+    /// <param name="name">The name of the parameter being checked (automatically provided).</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is negative.</exception>
+    public static void IfNegative(int value, [CallerMemberName] string? name = null)
+    {
+        if (value < 0)
+            throw new ArgumentOutOfRangeException(name, value, "Value must be non-negative.");   
+    }
+    
+    
+    /// <summary>
+    /// Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is zero or negative.
+    /// </summary>
+    /// <param name="value">The value to check.</param>
+    /// <param name="name">The name of the parameter being checked (automatically provided).</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="value"/> is zero or negative.</exception>
+    public static void IfNegativeOrZero(int value, [CallerMemberName] string? name = null)
+    {
+        if (value <= 0)
+            throw new ArgumentOutOfRangeException(name, value, "Value must be positive.");   
+    }
+        
     
     public static void ArgumentNullWhenNull([CallerMemberName] object? arg = null)
     {

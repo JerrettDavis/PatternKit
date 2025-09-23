@@ -19,6 +19,16 @@
               href: behavioral/strategy/actionstrategy.md
             - name: AsyncStrategy
               href: behavioral/strategy/asyncstrategy.md
+        - name: Iterator
+          items:
+            - name: ReplayableSequence
+              href: behavioral/iterator/replayablesequence.md
+            - name: WindowSequence
+              href: behavioral/iterator/windowsequence.md
+            - name: Flow
+              href: behavioral/iterator/flow.md
+            - name: AsyncFlow
+              href: behavioral/iterator/asyncflow.md
         - name: Mediator
           href: behavioral/mediator/mediator.md
         - name: Command

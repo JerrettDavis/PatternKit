@@ -42,6 +42,13 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 * **[Behavioral.Strategy.AsyncStrategy](behavioral/strategy/asyncstrategy.md)**
   Async sibling for strategies that await external work.
 
+### Iterator
+
+* **[Behavioral.Iterator.ReplayableSequence](behavioral/iterator/replayablesequence.md)**  
+  Forkable, lookahead, on-demand buffered sequence with immutable struct cursors, speculative forks, and LINQ interop (pay-as-you-go buffering).
+* **[Behavioral.Iterator.WindowSequence](behavioral/iterator/windowsequence.md)**  
+  Sliding / striding window iterator with optional partial trailing window and buffer reuse for zero-allocation full windows.
+
 ---
 
 ## Creational (Builder)
