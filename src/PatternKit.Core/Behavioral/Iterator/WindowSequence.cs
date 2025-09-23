@@ -80,11 +80,7 @@ public static class WindowSequence
                     return new Window<T>(buffer, count, partial, reusable: true);
                 }
                 var arr = new T[count];
-                var idx = 0;
-                foreach (var item in q.TakeWhile(_ => idx != count))
-                {
-                    arr[idx++] = item;
-                }
+                q.CopyTo(arr, 0);
                 return new Window<T>(arr, count, partial, reusable: false);
             }
         }
