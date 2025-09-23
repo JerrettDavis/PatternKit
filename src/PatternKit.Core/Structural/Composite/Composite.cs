@@ -20,7 +20,7 @@ namespace PatternKit.Structural.Composite;
 public sealed class Composite<TIn, TOut>
 {
     /// <summary>
-    /// Delegate for a <b>leaf</b> operation that produces a <typeparamref name="TOut"/> from an input.
+    /// Delegate for a <b>leaf</b> operation that produces a typed response from an input.
     /// </summary>
     /// <param name="input">Input value (readonly via <c>in</c>).</param>
     /// <returns>The computed result for this leaf.</returns>
