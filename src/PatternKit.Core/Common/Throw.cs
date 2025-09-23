@@ -102,4 +102,9 @@ public static class Throw
             throw new ArgumentOutOfRangeException(name, value, "Value must be positive.");   
     }
         
+    
+    public static void ArgumentNullWhenNull([CallerMemberName] object? arg = null)
+    {
+        if (arg is null) throw new ArgumentNullException(nameof(arg));
+    }
 }

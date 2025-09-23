@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using PatternKit.Common;
 
 namespace PatternKit.Behavioral.Mediator;
 
@@ -110,10 +111,10 @@ public sealed class Mediator // mark partial to allow future surface extension w
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The handler produced response.</returns>
     /// <exception cref="InvalidOperationException">Thrown if no handler exists or the result cannot be cast to <typeparamref name="TResponse"/>.</exception>
-    public ValueTask<TResponse> Send<TRequest, TResponse>(in TRequest request, CancellationToken ct = default)
+    public ValueTask<TResponse?> Send<TRequest, TResponse>(in TRequest request, CancellationToken ct = default)
         => Core<TRequest, TResponse>(request, ct);
 
-    private async ValueTask<TResponse> Core<TRequest, TResponse>(TRequest request, CancellationToken ct)
+    private async ValueTask<TResponse?> Core<TRequest, TResponse>(TRequest request, CancellationToken ct)
     {
         if (!_commands.TryGetValue(typeof(TRequest), out var handler))
             throw new InvalidOperationException($"No command handler registered for request type '{typeof(TRequest)}'.");
@@ -135,10 +136,13 @@ public sealed class Mediator // mark partial to allow future surface extension w
         foreach (var b in _post)
             await b(in boxed, obj, ct).ConfigureAwait(false);
 
-        if (obj is TResponse r) return r;
-        if (obj is null) return default(TResponse)!;
-        throw new InvalidOperationException(
-            $"Handler returned incompatible result for '{typeof(TRequest)}' -> expected '{typeof(TResponse)}', got '{obj.GetType()}'.");
+        return obj switch
+        {
+            TResponse r => r,
+            null => default,
+            _ => throw new InvalidOperationException(
+                $"Handler returned incompatible result for '{typeof(TRequest)}' -> expected '{typeof(TResponse)}', got '{obj.GetType()}'.")
+        };
     }
 
     /// <summary>
@@ -212,9 +216,12 @@ public sealed class Mediator // mark partial to allow future surface extension w
 
         await foreach (var item in seq.ConfigureAwait(false).WithCancellation(ct))
         {
-            if (item is TItem ti) yield return ti;
-            else if (item is null && default(TItem) is null) yield return default!;
-            else throw new InvalidOperationException($"Stream item type mismatch. Expected '{typeof(TItem)}' but got '{item?.GetType()}'.");
+            yield return item switch
+            {
+                TItem ti => ti,
+                null when default(TItem) is null => default!,
+                _ => throw new InvalidOperationException($"Stream item type mismatch. Expected '{typeof(TItem)}' but got '{item?.GetType()}'.")
+            };
         }
 
         // After stream completes
@@ -222,10 +229,9 @@ public sealed class Mediator // mark partial to allow future surface extension w
             await b(in boxed, null, ct).ConfigureAwait(false);
     }
 
-    private readonly struct BoxedAsyncEnumerable
+    private readonly struct BoxedAsyncEnumerable(IAsyncEnumerable<object?> inner)
     {
-        public readonly IAsyncEnumerable<object?> Inner;
-        public BoxedAsyncEnumerable(IAsyncEnumerable<object?> inner) => Inner = inner;
+        public readonly IAsyncEnumerable<object?> Inner = inner;
     }
 #endif
 
@@ -240,13 +246,13 @@ public sealed class Mediator // mark partial to allow future surface extension w
         // Typed delegate shapes for registration (with 'in' parameters)
         public delegate ValueTask<TResponse> CommandHandlerTyped<TRequest, TResponse>(in TRequest request, CancellationToken ct);
 
-        public delegate TResponse SyncCommandHandlerTyped<TRequest, TResponse>(in TRequest request);
+        public delegate TResponse SyncCommandHandlerTyped<TRequest, out TResponse>(in TRequest request);
 
         public delegate ValueTask NotificationHandlerTyped<TNotification>(in TNotification notification, CancellationToken ct);
 
         public delegate void SyncNotificationHandlerTyped<TNotification>(in TNotification notification);
 #if NETSTANDARD2_1 || NETCOREAPP3_0_OR_GREATER
-        public delegate IAsyncEnumerable<TItem> StreamHandlerTyped<TRequest, TItem>(in TRequest request, CancellationToken ct);
+        public delegate IAsyncEnumerable<TItem> StreamHandlerTyped<TRequest, out TItem>(in TRequest request, CancellationToken ct);
 #endif
 
         private readonly Dictionary<Type, CommandHandler> _commands = new();
@@ -259,37 +265,38 @@ public sealed class Mediator // mark partial to allow future surface extension w
         private readonly List<WholeBehavior> _whole = new(4);
 
         /// <summary>Add a pre behavior executed before any handler logic.</summary>
-        public Builder Pre(PreBehavior behavior)
+        public Builder Pre(PreBehavior? behavior)
         {
             if (behavior is not null) _pre.Add(behavior);
             return this;
         }
 
         /// <summary>Add a post behavior executed after handler or stream completion.</summary>
-        public Builder Post(PostBehavior behavior)
+        public Builder Post(PostBehavior? behavior)
         {
             if (behavior is not null) _post.Add(behavior);
             return this;
         }
 
         /// <summary>Add a whole (around) behavior wrapping handler + remaining behaviors.</summary>
-        public Builder Whole(WholeBehavior behavior)
+        public Builder Whole(WholeBehavior? behavior)
         {
             if (behavior is not null) _whole.Add(behavior);
             return this;
         }
 
         /// <summary>Register an asynchronous command handler.</summary>
+        /// <exception cref="ArgumentNullException"></exception>
         public Builder Command<TRequest, TResponse>(CommandHandlerTyped<TRequest, TResponse> handler)
         {
-            if (handler is null) throw new ArgumentNullException(nameof(handler));
+            Throw.ArgumentNullWhenNull(handler);
 
             _commands[typeof(TRequest)] = Adapt;
             return this;
 
             ValueTask<object?> Adapt(in object? req, CancellationToken ct)
-                => req is not TRequest r 
-                    ? throw new InvalidOperationException($"Invalid request type for '{typeof(TRequest)}'.") 
+                => req is not TRequest r
+                    ? throw new InvalidOperationException($"Invalid request type for '{typeof(TRequest)}'.")
                     : MediatorHelpers.Box(handler(in r, ct));
         }
 
@@ -302,15 +309,16 @@ public sealed class Mediator // mark partial to allow future surface extension w
         {
             if (handler is null) throw new ArgumentNullException(nameof(handler));
 
+            if (!_notifications.TryGetValue(typeof(TNotification), out var list))
+                _notifications[typeof(TNotification)] = list = new List<NotificationHandler>(2);
+
+            list.Add(Adapt);
+            return this;
+
             ValueTask Adapt(in object n, CancellationToken ct)
                 => n is TNotification t
                     ? handler(in t, ct)
                     : throw new InvalidOperationException($"Invalid notification type for '{typeof(TNotification)}'.");
-
-            if (!_notifications.TryGetValue(typeof(TNotification), out var list))
-                _notifications[typeof(TNotification)] = list = new List<NotificationHandler>(2);
-            list.Add(Adapt);
-            return this;
         }
 
         /// <summary>Register a synchronous notification handler (wrapped internally).</summary>
@@ -336,7 +344,7 @@ public sealed class Mediator // mark partial to allow future surface extension w
                     : throw new InvalidOperationException($"Invalid request type for stream '{typeof(TRequest)}'.");
 
             static async IAsyncEnumerable<object?> AdaptEnum(
-                IAsyncEnumerable<TItem> items, 
+                IAsyncEnumerable<TItem> items,
                 [EnumeratorCancellation] CancellationToken ct)
             {
                 await foreach (var it in items.ConfigureAwait(false).WithCancellation(ct))
@@ -392,8 +400,9 @@ internal static class MediatorHelpers
     /// <returns>Boxed value task returning an <see cref="object"/> or <c>null</c>.</returns>
     public static ValueTask<object?> Box<T>(ValueTask<T> vt)
     {
-        if (vt.IsCompletedSuccessfully) return new ValueTask<object?>(vt.Result);
-        return Await(vt);
+        return vt.IsCompletedSuccessfully
+            ? new ValueTask<object?>(vt.Result)
+            : Await(vt);
 
         static async ValueTask<object?> Await(ValueTask<T> v)
         {
