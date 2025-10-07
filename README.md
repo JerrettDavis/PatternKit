@@ -348,12 +348,50 @@ var validated = Decorator<int, int>.Create(static x => 100 / x)
 var output = validated.Execute(5); // (100 / 5) + 5 = 25
 ```
 
+### Facade (unified subsystem interface)
+```csharp
+using PatternKit.Structural.Facade;
+
+// Simplify complex e-commerce operations
+public record OrderRequest(string ProductId, int Quantity, string CustomerEmail, decimal Price);
+public record OrderResult(bool Success, string? OrderId = null, string? ErrorMessage = null);
+
+var orderFacade = Facade<OrderRequest, OrderResult>.Create()
+    .Operation("place-order", (in OrderRequest req) => {
+        // Coordinate inventory, payment, shipping, notifications
+        var reservationId = inventoryService.Reserve(req.ProductId, req.Quantity);
+        var txId = paymentService.Charge(req.Price * req.Quantity);
+        var shipmentId = shippingService.Schedule(req.CustomerEmail);
+        notificationService.SendConfirmation(req.CustomerEmail);
+        
+        return new OrderResult(true, OrderId: Guid.NewGuid().ToString());
+    })
+    .Operation("cancel-order", (in OrderRequest req) => {
+        inventoryService.Release(req.ProductId);
+        paymentService.Refund(req.ProductId);
+        return new OrderResult(true);
+    })
+    .Default((in OrderRequest _) => new OrderResult(false, ErrorMessage: "Unknown operation"))
+    .Build();
+
+// Simple client code - complex subsystem coordination hidden
+var result = orderFacade.Execute("place-order", orderRequest);
+
+// Case-insensitive operations
+var apiFacade = Facade<string, string>.Create()
+    .OperationIgnoreCase("Status", (in string _) => "System OK")
+    .OperationIgnoreCase("Version", (in string _) => "v2.0")
+    .Build();
+
+var status = apiFacade.Execute("STATUS", ""); // Works with any casing
+```
+
 ---
 
 ## 📚 Patterns Table
-| Category       | Patterns ✓ = implemented                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| -------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • [Composer](docs/patterns/creational/builder/composer.md) ✓ • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                                                                                                                                                                                                                                                                                               |
-| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • [Decorator](docs/patterns/structural/decorator/decorator.md) ✓ • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                   |
-| **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) ✓ • Command (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
+| Category       | Patterns ✓ = implemented                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • [Composer](docs/patterns/creational/builder/composer.md) ✓ • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                                                                                                                                                                                                                                                |
+| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • [Decorator](docs/patterns/structural/decorator/decorator.md) ✓ • [Facade](docs/patterns/structural/facade/facade.md) ✓ • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) ✓ • [Command](docs/patterns/behavioral/command/command.md) ✓ • [Mediator](docs/patterns/behavioral/mediator/mediator.md) ✓ • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 

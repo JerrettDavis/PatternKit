@@ -67,3 +67,5 @@
           href: structural/composite/composite.md
         - name: Decorator
           href: structural/decorator/decorator.md
+        - name: Facade
+          href: structural/facade/facade.md
