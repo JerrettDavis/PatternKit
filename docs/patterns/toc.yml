@@ -65,3 +65,5 @@
           href: structural/bridge/bridge.md
         - name: Composite
           href: structural/composite/composite.md
+        - name: Decorator
+          href: structural/decorator/decorator.md

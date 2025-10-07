@@ -311,96 +311,49 @@ var registry = Prototype<string, User>.Create()
 var guest = registry.Create("missing-key"); // falls back to default (guest)
 ```
 
+### Decorator (fluent wrapping & extension)
+```csharp
+using PatternKit.Structural.Decorator;
+
+// Add logging to any operation
+var calculator = Decorator<int, int>.Create(static x => x * x)
+    .Around((x, next) => {
+        Console.WriteLine($"Input: {x}");
+        var result = next(x);
+        Console.WriteLine($"Output: {result}");
+        return result;
+    })
+    .Build();
+
+var squared = calculator.Execute(7); // Logs: Input: 7, Output: 49
+
+// Add caching
+var cache = new Dictionary<int, int>();
+var cachedOp = Decorator<int, int>.Create(x => ExpensiveComputation(x))
+    .Around((x, next) => {
+        if (cache.TryGetValue(x, out var cached))
+            return cached;
+        var result = next(x);
+        cache[x] = result;
+        return result;
+    })
+    .Build();
+
+// Chain multiple decorators: validation + transformation
+var validated = Decorator<int, int>.Create(static x => 100 / x)
+    .Before(static x => x == 0 ? throw new ArgumentException("Cannot be zero") : x)
+    .After(static (input, result) => result + input)
+    .Build();
+
+var output = validated.Execute(5); // (100 / 5) + 5 = 25
+```
+
 ---
 
-## 📦 Patterns (Planned & In Progress)
-
-PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral** patterns with fluent, discoverable APIs:
-
+## 📚 Patterns Table
 | Category       | Patterns ✓ = implemented                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | -------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • [Composer](docs/patterns/creational/builder/composer.md) ✓ • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                                                                                                                                                                                                                                                                                               |
-| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • Decorator (planned) • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                                   |
+| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • [Decorator](docs/patterns/structural/decorator/decorator.md) ✓ • Facade (planned) • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                   |
 | **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) ✓ • Command (planned) • Mediator (planned) • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
-Each pattern will ship with:
-
-* A **fluent API** (`.When(...)`, `.Then(...)`, `.Finally(...)`, etc.)
-* **Source-generated boilerplate** where possible.
-* **DocFX-ready documentation** and **TinyBDD tests**.
-
----
-
-## 🧪 Testing Philosophy
-
-All patterns are validated with **[TinyBDD](https://github.com/jerrettdavis/TinyBdd)** and xUnit:
-
-```csharp
-[Feature("Strategy")]
-public class StrategyTests : TinyBddXunitBase
-{
-    [Scenario("Positive/negative classification")]
-    [Fact]
-    public async Task ClassificationWorks()
-    {
-        await Given("a strategy with three branches", BuildStrategy)
-            .When("executing with 5", s => s.Execute(5))
-            .Then("result should be 'positive'", r => r == "positive")
-            .AssertPassed();
-    }
-}
-```
-
-We keep tests **behavior-driven**, **readable**, and **high coverage**.
-
----
-
-
-## 💡 Design Goals
-
-* **Declarative:** Favor expression-based and fluent APIs over imperative setup.
-* **Minimalism:** Prefer single-responsibility types and low ceremony.
-* **Performance:** Allocation-free handlers, `in` parameters, ahead-of-time friendly.
-* **Discoverability:** IntelliSense-first APIs; easy to read, easy to write.
-* **Testability:** TinyBDD integration and mocks built-in where applicable.
-
----
-
-## 🛠 Requirements
-
-* **.NET 9.0 or later** (we use `in` parameters and modern generic features).
-* C# 12 features enabled (`readonly struct`, static lambdas, etc.).
-
----
-
-## 📚 Documentation
-
-Full API documentation is published with **DocFX** (coming soon).
-Each type and member ships with XML docs, examples, and cross-links between patterns.
-
----
-
-## 🤝 Contributing
-
-We welcome issues, discussions, and PRs.
-Focus areas:
-
-* Adding new patterns (start with Behavioral for max impact)
-* Improving fluent builder syntax and source generator coverage
-* Writing TinyBDD test scenarios for edge cases
-
----
-
-## 📄 License
-
-MIT — see [LICENSE](LICENSE) for details.
-
----
-
-## ❤️ Inspiration
-
-PatternKit is inspired by:
-
-* The **Gang of Four** design patterns
-* Fluent APIs from **ASP.NET Core**, **System.Linq**, and modern libraries
-* The desire to make patterns **readable**, **performant**, and **fun** to use in 2025+

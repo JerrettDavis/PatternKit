@@ -19,6 +19,9 @@
 - name: Minimal Web Request Router
   href: mini-router.md
   
+- name: Payment Processor — Fluent Decorator Pattern for Point of Sale
+  href: payment-processor-decorator.md
+  
 - name: POS App State Singleton
   href: pos-app-state-singleton.md
   

@@ -2,19 +2,20 @@
 
 Welcome! This section collects small, focused demos that show **how to compose behaviors with PatternKit**—without sprawling frameworks, if/else ladders, or tangled control flow. Each demo is production-shaped, tiny, and easy to lift into your own code.
 
-## What you’ll see
+## What you'll see
 
 * **First-match-wins strategies** for branching without `if` chains.
 * **Branchless action chains** for rule packs (logging, pre-auth, discounts, tax).
+* **Fluent decorators** for layering functionality (tax, discounts, rounding, logging) without inheritance.
 * **Pipelines** built declaratively and tested end-to-end.
 * **Config-driven composition** (DI + `IOptions`) so ops can re-order rules without redeploys.
-* **Strategy-based coercion** for turning “whatever came in” into the types you actually want.
+* **Strategy-based coercion** for turning "whatever came in" into the types you actually want.
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
 
 ## Demos in this section
 
 * **Composed, Preference-Aware Notification Strategy (Email/SMS/Push/IM)**
-  Shows how to layer a user’s channel preferences, failover, and throttling into a composable **Strategy** without `switch`es. Good template for “try X, else Y” flows (alerts, KYC, etc.).
+  Shows how to layer a user's channel preferences, failover, and throttling into a composable **Strategy** without `switch`es. Good template for "try X, else Y" flows (alerts, KYC, etc.).
 
 * **Auth & Logging Chain**
   A tiny `ActionChain<HttpRequest>` showing **request ID logging**, an **auth short-circuit** for `/admin/*`, and the subtleties of **`.ThenContinue` vs `.ThenStop` vs `Finally`** (strict-stop semantics by default).
@@ -29,7 +30,10 @@ Welcome! This section collects small, focused demos that show **how to compose b
   Same business shape as above, but wired via DI + `IOptions<PipelineOptions>`. Discounts/rounding/tenders are discovered and **ordered from config**, making the pipeline operationally tunable.
 
 * **Minimal Web Request Router**
-  A tiny “API gateway” that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
+  A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
+
+* **Payment Processor — Fluent Decorator Pattern for Point of Sale**
+  Demonstrates the **Decorator** pattern for building flexible payment processors. Shows how to layer tax calculation, promotional discounts, loyalty programs, employee benefits, and rounding strategies on a base processor—**no inheritance hierarchies**. Includes five real-world processors (simple, retail, e-commerce, cash register, birthday special) with full test coverage. Perfect for understanding decorator execution order and composition patterns.
 
 ## How to run
 
