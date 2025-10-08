@@ -112,8 +112,7 @@ Pair with **Decorator** to layer color transforms at use time instead of storing
 | Aspect | Behavior |
 |--------|----------|
 | Concurrency | Exactly one factory invocation per key (double‑checked inside lock). |
-| Visibility | After 
-store, value is visible to subsequent readers (dictionary guarantees). |
+| Visibility | After store, value is visible to subsequent readers (dictionary guarantees). |
 | Memory Growth | Monotonic; no eviction built‑in. |
 | GC Pressure | One allocation per distinct key + dictionary growth. |
 
