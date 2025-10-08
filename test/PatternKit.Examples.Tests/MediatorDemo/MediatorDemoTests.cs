@@ -175,7 +175,7 @@ public sealed class MediatorDemoTests(ITestOutputHelper output) : TinyBddXunitBa
             {
                 var (m, log) = t;
                 var r = await m.Send<Ping, Pong>(new Ping(1));
-                return (r, log);
+                return (r, log)!;
             })
             .Then("log contains before and after", t => t.Item2.Contains("before") && t.Item2.Contains("after"))
             .AssertPassed();

@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 
 namespace PatternKit.Structural.Facade;
 
@@ -54,7 +53,7 @@ public static class TypedFacade<TFacadeInterface>
     {
         if (!typeof(TFacadeInterface).IsInterface)
             throw new InvalidOperationException($"{typeof(TFacadeInterface).Name} must be an interface.");
-        
+
         return new Builder();
     }
 
@@ -65,7 +64,9 @@ public static class TypedFacade<TFacadeInterface>
     {
         private readonly Dictionary<MethodInfo, Delegate> _handlers = new();
 
-        internal Builder() { }
+        internal Builder()
+        {
+        }
 
         /// <summary>
         /// Maps a method with no parameters to its implementation handler.
@@ -76,7 +77,7 @@ public static class TypedFacade<TFacadeInterface>
         {
             var method = ExtractMethodInfo(methodSelector);
             ValidateMethodSignature(method, typeof(TResult));
-            
+
             if (_handlers.ContainsKey(method))
                 throw new ArgumentException($"Method '{method.Name}' is already mapped.", nameof(methodSelector));
 
@@ -93,7 +94,7 @@ public static class TypedFacade<TFacadeInterface>
         {
             var method = ExtractMethodInfo(methodSelector);
             ValidateMethodSignature(method, typeof(TResult), typeof(T1));
-            
+
             if (_handlers.ContainsKey(method))
                 throw new ArgumentException($"Method '{method.Name}' is already mapped.", nameof(methodSelector));
 
@@ -110,7 +111,7 @@ public static class TypedFacade<TFacadeInterface>
         {
             var method = ExtractMethodInfo(methodSelector);
             ValidateMethodSignature(method, typeof(TResult), typeof(T1), typeof(T2));
-            
+
             if (_handlers.ContainsKey(method))
                 throw new ArgumentException($"Method '{method.Name}' is already mapped.", nameof(methodSelector));
 
@@ -127,7 +128,7 @@ public static class TypedFacade<TFacadeInterface>
         {
             var method = ExtractMethodInfo(methodSelector);
             ValidateMethodSignature(method, typeof(TResult), typeof(T1), typeof(T2), typeof(T3));
-            
+
             if (_handlers.ContainsKey(method))
                 throw new ArgumentException($"Method '{method.Name}' is already mapped.", nameof(methodSelector));
 
@@ -144,7 +145,7 @@ public static class TypedFacade<TFacadeInterface>
         {
             var method = ExtractMethodInfo(methodSelector);
             ValidateMethodSignature(method, typeof(TResult), typeof(T1), typeof(T2), typeof(T3), typeof(T4));
-            
+
             if (_handlers.ContainsKey(method))
                 throw new ArgumentException($"Method '{method.Name}' is already mapped.", nameof(methodSelector));
 
@@ -230,7 +231,7 @@ internal static class TypedFacadeProxyFactory<TInterface> where TInterface : cla
         return new ReflectionProxy(handlers).GetTransparentProxy();
 #else
         // For modern .NET, use DispatchProxy
-        var proxy = System.Reflection.DispatchProxy.Create<TInterface, TypedFacadeDispatchProxy<TInterface>>();
+        var proxy = DispatchProxy.Create<TInterface, TypedFacadeDispatchProxy<TInterface>>();
         ((TypedFacadeDispatchProxy<TInterface>)(object)proxy).Initialize(handlers);
         return proxy;
 #endif
@@ -263,7 +264,7 @@ internal static class TypedFacadeProxyFactory<TInterface> where TInterface : cla
 /// DispatchProxy implementation for typed facades.
 /// </summary>
 /// <typeparam name="TInterface">The interface type to proxy.</typeparam>
-public class TypedFacadeDispatchProxy<TInterface> : System.Reflection.DispatchProxy
+public class TypedFacadeDispatchProxy<TInterface> : DispatchProxy
     where TInterface : class
 {
     private Dictionary<MethodInfo, Delegate> _handlers = new();

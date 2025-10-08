@@ -12,10 +12,7 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
     private static (OrderProcessingFacade processor, Facade<OrderRequest, OrderResult> facade) CreateFacade()
     {
         var inventory = new InventoryService();
-        var payment = new PaymentService();
-        var shipping = new ShippingService();
-        var notification = new NotificationService();
-        var processor = new OrderProcessingFacade(inventory, payment, shipping, notification);
+        var processor = new OrderProcessingFacade(inventory);
         var facade = processor.BuildFacade();
         return (processor, facade);
     }
@@ -78,7 +75,7 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
             })
             .When("cancelling the order", ctx =>
             {
-                var cancelRequest = ctx.request with { ProductId = ctx.OrderId };
+                var cancelRequest = ctx.request with { ProductId = ctx.OrderId! };
                 return ctx.facade.Execute("cancel-order", cancelRequest);
             })
             .Then("cancellation succeeds", r => r.Success)
@@ -103,7 +100,7 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
             })
             .When("processing a return", ctx =>
             {
-                var returnRequest = ctx.request with { ProductId = ctx.OrderId };
+                var returnRequest = ctx.request with { ProductId = ctx.OrderId! };
                 return ctx.facade.Execute("process-return", returnRequest);
             })
             .Then("return succeeds", r => r.Success)

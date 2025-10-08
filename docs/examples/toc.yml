@@ -27,3 +27,6 @@
   
 - name: Pricing Calculator (Async Sources, Loyalty, Rounding)
   href: pricing-calculator.md
+
+- name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
+  href: proxy-demo.md
