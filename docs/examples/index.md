@@ -11,6 +11,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Config-driven composition** (DI + `IOptions`) so ops can re-order rules without redeploys.
 * **Strategy-based coercion** for turning "whatever came in" into the types you actually want.
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
+* **Flyweight identity sharing** to eliminate duplicate immutable objects (glyphs, styles, tokens).
 
 ## Demos in this section
 
@@ -34,6 +35,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Payment Processor — Fluent Decorator Pattern for Point of Sale**
   Demonstrates the **Decorator** pattern for building flexible payment processors. Shows how to layer tax calculation, promotional discounts, loyalty programs, employee benefits, and rounding strategies on a base processor—**no inheritance hierarchies**. Includes five real-world processors (simple, retail, e-commerce, cash register, birthday special) with full test coverage. Perfect for understanding decorator execution order and composition patterns.
+
+* **Flyweight Glyph Cache & Style Sharing**  
+  Shows a high-volume text/glyph layout where each distinct glyph (and style) is allocated **once** and reused. Demonstrates intrinsic vs extrinsic state separation, preload of hot keys (spaces), custom key comparers (case-insensitive styles), and thread-safe lazy creation—mirroring classic Flyweight scenarios (rendering, AST token metadata, icon caches).
 
 ## How to run
 
@@ -60,6 +64,7 @@ dotnet test PatternKit.slnx -c Release
 * **Branchless rule packs** via `ActionChain<T>` with `When/ThenContinue/ThenStop/Finally`.
 * **Immutable, thread-safe artifacts** after `.Build()`; builders remain mutable.
 * **Tiny domain types** you can replace or extend (requests, responses, tenders, items, rules).
+* **Identity sharing** via Flyweight to lower allocation pressure in repetition-heavy domains.
 
 ## Where to look (quick map)
 
@@ -68,6 +73,9 @@ dotnet test PatternKit.slnx -c Release
 * **Mini Router:** `MiniRouter` + `Demo.Run` — middleware/auth/negotiation in console output.
 * **Mediated Pipeline:** `TransactionPipelineBuilder` + `MediatedTransactionPipelineDemo.Run`.
 * **Config-Driven Pipeline:** `ConfigDrivenPipelineDemo.AddPaymentPipeline` + `PipelineOptions`.
+* **Payment Processor Decorators:** `PaymentProcessor*` + related tests.
+* **Flyweight Glyph Cache:** `FlyweightDemo` (+ `FlyweightDemoTests`) — glyph width layout & style sharing.
+* **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
@@ -78,5 +86,6 @@ They’re meant to be **copy-pasteable patterns**:
 * Turn scattered rules into a **linear, testable chain**.
 * Move “what runs & in what order” to **configuration**, when appropriate.
 * Keep the primitives small so the system stays legible under change.
+* Eliminate duplicate immutable instances (Flyweight) where repetition is high.
 
 Jump in via the pages in the left-hand ToC and open the corresponding test files—the assertions double as executable documentation.

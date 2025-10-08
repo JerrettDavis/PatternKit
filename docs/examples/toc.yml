@@ -30,3 +30,6 @@
 
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
+  
+- name: Flyweight Glyph Cache & Style Sharing
+  href: flyweight-glyph-cache.md
