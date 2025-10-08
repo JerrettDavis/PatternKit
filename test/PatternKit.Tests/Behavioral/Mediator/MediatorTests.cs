@@ -52,7 +52,7 @@ public sealed class MediatorTests(ITestOutputHelper output) : TinyBddXunitBase(o
                 .Build();
             return (m, log);
         })
-        .When("sending Ping(5)", async Task<(Pong r, List<string> log)> (t) => { var (m, log) = t; var r = await m.Send<Ping, Pong>(new Ping(5)); return (r, log); })
+        .When("sending Ping(5)", async Task<(Pong r, List<string> log)> (t) => { var (m, log) = t; var r = await m.Send<Ping, Pong>(new Ping(5)); return (r, log)!; })
         .Then("result is pong:5", t => Expect.For(t.r.Value).ToBe("pong:5"))
         .And("behaviors logged pre, whole before/after, and post", t => Expect.For(string.Join('|', t.log)).ToBe("pre|whole:before|whole:after|post:pong:5"))
         .AssertPassed();

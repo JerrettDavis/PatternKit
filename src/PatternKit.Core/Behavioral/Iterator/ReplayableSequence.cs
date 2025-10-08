@@ -57,8 +57,8 @@ public sealed class ReplayableSequence<T>
         }
     }
 
-    /// <summary>Exposes the sequence as an <see cref="IAsyncEnumerable{T}"/> (synchronous push under the hood).</summary>
 #if !NETSTANDARD2_0
+    /// <summary>Exposes the sequence as an <see cref="IAsyncEnumerable{T}"/> (synchronous push under the hood).</summary>
     public async IAsyncEnumerable<T> AsAsyncEnumerable([System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
     {
         var c = GetCursor();

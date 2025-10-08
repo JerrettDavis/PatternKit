@@ -110,10 +110,7 @@ public static class FacadeDemo
     /// Facade that simplifies complex order processing workflow
     /// </summary>
     public sealed class OrderProcessingFacade(
-        InventoryService inventory,
-        PaymentService payment,
-        ShippingService shipping,
-        NotificationService notification
+        InventoryService inventory
     )
     {
         private readonly Dictionary<string, (string reservationId, string transactionId, string shipmentId)> _orders = new();
@@ -124,7 +121,7 @@ public static class FacadeDemo
                 .Operation("place-order", PlaceOrder)
                 .Operation("cancel-order", CancelOrder)
                 .Operation("process-return", ProcessReturn)
-                .Default((in OrderRequest _) => 
+                .Default((in _) => 
                     new OrderResult(false, ErrorMessage: "Unknown operation"))
                 .Build();
         }
@@ -206,7 +203,7 @@ public static class FacadeDemo
             }
 
             // Step 1: Initiate return shipment
-            var returnId = ShippingService.InitiateReturn(orderData.shipmentId);
+            ShippingService.InitiateReturn(orderData.shipmentId);
 
             // Step 2: Process refund
             var refundAmount = request.Price * request.Quantity;
@@ -236,12 +233,13 @@ public static class FacadeDemo
 
         // Create subsystem services
         var inventory = new InventoryService();
-        var payment = new PaymentService();
-        var shipping = new ShippingService();
-        var notification = new NotificationService();
+        // E.g.
+        // var payment = new PaymentService();
+        // var shipping = new ShippingService();
+        // var notification = new NotificationService();
 
         // Create facade
-        var orderProcessor = new OrderProcessingFacade(inventory, payment, shipping, notification);
+        var orderProcessor = new OrderProcessingFacade(inventory);
         var facade = orderProcessor.BuildFacade();
 
         // Example 1: Place an order (complex operation simplified)
@@ -262,7 +260,7 @@ public static class FacadeDemo
             Console.WriteLine($"  Shipment: {result.ShipmentId}");
 
             // Example 2: Cancel the order
-            var cancelRequest = orderRequest with { ProductId = result.OrderId };
+            var cancelRequest = orderRequest with { ProductId = result.OrderId! };
             var cancelResult = facade.Execute("cancel-order", cancelRequest);
             
             if (cancelResult.Success)
@@ -287,7 +285,7 @@ public static class FacadeDemo
             Console.WriteLine($"✓ Second order placed: {result2.OrderId}");
 
             // Process return
-            var returnRequest = order2 with { ProductId = result2.OrderId };
+            var returnRequest = order2 with { ProductId = result2.OrderId! };
             var returnResult = facade.Execute("process-return", returnRequest);
             
             if (returnResult.Success)

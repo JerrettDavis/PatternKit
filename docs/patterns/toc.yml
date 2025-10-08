@@ -69,3 +69,5 @@
           href: structural/decorator/decorator.md
         - name: Facade
           href: structural/facade/facade.md
+        - name: Proxy
+          href: structural/proxy/index.md

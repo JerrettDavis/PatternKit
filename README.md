@@ -386,12 +386,69 @@ var apiFacade = Facade<string, string>.Create()
 var status = apiFacade.Execute("STATUS", ""); // Works with any casing
 ```
 
+### Proxy (access control & lazy initialization)
+```csharp
+using PatternKit.Structural.Proxy;
+
+// Virtual Proxy - lazy initialization
+var dbProxy = Proxy<string, string>.Create()
+    .VirtualProxy(() => {
+        var db = new ExpensiveDatabase("connection-string");
+        return sql => db.Query(sql);
+    })
+    .Build();
+// Database not created until first Execute call
+var result = dbProxy.Execute("SELECT * FROM Users");
+
+// Protection Proxy - access control
+var deleteProxy = Proxy<User, bool>.Create(user => DeleteUser(user))
+    .ProtectionProxy(user => user.IsAdmin)
+    .Build();
+deleteProxy.Execute(regularUser); // Throws UnauthorizedAccessException
+
+// Caching Proxy - memoization
+var cachedCalc = Proxy<int, int>.Create(x => ExpensiveFibonacci(x))
+    .CachingProxy()
+    .Build();
+cachedCalc.Execute(100); // Calculates
+cachedCalc.Execute(100); // Returns cached result
+
+// Logging Proxy - audit trail
+var loggedOp = Proxy<Payment, bool>.Create(p => ProcessPayment(p))
+    .LoggingProxy(msg => logger.Log(msg))
+    .Build();
+
+// Custom Interception - retry logic
+var retryProxy = Proxy<string, string>.Create(CallUnreliableService)
+    .Intercept((input, next) => {
+        for (int i = 0; i < 3; i++) {
+            try { return next(input); }
+            catch (Exception) when (i < 2) { Thread.Sleep(1000); }
+        }
+        throw new Exception("Max retries exceeded");
+    })
+    .Build();
+
+// Remote Proxy - combine caching + logging
+var remoteProxy = Proxy<int, string>.Create(id => CallRemoteApi(id))
+    .Intercept((id, next) => {
+        logger.Log($"Request for ID: {id}");
+        var result = next(id);
+        logger.Log("Response received");
+        return result;
+    })
+    .Build();
+var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
+    .CachingProxy()
+    .Build();
+```
+
 ---
 
 ## 📚 Patterns Table
 | Category       | Patterns ✓ = implemented                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Creational** | [Factory](docs/patterns/creational/factory/factory.md) ✓ • [Composer](docs/patterns/creational/builder/composer.md) ✓ • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) ✓ • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) ✓ • [Prototype](docs/patterns/creational/prototype/prototype.md) ✓ • [Singleton](docs/patterns/creational/singleton/singleton.md) ✓                                                                                                                                                                                                                                                                |
-| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • [Decorator](docs/patterns/structural/decorator/decorator.md) ✓ • [Facade](docs/patterns/structural/facade/facade.md) ✓ • Flyweight (planned) • Proxy (planned)                                                                                                                                                                                                                                                                                                                                                                                  |
+| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) ✓ • [Bridge](docs/patterns/structural/bridge/bridge.md) ✓ • [Composite](docs/patterns/structural/composite/composite.md) ✓ • [Decorator](docs/patterns/structural/decorator/decorator.md) ✓ • [Facade](docs/patterns/structural/facade/facade.md) ✓ • Flyweight (planned) • [Proxy](docs/patterns/structural/proxy/index.md) ✓                                                                                                                                                                                                                                                                                                                                  |
 | **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) ✓ • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) ✓ • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) ✓ • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) ✓ • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) ✓ • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) ✓ • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) ✓ • [Command](docs/patterns/behavioral/command/command.md) ✓ • [Mediator](docs/patterns/behavioral/mediator/mediator.md) ✓ • Memento (planned) • Observer (planned) • State (planned) • Template Method (planned) • Visitor (planned) |
 
