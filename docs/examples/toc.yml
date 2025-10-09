@@ -33,3 +33,6 @@
   
 - name: Flyweight Glyph Cache & Style Sharing
   href: flyweight-glyph-cache.md
+
+- name: Text Editor History (Memento)
+  href: text-editor-memento.md

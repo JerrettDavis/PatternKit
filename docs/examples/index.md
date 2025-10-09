@@ -12,6 +12,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Strategy-based coercion** for turning "whatever came in" into the types you actually want.
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
 * **Flyweight identity sharing** to eliminate duplicate immutable objects (glyphs, styles, tokens).
+* **Snapshot history & undo/redo (Memento)** for document/editor style workflows.
 
 ## Demos in this section
 
@@ -38,6 +39,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Flyweight Glyph Cache & Style Sharing**  
   Shows a high-volume text/glyph layout where each distinct glyph (and style) is allocated **once** and reused. Demonstrates intrinsic vs extrinsic state separation, preload of hot keys (spaces), custom key comparers (case-insensitive styles), and thread-safe lazy creation—mirroring classic Flyweight scenarios (rendering, AST token metadata, icon caches).
+
+* **Document Editing History (Memento)**  
+  A simple document buffer with tagged snapshots, undo/redo, jump-to-version, and duplicate suppression illustrating the **Memento** pattern's practical shape in a UI/editor workflow.
 
 ## How to run
 
@@ -76,6 +80,7 @@ dotnet test PatternKit.slnx -c Release
 * **Payment Processor Decorators:** `PaymentProcessor*` + related tests.
 * **Flyweight Glyph Cache:** `FlyweightDemo` (+ `FlyweightDemoTests`) — glyph width layout & style sharing.
 * **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
+* **Memento Document Demo:** `MementoDemo` — buffer edits with undo/redo and tags.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
