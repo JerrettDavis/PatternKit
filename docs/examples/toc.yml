@@ -36,3 +36,12 @@
 
 - name: Text Editor History (Memento)
   href: text-editor-memento.md
+
+- name: Observer — In-Process Event Hub
+  href: observer-demo.md
+
+- name: Reactive ViewModel (Dependent Properties + Enablement)
+  href: reactive-viewmodel.md
+
+- name: Reactive Transaction (Dynamic Discounts, Tax, Total)
+  href: reactive-transaction.md

@@ -2,44 +2,86 @@ using PatternKit.Behavioral.Observer;
 
 namespace PatternKit.Examples.ObserverDemo;
 
+/// <summary>Customer loyalty tiers used for discount calculation.</summary>
 public enum LoyaltyTier { None, Silver, Gold, Platinum }
+
+/// <summary>Payment methods that may influence discounts or eligibility.</summary>
 public enum PaymentKind { None, CreditCard, StoreCard, Cash }
 
+/// <summary>
+/// Represents a line item in a transaction.
+/// </summary>
+/// <param name="Sku">The product SKU.</param>
+/// <param name="Qty">The quantity ordered.</param>
+/// <param name="UnitPrice">The unit price.</param>
+/// <param name="DiscountPct">Optional per-line discount percentage (0..1).</param>
+/// <param name="Taxable">Whether the line is taxable.</param>
 public readonly record struct LineItem(string Sku, int Qty, decimal UnitPrice, decimal? DiscountPct = null, bool Taxable = true)
 {
+    /// <summary>Total raw amount before discounts.</summary>
     public decimal Raw => Qty * UnitPrice;
+
+    /// <summary>Discount amount for this line based on <see cref="DiscountPct"/>.</summary>
     public decimal LineDiscount => DiscountPct is { } p ? Raw * p : 0m;
+
+    /// <summary>Net amount after line discount.</summary>
     public decimal Net => Raw - LineDiscount;
 }
 
 /// <summary>
 /// Reactive transaction shows dependent, computed properties updated via Observer-based subscriptions.
+/// It recomputes totals and UI-like flags whenever any input changes.
 /// </summary>
 public sealed class ReactiveTransaction
 {
     // Inputs (reactive)
-    public ObservableList<LineItem> Items { get; } = new();
+    /// <summary>Collection of items in the transaction. Publishes add/remove events.</summary>
+    public ObservableList<LineItem> Items { get; } = [];
+
+    /// <summary>Current customer loyalty tier.</summary>
     public ObservableVar<LoyaltyTier> Tier { get; } = new();
+
+    /// <summary>Selected payment method.</summary>
     public ObservableVar<PaymentKind> Payment { get; } = new();
+
+    /// <summary>Applicable tax rate for taxable items.</summary>
     public ObservableVar<decimal> TaxRate { get; } = new(0.07m);
 
     // Outputs (reactive vars so consumers can subscribe to precise changes)
+    /// <summary>Subtotal before discounts and tax.</summary>
     public ObservableVar<decimal> Subtotal { get; } = new();
+
+    /// <summary>Total of all per-line discounts.</summary>
     public ObservableVar<decimal> LineItemDiscounts { get; } = new();
+
+    /// <summary>Discount based on loyalty tier.</summary>
     public ObservableVar<decimal> LoyaltyDiscount { get; } = new();
+
+    /// <summary>Discount based on payment method.</summary>
     public ObservableVar<decimal> PaymentDiscount { get; } = new();
+
+    /// <summary>Calculated tax on taxable net amount.</summary>
     public ObservableVar<decimal> Tax { get; } = new();
+
+    /// <summary>Final total after all discounts and tax.</summary>
     public ObservableVar<decimal> Total { get; } = new();
 
     // UI-ish dependent properties
+    /// <summary>Whether the transaction meets basic checkout requirements.</summary>
     public ObservableVar<bool> CanCheckout { get; } = new();
+
+    /// <summary>Optional badge text indicating savings.</summary>
     public ObservableVar<string?> DiscountBadge { get; } = new();
 
     // Fine-grained change notifications for property names, if needed
+    /// <summary>Name-based change hub for UI bindings listening by property name.</summary>
     public PropertyChangedHub PropertyChanged { get; } = new();
 
     private readonly Observer<string>.Handler _notify;
 
+    /// <summary>
+    /// Create the transaction and wire reactive inputs so that any change triggers recomputation of outputs.
+    /// </summary>
     public ReactiveTransaction()
     {
         _notify = (in p) => PropertyChanged.Raise(p);
@@ -110,10 +152,20 @@ public sealed class ReactiveTransaction
     }
 
     // Convenience API
+    /// <summary>Add a line item.</summary>
     public void AddItem(LineItem item) => Items.Add(item);
+
+    /// <summary>Remove a line item.</summary>
+    /// <returns><see langword="true"/> if removed; otherwise <see langword="false"/>.</returns>
     public bool RemoveItem(LineItem item) => Items.Remove(item);
+
+    /// <summary>Set the loyalty tier.</summary>
     public void SetTier(LoyaltyTier tier) => Tier.Value = tier;
+
+    /// <summary>Set the payment method.</summary>
     public void SetPayment(PaymentKind kind) => Payment.Value = kind;
+
+    /// <summary>Set the tax rate.</summary>
     public void SetTaxRate(decimal rate) => TaxRate.Value = rate;
 }
 
@@ -122,14 +174,24 @@ public sealed class ReactiveTransaction
 /// </summary>
 public sealed class ProfileViewModel
 {
+    /// <summary>First name input.</summary>
     public ObservableVar<string?> FirstName { get; } = new();
+
+    /// <summary>Last name input.</summary>
     public ObservableVar<string?> LastName  { get; } = new();
+
+    /// <summary>Computed full name.</summary>
     public ObservableVar<string>  FullName  { get; } = new(string.Empty);
+
+    /// <summary>Whether saving is currently allowed.</summary>
     public ObservableVar<bool>    CanSave   { get; } = new();
+
+    /// <summary>Name-based change hub for UI bindings listening by property name.</summary>
     public PropertyChangedHub PropertyChanged { get; } = new();
 
     private readonly Observer<string>.Handler _notify;
 
+    /// <summary>Create the view model and wire reactive recompute behavior.</summary>
     public ProfileViewModel()
     {
         _notify = (in p) => PropertyChanged.Raise(p);
