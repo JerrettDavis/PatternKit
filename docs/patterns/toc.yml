@@ -33,6 +33,12 @@
           href: behavioral/mediator/mediator.md
         - name: Command
           href: behavioral/command/command.md
+        - name: Observer
+          items:
+            - name: Observer
+              href: behavioral/observer/observer.md
+            - name: AsyncObserver
+              href: behavioral/observer/asyncobserver.md
     - name: Creational
       items:
         - name: Builder
