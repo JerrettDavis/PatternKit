@@ -39,6 +39,8 @@
               href: behavioral/observer/observer.md
             - name: AsyncObserver
               href: behavioral/observer/asyncobserver.md
+        - name: State
+          href: behavioral/state/state.md
     - name: Creational
       items:
         - name: Builder

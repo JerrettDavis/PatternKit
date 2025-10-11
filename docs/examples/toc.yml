@@ -45,3 +45,6 @@
 
 - name: Reactive Transaction (Dynamic Discounts, Tax, Total)
   href: reactive-transaction.md
+
+- name: Async Connection State Machine
+  href: async-state-machine.md

@@ -43,6 +43,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Document Editing History (Memento)**  
   A simple document buffer with tagged snapshots, undo/redo, jump-to-version, and duplicate suppression illustrating the **Memento** pattern's practical shape in a UI/editor workflow.
 
+* **State Machine — Order Lifecycle**  
+  A fluent state machine driving an order lifecycle with entry/exit hooks, transition effects, and default per‑state behavior. Shows determinism (first‑match wins), internal (Stay) vs cross‑state transitions, and log/audit side‑effects.
+
 ## How to run
 
 From the repo root:
@@ -81,6 +84,7 @@ dotnet test PatternKit.slnx -c Release
 * **Flyweight Glyph Cache:** `FlyweightDemo` (+ `FlyweightDemoTests`) — glyph width layout & style sharing.
 * **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
 * **Memento Document Demo:** `MementoDemo` — buffer edits with undo/redo and tags.
+* **State Machine Demo:** `OrderStateDemo` (+ `StateDemoTests`) — order lifecycle with entry/exit hooks and default behaviors.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
