@@ -46,6 +46,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **State Machine — Order Lifecycle**  
   A fluent state machine driving an order lifecycle with entry/exit hooks, transition effects, and default per‑state behavior. Shows determinism (first‑match wins), internal (Stay) vs cross‑state transitions, and log/audit side‑effects.
 
+* **Template Method Data Processor**
+  Shows how to use the Template Method pattern to define a reusable, extensible workflow for data processing. Demonstrates hooks for pre/post processing, thread-safety, and easy extensibility. See [Template Method Demo](template-method-demo.md).
+
 ## How to run
 
 From the repo root:
