@@ -1,5 +1,3 @@
-using System;
-
 namespace PatternKit.Behavioral.Template;
 
 /// <summary>

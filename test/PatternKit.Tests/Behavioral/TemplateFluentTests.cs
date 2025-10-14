@@ -1,96 +1,106 @@
-using System;
 using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
 using PatternKit.Behavioral.Template;
-using Xunit;
+using TinyBDD;
+using TinyBDD.Xunit;
+using Xunit.Abstractions;
 
-namespace PatternKit.Tests.Behavioral
+namespace PatternKit.Tests.Behavioral;
+
+[Feature("Behavioral - Template<TContext,TResult> (fluent skeleton with hooks)")]
+public sealed class TemplateFluentTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
-    public class TemplateFluentTests
-    {
-        [Fact]
-        public void Execute_RunsHooksAndStep_InOrder()
-        {
-            var calls = new ConcurrentQueue<string>();
-            var tpl = Template<string, int>
-                .Create(ctx => { calls.Enqueue($"step:{ctx}"); return ctx.Length; })
-                .Before(ctx => calls.Enqueue($"before:{ctx}"))
-                .After((ctx, res) => calls.Enqueue($"after:{ctx}:{res}"))
-                .Build();
+    [Scenario("Execute runs Before → Step → After in order")]
+    [Fact]
+    public Task Execute_RunsHooks_InOrder()
+        => Given("a calls queue and a template", () =>
+            {
+                var calls = new ConcurrentQueue<string>();
+                var tpl = Template<string, int>
+                    .Create(ctx => { calls.Enqueue($"step:{ctx}"); return ctx.Length; })
+                    .Before(ctx => calls.Enqueue($"before:{ctx}"))
+                    .After((ctx, res) => calls.Enqueue($"after:{ctx}:{res}"))
+                    .Build();
+                return (tpl, calls);
+            })
+           .When("executed with 'abc'", x => (result: x.tpl.Execute("abc"), x.calls))
+           .Then("returns 3", r => r.result == 3)
+           .And("calls recorded in order", r =>
+           {
+               var arr = r.Item2.ToArray();
+               return arr.Length == 3 && arr[0] == "before:abc" && arr[1] == "step:abc" && arr[2] == "after:abc:3";
+           })
+           .AssertPassed();
 
-            var result = tpl.Execute("abc");
+    [Scenario("TryExecute captures errors and invokes OnError")]
+    [Fact]
+    public Task TryExecute_Captures_Error()
+        => Given("a throwing template and observer holder", () =>
+            {
+                var holder = new { Observed = new string?[] { null } };
+                var tpl = Template<int, int>
+                    .Create(_ => throw new InvalidOperationException("boom"))
+                    .OnError((ctx, err) => holder.Observed[0] = $"ctx={ctx};err={err}")
+                    .Build();
+                return (tpl, holder);
+            })
+           .When("TryExecute with 42", x => { var ok = x.tpl.TryExecute(42, out var result, out var error); return (ok, result, error, x.holder); })
+           .Then("returns false", r => !r.ok)
+           .And("result is default", r => EqualityComparer<int>.Default.Equals(r.result, default))
+           .And("error not null", r => r.error is { Length: > 0 })
+           .And("OnError observed", r => r.holder.Observed[0] == "ctx=42;err=boom")
+           .AssertPassed();
 
-            Assert.Equal(3, result);
-            Assert.Collection(calls,
-                s => Assert.Equal("before:abc", s),
-                s => Assert.Equal("step:abc", s),
-                s => Assert.Equal("after:abc:3", s));
-        }
+    [Scenario("Multiple Before/After hooks compose (multicast)")]
+    [Fact]
+    public Task Hooks_Compose_Multicast()
+        => Given("counter holder and template", () =>
+            {
+                var counts = new int[2]; // [0]=before, [1]=after
+                var tpl = Template<string, string>
+                    .Create(ctx => ctx.ToUpperInvariant())
+                    .Before(_ => Interlocked.Increment(ref counts[0]))
+                    .Before(_ => Interlocked.Increment(ref counts[0]))
+                    .After((_, _) => Interlocked.Increment(ref counts[1]))
+                    .After((_, _) => Interlocked.Increment(ref counts[1]))
+                    .Build();
+                return (tpl, counts);
+            })
+           .When("executed concurrently twice", x => { Task.WaitAll(Task.Run(() => x.tpl.Execute("x")), Task.Run(() => x.tpl.Execute("y"))); return x.counts; })
+           .Then("before called 4 times", counts => counts[0] == 4)
+           .And("after called 4 times", counts => counts[1] == 4)
+           .AssertPassed();
 
-        [Fact]
-        public void TryExecute_CatchesErrors_AndInvokesOnError()
-        {
-            string? observed = null;
-            var tpl = Template<int, int>
-                .Create(_ => throw new InvalidOperationException("boom"))
-                .OnError((ctx, err) => observed = $"ctx={ctx};err={err}")
-                .Build();
-
-            var ok = tpl.TryExecute(42, out var result, out var error);
-
-            Assert.False(ok);
-            Assert.Equal(default, result);
-            Assert.NotNull(error);
-            Assert.Equal("ctx=42;err=boom", observed);
-        }
-
-        [Fact]
-        public async Task Hooks_Compose_Multicast()
-        {
-            int beforeCount = 0;
-            int afterCount = 0;
-            var tpl = Template<string, string>
-                .Create(ctx => ctx.ToUpperInvariant())
-                .Before(_ => Interlocked.Increment(ref beforeCount))
-                .Before(_ => Interlocked.Increment(ref beforeCount))
-                .After((_, _) => Interlocked.Increment(ref afterCount))
-                .After((_, _) => Interlocked.Increment(ref afterCount))
-                .Build();
-
-            var t1 = Task.Run(() => tpl.Execute("x"));
-            var t2 = Task.Run(() => tpl.Execute("y"));
-            await Task.WhenAll(t1, t2);
-
-            Assert.Equal(4, beforeCount);
-            Assert.Equal(4, afterCount);
-        }
-
-        [Fact]
-        public async Task Synchronized_EnforcesMutualExclusion()
-        {
-            int concurrent = 0;
-            int maxConcurrent = 0;
-
-            var tpl = Template<int, int>
-                .Create(ctx =>
-                {
-                    var c = Interlocked.Increment(ref concurrent);
-                    maxConcurrent = Math.Max(maxConcurrent, c);
-                    Thread.Sleep(20);
-                    Interlocked.Decrement(ref concurrent);
-                    return ctx * 2;
-                })
-                .Synchronized()
-                .Build();
-
-            var tasks = new Task<int>[8];
-            for (int i = 0; i < tasks.Length; i++) tasks[i] = Task.Run(() => tpl.Execute(2));
-            var results = await Task.WhenAll(tasks);
-
-            Assert.All(results, r => Assert.Equal(4, r));
-            Assert.Equal(1, maxConcurrent);
-        }
-    }
+    [Scenario("Synchronized enforces mutual exclusion")]
+    [Fact]
+    public Task Synchronized_Enforces_Mutex()
+        => Given("a synchronized template and concurrency holder", () =>
+            {
+                var holder = new int[2]; // [0]=concurrent, [1]=max
+                var tpl = Template<int, int>
+                    .Create(ctx =>
+                    {
+                        var c = Interlocked.Increment(ref holder[0]);
+                        while (true)
+                        {
+                            var snap = Volatile.Read(ref holder[1]);
+                            var next = Math.Max(snap, c);
+                            if (Interlocked.CompareExchange(ref holder[1], next, snap) == snap) break;
+                        }
+                        Thread.Sleep(20);
+                        Interlocked.Decrement(ref holder[0]);
+                        return ctx * 2;
+                    })
+                    .Synchronized()
+                    .Build();
+                return (tpl, holder);
+            })
+           .When("executed on 8 tasks", x =>
+           {
+               var tasks = Enumerable.Range(0, 8).Select(_ => Task.Run(() => x.tpl.Execute(2))).ToArray();
+               Task.WaitAll(tasks);
+               return (results: tasks.Select(t => t.Result).ToArray(), x.holder);
+           })
+           .Then("all results are 4", r => r.results.All(v => v == 4))
+           .And("max concurrency is 1", r => r.holder[1] == 1)
+           .AssertPassed();
 }
-

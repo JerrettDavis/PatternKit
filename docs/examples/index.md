@@ -49,6 +49,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Template Method Data Processor**
   Shows how to use the Template Method pattern to define a reusable, extensible workflow for data processing. Demonstrates hooks for pre/post processing, thread-safety, and easy extensibility. See [Template Method Demo](template-method-demo.md).
 
+* **Template Method Async Pipeline**
+  End-to-end async pipeline (fetch → transform → store) with cancellation, optional synchronization, and error observation. Shows both subclassing (`AsyncTemplateMethod`) and fluent (`AsyncTemplate`) approaches. See [Template Method Async Demo](template-method-async-demo.md).
+
 ## How to run
 
 From the repo root:

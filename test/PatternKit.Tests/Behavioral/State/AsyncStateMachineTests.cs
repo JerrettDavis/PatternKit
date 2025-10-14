@@ -1,11 +1,7 @@
 using PatternKit.Behavioral.State;
 using TinyBDD;
 using TinyBDD.Xunit;
-using Xunit;
 using Xunit.Abstractions;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace PatternKit.Tests.Behavioral.State;
 
