@@ -2,7 +2,9 @@
 
 **Category:** Behavioral
 
-## Overview
+---
+
+## What it is
 Template Method defines the skeleton of an algorithm in a base class, allowing specific steps to be customized without changing the overall structure. PatternKit offers two complementary shapes:
 
 - Subclassing API: derive from `TemplateMethod<TContext, TResult>` and override hooks.
@@ -14,21 +16,13 @@ Common traits:
 - Optional synchronization for thread safety
 - Clear separation of “when/where” (hooks) and “what” (the main step)
 
-## Structure
-- `TemplateMethod<TContext, TResult>` (abstract)
-  - `Execute(context)` — calls `OnBefore`, `Step`, `OnAfter` in order
-  - `protected virtual void OnBefore(context)` — optional pre-step hook
-  - `protected abstract TResult Step(context)` — required main step
-  - `protected virtual void OnAfter(context, result)` — optional post-step hook
-  - `protected virtual bool Synchronized` — set to `true` to serialize executions
+---
 
-- `Template<TContext, TResult>` (fluent)
-  - `Execute(context)` — runs before → step → after; throws on error
-  - `TryExecute(context, out result, out error)` — non-throwing path
-  - `Create(step)` → `.Before(...)` → `.After(...)` → `.OnError(...)` → `.Synchronized()` → `.Build()`
+## TL;DR (subclassing)
 
-## Subclassing Example
 ```csharp
+using PatternKit.Behavioral.Template;
+
 public sealed class DataProcessor : TemplateMethod<string, int>
 {
     protected override void OnBefore(string context)
@@ -48,8 +42,32 @@ var processor = new DataProcessor();
 var count = processor.Execute("The quick brown fox");
 ```
 
+---
+
+## API shape (subclassing)
+
+- `TemplateMethod<TContext, TResult>` (abstract)
+  - `TResult Execute(TContext context)` — calls `OnBefore`, `Step`, `OnAfter` in order
+  - `protected virtual void OnBefore(TContext context)` — optional pre-step hook
+  - `protected abstract TResult Step(TContext context)` — required main step
+  - `protected virtual void OnAfter(TContext context, TResult result)` — optional post-step hook
+  - `protected virtual bool Synchronized` — set to `true` to serialize executions
+
+- `AsyncTemplateMethod<TContext, TResult>` (abstract)
+  - `Task<TResult> ExecuteAsync(TContext context, CancellationToken ct)` — calls `OnBeforeAsync`, `StepAsync`, `OnAfterAsync`
+  - `protected virtual ValueTask OnBeforeAsync(TContext context, CancellationToken ct)` — optional pre-step hook
+  - `protected abstract ValueTask<TResult> StepAsync(TContext context, CancellationToken ct)` — required main step
+  - `protected virtual ValueTask OnAfterAsync(TContext context, TResult result, CancellationToken ct)` — optional post-step hook
+  - `protected virtual bool Synchronized` — set to `true` to serialize `ExecuteAsync` calls (uses `SemaphoreSlim`)
+
+> Prefer the fluent siblings when you want multicast hooks, non-throwing `Try` execution, or quick composition: see [Template<TContext, TResult>](./template.md) and [AsyncTemplate<TContext, TResult>](./asynctemplate.md).
+
+---
+
 ## Fluent Example
 ```csharp
+using PatternKit.Behavioral.Template;
+
 var template = Template<string, int>
     .Create(ctx => ctx.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length)
     .Before(ctx => Console.WriteLine($"[Before] '{ctx}'"))
@@ -64,23 +82,15 @@ else
     Console.WriteLine($"Failed: {error}");
 ```
 
+---
+
 ## Async variants
 PatternKit also provides first-class async variants with cancellation and optional synchronization:
 
-- `AsyncTemplateMethod<TContext, TResult>` (abstract)
-  - `ExecuteAsync(context, cancellationToken)` — calls `OnBeforeAsync`, `StepAsync`, `OnAfterAsync` in order
-  - `protected virtual ValueTask OnBeforeAsync(context, ct)` — optional pre-step hook
-  - `protected abstract ValueTask<TResult> StepAsync(context, ct)` — required main step
-  - `protected virtual ValueTask OnAfterAsync(context, result, ct)` — optional post-step hook
-  - `protected virtual bool Synchronized` — set to `true` to serialize `ExecuteAsync` calls (uses `SemaphoreSlim`)
-
-- `AsyncTemplate<TContext, TResult>` (fluent)
-  - `ExecuteAsync(context, ct)` — runs before → step → after; throws on error
-  - `TryExecuteAsync(context, ct)` — returns `(ok, result, error)` without throwing
-  - `Create(async (ctx, ct) => ...)` → `.Before(...)`/`.After(...)`/`.OnError(...)` (async or sync overloads) → `.Synchronized()` → `.Build()`
-
 ### Async subclassing example
 ```csharp
+using PatternKit.Behavioral.Template;
+
 public sealed class AsyncDataPipeline : AsyncTemplateMethod<int, string>
 {
     protected override bool Synchronized => false; // enable for strict serialization
@@ -113,6 +123,8 @@ var outVal = await pipe.ExecuteAsync(42, cts.Token);
 
 ### Async fluent example
 ```csharp
+using PatternKit.Behavioral.Template;
+
 var tpl = AsyncTemplate<int, string>
     .Create(async (id, ct) =>
     {
@@ -134,6 +146,8 @@ var (ok, result, error) = await tpl.TryExecuteAsync(42);
 - Use `.Synchronized()` or override `Synchronized` only when shared mutable state demands serialization.
 - Choose `TryExecuteAsync` when you need non-throwing control flow and centralized error observation.
 
+---
+
 ## When to Use
 - You need a consistent workflow with customizable steps.
 - You want to prevent structural drift while enabling tailored behaviors.
@@ -148,11 +162,15 @@ var (ok, result, error) = await tpl.TryExecuteAsync(42);
 - Subclassing: let exceptions bubble; catch externally if needed.
 - Fluent: use `TryExecute` to avoid throwing, and `.OnError(...)` to observe errors.
 
+---
+
 ## Related Patterns
 - Strategy: swap entire algorithms rather than customizing steps inline.
 - Chain of Responsibility: linear rule packs with stop/continue semantics.
 - State: behavior that changes with state; Template Method keeps structure fixed.
 
 ## See Also
+- Fluent (sync): [Template<TContext, TResult>](./template.md)
+- Fluent (async): [AsyncTemplate<TContext, TResult>](./asynctemplate.md)
+- Examples: [Template Method Demo](../../../examples/template-method-demo.md), [Template Method Async Demo](../../../examples/template-method-async-demo.md)
 - Refactoring Guru: Template Method — https://refactoring.guru/design-patterns/template-method
-- Examples: see the Template Method demos in the Examples section.
