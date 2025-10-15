@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using PatternKit.Common;
 
 namespace PatternKit.Behavioral.State;
 

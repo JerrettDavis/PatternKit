@@ -435,7 +435,7 @@ public static class ProxyDemo
         /// The mock records all invocations and allows verification of interactions,
         /// similar to popular mocking frameworks.
         /// </remarks>
-        public sealed class Mock<TIn, TOut>
+        public sealed class Mock<TIn, TOut> where TIn : notnull
         {
             private readonly List<(Func<TIn, bool> predicate, TOut result)> _setups = new();
             private readonly List<TIn> _invocations = new();
@@ -529,7 +529,8 @@ public static class ProxyDemo
         /// <typeparam name="TIn">The input type.</typeparam>
         /// <typeparam name="TOut">The output type.</typeparam>
         /// <returns>A new mock builder.</returns>
-        public static Mock<TIn, TOut> CreateMock<TIn, TOut>() => new();
+        public static Mock<TIn, TOut> CreateMock<TIn, TOut>() where TIn : notnull
+            => new();
     }
 
     /// <summary>

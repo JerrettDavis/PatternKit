@@ -1,11 +1,7 @@
 using PatternKit.Examples.AsyncStateDemo;
 using TinyBDD;
 using TinyBDD.Xunit;
-using Xunit;
 using Xunit.Abstractions;
-using System.Linq;
-using System;
-using System.Threading.Tasks;
 
 namespace PatternKit.Examples.Tests.AsyncStateDemo;
 

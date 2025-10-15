@@ -1,7 +1,6 @@
 #if !NETSTANDARD2_0
 using PatternKit.Behavioral.Iterator;
 using TinyBDD;
-using TinyBDD.Assertions;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
 

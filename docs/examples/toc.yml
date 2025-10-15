@@ -48,3 +48,9 @@
 
 - name: Async Connection State Machine
   href: async-state-machine.md
+
+- name: Template Method (Subclassing)
+  href: template-method-demo.md
+
+- name: Template Method (Async)
+  href: template-method-async-demo.md
