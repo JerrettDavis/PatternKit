@@ -1,8 +1,6 @@
-using System.Linq;
 using PatternKit.Examples.StateDemo;
 using TinyBDD;
 using TinyBDD.Xunit;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.StateDemo;

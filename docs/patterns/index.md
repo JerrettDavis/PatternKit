@@ -42,6 +42,17 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Behavioral.Strategy.AsyncStrategy](behavioral/strategy/asyncstrategy.md)**
   Async sibling for strategies that await external work.
 
+### Template
+
+- **[Behavioral.Template.TemplateMethod](behavioral/template/templatemethod.md)**
+  Abstract base with `OnBefore/Step/OnAfter` hooks and optional synchronization.
+
+- **[Behavioral.Template.Template (Fluent)](behavioral/template/template.md)**
+  Fluent, allocation-light template with multicast hooks and `TryExecute`.
+
+- **[Behavioral.Template.AsyncTemplate (Fluent)](behavioral/template/asynctemplate.md)**
+  Async fluent sibling with cancellation-aware hooks and `TryExecuteAsync`.
+
 ### Iterator
 
 - **[Behavioral.Iterator.ReplayableSequence](behavioral/iterator/replayablesequence.md)**  

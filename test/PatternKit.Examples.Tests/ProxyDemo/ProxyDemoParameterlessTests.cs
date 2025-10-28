@@ -1,9 +1,5 @@
-using System;
-using System.IO;
-using System.Linq;
 using TinyBDD;
 using TinyBDD.Xunit;
-using Xunit;
 using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.ProxyDemo;

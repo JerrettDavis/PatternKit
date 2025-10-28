@@ -103,7 +103,7 @@ internal sealed class AsyncReplayBuffer<T>
         if (index < 0) return false;
         while (true)
         {
-            TaskCompletionSource<bool>? waiter = null;
+            TaskCompletionSource<bool>? waiter;
             lock (_sync)
             {
                 if (index < _buffer.Count)
