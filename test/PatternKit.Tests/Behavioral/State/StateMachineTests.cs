@@ -19,20 +19,20 @@ public sealed class StateMachineTests(ITestOutputHelper output) : TinyBddXunitBa
         var log = new List<string>();
         var m = StateMachine<S, Ev>.Create()
             .InState(S.Idle, s => s
-                .OnExit((in Ev _) => log.Add("exit:Idle"))
-                .When(static (in Ev e) => Is("go", in e)).Permit(S.Active).Do((in Ev _) => log.Add("effect:go"))
-                .When(static (in Ev e) => Is("panic", in e)).Permit(S.Alarm).Do((in Ev _) => log.Add("effect:panic"))
+                .OnExit((in _) => log.Add("exit:Idle"))
+                .When(static (in e) => Is("go", in e)).Permit(S.Active).Do((in _) => log.Add("effect:go"))
+                .When(static (in e) => Is("panic", in e)).Permit(S.Alarm).Do((in _) => log.Add("effect:panic"))
             )
             .InState(S.Active, s => s
-                .OnEnter((in Ev _) => log.Add("enter:Active"))
-                .OnExit((in Ev _) => log.Add("exit:Active"))
-                .When(static (in Ev e) => Is("ping", in e)).Stay().Do((in Ev _) => log.Add("effect:ping"))
-                .When(static (in Ev e) => Is("stop", in e)).Permit(S.Idle).Do((in Ev _) => log.Add("effect:stop"))
+                .OnEnter((in _) => log.Add("enter:Active"))
+                .OnExit((in _) => log.Add("exit:Active"))
+                .When(static (in e) => Is("ping", in e)).Stay().Do((in _) => log.Add("effect:ping"))
+                .When(static (in e) => Is("stop", in e)).Permit(S.Idle).Do((in _) => log.Add("effect:stop"))
             )
             .InState(S.Alarm, s => s
-                .OnEnter((in Ev _) => log.Add("enter:Alarm"))
-                .When(static (in Ev e) => Is("reset", in e)).Permit(S.Idle).Do((in Ev _) => log.Add("effect:reset"))
-                .Otherwise().Stay().Do((in Ev _) => log.Add("effect:default"))
+                .OnEnter((in _) => log.Add("enter:Alarm"))
+                .When(static (in e) => Is("reset", in e)).Permit(S.Idle).Do((in _) => log.Add("effect:reset"))
+                .Otherwise().Stay().Do((in _) => log.Add("effect:default"))
             )
             .Build();
         return new Ctx(m, log, S.Idle);
@@ -104,8 +104,8 @@ public sealed class StateMachineTests(ITestOutputHelper output) : TinyBddXunitBa
         var log = new List<string>();
         var m = StateMachine<S, Ev>.Create()
             .InState(S.Idle, s => s
-                .When(static (in Ev e) => e.Kind.Length > 0).Stay().Do((in Ev _) => log.Add("first"))
-                .When(static (in Ev e) => e.Kind == "x").Permit(S.Active).Do((in Ev _) => log.Add("second"))
+                .When(static (in e) => e.Kind.Length > 0).Stay().Do((in _) => log.Add("first"))
+                .When(static (in e) => e.Kind == "x").Permit(S.Active).Do((in _) => log.Add("second"))
             )
             .Build();
 

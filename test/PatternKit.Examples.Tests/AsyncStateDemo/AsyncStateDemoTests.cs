@@ -11,10 +11,10 @@ public sealed class AsyncStateDemoTests(ITestOutputHelper output) : TinyBddXunit
     [Fact]
     public async Task Connect_Flow()
     {
-        await Given<object?>("async connection demo", () => default(object?))
-            .When<(ConnectionStateDemo.Mode Final, System.Collections.Generic.List<string> Log)>(
+        await Given("async connection demo", () => default(object?))
+            .When<(ConnectionStateDemo.Mode Final, List<string> Log)>(
                 "run connect, ok",
-                (Func<object?, Task<(ConnectionStateDemo.Mode, System.Collections.Generic.List<string>)>>)(_ => ConnectionStateDemo.RunAsync("connect", "ok").AsTask())
+                (Func<object?, Task<(ConnectionStateDemo.Mode, List<string>)>>)(_ => ConnectionStateDemo.RunAsync("connect", "ok").AsTask())
             )
             .Then("final Connected and logs show exit/eff/enter handover", r =>
                 r.Final == ConnectionStateDemo.Mode.Connected &&
@@ -29,13 +29,13 @@ public sealed class AsyncStateDemoTests(ITestOutputHelper output) : TinyBddXunit
     [Fact]
     public async Task Default_Stay_NoOp()
     {
-        await Given<(ConnectionStateDemo.Mode Final, System.Collections.Generic.List<string> Log)>(
+        await Given<(ConnectionStateDemo.Mode Final, List<string> Log)>(
                 "connected",
-                (Func<Task<(ConnectionStateDemo.Mode, System.Collections.Generic.List<string>)>>)(() => ConnectionStateDemo.RunAsync("connect","ok").AsTask())
+                (Func<Task<(ConnectionStateDemo.Mode, List<string>)>>)(() => ConnectionStateDemo.RunAsync("connect","ok").AsTask())
             )
-            .When<(ConnectionStateDemo.Mode Final, System.Collections.Generic.List<string> Log)>(
+            .When<(ConnectionStateDemo.Mode Final, List<string> Log)>(
                 "unknown event in Connected",
-                (Func<(ConnectionStateDemo.Mode, System.Collections.Generic.List<string>), Task<(ConnectionStateDemo.Mode, System.Collections.Generic.List<string>)>>)(
+                (Func<(ConnectionStateDemo.Mode, List<string>), Task<(ConnectionStateDemo.Mode, List<string>)>>)(
                     _ => ConnectionStateDemo.RunAsync("connect","ok","ignore").AsTask()
                 )
             )

@@ -129,7 +129,7 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
                 service.Operation4(1.5m, 2.5m, 3.5m, 4.5m)))
             .Then("1-param method works", r => r.Item1 == "Result: test")
             .And("2-param method works", r => r.Item2 == 15)
-            .And("3-param method works", r => r.Item3 == true)
+            .And("3-param method works", r => r.Item3)
             .And("4-param method works", r => r.Item4 == 12.0m)
             .AssertPassed();
 

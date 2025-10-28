@@ -3,7 +3,7 @@ using PatternKit.Structural.Flyweight;
 namespace PatternKit.Examples.FlyweightDemo;
 
 /// <summary>
-/// Demonstrations for the Flyweight pattern: glyph layout & style sharing.
+/// Demonstrations for the Flyweight pattern: glyph layout, and style sharing.
 /// </summary>
 public static class FlyweightDemo
 {

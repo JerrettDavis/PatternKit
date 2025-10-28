@@ -17,7 +17,7 @@ public sealed class ReactiveTransactionTests(ITestOutputHelper output) : TinyBdd
 
     private static Ctx SubscribeTotals(Ctx c)
     {
-        c.Tx.Total.Subscribe((old, @new) => c.Totals.Add(@new));
+        c.Tx.Total.Subscribe((_, @new) => c.Totals.Add(@new));
         return c;
     }
 

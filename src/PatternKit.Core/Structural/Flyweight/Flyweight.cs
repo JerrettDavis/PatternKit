@@ -76,8 +76,8 @@ public sealed class Flyweight<TKey, TValue> where TKey : notnull
     /// <remarks>
     /// Uses a double-checked locking pattern:
     /// <list type="number">
-    ///   <item><description>Fast path: try dictionary without lock.</description></item>
-    ///   <item><description>Slow path: lock, re-check, then create & store.</description></item>
+    ///   <item><description>Fast path: try a dictionary without lock.</description></item>
+    ///   <item><description>Slow path: lock, re-check, then create, and store.</description></item>
     /// </list>
     /// Subsequent calls for the same key take the fast path.
     /// </remarks>

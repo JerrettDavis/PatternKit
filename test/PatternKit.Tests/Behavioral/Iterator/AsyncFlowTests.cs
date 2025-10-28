@@ -56,7 +56,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
         return (even, odd);
     }
 
-    private static async Task<(PatternKit.Common.Option<int> Some, PatternKit.Common.Option<int> None)> Firsts((AsyncFlow<int> NonEmpty, AsyncFlow<int> Empty) flows)
+    private static async Task<(Common.Option<int> Some, Common.Option<int> None)> Firsts((AsyncFlow<int> NonEmpty, AsyncFlow<int> Empty) flows)
     {
         var some = await flows.NonEmpty.FirstOptionAsync();
         var none = await flows.Empty.FirstOptionAsync();

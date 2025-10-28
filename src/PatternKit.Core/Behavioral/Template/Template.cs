@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace PatternKit.Behavioral.Template;
 
 /// <summary>
@@ -32,6 +34,7 @@ public sealed class Template<TContext, TResult>
     /// <summary>
     /// Execute the template: before → step → after. Throws on errors.
     /// </summary>
+    [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
     public TResult Execute(TContext context)
     {
         if (_synchronized)

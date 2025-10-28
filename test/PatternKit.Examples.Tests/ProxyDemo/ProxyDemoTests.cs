@@ -216,7 +216,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
         => Given("caching proxy with fibonacci", () =>
             {
                 var callCount = 0;
-                var proxy = PatternKit.Structural.Proxy.Proxy<int, int>.Create(n =>
+                var proxy = Proxy<int, int>.Create(n =>
                 {
                     callCount++;
                     // Simple fibonacci
@@ -252,7 +252,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
         => Given("logging proxy with list", () =>
             {
                 var logs = new List<string>();
-                var proxy = PatternKit.Structural.Proxy.Proxy<(int a, int b), int>.Create(
+                var proxy = Proxy<(int a, int b), int>.Create(
                     input => input.a + input.b)
                     .LoggingProxy(logs.Add)
                     .Build();
@@ -279,7 +279,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var logs = new List<string>();
                 
                 // Inner proxy with logging
-                var innerProxy = PatternKit.Structural.Proxy.Proxy<int, string>.Create(id =>
+                var innerProxy = Proxy<int, string>.Create(id =>
                 {
                     callCount++;
                     return $"Remote data for ID {id}";
@@ -294,7 +294,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 .Build();
                 
                 // Outer caching proxy
-                var cachedProxy = PatternKit.Structural.Proxy.Proxy<int, string>.Create(
+                var cachedProxy = Proxy<int, string>.Create(
                     id => innerProxy.Execute(id))
                     .CachingProxy()
                     .Build();
@@ -319,7 +319,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
         => Given("proxy with retry logic", () =>
             {
                 var attempts = 0;
-                var proxy = PatternKit.Structural.Proxy.Proxy<string, string>.Create(req =>
+                var proxy = Proxy<string, string>.Create(req =>
                 {
                     attempts++;
                     if (attempts < 3)

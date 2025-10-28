@@ -17,20 +17,20 @@ public sealed class AsyncStateMachineTests(ITestOutputHelper output) : TinyBddXu
         var log = new List<string>();
         var m = AsyncStateMachine<S, Ev>.Create()
             .InState(S.Idle, s => s
-                .OnExit(async (e, ct) => { await Task.Yield(); log.Add("exit:Idle"); })
-                .When((e, ct) => new ValueTask<bool>(e.Kind == "go")).Permit(S.Active).Do(async (e, ct) => { await Task.Delay(1, ct); log.Add("effect:go"); })
-                .When((e, ct) => new ValueTask<bool>(e.Kind == "panic")).Permit(S.Alarm).Do(async (e, ct) => { await Task.Yield(); log.Add("effect:panic"); })
+                .OnExit(async (_, _) => { await Task.Yield(); log.Add("exit:Idle"); })
+                .When((e, _) => new ValueTask<bool>(e.Kind == "go")).Permit(S.Active).Do(async (_, ct) => { await Task.Delay(1, ct); log.Add("effect:go"); })
+                .When((e, _) => new ValueTask<bool>(e.Kind == "panic")).Permit(S.Alarm).Do(async (_, _) => { await Task.Yield(); log.Add("effect:panic"); })
             )
             .InState(S.Active, s => s
-                .OnEnter(async (e, ct) => { await Task.Yield(); log.Add("enter:Active"); })
-                .OnExit(async (e, ct) => { await Task.Yield(); log.Add("exit:Active"); })
-                .When((e, ct) => new ValueTask<bool>(e.Kind == "ping")).Stay().Do(async (e, ct) => { await Task.Yield(); log.Add("effect:ping"); })
-                .When((e, ct) => new ValueTask<bool>(e.Kind == "stop")).Permit(S.Idle).Do(async (e, ct) => { await Task.Yield(); log.Add("effect:stop"); })
+                .OnEnter(async (_, _) => { await Task.Yield(); log.Add("enter:Active"); })
+                .OnExit(async (_, _) => { await Task.Yield(); log.Add("exit:Active"); })
+                .When((e, _) => new ValueTask<bool>(e.Kind == "ping")).Stay().Do(async (_, _) => { await Task.Yield(); log.Add("effect:ping"); })
+                .When((e, _) => new ValueTask<bool>(e.Kind == "stop")).Permit(S.Idle).Do(async (_, _) => { await Task.Yield(); log.Add("effect:stop"); })
             )
             .InState(S.Alarm, s => s
-                .OnEnter(async (e, ct) => { await Task.Yield(); log.Add("enter:Alarm"); })
-                .When((e, ct) => new ValueTask<bool>(e.Kind == "reset")).Permit(S.Idle).Do(async (e, ct) => { await Task.Yield(); log.Add("effect:reset"); })
-                .Otherwise().Stay().Do(async (e, ct) => { await Task.Yield(); log.Add("effect:default"); })
+                .OnEnter(async (_, _) => { await Task.Yield(); log.Add("enter:Alarm"); })
+                .When((e, _) => new ValueTask<bool>(e.Kind == "reset")).Permit(S.Idle).Do(async (_, _) => { await Task.Yield(); log.Add("effect:reset"); })
+                .Otherwise().Stay().Do(async (_, _) => { await Task.Yield(); log.Add("effect:default"); })
             )
             .Build();
         return new Ctx(m, log, S.Idle);
