@@ -40,6 +40,8 @@
 - name: Visitor — Message Router (Background Worker)
   href: message-router-visitor.md
 
+- name: Patterns Showcase — Integrated Order Processing
+  href: patterns-showcase.md
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
   
