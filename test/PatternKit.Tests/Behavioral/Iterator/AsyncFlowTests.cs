@@ -11,7 +11,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
 {
     private static async IAsyncEnumerable<int> RangeAsync(int count, int delayMs = 0)
     {
-        for (int i = 1; i <= count; i++)
+        for (var i = 1; i <= count; i++)
         {
             if (delayMs > 0) await Task.Delay(delayMs).ConfigureAwait(false);
             yield return i;

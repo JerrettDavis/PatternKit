@@ -201,7 +201,7 @@ public sealed class StateMachine<TState, TEvent>
             public WhenBuilder When(Predicate predicate) => new(this, predicate);
 
             /// <summary>Default transition used when no predicate matches.</summary>
-            public ThenBuilder Otherwise() => new(this, static (in TEvent _) => true);
+            public ThenBuilder Otherwise() => new(this, static (in _) => true);
 
             /// <summary>Register an entry hook invoked after entering this state.</summary>
             public StateBuilder OnEnter(StateHook hook)

@@ -2,7 +2,13 @@ using PatternKit.Behavioral.Strategy;
 
 namespace PatternKit.Examples.ApiGateway;
 
-// Ultra-minimal request/response types used by the demo.
+/// <summary>
+/// Minimal HTTP-like request used by the API gateway demo.
+/// </summary>
+/// <param name="Method">HTTP method (e.g., GET, POST).</param>
+/// <param name="Path">Request path (e.g., /orders/123).</param>
+/// <param name="Headers">Request headers map.</param>
+/// <param name="Body">Optional raw body string.</param>
 public readonly record struct Request(
     string Method,
     string Path,
@@ -10,23 +16,40 @@ public readonly record struct Request(
     string? Body = null
 );
 
+/// <summary>
+/// Minimal HTTP-like response produced by routes.
+/// </summary>
+/// <param name="StatusCode">HTTP status code.</param>
+/// <param name="ContentType">MIME content type.</param>
+/// <param name="Body">Raw response body.</param>
 public readonly record struct Response(
     int StatusCode,
     string ContentType,
     string Body
 );
 
+/// <summary>
+/// Small helpers to build common <see cref="Response"/> shapes.
+/// </summary>
 public static class Responses
 {
+    /// <summary>Create a text/plain response with status and body.</summary>
+    /// <param name="status">HTTP status code.</param>
+    /// <param name="body">Response text body.</param>
     public static Response Text(int status, string body)
         => new(status, "text/plain; charset=utf-8", body);
 
+    /// <summary>Create an application/json response with status and pre‑serialized JSON body.</summary>
+    /// <param name="status">HTTP status code.</param>
+    /// <param name="json">Serialized JSON string.</param>
     public static Response Json(int status, string json)
         => new(status, "application/json; charset=utf-8", json);
 
+    /// <summary>Build a standard 404 Not Found response.</summary>
     public static Response NotFound()
         => Text(404, "Not Found");
 
+    /// <summary>Build a standard 401 Unauthorized response.</summary>
     public static Response Unauthorized()
         => Text(401, "Unauthorized");
 }
@@ -34,6 +57,9 @@ public static class Responses
 /// <summary>
 /// A tiny API gateway/router showing how ActionStrategy + Strategy + TryStrategy
 /// compose into a pragmatic HTTP-ish pipeline.
+/// </summary>
+/// <summary>
+/// A tiny API gateway/router composing middleware, routes, and content negotiation.
 /// </summary>
 public sealed class MiniRouter
 {
@@ -47,6 +73,11 @@ public sealed class MiniRouter
         TryStrategy<Request, string> negotiate)
         => (_middleware, _routes, _negotiate) = (middleware, routes, negotiate);
 
+    /// <summary>
+    /// Processes a request through middleware, routes, and content negotiation.
+    /// </summary>
+    /// <param name="req">The incoming request.</param>
+    /// <returns>The route response with content type negotiated.</returns>
     public Response Handle(in Request req)
     {
         // fire first-matching side-effect (e.g., logging, auth short-circuit)
@@ -63,6 +94,7 @@ public sealed class MiniRouter
         return res;
     }
 
+    /// <summary>Create a new builder for <see cref="MiniRouter"/>.</summary>
     public static Builder Create() => new();
 
     public sealed class Builder
@@ -99,6 +131,7 @@ public sealed class MiniRouter
             return this;
         }
 
+        /// <summary>Builds an immutable router instance.</summary>
         public MiniRouter Build()
         {
             // Middleware default: do nothing if nothing matched
@@ -110,6 +143,9 @@ public sealed class MiniRouter
             return new MiniRouter(mw, routes, neg);
         }
 
+        /// <summary>
+        /// Default content negotiator that picks JSON if requested, then text, otherwise JSON.
+        /// </summary>
         private static TryStrategy<Request, string> DefaultNegotiator()
         {
             // Tiny Accept negotiator:
