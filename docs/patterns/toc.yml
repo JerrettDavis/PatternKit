@@ -48,6 +48,24 @@
       href: behavioral/state/state.md
     - name: Memento
       href: behavioral/memento/memento.md
+    - name: Visitor
+      items:
+        - name: Visitor
+          href: behavioral/visitor/visitor.md
+        - name: ActionVisitor
+          href: behavioral/visitor/actionvisitor.md
+        - name: AsyncVisitor
+          href: behavioral/visitor/asyncvisitor.md
+        - name: AsyncActionVisitor
+          href: behavioral/visitor/asyncactionvisitor.md
+        - name: Alternatives & Comparisons
+          href: behavioral/visitor/alternatives.md
+        - name: FAQ
+          href: behavioral/visitor/faq.md
+        - name: Troubleshooting
+          href: behavioral/visitor/troubleshooting.md
+        - name: Enterprise Guide
+          href: behavioral/visitor/guide.md
 
 - name: Creational
   items:

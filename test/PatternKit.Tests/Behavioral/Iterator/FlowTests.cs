@@ -16,7 +16,7 @@ public sealed class FlowTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
         public CountingEnumerable(int count) => _count = count;
         public IEnumerator<int> GetEnumerator()
         {
-            for (int i = 0; i < _count; i++)
+            for (var i = 0; i < _count; i++)
             {
                 MoveNextCalls++;
                 yield return i + 1; // 1..n

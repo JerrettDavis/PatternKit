@@ -28,6 +28,18 @@
 - name: Pricing Calculator (Async Sources, Loyalty, Rounding)
   href: pricing-calculator.md
 
+- name: Visitor — POS Tender Routing & Receipt Rendering
+  href: pos-visitor-routing.md
+
+- name: Visitor — API Exception Mapping (ASP.NET Core)
+  href: api-exception-mapping-visitor.md
+
+- name: Visitor — Event Processing (Orchestration)
+  href: event-processor-visitor.md
+
+- name: Visitor — Message Router (Background Worker)
+  href: message-router-visitor.md
+
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
   
