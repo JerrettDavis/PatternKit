@@ -26,6 +26,7 @@ jobs:
         with:
           dotnet-version: |
             9.0.x
+            10.0.x
           cache: true
           cache-dependency-path: |
             **/packages.lock.json
@@ -109,6 +110,7 @@ jobs:
         with:
           dotnet-version: |
             9.0.x
+            10.0.x
           cache: true
           cache-dependency-path: |
             **/packages.lock.json
