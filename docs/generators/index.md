@@ -24,5 +24,6 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 
 - **Factory Method** — Turn a `static partial` class into a keyed dispatcher with optional default behavior.
 - **Factory Class** — GoF-style factory for an abstract base or interface, mapping keys to concrete products (with optional enum keys and async creation).
+- **Examples** — See the samples in `PatternKit.Examples/Generators` for DI module wiring and orchestrated application steps using the generators.
 
 Use the pages in this section for usage, generated API shape, async rules, and diagnostics.

@@ -511,4 +511,74 @@ public class FactoriesGeneratorTests
         var awaited = vtObj.GetAwaiter().GetResult();
         Assert.Equal("Demo.SyncService", ((object)awaited).GetType().FullName);
     }
+
+    [Fact]
+    public void FactoryGenerators_Work_In_DI_Orchestrator_Scenario()
+    {
+        const string user = """
+                            using System;
+                            using System.Threading;
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            public interface IServiceCollection
+                            {
+                                IServiceCollection Add(Type serviceType, Type implType);
+                            }
+
+                            public class Services : IServiceCollection
+                            {
+                                public IServiceCollection Add(Type serviceType, Type implType) => this;
+                            }
+
+                            [FactoryMethod(typeof(string), CreateMethodName = "ConfigureModule")]
+                            public static partial class ServiceModules
+                            {
+                                [FactoryCase("metrics")]
+                                public static IServiceCollection AddMetrics(IServiceCollection services) => services.Add(typeof(IMetrics), typeof(ConsoleMetrics));
+
+                                [FactoryCase("workers")]
+                                public static IServiceCollection AddWorkers(IServiceCollection services) => services.Add(typeof(IWorker), typeof(Worker));
+
+                                [FactoryDefault]
+                                public static IServiceCollection AddDefaults(IServiceCollection services) => services.Add(typeof(IWorker), typeof(Worker));
+                            }
+
+                            [FactoryClass(typeof(string))]
+                            public interface IOrchestratorStep
+                            {
+                                ValueTask ExecuteAsync(IServiceCollection services, CancellationToken cancellationToken = default);
+                            }
+
+                            [FactoryClassKey("seed")]
+                            public sealed class SeedStep : IOrchestratorStep
+                            {
+                                public ValueTask ExecuteAsync(IServiceCollection services, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+                            }
+
+                            [FactoryClassKey("start")]
+                            public sealed class StartStep : IOrchestratorStep
+                            {
+                                public ValueTask ExecuteAsync(IServiceCollection services, CancellationToken cancellationToken = default) => ValueTask.CompletedTask;
+                            }
+
+                            public interface IMetrics { }
+                            public sealed class ConsoleMetrics : IMetrics { }
+                            public interface IWorker { }
+                            public sealed class Worker : IWorker { }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryGenerators_Work_In_DI_Orchestrator_Scenario));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+
+        using var pe = new MemoryStream();
+        var emit = updated.Emit(pe);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
