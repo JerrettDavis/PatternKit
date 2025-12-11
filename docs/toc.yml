@@ -7,6 +7,10 @@
 - name: Patterns
   href: patterns/
   homepage: patterns/
+
+- name: Generators
+  href: generators/
+  homepage: generators/
   
 - name: Examples
   href: examples/

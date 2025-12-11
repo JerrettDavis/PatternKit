@@ -92,7 +92,7 @@ public sealed class ActionVisitor<TBase>
         private readonly BranchBuilder<Predicate, ActionHandler> _core = BranchBuilder<Predicate, ActionHandler>.Create();
 
         /// <summary>Registers an action for nodes of type <typeparamref name="T"/>.</summary>
-        /// <typeparam name="T">A concrete type assignable to <see cref="TBase"/>.</typeparam>
+        /// <typeparam name="T">A concrete type assignable to the base type.</typeparam>
         /// <param name="action">The action invoked when the runtime type is <typeparamref name="T"/>.</param>
         public Builder On<T>(Action<T> action) where T : TBase
         {

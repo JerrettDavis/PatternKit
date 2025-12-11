@@ -1,0 +1,14 @@
+- name: Generators Overview
+  href: index.md
+
+- name: Factory Method
+  href: factory-method.md
+
+- name: Factory Class
+  href: factory-class.md
+
+- name: Examples
+  href: examples.md
+
+- name: Troubleshooting
+  href: troubleshooting.md
