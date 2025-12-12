@@ -8,7 +8,7 @@
         <DisableTransitiveFrameworkReferences>true</DisableTransitiveFrameworkReferences>
         <IsPackable>true</IsPackable>
         <DevelopmentDependency>true</DevelopmentDependency>
-        <TargetFrameworks />
+        <TargetFrameworks>netstandard2.0;</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

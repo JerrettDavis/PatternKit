@@ -1,6 +1,6 @@
 # Generator Examples (DI + Orchestration)
 
-Two production-flavored samples live in `src/PatternKit.Examples/Generators` to show the factory generators in action with `IServiceCollection`.
+Three production-flavored samples live in `src/PatternKit.Examples/Generators` to show the factory and builder generators in action with `IServiceCollection` and `Host`.
 
 ## 1) ServiceModules with FactoryMethod
 
@@ -68,7 +68,34 @@ await step.ExecuteAsync(provider, cancellationToken);
 
 `ApplicationOrchestrator` consumes it to run configured steps in order. This pattern works well for task pipelines defined by configuration or tenant-specific input.
 
+## 3) CorporateApplication with Builder
+
+A `[GenerateBuilder]` state-projection builder composes a modular host that plugs into `Host.CreateApplicationBuilder()`:
+
+```csharp
+[GenerateBuilder(Model = BuilderModel.StateProjection, BuilderTypeName = "CorporateAppBuilder")]
+public static partial class CorporateApplication
+{
+    public static CorporateAppState Seed() => new(Host.CreateApplicationBuilder(), new(), new(), new(), new());
+
+    [BuilderProjector]
+    public static CorporateApp Build(CorporateAppState state)
+    {
+        foreach (var module in state.Modules) module.Configure(state.Builder, state.Log);
+        foreach (var customize in state.Customizations) customize(state.Builder);
+        return new CorporateApp(state.Builder.Build(), state.StartupTasks, state.Log);
+    }
+}
+
+// Sample usage
+var app = await CorporateApplicationDemo.BuildAsync("Production", "messaging", "jobs");
+await app.InitializeAsync();
+```
+
+The demo wires observability, messaging, background jobs, async secret loading, and startup tasks before emitting a ready-to-run `CorporateApp` instance.
+
 ## Where to find the code
 
 - `src/PatternKit.Examples/Generators/FactoryGeneratorExamples.cs`
-- Project references `PatternKit.Generators` as an analyzer so the factories are generated at build time.
+- `src/PatternKit.Examples/Generators/CorporateApplicationBuilderDemo.cs`
+- Project references `PatternKit.Generators` as an analyzer so the factories/builders are generated at build time.
