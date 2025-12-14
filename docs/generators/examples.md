@@ -73,7 +73,7 @@ await step.ExecuteAsync(provider, cancellationToken);
 A `[GenerateBuilder]` state-projection builder composes a modular host that plugs into `Host.CreateApplicationBuilder()`:
 
 ```csharp
-[GenerateBuilder(Model = BuilderModel.StateProjection, BuilderTypeName = "CorporateAppBuilder")]
+[GenerateBuilder(Model = BuilderModel.StateProjection)]
 public static partial class CorporateApplication
 {
     public static CorporateAppState Seed() => new(Host.CreateApplicationBuilder(), new(), new(), new(), new());
@@ -87,9 +87,14 @@ public static partial class CorporateApplication
     }
 }
 
-// Sample usage
-var app = await CorporateApplicationDemo.BuildAsync("Production", "messaging", "jobs");
-await app.InitializeAsync();
+// Fluent, no magic strings
+var app = await CorporateApplicationDemo.CreateBuilder()
+    .ForEnvironment(CorporateEnvironment.Production)
+    .EnableMessaging()
+    .EnableJobs()
+    .LoadSecrets()
+    .AddStartupTasks()
+    .BuildAndInitializeAsync();
 ```
 
 The demo wires observability, messaging, background jobs, async secret loading, and startup tasks before emitting a ready-to-run `CorporateApp` instance.

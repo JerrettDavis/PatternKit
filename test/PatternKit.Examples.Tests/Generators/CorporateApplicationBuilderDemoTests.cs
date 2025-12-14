@@ -1,34 +1,57 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
-using PatternKit.Examples.Generators.Factories;
+using TinyBDD;
+using TinyBDD.Xunit;
+using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.Generators;
 
-public class CorporateApplicationBuilderDemoTests
+[Feature("Corporate application builder (fluent, string-free)")]
+public sealed class CorporateApplicationBuilderDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("Builds and initializes a production app with modules, secrets, and startup tasks")]
     [Fact]
     public async Task CorporateApp_Composes_Modules_And_Startup_Tasks()
     {
-        var app = await CorporateApplicationDemo.BuildAsync("Production", "messaging", "jobs");
-
-        await app.InitializeAsync();
-
-        var services = app.Host.Services;
-        Assert.NotNull(services.GetService<IMetricsSink>());
-        Assert.NotNull(services.GetService<INotificationPublisher>());
-        Assert.NotNull(services.GetService<IBackgroundJobScheduler>());
-
-        var configuration = services.GetRequiredService<IConfiguration>();
-        Assert.Equal("Server=prod;Database=Corporate;", configuration["ConnectionStrings:Primary"]);
-        Assert.Equal("3", configuration["Corporate:FeatureCount"]);
-
-        Assert.Contains("env:Production", app.Log);
-        Assert.Contains("module:observability", app.Log);
-        Assert.Contains("module:messaging", app.Log);
-        Assert.Contains("module:jobs", app.Log);
-        Assert.Contains("secrets:loaded", app.Log);
-        Assert.Contains("startup:notifications", app.Log);
-        Assert.Contains("startup:jobs", app.Log);
+        await Given("a production builder with messaging and jobs enabled", () =>
+                CorporateApplicationDemo.CreateBuilder()
+                    .ForEnvironment(CorporateEnvironment.Production)
+                    .EnableMessaging()
+                    .EnableJobs()
+                    .LoadSecrets()
+                    .AddStartupTasks())
+            .When("build and initialize", async b => await b.BuildAndInitializeAsync())
+            .Then("required services are registered",
+                app =>
+                {
+                    var services = app.Host.Services;
+                    return services.GetService<IMetricsSink>() is not null
+                           && services.GetService<INotificationPublisher>() is not null
+                           && services.GetService<IBackgroundJobScheduler>() is not null;
+                })
+            .And("configuration is applied",
+                app =>
+                {
+                    var configuration = app.Host.Services.GetRequiredService<IConfiguration>();
+                    return configuration["ConnectionStrings:Primary"] == "Server=prod;Database=Corporate;"
+                           && configuration["Corporate:FeatureCount"] == "3";
+                })
+            .And("log captures setup steps",
+                app =>
+                {
+                    var expected = new[]
+                    {
+                        "env:Production",
+                        "module:observability",
+                        "module:messaging",
+                        "module:jobs",
+                        "secrets:loaded",
+                        "startup:notifications",
+                        "startup:jobs"
+                    };
+                    return expected.All(app.Log.Contains);
+                })
+            .AssertPassed();
     }
 }

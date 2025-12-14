@@ -2,9 +2,9 @@ namespace PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDem
 
 public static class SecretsProvider
 {
-    public static ValueTask<string> GetConnectionStringAsync(string environment)
+    public static ValueTask<string> GetConnectionStringAsync(CorporateEnvironment environment)
     {
-        var value = environment.Equals("Production", StringComparison.OrdinalIgnoreCase)
+        var value = environment == CorporateEnvironment.Production
             ? "Server=prod;Database=Corporate;"
             : "Server=dev;Database=Corporate;";
         return new ValueTask<string>(value);

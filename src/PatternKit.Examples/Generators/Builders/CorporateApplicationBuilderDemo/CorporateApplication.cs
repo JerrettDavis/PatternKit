@@ -6,7 +6,6 @@ namespace PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDem
 
 [GenerateBuilder(
     Model = BuilderModel.StateProjection,
-    BuilderTypeName = "CorporateAppBuilder",
     GenerateBuilderMethods = true)]
 public static partial class CorporateApplication
 {
