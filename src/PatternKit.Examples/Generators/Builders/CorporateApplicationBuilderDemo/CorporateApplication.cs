@@ -14,12 +14,7 @@ public static partial class CorporateApplication
         var builder = Host.CreateApplicationBuilder();
         builder.Services.AddOptions();
 
-        return new CorporateAppState(
-            builder,
-            new List<IAppModule>(),
-            new List<Action<IHostApplicationBuilder>>(),
-            new List<Func<IServiceProvider, ValueTask>>(),
-            new List<string>());
+        return new CorporateAppState(builder, [], [], [], []);
     }
 
     [BuilderProjector]

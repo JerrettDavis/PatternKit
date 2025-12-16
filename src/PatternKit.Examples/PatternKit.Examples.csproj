@@ -12,7 +12,8 @@
         <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"
-                          AdditionalProperties="TargetFramework=netstandard2.0" />
+                          AdditionalProperties="TargetFramework=netstandard2.0"
+                          Condition="'$(DOCFX)'!='true'" />
     </ItemGroup>
 
 

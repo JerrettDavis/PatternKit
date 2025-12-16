@@ -1,0 +1,42 @@
+    public static void DemonstrateRemoteProxy(TextWriter writer)
+    {
+        writer.WriteLine("\n=== Remote Proxy - Network Call Optimization ===");
+
+        var remoteService = new RemoteDataService();
+        var callCount = 0;
+
+        // Combine caching with logging to create an efficient remote proxy
+        var remoteProxy = Proxy<int, string>.Create(id =>
+            {
+                callCount++;
+                return remoteService.FetchData(id);
+            })
+            .Intercept((id, next) =>
+            {
+                writer.WriteLine($"[PROXY] Request for ID: {id}");
+                var result = next(id);
+                writer.WriteLine($"[PROXY] Response received");
+                return result;
+            })
+            .Build();
+
+        // Now wrap with caching
+        var cachedRemoteProxy = Proxy<int, string>.Create(
+                id => remoteProxy.Execute(id))
+            .CachingProxy()
+            .Build();
+
+        writer.WriteLine("First request for ID 42:");
+        var r1 = cachedRemoteProxy.Execute(42);
+        writer.WriteLine($"Result: {r1}\n");
+
+        writer.WriteLine("Second request for ID 42 (cached):");
+        var r2 = cachedRemoteProxy.Execute(42);
+        writer.WriteLine($"Result: {r2}\n");
+
+        writer.WriteLine("Request for ID 99:");
+        var r3 = cachedRemoteProxy.Execute(99);
+        writer.WriteLine($"Result: {r3}\n");
+
+        writer.WriteLine($"Total network calls made: {callCount}");
+    }
