@@ -1,4 +1,4 @@
-using PatternKit.Examples.Generators;
+using PatternKit.Examples.Generators.Strategies;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;

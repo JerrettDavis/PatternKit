@@ -437,7 +437,9 @@ Combine **logging** and **caching** proxies to create an efficient remote proxy 
 
 ### Code
 
-[!code-csharp[RemoteProxy](~/src/PatternKit.Examples/ProxyDemo/ProxyDemo.cs#L416-L465)]
+```csharp
+{{include/proxy-remote-snippet.txt}}
+```
 
 ### How It Works
 

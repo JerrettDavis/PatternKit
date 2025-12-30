@@ -7,6 +7,9 @@
 - name: Factory Class
   href: factory-class.md
 
+- name: Builder
+  href: builder.md
+
 - name: Examples
   href: examples.md
 

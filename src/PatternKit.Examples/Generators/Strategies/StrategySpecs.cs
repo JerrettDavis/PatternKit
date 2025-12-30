@@ -1,6 +1,6 @@
 using PatternKit.Generators;
 
-namespace PatternKit.Examples.Generators;
+namespace PatternKit.Examples.Generators.Strategies;
 
 [GenerateStrategy(nameof(OrderRouter), typeof(char), StrategyKind.Action)]
 public partial class OrderRouter

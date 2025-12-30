@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Generators.Factories;
 
-namespace PatternKit.Examples.Generators;
+namespace PatternKit.Examples.Generators.Factories;
 
 // Example 1: Use FactoryMethod to map configuration keys to IServiceCollection wiring.
 [FactoryMethod(typeof(string), CreateMethodName = "ConfigureModule")]

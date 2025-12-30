@@ -410,7 +410,7 @@ var robustFacade = Facade<Request, Result>.Create()
 
 ## See Also
 
-- [Adapter Pattern](../adapter/adapter.md) - For interface conversion
-- [Decorator Pattern](../decorator/decorator.md) - For behavior enhancement
+- [Adapter Pattern](../adapter/fluent-adapter.md) - For interface conversion
+- [Decorator Pattern](../decorator/index.md) - For behavior enhancement
 - [Strategy Pattern](../../behavioral/strategy/strategy.md) - For algorithm selection
 

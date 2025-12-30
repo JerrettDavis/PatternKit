@@ -261,7 +261,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             .When("execute calculation", ctx =>
             {
                 var result = ctx.proxy.Execute((5, 3));
-                return (result, logs: ctx.logs);
+                return (result, ctx.logs);
             })
             .Then("returns correct sum", r => r.result == 8)
             .And("logs input and output", r => r.logs.Count == 2)
@@ -449,7 +449,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             .When("executing with no matching setup", proxy =>
                 Record.Exception(() => proxy.Execute(42)))
             .Then("throws InvalidOperationException", ex => ex is InvalidOperationException)
-            .And("has descriptive message", ex => ex.Message.Contains("No setup found"))
+            .And("has descriptive message", ex => ex!.Message.Contains("No setup found"))
             .AssertPassed();
 
     [Scenario("Mock framework Throws method configures exception")]
@@ -601,7 +601,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             .When("executing operations", ctx =>
             {
                 var result = ctx.proxy.Execute((5, 3));
-                return (result, logCount: ctx.logs.Count, logs: ctx.logs);
+                return (result, logCount: ctx.logs.Count, ctx.logs);
             })
             .Then("returns correct sum", r => r.result == 8)
             .And("logs two messages", r => r.logCount == 2)

@@ -686,6 +686,7 @@ public static class ProxyDemo
         DemonstrateRemoteProxy(Console.Out);
     }
 
+    #region RemoteProxy
     public static void DemonstrateRemoteProxy(TextWriter writer)
     {
         writer.WriteLine("\n=== Remote Proxy - Network Call Optimization ===");
@@ -728,6 +729,7 @@ public static class ProxyDemo
 
         writer.WriteLine($"Total network calls made: {callCount}");
     }
+    #endregion
 
     #endregion
 

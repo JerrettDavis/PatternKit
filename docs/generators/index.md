@@ -1,6 +1,6 @@
 # PatternKit Generators
 
-PatternKit includes a Roslyn incremental generator package (`PatternKit.Generators`) that emits factory code at compile time. Use it when you want predictable, allocation-light factories without writing the boilerplate by hand.
+PatternKit includes a Roslyn incremental generator package (`PatternKit.Generators`) that emits builder and factory code at compile time. Use it when you want predictable, allocation-light helpers without writing the boilerplate by hand.
 
 ## When to use
 
@@ -22,6 +22,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 
 ## Available generators
 
+- **Builder** — GoF-aligned builders (mutable instance or state + projector) with sync/async pipelines and optional static helper methods on your target types.
 - **Factory Method** — Turn a `static partial` class into a keyed dispatcher with optional default behavior.
 - **Factory Class** — GoF-style factory for an abstract base or interface, mapping keys to concrete products (with optional enum keys and async creation).
 - **Examples** — See the samples in `PatternKit.Examples/Generators` for DI module wiring and orchestrated application steps using the generators.
