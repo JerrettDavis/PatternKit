@@ -37,7 +37,7 @@ jobs:
           languages: csharp
 
       - name: Restore
-        run: dotnet restore PatternKit.slnx --use-lock-file --force-evaluate
+        run: dotnet restore PatternKit.slnx --use-lock-file
 
       - name: Build
         run: dotnet build PatternKit.slnx --configuration Release --no-restore

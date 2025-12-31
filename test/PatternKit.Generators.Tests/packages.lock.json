@@ -452,7 +452,10 @@
         }
       },
       "patternkit.generators": {
-        "type": "Project"
+        "type": "Project",
+        "dependencies": {
+          "PatternKit.Generators.Abstractions": "[1.0.0, )"
+        }
       },
       "patternkit.generators.abstractions": {
         "type": "Project"
@@ -952,6 +955,7 @@
       "patternkit.generators": {
         "type": "Project",
         "dependencies": {
+          "PatternKit.Generators.Abstractions": "[1.0.0, )",
           "System.Collections.Immutable": "[10.0.1, )"
         }
       },
@@ -1441,6 +1445,7 @@
       "patternkit.generators": {
         "type": "Project",
         "dependencies": {
+          "PatternKit.Generators.Abstractions": "[1.0.0, )",
           "System.Collections.Immutable": "[10.0.1, )"
         }
       },
