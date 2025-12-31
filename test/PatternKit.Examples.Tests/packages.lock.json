@@ -440,10 +440,10 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[10.0.1, )",
           "Microsoft.Extensions.Options.DataAnnotations": "[10.0.1, )",
           "PatternKit.Core": "[1.0.0, )",
-          "PatternKit.Generators": "[1.0.0, )"
+          "PatternKit.Generators.Abstractions": "[1.0.0, )"
         }
       },
-      "patternkit.generators": {
+      "patternkit.generators.abstractions": {
         "type": "Project"
       }
     },
@@ -915,14 +915,11 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[10.0.1, )",
           "Microsoft.Extensions.Options.DataAnnotations": "[10.0.1, )",
           "PatternKit.Core": "[1.0.0, )",
-          "PatternKit.Generators": "[1.0.0, )"
+          "PatternKit.Generators.Abstractions": "[1.0.0, )"
         }
       },
-      "patternkit.generators": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[10.0.1, )"
-        }
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     },
     "net9.0": {
@@ -1393,14 +1390,11 @@
           "Microsoft.Extensions.Options.ConfigurationExtensions": "[10.0.1, )",
           "Microsoft.Extensions.Options.DataAnnotations": "[10.0.1, )",
           "PatternKit.Core": "[1.0.0, )",
-          "PatternKit.Generators": "[1.0.0, )"
+          "PatternKit.Generators.Abstractions": "[1.0.0, )"
         }
       },
-      "patternkit.generators": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[10.0.1, )"
-        }
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     }
   }

@@ -304,11 +304,6 @@
         "resolved": "10.0.1",
         "contentHash": "DO8XrJkp5x4PddDuc/CH37yDBCs9BYN6ijlKyR3vMb55BP1Vwh90vOX8bNfnKxr5B2qEI3D8bvbY1fFbDveDHQ=="
       },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "kdTe61B8P7i2M1pODC3MLbZ/CfFGjpC6c6jzxjQoB5DHZNewayCRqgFUmx3JKB6vLQtozpMQEiw+R5fO32Jv4g=="
-      },
       "System.Diagnostics.EventLog": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -317,11 +312,8 @@
       "patternkit.core": {
         "type": "Project"
       },
-      "patternkit.generators": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[10.0.1, )"
-        }
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     },
     "net8.0": {
@@ -632,11 +624,6 @@
         "resolved": "10.0.1",
         "contentHash": "DO8XrJkp5x4PddDuc/CH37yDBCs9BYN6ijlKyR3vMb55BP1Vwh90vOX8bNfnKxr5B2qEI3D8bvbY1fFbDveDHQ=="
       },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "kdTe61B8P7i2M1pODC3MLbZ/CfFGjpC6c6jzxjQoB5DHZNewayCRqgFUmx3JKB6vLQtozpMQEiw+R5fO32Jv4g=="
-      },
       "System.Diagnostics.DiagnosticSource": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -669,11 +656,8 @@
       "patternkit.core": {
         "type": "Project"
       },
-      "patternkit.generators": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[10.0.1, )"
-        }
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     },
     "net9.0": {
@@ -984,11 +968,6 @@
         "resolved": "10.0.1",
         "contentHash": "DO8XrJkp5x4PddDuc/CH37yDBCs9BYN6ijlKyR3vMb55BP1Vwh90vOX8bNfnKxr5B2qEI3D8bvbY1fFbDveDHQ=="
       },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "10.0.1",
-        "contentHash": "kdTe61B8P7i2M1pODC3MLbZ/CfFGjpC6c6jzxjQoB5DHZNewayCRqgFUmx3JKB6vLQtozpMQEiw+R5fO32Jv4g=="
-      },
       "System.Diagnostics.DiagnosticSource": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -1021,11 +1000,8 @@
       "patternkit.core": {
         "type": "Project"
       },
-      "patternkit.generators": {
-        "type": "Project",
-        "dependencies": {
-          "System.Collections.Immutable": "[10.0.1, )"
-        }
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     }
   }
