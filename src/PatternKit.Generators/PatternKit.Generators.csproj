@@ -15,14 +15,10 @@
     <ItemGroup>
         <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
-        <None Include="..\PatternKit.Generators.Abstractions\bin\$(Configuration)\netstandard2.0\PatternKit.Generators.Abstractions.dll"
+        <None Include="$(TargetDir)PatternKit.Generators.Abstractions.dll"
               Pack="true"
               PackagePath="analyzers/dotnet/cs"
               Visible="false" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <Analyzer Include="..\PatternKit.Generators.Abstractions\bin\$(Configuration)\netstandard2.0\PatternKit.Generators.Abstractions.dll" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,7 +28,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" />
+        <ProjectReference Include="..\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>
