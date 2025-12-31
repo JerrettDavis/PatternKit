@@ -670,7 +670,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
     private static string ToCamelCase(string name)
     {
-        if (string.IsNullOrEmpty(name)) return name;
+        if (string.IsNullOrEmpty(name) || name.Length == 1) 
+            return name.ToLowerInvariant();
         return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
