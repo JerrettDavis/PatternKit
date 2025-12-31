@@ -325,28 +325,21 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"public sealed class {builderName}<TResult>");
         sb.AppendLine("{");
         
-        // Generate field for each visitable type
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"    private System.Func<{type.Name}, TResult>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        // Store handlers in a dictionary keyed by Type
+        sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, TResult>? _defaultHandler;");
         sb.AppendLine();
 
-        // Generate When methods for each type
-        foreach (var type in visitableTypes)
-        {
-            var typeName = type.Name;
-            var fieldName = $"_{ToCamelCase(typeName)}Handler";
-            
-            sb.AppendLine($"    /// <summary>Registers a handler for {typeName}.</summary>");
-            sb.AppendLine($"    public {builderName}<TResult> When(System.Func<{typeName}, TResult> handler)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        {fieldName} = handler;");
-            sb.AppendLine("        return this;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
+        // Generate generic When<T> method
+        sb.AppendLine($"    /// <summary>Registers a handler for nodes of type <typeparamref name=\"T\"/>.</summary>");
+        sb.AppendLine($"    /// <typeparam name=\"T\">A concrete type assignable to {root.BaseName}.</typeparam>");
+        sb.AppendLine($"    /// <param name=\"handler\">The handler invoked when the runtime type is <typeparamref name=\"T\"/>.</param>");
+        sb.AppendLine($"    public {builderName}<TResult> When<T>(System.Func<T, TResult> handler) where T : {root.BaseName}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        _handlers[typeof(T)] = node => handler((T)node);");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
 
         // Default handler
         sb.AppendLine($"    /// <summary>Sets a default handler for unmatched types.</summary>");
@@ -361,38 +354,20 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"    /// <summary>Builds the visitor implementation.</summary>");
         sb.AppendLine($"    public {root.VisitorInterfaceName}<TResult> Build()");
         sb.AppendLine("    {");
-        sb.AppendLine($"        return new Implementation(");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
-        }
-        sb.AppendLine("            _defaultHandler");
-        sb.AppendLine("        );");
+        sb.AppendLine($"        return new Implementation(_handlers, _defaultHandler);");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         // Implementation class
         sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}<TResult>");
         sb.AppendLine("    {");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"        private readonly System.Func<{type.Name}, TResult>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, TResult>? _defaultHandler;");
         sb.AppendLine();
         
-        sb.Append("        internal Implementation(");
-        var paramList = visitableTypes.Select(t => 
-            $"System.Func<{t.Name}, TResult>? {ToCamelCase(t.Name)}Handler").ToList();
-        paramList.Add($"System.Func<{root.BaseName}, TResult>? defaultHandler");
-        sb.Append(string.Join(", ", paramList));
-        sb.AppendLine(")");
+        sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> handlers, System.Func<{root.BaseName}, TResult>? defaultHandler)");
         sb.AppendLine("        {");
-        foreach (var type in visitableTypes)
-        {
-            var camelName = ToCamelCase(type.Name);
-            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
-        }
+        sb.AppendLine($"            _handlers = handlers;");
         sb.AppendLine("            _defaultHandler = defaultHandler;");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -402,12 +377,11 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         {
             var typeName = type.Name;
             var paramName = ToCamelCase(typeName);
-            var fieldName = $"_{paramName}Handler";
             
             sb.AppendLine($"        public TResult Visit({typeName} {paramName})");
             sb.AppendLine("        {");
-            sb.AppendLine($"            if ({fieldName} is not null)");
-            sb.AppendLine($"                return {fieldName}({paramName});");
+            sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
+            sb.AppendLine($"                return handler({paramName});");
             sb.AppendLine($"            if (_defaultHandler is not null)");
             sb.AppendLine($"                return _defaultHandler({paramName});");
             sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
@@ -445,24 +419,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"public sealed class {builderName}");
         sb.AppendLine("{");
         
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"    private System.Action<{type.Name}>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> _handlers = new();");
         sb.AppendLine($"    private System.Action<{root.BaseName}>? _defaultHandler;");
         sb.AppendLine();
 
-        foreach (var type in visitableTypes)
-        {
-            var typeName = type.Name;
-            sb.AppendLine($"    /// <summary>Registers a handler for {typeName}.</summary>");
-            sb.AppendLine($"    public {builderName} When(System.Action<{typeName}> handler)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
-            sb.AppendLine("        return this;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
+        sb.AppendLine($"    /// <summary>Registers an action handler for nodes of type <typeparamref name=\"T\"/>.</summary>");
+        sb.AppendLine($"    /// <typeparam name=\"T\">A concrete type assignable to {root.BaseName}.</typeparam>");
+        sb.AppendLine($"    /// <param name=\"handler\">The action invoked when the runtime type is <typeparamref name=\"T\"/>.</param>");
+        sb.AppendLine($"    public {builderName} When<T>(System.Action<T> handler) where T : {root.BaseName}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        _handlers[typeof(T)] = node => handler((T)node);");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
 
         sb.AppendLine($"    /// <summary>Sets a default handler for unmatched types.</summary>");
         sb.AppendLine($"    public {builderName} Default(System.Action<{root.BaseName}> handler)");
@@ -475,37 +444,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"    /// <summary>Builds the visitor implementation.</summary>");
         sb.AppendLine($"    public {root.VisitorInterfaceName}Action Build()");
         sb.AppendLine("    {");
-        sb.AppendLine($"        return new Implementation(");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
-        }
-        sb.AppendLine("            _defaultHandler");
-        sb.AppendLine("        );");
+        sb.AppendLine($"        return new Implementation(_handlers, _defaultHandler);");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}Action");
         sb.AppendLine("    {");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"        private readonly System.Action<{type.Name}>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> _handlers;");
         sb.AppendLine($"        private readonly System.Action<{root.BaseName}>? _defaultHandler;");
         sb.AppendLine();
         
-        sb.Append("        internal Implementation(");
-        var paramList = visitableTypes.Select(t => 
-            $"System.Action<{t.Name}>? {ToCamelCase(t.Name)}Handler").ToList();
-        paramList.Add($"System.Action<{root.BaseName}>? defaultHandler");
-        sb.Append(string.Join(", ", paramList));
-        sb.AppendLine(")");
+        sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> handlers, System.Action<{root.BaseName}>? defaultHandler)");
         sb.AppendLine("        {");
-        foreach (var type in visitableTypes)
-        {
-            var camelName = ToCamelCase(type.Name);
-            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
-        }
+        sb.AppendLine($"            _handlers = handlers;");
         sb.AppendLine("            _defaultHandler = defaultHandler;");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -517,8 +468,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             
             sb.AppendLine($"        public void Visit({typeName} {paramName})");
             sb.AppendLine("        {");
-            sb.AppendLine($"            if (_{paramName}Handler is not null)");
-            sb.AppendLine($"                _{paramName}Handler({paramName});");
+            sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
+            sb.AppendLine($"                handler({paramName});");
             sb.AppendLine($"            else if (_defaultHandler is not null)");
             sb.AppendLine($"                _defaultHandler({paramName});");
             sb.AppendLine($"            else");
@@ -557,24 +508,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"public sealed class {builderName}<TResult>");
         sb.AppendLine("{");
         
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"    private System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
         sb.AppendLine();
 
-        foreach (var type in visitableTypes)
-        {
-            var typeName = type.Name;
-            sb.AppendLine($"    /// <summary>Registers an async handler for {typeName}.</summary>");
-            sb.AppendLine($"    public {builderName}<TResult> WhenAsync(System.Func<{typeName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>> handler)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
-            sb.AppendLine("        return this;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
+        sb.AppendLine($"    /// <summary>Registers an async handler for nodes of type <typeparamref name=\"T\"/>.</summary>");
+        sb.AppendLine($"    /// <typeparam name=\"T\">A concrete type assignable to {root.BaseName}.</typeparam>");
+        sb.AppendLine($"    /// <param name=\"handler\">The async handler invoked when the runtime type is <typeparamref name=\"T\"/>.</param>");
+        sb.AppendLine($"    public {builderName}<TResult> WhenAsync<T>(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>> handler) where T : {root.BaseName}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        _handlers[typeof(T)] = (node, ct) => handler((T)node, ct);");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
 
         sb.AppendLine($"    /// <summary>Sets a default async handler for unmatched types.</summary>");
         sb.AppendLine($"    public {builderName}<TResult> DefaultAsync(System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>> handler)");
@@ -587,37 +533,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"    /// <summary>Builds the async visitor implementation.</summary>");
         sb.AppendLine($"    public {root.VisitorInterfaceName}Async<TResult> Build()");
         sb.AppendLine("    {");
-        sb.AppendLine($"        return new Implementation(");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
-        }
-        sb.AppendLine("            _defaultHandler");
-        sb.AppendLine("        );");
+        sb.AppendLine($"        return new Implementation(_handlers, _defaultHandler);");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}Async<TResult>");
         sb.AppendLine("    {");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"        private readonly System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
         sb.AppendLine();
         
-        sb.Append("        internal Implementation(");
-        var paramList = visitableTypes.Select(t => 
-            $"System.Func<{t.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? {ToCamelCase(t.Name)}Handler").ToList();
-        paramList.Add($"System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? defaultHandler");
-        sb.Append(string.Join(", ", paramList));
-        sb.AppendLine(")");
+        sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> handlers, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? defaultHandler)");
         sb.AppendLine("        {");
-        foreach (var type in visitableTypes)
-        {
-            var camelName = ToCamelCase(type.Name);
-            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
-        }
+        sb.AppendLine($"            _handlers = handlers;");
         sb.AppendLine("            _defaultHandler = defaultHandler;");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -629,8 +557,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            if (_{paramName}Handler is not null)");
-            sb.AppendLine($"                return _{paramName}Handler({paramName}, cancellationToken);");
+            sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
+            sb.AppendLine($"                return handler({paramName}, cancellationToken);");
             sb.AppendLine($"            if (_defaultHandler is not null)");
             sb.AppendLine($"                return _defaultHandler({paramName}, cancellationToken);");
             sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
@@ -668,24 +596,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"public sealed class {builderName}");
         sb.AppendLine("{");
         
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"    private System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
         sb.AppendLine();
 
-        foreach (var type in visitableTypes)
-        {
-            var typeName = type.Name;
-            sb.AppendLine($"    /// <summary>Registers an async action handler for {typeName}.</summary>");
-            sb.AppendLine($"    public {builderName} WhenAsync(System.Func<{typeName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask> handler)");
-            sb.AppendLine("    {");
-            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
-            sb.AppendLine("        return this;");
-            sb.AppendLine("    }");
-            sb.AppendLine();
-        }
+        sb.AppendLine($"    /// <summary>Registers an async action handler for nodes of type <typeparamref name=\"T\"/>.</summary>");
+        sb.AppendLine($"    /// <typeparam name=\"T\">A concrete type assignable to {root.BaseName}.</typeparam>");
+        sb.AppendLine($"    /// <param name=\"handler\">The async action invoked when the runtime type is <typeparamref name=\"T\"/>.</param>");
+        sb.AppendLine($"    public {builderName} WhenAsync<T>(System.Func<T, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask> handler) where T : {root.BaseName}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        _handlers[typeof(T)] = (node, ct) => handler((T)node, ct);");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
 
         sb.AppendLine($"    /// <summary>Sets a default async action handler for unmatched types.</summary>");
         sb.AppendLine($"    public {builderName} DefaultAsync(System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask> handler)");
@@ -698,37 +621,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"    /// <summary>Builds the async action visitor implementation.</summary>");
         sb.AppendLine($"    public {root.VisitorInterfaceName}AsyncAction Build()");
         sb.AppendLine("    {");
-        sb.AppendLine($"        return new Implementation(");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
-        }
-        sb.AppendLine("            _defaultHandler");
-        sb.AppendLine("        );");
+        sb.AppendLine($"        return new Implementation(_handlers, _defaultHandler);");
         sb.AppendLine("    }");
         sb.AppendLine();
 
         sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}AsyncAction");
         sb.AppendLine("    {");
-        foreach (var type in visitableTypes)
-        {
-            sb.AppendLine($"        private readonly System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _{ToCamelCase(type.Name)}Handler;");
-        }
+        sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
         sb.AppendLine();
         
-        sb.Append("        internal Implementation(");
-        var paramList = visitableTypes.Select(t => 
-            $"System.Func<{t.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? {ToCamelCase(t.Name)}Handler").ToList();
-        paramList.Add($"System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? defaultHandler");
-        sb.Append(string.Join(", ", paramList));
-        sb.AppendLine(")");
+        sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> handlers, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? defaultHandler)");
         sb.AppendLine("        {");
-        foreach (var type in visitableTypes)
-        {
-            var camelName = ToCamelCase(type.Name);
-            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
-        }
+        sb.AppendLine($"            _handlers = handlers;");
         sb.AppendLine("            _defaultHandler = defaultHandler;");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -740,8 +645,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
-            sb.AppendLine($"            if (_{paramName}Handler is not null)");
-            sb.AppendLine($"                return _{paramName}Handler({paramName}, cancellationToken);");
+            sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
+            sb.AppendLine($"                return handler({paramName}, cancellationToken);");
             sb.AppendLine($"            if (_defaultHandler is not null)");
             sb.AppendLine($"                return _defaultHandler({paramName}, cancellationToken);");
             sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
