@@ -1,0 +1,782 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
+using System.Text;
+
+namespace PatternKit.Generators;
+
+/// <summary>
+/// Source generator that produces visitor pattern infrastructure including interfaces,
+/// Accept methods, and fluent builders for types marked with [GenerateVisitor].
+/// </summary>
+[Generator]
+public sealed class VisitorGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        // Find all classes marked with [GenerateVisitor]
+        var visitorRoots = context.SyntaxProvider.ForAttributeWithMetadataName(
+            fullyQualifiedMetadataName: "PatternKit.Generators.GenerateVisitorAttribute",
+            predicate: static (node, _) => node is ClassDeclarationSyntax,
+            transform: static (gasc, ct) => GetVisitorRoot(gasc, ct)
+        ).Where(static x => x is not null);
+
+        // Generate visitor infrastructure for each root
+        context.RegisterSourceOutput(visitorRoots.Collect(), static (spc, roots) =>
+        {
+            foreach (var root in roots)
+            {
+                if (root is null) continue;
+                GenerateVisitorInfrastructure(spc, root.Value);
+            }
+        });
+    }
+
+    private static VisitorRootInfo? GetVisitorRoot(GeneratorAttributeSyntaxContext context, CancellationToken ct)
+    {
+        if (context.TargetSymbol is not INamedTypeSymbol baseType)
+            return null;
+
+        var attr = context.Attributes[0];
+        
+        // Read attribute properties
+        var visitorInterfaceName = GetAttributeProperty<string>(attr, "VisitorInterfaceName");
+        var generateAsync = GetAttributeProperty<bool?>(attr, "GenerateAsync") ?? true;
+        var generateActions = GetAttributeProperty<bool?>(attr, "GenerateActions") ?? true;
+        var autoDiscover = GetAttributeProperty<bool?>(attr, "AutoDiscoverDerivedTypes") ?? true;
+
+        var ns = baseType.ContainingNamespace.IsGlobalNamespace 
+            ? null 
+            : baseType.ContainingNamespace.ToDisplayString();
+
+        var baseName = baseType.Name;
+        var baseFullName = baseType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+
+        // Discover derived types in the same assembly
+        var derivedTypes = autoDiscover 
+            ? DiscoverDerivedTypes(baseType, context.SemanticModel.Compilation)
+            : ImmutableArray<INamedTypeSymbol>.Empty;
+
+        return new VisitorRootInfo(
+            Namespace: ns,
+            BaseName: baseName,
+            BaseFullName: baseFullName,
+            BaseType: baseType,
+            VisitorInterfaceName: visitorInterfaceName ?? $"I{baseName}Visitor",
+            GenerateAsync: generateAsync,
+            GenerateActions: generateActions,
+            DerivedTypes: derivedTypes
+        );
+    }
+
+    private static T? GetAttributeProperty<T>(AttributeData attr, string propertyName)
+    {
+        var prop = attr.NamedArguments.FirstOrDefault(x => x.Key == propertyName);
+        if (prop.Value.Value is T value)
+            return value;
+        return default;
+    }
+
+    private static ImmutableArray<INamedTypeSymbol> DiscoverDerivedTypes(
+        INamedTypeSymbol baseType, 
+        Compilation compilation)
+    {
+        var derived = new List<INamedTypeSymbol>();
+        
+        foreach (var tree in compilation.SyntaxTrees)
+        {
+            var semanticModel = compilation.GetSemanticModel(tree);
+            var root = tree.GetRoot();
+            
+            foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
+                if (symbol is null) continue;
+                
+                // Check if this type derives from baseType
+                var current = symbol.BaseType;
+                while (current is not null)
+                {
+                    if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                    {
+                        derived.Add(symbol);
+                        break;
+                    }
+                    current = current.BaseType;
+                }
+            }
+        }
+        
+        return derived.ToImmutableArray();
+    }
+
+    private static void GenerateVisitorInfrastructure(SourceProductionContext context, VisitorRootInfo root)
+    {
+        // Generate visitor interfaces
+        GenerateVisitorInterfaces(context, root);
+        
+        // Generate Accept methods for base and derived types
+        GenerateAcceptMethods(context, root);
+        
+        // Generate fluent builders
+        GenerateFluentBuilders(context, root);
+    }
+
+    private static void GenerateVisitorInterfaces(SourceProductionContext context, VisitorRootInfo root)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+
+        if (root.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {root.Namespace};");
+            sb.AppendLine();
+        }
+
+        var visitableTypes = GetAllVisitableTypes(root);
+
+        // Generate sync result visitor
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Visitor interface for {root.BaseName} hierarchy that returns a result.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public interface {root.VisitorInterfaceName}<TResult>");
+        sb.AppendLine("{");
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var paramName = ToCamelCase(typeName);
+            sb.AppendLine($"    TResult Visit({typeName} {paramName});");
+        }
+        sb.AppendLine("}");
+        sb.AppendLine();
+
+        // Generate action visitor if requested
+        if (root.GenerateActions)
+        {
+            sb.AppendLine("/// <summary>");
+            sb.AppendLine($"/// Action visitor interface for {root.BaseName} hierarchy (no return value).");
+            sb.AppendLine("/// </summary>");
+            sb.AppendLine($"public interface {root.VisitorInterfaceName}Action");
+            sb.AppendLine("{");
+            foreach (var type in visitableTypes)
+            {
+                var typeName = type.Name;
+                var paramName = ToCamelCase(typeName);
+                sb.AppendLine($"    void Visit({typeName} {paramName});");
+            }
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+
+        // Generate async visitor if requested
+        if (root.GenerateAsync)
+        {
+            sb.AppendLine("/// <summary>");
+            sb.AppendLine($"/// Async visitor interface for {root.BaseName} hierarchy that returns a ValueTask result.");
+            sb.AppendLine("/// </summary>");
+            sb.AppendLine($"public interface {root.VisitorInterfaceName}Async<TResult>");
+            sb.AppendLine("{");
+            foreach (var type in visitableTypes)
+            {
+                var typeName = type.Name;
+                var paramName = ToCamelCase(typeName);
+                sb.AppendLine($"    System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default);");
+            }
+            sb.AppendLine("}");
+            sb.AppendLine();
+
+            if (root.GenerateActions)
+            {
+                sb.AppendLine("/// <summary>");
+                sb.AppendLine($"/// Async action visitor interface for {root.BaseName} hierarchy (no return value).");
+                sb.AppendLine("/// </summary>");
+                sb.AppendLine($"public interface {root.VisitorInterfaceName}AsyncAction");
+                sb.AppendLine("{");
+                foreach (var type in visitableTypes)
+                {
+                    var typeName = type.Name;
+                    var paramName = ToCamelCase(typeName);
+                    sb.AppendLine($"    System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default);");
+                }
+                sb.AppendLine("}");
+                sb.AppendLine();
+            }
+        }
+
+        context.AddSource($"{root.VisitorInterfaceName}.Interfaces.g.cs", sb.ToString());
+    }
+
+    private static void GenerateAcceptMethods(SourceProductionContext context, VisitorRootInfo root)
+    {
+        var allTypes = GetAllVisitableTypes(root);
+        
+        foreach (var type in allTypes)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("#nullable enable");
+            sb.AppendLine("// <auto-generated />");
+            sb.AppendLine();
+
+            var ns = type.ContainingNamespace.IsGlobalNamespace 
+                ? null 
+                : type.ContainingNamespace.ToDisplayString();
+
+            if (ns is not null)
+            {
+                sb.AppendLine($"namespace {ns};");
+                sb.AppendLine();
+            }
+
+            sb.AppendLine($"public partial class {type.Name}");
+            sb.AppendLine("{");
+
+            // Sync Accept with result
+            sb.AppendLine($"    /// <summary>Accepts a visitor and returns a result.</summary>");
+            sb.AppendLine($"    public TResult Accept<TResult>({root.VisitorInterfaceName}<TResult> visitor)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        return visitor.Visit(this);");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+
+            // Action Accept if requested
+            if (root.GenerateActions)
+            {
+                sb.AppendLine($"    /// <summary>Accepts an action visitor.</summary>");
+                sb.AppendLine($"    public void Accept({root.VisitorInterfaceName}Action visitor)");
+                sb.AppendLine("    {");
+                sb.AppendLine($"        visitor.Visit(this);");
+                sb.AppendLine("    }");
+                sb.AppendLine();
+            }
+
+            // Async Accept if requested
+            if (root.GenerateAsync)
+            {
+                sb.AppendLine($"    /// <summary>Accepts an async visitor and returns a ValueTask result.</summary>");
+                sb.AppendLine($"    public System.Threading.Tasks.ValueTask<TResult> AcceptAsync<TResult>({root.VisitorInterfaceName}Async<TResult> visitor, System.Threading.CancellationToken cancellationToken = default)");
+                sb.AppendLine("    {");
+                sb.AppendLine($"        return visitor.VisitAsync(this, cancellationToken);");
+                sb.AppendLine("    }");
+                sb.AppendLine();
+
+                if (root.GenerateActions)
+                {
+                    sb.AppendLine($"    /// <summary>Accepts an async action visitor.</summary>");
+                    sb.AppendLine($"    public System.Threading.Tasks.ValueTask AcceptAsync({root.VisitorInterfaceName}AsyncAction visitor, System.Threading.CancellationToken cancellationToken = default)");
+                    sb.AppendLine("    {");
+                    sb.AppendLine($"        return visitor.VisitAsync(this, cancellationToken);");
+                    sb.AppendLine("    }");
+                    sb.AppendLine();
+                }
+            }
+
+            sb.AppendLine("}");
+
+            context.AddSource($"{type.Name}.Accept.g.cs", sb.ToString());
+        }
+    }
+
+    private static void GenerateFluentBuilders(SourceProductionContext context, VisitorRootInfo root)
+    {
+        var allTypes = GetAllVisitableTypes(root);
+        
+        // Generate sync result builder
+        GenerateSyncResultBuilder(context, root, allTypes);
+        
+        if (root.GenerateActions)
+        {
+            GenerateSyncActionBuilder(context, root, allTypes);
+        }
+        
+        if (root.GenerateAsync)
+        {
+            GenerateAsyncResultBuilder(context, root, allTypes);
+            
+            if (root.GenerateActions)
+            {
+                GenerateAsyncActionBuilder(context, root, allTypes);
+            }
+        }
+    }
+
+    private static void GenerateSyncResultBuilder(
+        SourceProductionContext context, 
+        VisitorRootInfo root, 
+        ImmutableArray<INamedTypeSymbol> visitableTypes)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+
+        if (root.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {root.Namespace};");
+            sb.AppendLine();
+        }
+
+        var builderName = $"{root.BaseName}VisitorBuilder";
+
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Fluent builder for creating {root.VisitorInterfaceName} implementations.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public sealed class {builderName}<TResult>");
+        sb.AppendLine("{");
+        
+        // Generate field for each visitable type
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"    private System.Func<{type.Name}, TResult>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"    private System.Func<{root.BaseName}, TResult>? _defaultHandler;");
+        sb.AppendLine();
+
+        // Generate When methods for each type
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var fieldName = $"_{ToCamelCase(typeName)}Handler";
+            
+            sb.AppendLine($"    /// <summary>Registers a handler for {typeName}.</summary>");
+            sb.AppendLine($"    public {builderName}<TResult> When(System.Func<{typeName}, TResult> handler)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        {fieldName} = handler;");
+            sb.AppendLine("        return this;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+
+        // Default handler
+        sb.AppendLine($"    /// <summary>Sets a default handler for unmatched types.</summary>");
+        sb.AppendLine($"    public {builderName}<TResult> Default(System.Func<{root.BaseName}, TResult> handler)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _defaultHandler = handler;");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Build method
+        sb.AppendLine($"    /// <summary>Builds the visitor implementation.</summary>");
+        sb.AppendLine($"    public {root.VisitorInterfaceName}<TResult> Build()");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        return new Implementation(");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
+        }
+        sb.AppendLine("            _defaultHandler");
+        sb.AppendLine("        );");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Implementation class
+        sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}<TResult>");
+        sb.AppendLine("    {");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"        private readonly System.Func<{type.Name}, TResult>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"        private readonly System.Func<{root.BaseName}, TResult>? _defaultHandler;");
+        sb.AppendLine();
+        
+        sb.Append("        internal Implementation(");
+        var paramList = visitableTypes.Select(t => 
+            $"System.Func<{t.Name}, TResult>? {ToCamelCase(t.Name)}Handler").ToList();
+        paramList.Add($"System.Func<{root.BaseName}, TResult>? defaultHandler");
+        sb.Append(string.Join(", ", paramList));
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        foreach (var type in visitableTypes)
+        {
+            var camelName = ToCamelCase(type.Name);
+            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
+        }
+        sb.AppendLine("            _defaultHandler = defaultHandler;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        // Visit methods
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var paramName = ToCamelCase(typeName);
+            var fieldName = $"_{paramName}Handler";
+            
+            sb.AppendLine($"        public TResult Visit({typeName} {paramName})");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            if ({fieldName} is not null)");
+            sb.AppendLine($"                return {fieldName}({paramName});");
+            sb.AppendLine($"            if (_defaultHandler is not null)");
+            sb.AppendLine($"                return _defaultHandler({paramName});");
+            sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource($"{builderName}.g.cs", sb.ToString());
+    }
+
+    private static void GenerateSyncActionBuilder(
+        SourceProductionContext context, 
+        VisitorRootInfo root, 
+        ImmutableArray<INamedTypeSymbol> visitableTypes)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+
+        if (root.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {root.Namespace};");
+            sb.AppendLine();
+        }
+
+        var builderName = $"{root.BaseName}ActionVisitorBuilder";
+
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Fluent builder for creating {root.VisitorInterfaceName}Action implementations.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public sealed class {builderName}");
+        sb.AppendLine("{");
+        
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"    private System.Action<{type.Name}>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"    private System.Action<{root.BaseName}>? _defaultHandler;");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            sb.AppendLine($"    /// <summary>Registers a handler for {typeName}.</summary>");
+            sb.AppendLine($"    public {builderName} When(System.Action<{typeName}> handler)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
+            sb.AppendLine("        return this;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"    /// <summary>Sets a default handler for unmatched types.</summary>");
+        sb.AppendLine($"    public {builderName} Default(System.Action<{root.BaseName}> handler)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _defaultHandler = handler;");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    /// <summary>Builds the visitor implementation.</summary>");
+        sb.AppendLine($"    public {root.VisitorInterfaceName}Action Build()");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        return new Implementation(");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
+        }
+        sb.AppendLine("            _defaultHandler");
+        sb.AppendLine("        );");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}Action");
+        sb.AppendLine("    {");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"        private readonly System.Action<{type.Name}>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"        private readonly System.Action<{root.BaseName}>? _defaultHandler;");
+        sb.AppendLine();
+        
+        sb.Append("        internal Implementation(");
+        var paramList = visitableTypes.Select(t => 
+            $"System.Action<{t.Name}>? {ToCamelCase(t.Name)}Handler").ToList();
+        paramList.Add($"System.Action<{root.BaseName}>? defaultHandler");
+        sb.Append(string.Join(", ", paramList));
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        foreach (var type in visitableTypes)
+        {
+            var camelName = ToCamelCase(type.Name);
+            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
+        }
+        sb.AppendLine("            _defaultHandler = defaultHandler;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var paramName = ToCamelCase(typeName);
+            
+            sb.AppendLine($"        public void Visit({typeName} {paramName})");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            if (_{paramName}Handler is not null)");
+            sb.AppendLine($"                _{paramName}Handler({paramName});");
+            sb.AppendLine($"            else if (_defaultHandler is not null)");
+            sb.AppendLine($"                _defaultHandler({paramName});");
+            sb.AppendLine($"            else");
+            sb.AppendLine($"                throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource($"{builderName}.g.cs", sb.ToString());
+    }
+
+    private static void GenerateAsyncResultBuilder(
+        SourceProductionContext context, 
+        VisitorRootInfo root, 
+        ImmutableArray<INamedTypeSymbol> visitableTypes)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+
+        if (root.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {root.Namespace};");
+            sb.AppendLine();
+        }
+
+        var builderName = $"{root.BaseName}AsyncVisitorBuilder";
+
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Fluent builder for creating {root.VisitorInterfaceName}Async implementations.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public sealed class {builderName}<TResult>");
+        sb.AppendLine("{");
+        
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"    private System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            sb.AppendLine($"    /// <summary>Registers an async handler for {typeName}.</summary>");
+            sb.AppendLine($"    public {builderName}<TResult> WhenAsync(System.Func<{typeName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>> handler)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
+            sb.AppendLine("        return this;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"    /// <summary>Sets a default async handler for unmatched types.</summary>");
+        sb.AppendLine($"    public {builderName}<TResult> DefaultAsync(System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>> handler)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _defaultHandler = handler;");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    /// <summary>Builds the async visitor implementation.</summary>");
+        sb.AppendLine($"    public {root.VisitorInterfaceName}Async<TResult> Build()");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        return new Implementation(");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
+        }
+        sb.AppendLine("            _defaultHandler");
+        sb.AppendLine("        );");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}Async<TResult>");
+        sb.AppendLine("    {");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"        private readonly System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
+        sb.AppendLine();
+        
+        sb.Append("        internal Implementation(");
+        var paramList = visitableTypes.Select(t => 
+            $"System.Func<{t.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? {ToCamelCase(t.Name)}Handler").ToList();
+        paramList.Add($"System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? defaultHandler");
+        sb.Append(string.Join(", ", paramList));
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        foreach (var type in visitableTypes)
+        {
+            var camelName = ToCamelCase(type.Name);
+            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
+        }
+        sb.AppendLine("            _defaultHandler = defaultHandler;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var paramName = ToCamelCase(typeName);
+            
+            sb.AppendLine($"        public System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            if (_{paramName}Handler is not null)");
+            sb.AppendLine($"                return _{paramName}Handler({paramName}, cancellationToken);");
+            sb.AppendLine($"            if (_defaultHandler is not null)");
+            sb.AppendLine($"                return _defaultHandler({paramName}, cancellationToken);");
+            sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource($"{builderName}.g.cs", sb.ToString());
+    }
+
+    private static void GenerateAsyncActionBuilder(
+        SourceProductionContext context, 
+        VisitorRootInfo root, 
+        ImmutableArray<INamedTypeSymbol> visitableTypes)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+
+        if (root.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {root.Namespace};");
+            sb.AppendLine();
+        }
+
+        var builderName = $"{root.BaseName}AsyncActionVisitorBuilder";
+
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Fluent builder for creating {root.VisitorInterfaceName}AsyncAction implementations.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public sealed class {builderName}");
+        sb.AppendLine("{");
+        
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"    private System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            sb.AppendLine($"    /// <summary>Registers an async action handler for {typeName}.</summary>");
+            sb.AppendLine($"    public {builderName} WhenAsync(System.Func<{typeName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask> handler)");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        _{ToCamelCase(typeName)}Handler = handler;");
+            sb.AppendLine("        return this;");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"    /// <summary>Sets a default async action handler for unmatched types.</summary>");
+        sb.AppendLine($"    public {builderName} DefaultAsync(System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask> handler)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _defaultHandler = handler;");
+        sb.AppendLine("        return this;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    /// <summary>Builds the async action visitor implementation.</summary>");
+        sb.AppendLine($"    public {root.VisitorInterfaceName}AsyncAction Build()");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        return new Implementation(");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"            _{ToCamelCase(type.Name)}Handler,");
+        }
+        sb.AppendLine("            _defaultHandler");
+        sb.AppendLine("        );");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        sb.AppendLine($"    private sealed class Implementation : {root.VisitorInterfaceName}AsyncAction");
+        sb.AppendLine("    {");
+        foreach (var type in visitableTypes)
+        {
+            sb.AppendLine($"        private readonly System.Func<{type.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _{ToCamelCase(type.Name)}Handler;");
+        }
+        sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
+        sb.AppendLine();
+        
+        sb.Append("        internal Implementation(");
+        var paramList = visitableTypes.Select(t => 
+            $"System.Func<{t.Name}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? {ToCamelCase(t.Name)}Handler").ToList();
+        paramList.Add($"System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? defaultHandler");
+        sb.Append(string.Join(", ", paramList));
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        foreach (var type in visitableTypes)
+        {
+            var camelName = ToCamelCase(type.Name);
+            sb.AppendLine($"            _{camelName}Handler = {camelName}Handler;");
+        }
+        sb.AppendLine("            _defaultHandler = defaultHandler;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        foreach (var type in visitableTypes)
+        {
+            var typeName = type.Name;
+            var paramName = ToCamelCase(typeName);
+            
+            sb.AppendLine($"        public System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            if (_{paramName}Handler is not null)");
+            sb.AppendLine($"                return _{paramName}Handler({paramName}, cancellationToken);");
+            sb.AppendLine($"            if (_defaultHandler is not null)");
+            sb.AppendLine($"                return _defaultHandler({paramName}, cancellationToken);");
+            sb.AppendLine($"            throw new System.InvalidOperationException($\"No handler registered for type {typeName}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+
+        context.AddSource($"{builderName}.g.cs", sb.ToString());
+    }
+
+    private static ImmutableArray<INamedTypeSymbol> GetAllVisitableTypes(VisitorRootInfo root)
+    {
+        // Include base type and all derived types
+        var result = new List<INamedTypeSymbol> { root.BaseType };
+        result.AddRange(root.DerivedTypes);
+        return result.ToImmutableArray();
+    }
+
+    private static string ToCamelCase(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+        return char.ToLowerInvariant(name[0]) + name.Substring(1);
+    }
+
+    private readonly record struct VisitorRootInfo(
+        string? Namespace,
+        string BaseName,
+        string BaseFullName,
+        INamedTypeSymbol BaseType,
+        string VisitorInterfaceName,
+        bool GenerateAsync,
+        bool GenerateActions,
+        ImmutableArray<INamedTypeSymbol> DerivedTypes
+    );
+}
