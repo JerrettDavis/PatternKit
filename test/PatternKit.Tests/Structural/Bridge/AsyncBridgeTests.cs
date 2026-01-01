@@ -320,6 +320,221 @@ public sealed class AsyncBridgeTests
 
     #endregion
 
+    #region AsyncActionBridge<TIn, TImpl> Tests
+
+    [Fact]
+    public async Task AsyncActionBridge_Executes()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => log.Add($"{input}-{impl}"))
+            .Build();
+
+        await bridge.ExecuteAsync("hello");
+
+        Assert.Single(log);
+        Assert.Equal("hello-42", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Async_Provider_Works()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(async ct =>
+            {
+                await Task.Delay(1, ct);
+                return 100;
+            })
+            .Operation(async (input, impl, ct) => log.Add($"{input}-{impl}"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Single(log);
+        Assert.Equal("test-100", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Sync_Operation()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation((input, impl) => log.Add($"sync-{input}-{impl}"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Single(log);
+        Assert.Equal("sync-test-42", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Before_Hook_Executes()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => log.Add("operation"))
+            .Before(async (input, impl, ct) => log.Add($"before-{input}"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Equal("before-test", log[0]);
+        Assert.Equal("operation", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Before_Sync_Hook()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => log.Add("operation"))
+            .Before((input, impl) => log.Add("sync-before"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Equal("sync-before", log[0]);
+        Assert.Equal("operation", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_After_Hook_Executes()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => log.Add("operation"))
+            .After(async (input, impl, ct) => log.Add($"after-{input}"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Equal("operation", log[0]);
+        Assert.Equal("after-test", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_After_Sync_Hook()
+    {
+        var log = new List<string>();
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => log.Add("operation"))
+            .After((input, impl) => log.Add("sync-after"))
+            .Build();
+
+        await bridge.ExecuteAsync("test");
+
+        Assert.Equal("operation", log[0]);
+        Assert.Equal("sync-after", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_TryExecute_Returns_Success()
+    {
+        var executed = false;
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => executed = true)
+            .Build();
+
+        var (success, error) = await bridge.TryExecuteAsync("hello");
+
+        Assert.True(success);
+        Assert.True(executed);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_TryExecute_Catches_Exception()
+    {
+        var bridge = AsyncActionBridge<string, int>.Create(() => 42)
+            .Operation(async (input, impl, ct) => throw new InvalidOperationException("test error"))
+            .Build();
+
+        var (success, error) = await bridge.TryExecuteAsync("hello");
+
+        Assert.False(success);
+        Assert.Equal("test error", error);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Require_Validation_Passes()
+    {
+        var executed = false;
+        var bridge = AsyncActionBridge<int, int>.Create(() => 1)
+            .Operation(async (input, impl, ct) => executed = true)
+            .Require(async (input, impl, ct) => input > 0 ? null : "Input must be positive")
+            .Build();
+
+        await bridge.ExecuteAsync(5);
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Require_Validation_Fails()
+    {
+        var bridge = AsyncActionBridge<int, int>.Create(() => 1)
+            .Operation(async (input, impl, ct) => { })
+            .Require(async (input, impl, ct) => input > 0 ? null : "Input must be positive")
+            .Build();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => bridge.ExecuteAsync(-5).AsTask());
+
+        Assert.Equal("Input must be positive", ex.Message);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_Require_Sync_Validation()
+    {
+        var bridge = AsyncActionBridge<int, int>.Create(() => 1)
+            .Operation(async (input, impl, ct) => { })
+            .Require((input, impl) => input > 0 ? null : "Sync validation failed")
+            .Build();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => bridge.ExecuteAsync(-5).AsTask());
+
+        Assert.Equal("Sync validation failed", ex.Message);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_TryExecute_Returns_Validation_Error()
+    {
+        var bridge = AsyncActionBridge<int, int>.Create(() => 1)
+            .Operation(async (input, impl, ct) => { })
+            .Require((input, impl) => input > 0 ? null : "Input must be positive")
+            .Build();
+
+        var (success, error) = await bridge.TryExecuteAsync(-5);
+
+        Assert.False(success);
+        Assert.Equal("Input must be positive", error);
+    }
+
+    [Fact]
+    public async Task AsyncActionBridge_ProviderFrom_Depends_On_Input()
+    {
+        var capturedImpl = 0;
+        var bridge = AsyncActionBridge<int, int>.Create(
+                async (input, ct) => input * 10)
+            .Operation(async (input, impl, ct) => capturedImpl = impl)
+            .Build();
+
+        await bridge.ExecuteAsync(5);
+
+        Assert.Equal(50, capturedImpl);
+    }
+
+    [Fact]
+    public void AsyncActionBridge_Build_Throws_Without_Operation()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionBridge<int, int>.Create(() => 1).Build());
+    }
+
+    #endregion
+
     #region Null Argument Tests
 
     [Fact]

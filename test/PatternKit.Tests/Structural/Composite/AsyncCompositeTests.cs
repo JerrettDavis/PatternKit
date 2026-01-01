@@ -231,6 +231,160 @@ public sealed class AsyncCompositeTests
 
     #endregion
 
+    #region AsyncActionComposite<TIn> Tests
+
+    [Fact]
+    public async Task AsyncActionComposite_Leaf_Executes()
+    {
+        var executed = false;
+        var composite = AsyncActionComposite<int>.Leaf(async (x, ct) =>
+            {
+                await Task.Delay(1, ct);
+                executed = true;
+            })
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_Leaf_Sync_Executes()
+    {
+        var executed = false;
+        var composite = AsyncActionComposite<int>.Leaf(x => executed = true)
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_Node_Executes_Children_Sequentially()
+    {
+        var log = new List<string>();
+        var composite = AsyncActionComposite<int>.Node()
+            .AddChild(AsyncActionComposite<int>.Leaf(async (x, ct) =>
+            {
+                await Task.Delay(10, ct);
+                log.Add("child1");
+            }))
+            .AddChild(AsyncActionComposite<int>.Leaf((x, ct) =>
+            {
+                log.Add("child2");
+                return default;
+            }))
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.Equal(2, log.Count);
+        Assert.Equal("child1", log[0]);
+        Assert.Equal("child2", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_ParallelNode_Executes_Children_Concurrently()
+    {
+        var log = new List<string>();
+        var lockObj = new object();
+        var composite = AsyncActionComposite<int>.ParallelNode()
+            .AddChild(AsyncActionComposite<int>.Leaf(async (x, ct) =>
+            {
+                await Task.Delay(50, ct);
+                lock (lockObj) log.Add("slow");
+            }))
+            .AddChild(AsyncActionComposite<int>.Leaf((x, ct) =>
+            {
+                lock (lockObj) log.Add("fast");
+                return default;
+            }))
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.Equal(2, log.Count);
+        // Fast should complete before slow because parallel execution
+        Assert.Equal("fast", log[0]);
+        Assert.Equal("slow", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_Node_With_PrePost_Hooks()
+    {
+        var log = new List<string>();
+        var composite = AsyncActionComposite<int>.Node(
+                pre: async (x, ct) => log.Add("pre"),
+                post: async (x, ct) => log.Add("post"))
+            .AddChild(AsyncActionComposite<int>.Leaf(x => log.Add("child")))
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("pre", log[0]);
+        Assert.Equal("child", log[1]);
+        Assert.Equal("post", log[2]);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_AddChildren_Multiple()
+    {
+        var count = 0;
+        var composite = AsyncActionComposite<int>.Node()
+            .AddChildren(
+                AsyncActionComposite<int>.Leaf(x => Interlocked.Increment(ref count)),
+                AsyncActionComposite<int>.Leaf(x => Interlocked.Increment(ref count)),
+                AsyncActionComposite<int>.Leaf(x => Interlocked.Increment(ref count)))
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public async Task AsyncActionComposite_Nested_Structure()
+    {
+        var log = new List<string>();
+        var composite = AsyncActionComposite<int>.Node()
+            .AddChild(AsyncActionComposite<int>.Node(
+                    pre: async (x, ct) => log.Add("inner-pre"))
+                .AddChild(AsyncActionComposite<int>.Leaf(x => log.Add("inner-leaf"))))
+            .AddChild(AsyncActionComposite<int>.Leaf(x => log.Add("outer-leaf")))
+            .Build();
+
+        await composite.ExecuteAsync(5);
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("inner-pre", log[0]);
+        Assert.Equal("inner-leaf", log[1]);
+        Assert.Equal("outer-leaf", log[2]);
+    }
+
+    [Fact]
+    public void AsyncActionComposite_AddChild_Ignored_For_Leaf()
+    {
+        // Adding children to a leaf should be ignored
+        var builder = AsyncActionComposite<int>.Leaf(x => { })
+            .AddChild(AsyncActionComposite<int>.Leaf(x => { }));
+
+        // Should still build successfully as a leaf
+        var composite = builder.Build();
+        Assert.NotNull(composite);
+    }
+
+    [Fact]
+    public void AsyncActionComposite_Leaf_Null_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionComposite<int>.Leaf((AsyncActionComposite<int>.LeafAction)null!).Build());
+    }
+
+    #endregion
+
     #region Null Argument Tests
 
     [Fact]
