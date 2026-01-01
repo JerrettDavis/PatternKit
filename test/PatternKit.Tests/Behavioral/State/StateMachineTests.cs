@@ -119,3 +119,270 @@ public sealed class StateMachineTests(ITestOutputHelper output) : TinyBddXunitBa
             .AssertPassed();
     }
 }
+
+#region Additional StateMachine Tests
+
+public sealed class StateMachineBuilderTests
+{
+    private enum S { A, B, C, D }
+    private readonly record struct E(string Kind);
+
+    [Fact]
+    public void CustomComparer_Works()
+    {
+        var log = new List<string>();
+        var m = StateMachine<string, E>.Create()
+            .Comparer(StringComparer.OrdinalIgnoreCase)
+            .InState("idle", s => s
+                .When((in e) => e.Kind == "go").Permit("ACTIVE").End()
+            )
+            .InState("ACTIVE", s => s
+                .OnEnter((in _) => log.Add("entered"))
+            )
+            .Build();
+
+        var state = "IDLE"; // Different case
+        var handled = m.TryTransition(ref state, new E("go"));
+
+        Assert.True(handled);
+        Assert.Equal("ACTIVE", state);
+        Assert.Contains("entered", log);
+    }
+
+    [Fact]
+    public void ThenBuilder_End_Without_Effect()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("go"));
+
+        Assert.True(handled);
+        Assert.Equal(S.B, state);
+    }
+
+    [Fact]
+    public void ThenBuilder_Stay_End()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "stay").Stay().End()
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("stay"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+    }
+
+    [Fact]
+    public void ThenBuilder_AsDefault_Stay()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "specific").Permit(S.B).Do((in _) => log.Add("specific"))
+                .Otherwise().Stay().Do((in _) => log.Add("default"))
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("anything"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+        Assert.Equal("default", log[0]);
+    }
+
+    [Fact]
+    public void ThenBuilder_AsDefault_Permit()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit((in _) => log.Add("exit:A"))
+                .Otherwise().Permit(S.C).Do((in _) => log.Add("default:go-to-C"))
+            )
+            .InState(S.C, s => s
+                .OnEnter((in _) => log.Add("enter:C"))
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("anything"));
+
+        Assert.True(handled);
+        Assert.Equal(S.C, state);
+        Assert.Equal("exit:A", log[0]);
+        Assert.Equal("default:go-to-C", log[1]);
+        Assert.Equal("enter:C", log[2]);
+    }
+
+    [Fact]
+    public void MultipleOnEnterOnExit_Hooks()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit((in _) => log.Add("exit:A:1"))
+                .OnExit((in _) => log.Add("exit:A:2"))
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .InState(S.B, s => s
+                .OnEnter((in _) => log.Add("enter:B:1"))
+                .OnEnter((in _) => log.Add("enter:B:2"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("go"));
+
+        Assert.Equal(4, log.Count);
+        Assert.Equal("exit:A:1", log[0]);
+        Assert.Equal("exit:A:2", log[1]);
+        Assert.Equal("enter:B:1", log[2]);
+        Assert.Equal("enter:B:2", log[3]);
+    }
+
+    [Fact]
+    public void StateBuilder_Direct_Access()
+    {
+        var log = new List<string>();
+        var builder = StateMachine<S, E>.Create();
+
+        var stateBuilder = builder.State(S.A);
+        stateBuilder.OnEnter((in _) => log.Add("enter:A"));
+        stateBuilder.When((in e) => e.Kind == "go").Permit(S.B).End();
+        stateBuilder.End(); // Return to builder
+
+        builder.InState(S.B, s => s
+            .OnEnter((in _) => log.Add("enter:B"))
+        );
+
+        var m = builder.Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("go"));
+
+        Assert.Equal(S.B, state);
+        Assert.Contains("enter:B", log);
+    }
+
+    [Fact]
+    public void UnknownState_Returns_False()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .Build();
+
+        var state = S.C; // Not configured
+        var handled = m.TryTransition(ref state, new E("go"));
+
+        Assert.False(handled);
+        Assert.Equal(S.C, state);
+    }
+
+    [Fact]
+    public void Transition_To_Self_State_No_Exit_Enter()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnEnter((in _) => log.Add("enter:A"))
+                .OnExit((in _) => log.Add("exit:A"))
+                .When((in e) => e.Kind == "self").Permit(S.A).Do((in _) => log.Add("effect"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("self"));
+
+        // Should only run effect, not exit/enter since state stays the same
+        Assert.Single(log);
+        Assert.Equal("effect", log[0]);
+    }
+
+    [Fact]
+    public void WhenBuilder_Permit_Then_Stay_Override()
+    {
+        // Test that Stay() can override Permit()
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "test").Permit(S.B).Stay().Do((in _) => log.Add("stayed"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("test"));
+
+        Assert.Equal(S.A, state); // Should stay
+        Assert.Equal("stayed", log[0]);
+    }
+
+    [Fact]
+    public void Default_Effect_Only_On_Stay()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit((in _) => log.Add("exit"))
+                .Otherwise().Stay().Do((in _) => log.Add("default-effect"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("any"));
+
+        // No exit should be called for stay
+        Assert.Single(log);
+        Assert.Equal("default-effect", log[0]);
+    }
+
+    [Fact]
+    public void Null_Hook_Is_Ignored()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnEnter(null!)
+                .OnExit(null!)
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .InState(S.B, s => s
+                .OnEnter((in _) => log.Add("enter:B"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("go"));
+
+        Assert.Equal(S.B, state);
+        Assert.Single(log);
+    }
+
+    [Fact]
+    public void NoDefault_NoMatch_Returns_False()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "specific").Permit(S.B).End()
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("other"));
+
+        Assert.False(handled);
+    }
+}
+
+#endregion

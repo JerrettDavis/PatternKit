@@ -78,3 +78,246 @@ public sealed class FlowTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
             .AssertPassed();
 }
 
+#region Additional Flow Tests
+
+public sealed class FlowBuilderTests
+{
+    [Fact]
+    public void Flow_From_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => Flow<int>.From(null!));
+    }
+
+    [Fact]
+    public void Flow_Map_Null_Throws()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        Assert.Throws<ArgumentNullException>(() => flow.Map<int>(null!));
+    }
+
+    [Fact]
+    public void Flow_Filter_Null_Throws()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        Assert.Throws<ArgumentNullException>(() => flow.Filter(null!));
+    }
+
+    [Fact]
+    public void Flow_FlatMap_Null_Throws()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        Assert.Throws<ArgumentNullException>(() => flow.FlatMap<int>(null!));
+    }
+
+    [Fact]
+    public void Flow_Tee_Null_Throws()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        Assert.Throws<ArgumentNullException>(() => flow.Tee(null!));
+    }
+
+    [Fact]
+    public void SharedFlow_Branch_Null_Throws()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        Assert.Throws<ArgumentNullException>(() => shared.Branch(null!));
+    }
+
+    [Fact]
+    public void SharedFlow_Fork_Multiple()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        var forks = shared.Fork(3);
+
+        Assert.Equal(3, forks.Length);
+
+        var results = forks.Select(f => f.ToList()).ToArray();
+        foreach (var result in results)
+        {
+            Assert.Equal(new[] { 1, 2, 3 }, result);
+        }
+    }
+
+    [Fact]
+    public void SharedFlow_Fork_Zero_Throws()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        Assert.Throws<ArgumentOutOfRangeException>(() => shared.Fork(0));
+    }
+
+    [Fact]
+    public void SharedFlow_Fork_Negative_Throws()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        Assert.Throws<ArgumentOutOfRangeException>(() => shared.Fork(-1));
+    }
+
+    [Fact]
+    public void SharedFlow_Map()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        var result = shared.Map(x => x * 10).ToList();
+
+        Assert.Equal(new[] { 10, 20, 30 }, result);
+    }
+
+    [Fact]
+    public void SharedFlow_Filter()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3, 4, 5 }).Share();
+        var result = shared.Filter(x => x % 2 == 0).ToList();
+
+        Assert.Equal(new[] { 2, 4 }, result);
+    }
+
+    [Fact]
+    public void SharedFlow_AsFlow()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3 }).Share();
+        var flow = shared.AsFlow();
+        var result = flow.ToList();
+
+        Assert.Equal(new[] { 1, 2, 3 }, result);
+    }
+
+    [Fact]
+    public void FlowExtensions_Fold()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3, 4, 5 });
+        var sum = flow.Fold(0, (acc, x) => acc + x);
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public void FlowExtensions_Fold_Null_Flow_Throws()
+    {
+        Flow<int>? flow = null;
+        Assert.Throws<ArgumentNullException>(() => flow!.Fold(0, (acc, x) => acc + x));
+    }
+
+    [Fact]
+    public void FlowExtensions_Fold_Null_Folder_Throws()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        Assert.Throws<ArgumentNullException>(() => flow.Fold<int, int>(0, null!));
+    }
+
+    [Fact]
+    public void SharedFlow_Fold()
+    {
+        var shared = Flow<int>.From(new[] { 1, 2, 3, 4, 5 }).Share();
+        var sum = shared.Fold(0, (acc, x) => acc + x);
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public void FlowExtensions_FirstOrDefault_Found()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3, 4, 5 });
+        var result = flow.FirstOrDefault(x => x > 3);
+
+        Assert.Equal(4, result);
+    }
+
+    [Fact]
+    public void FlowExtensions_FirstOrDefault_NotFound()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3 });
+        var result = flow.FirstOrDefault(x => x > 10);
+
+        Assert.Equal(default, result);
+    }
+
+    [Fact]
+    public void FlowExtensions_FirstOrDefault_NoPredicate()
+    {
+        var flow = Flow<int>.From(new[] { 5, 6, 7 });
+        var result = flow.FirstOrDefault();
+
+        Assert.Equal(5, result);
+    }
+
+    [Fact]
+    public void FlowExtensions_FirstOrDefault_Null_Throws()
+    {
+        Flow<int>? flow = null;
+        Assert.Throws<ArgumentNullException>(() => flow!.FirstOrDefault());
+    }
+
+    [Fact]
+    public void FlowExtensions_FirstOption_Null_Throws()
+    {
+        Flow<int>? flow = null;
+        Assert.Throws<ArgumentNullException>(() => flow!.FirstOption());
+    }
+
+    [Fact]
+    public void Flow_Deferred_Execution()
+    {
+        var evaluated = false;
+        IEnumerable<int> Source()
+        {
+            evaluated = true;
+            yield return 1;
+        }
+
+        var flow = Flow<int>.From(Source());
+        Assert.False(evaluated); // Should be deferred
+
+        var list = flow.ToList();
+        Assert.True(evaluated); // Now evaluated
+        Assert.Equal(new[] { 1 }, list);
+    }
+
+    [Fact]
+    public void Flow_Empty_Source()
+    {
+        var flow = Flow<int>.From(Array.Empty<int>());
+        var result = flow.Map(x => x * 2).Filter(x => x > 0).ToList();
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void SharedFlow_Multiple_Enumerations_Share_Data()
+    {
+        var callCount = 0;
+        IEnumerable<int> Source()
+        {
+            callCount++;
+            yield return 1;
+            yield return 2;
+            yield return 3;
+        }
+
+        var shared = Flow<int>.From(Source()).Share();
+
+        var list1 = shared.Fork().ToList();
+        var list2 = shared.Fork().ToList();
+        var list3 = shared.Fork().ToList();
+
+        // Source should only be enumerated once
+        Assert.Equal(1, callCount);
+        Assert.Equal(new[] { 1, 2, 3 }, list1);
+        Assert.Equal(new[] { 1, 2, 3 }, list2);
+        Assert.Equal(new[] { 1, 2, 3 }, list3);
+    }
+
+    [Fact]
+    public void Flow_Chained_Operations()
+    {
+        var flow = Flow<int>.From(new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+        var result = flow
+            .Filter(x => x % 2 == 0)    // 2, 4, 6, 8, 10
+            .Map(x => x * x)            // 4, 16, 36, 64, 100
+            .Filter(x => x < 50)        // 4, 16, 36
+            .ToList();
+
+        Assert.Equal(new[] { 4, 16, 36 }, result);
+    }
+}
+
+#endregion
+

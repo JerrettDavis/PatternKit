@@ -99,4 +99,142 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
             .And("None has no value", r => !r.None.HasValue)
             .AssertPassed();
 }
+
+#region Additional AsyncFlow Tests
+
+public sealed class AsyncFlowBuilderTests
+{
+    private static async IAsyncEnumerable<int> RangeAsync(int count)
+    {
+        for (var i = 1; i <= count; i++)
+            yield return i;
+    }
+
+    [Fact]
+    public void AsyncFlow_From_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => AsyncFlow<int>.From(null!));
+    }
+
+    [Fact]
+    public void AsyncFlow_Map_Null_Throws()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        Assert.Throws<ArgumentNullException>(() => flow.Map<int>(null!));
+    }
+
+    [Fact]
+    public void AsyncFlow_Filter_Null_Throws()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        Assert.Throws<ArgumentNullException>(() => flow.Filter(null!));
+    }
+
+    [Fact]
+    public void AsyncFlow_FlatMap_Null_Throws()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        Assert.Throws<ArgumentNullException>(() => flow.FlatMap<int>(null!));
+    }
+
+    [Fact]
+    public void AsyncFlow_Tee_Null_Throws()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        Assert.Throws<ArgumentNullException>(() => flow.Tee(null!));
+    }
+
+    [Fact]
+    public void SharedAsyncFlow_Branch_Null_Throws()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(3)).Share();
+        Assert.Throws<ArgumentNullException>(() => shared.Branch(null!));
+    }
+
+    [Fact]
+    public async Task AsyncFlow_FoldAsync()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(5));
+        var sum = await flow.FoldAsync(0, (acc, x) => acc + x);
+
+        Assert.Equal(15, sum);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_FoldAsync_Null_Flow_Throws()
+    {
+        AsyncFlow<int>? flow = null;
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            flow!.FoldAsync(0, (acc, x) => acc + x).AsTask());
+    }
+
+    [Fact]
+    public async Task AsyncFlow_FoldAsync_Null_Folder_Throws()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            flow.FoldAsync<int, int>(0, null!).AsTask());
+    }
+
+    [Fact]
+    public async Task AsyncFlow_FirstOptionAsync_Null_Throws()
+    {
+        AsyncFlow<int>? flow = null;
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            flow!.FirstOptionAsync().AsTask());
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_Fork_Works()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(3)).Share();
+        var fork = shared.Fork();
+
+        var result = new List<int>();
+        await foreach (var v in fork)
+            result.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3 }, result);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_Empty_Source()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(0));
+        var result = new List<int>();
+        await foreach (var v in flow)
+            result.Add(v);
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_Chained_Operations()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(10))
+            .Filter(x => x % 2 == 0)
+            .Map(x => x * 10);
+
+        var result = new List<int>();
+        await foreach (var v in flow)
+            result.Add(v);
+
+        Assert.Equal(new[] { 20, 40, 60, 80, 100 }, result);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_WithCancellation_Works()
+    {
+        using var cts = new CancellationTokenSource();
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+
+        var result = new List<int>();
+        await foreach (var v in flow.WithCancellation(cts.Token))
+            result.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3 }, result);
+    }
+}
+
+#endregion
 #endif
