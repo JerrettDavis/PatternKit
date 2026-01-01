@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.Strategy;
+using PatternKit.Common;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -143,4 +144,112 @@ public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
 
 }
 
+#region TryHandlerExtensions Tests
+
+public sealed class TryHandlerExtensionsTests
+{
+    private static bool EvenHandler(in int x, out string? label)
+    {
+        if (x % 2 == 0) { label = "even"; return true; }
+        label = null;
+        return false;
+    }
+
+    private static bool Div3Handler(in int x, out string? label)
+    {
+        if (x % 3 == 0) { label = "div3"; return true; }
+        label = null;
+        return false;
+    }
+
+    private static bool NeverMatch(in int x, out string? label)
+    {
+        label = null;
+        return false;
+    }
+
+    [Fact]
+    public void TryGetResult_FirstMatch_ReturnsTrue()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [EvenHandler, Div3Handler];
+
+        var input = 6;
+        var success = handlers.TryGetResult(in input, out var result);
+
+        Assert.True(success);
+        Assert.Equal("even", result);
+    }
+
+    [Fact]
+    public void TryGetResult_SecondMatch_ReturnsTrue()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [EvenHandler, Div3Handler];
+
+        var input = 9; // odd, divisible by 3
+        var success = handlers.TryGetResult(in input, out var result);
+
+        Assert.True(success);
+        Assert.Equal("div3", result);
+    }
+
+    [Fact]
+    public void TryGetResult_NoMatch_ReturnsFalse()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [EvenHandler, Div3Handler];
+
+        var input = 7; // odd, not divisible by 3
+        var success = handlers.TryGetResult(in input, out var result);
+
+        Assert.False(success);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void TryGetResult_EmptyHandlers_ReturnsFalse()
+    {
+        var handlers = Array.Empty<TryStrategy<int, string>.TryHandler>();
+        var input = 5;
+        var success = handlers.TryGetResult(in input, out var result);
+
+        Assert.False(success);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void FirstMatch_Found_ReturnsSome()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [EvenHandler, Div3Handler];
+
+        var input = 4;
+        var option = handlers.FirstMatch(in input);
+
+        Assert.True(option.HasValue);
+        Assert.Equal("even", option.ValueOrDefault);
+    }
+
+    [Fact]
+    public void FirstMatch_NotFound_ReturnsNone()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [NeverMatch];
+
+        var input = 42;
+        var option = handlers.FirstMatch(in input);
+
+        Assert.False(option.HasValue);
+    }
+
+    [Fact]
+    public void FirstMatch_MultipleMatches_ReturnsFirst()
+    {
+        TryStrategy<int, string>.TryHandler[] handlers = [EvenHandler, Div3Handler];
+
+        var input = 6; // both even and divisible by 3
+        var option = handlers.FirstMatch(in input);
+
+        Assert.True(option.HasValue);
+        Assert.Equal("even", option.ValueOrDefault); // first wins
+    }
+}
+
+#endregion
 

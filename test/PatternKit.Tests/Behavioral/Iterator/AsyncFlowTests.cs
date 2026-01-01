@@ -234,6 +234,104 @@ public sealed class AsyncFlowBuilderTests
 
         Assert.Equal(new[] { 1, 2, 3 }, result);
     }
+
+    [Fact]
+    public async Task SharedAsyncFlow_MultipleForks_SameData()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(5)).Share();
+
+        var fork1 = shared.Fork();
+        var fork2 = shared.Fork();
+        var fork3 = shared.Fork();
+
+        var list1 = new List<int>();
+        var list2 = new List<int>();
+        var list3 = new List<int>();
+
+        await foreach (var v in fork1) list1.Add(v);
+        await foreach (var v in fork2) list2.Add(v);
+        await foreach (var v in fork3) list3.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list1);
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list2);
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list3);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_ConcurrentForks()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(10)).Share();
+
+        var tasks = Enumerable.Range(0, 5).Select(async _ =>
+        {
+            var list = new List<int>();
+            await foreach (var v in shared.Fork())
+                list.Add(v);
+            return list;
+        }).ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var result in results)
+        {
+            Assert.Equal(10, result.Count);
+            Assert.Equal(Enumerable.Range(1, 10), result);
+        }
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_Branch_TrueFalse()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(10)).Share();
+        var (trueFlow, falseFlow) = shared.Branch(x => x % 2 == 0);
+
+        var evenList = new List<int>();
+        var oddList = new List<int>();
+
+        await foreach (var v in trueFlow) evenList.Add(v);
+        await foreach (var v in falseFlow) oddList.Add(v);
+
+        Assert.Equal(new[] { 2, 4, 6, 8, 10 }, evenList);
+        Assert.Equal(new[] { 1, 3, 5, 7, 9 }, oddList);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_Map_Transform()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        var result = new List<string>();
+
+        await foreach (var v in flow.Map(x => $"item{x}"))
+            result.Add(v);
+
+        Assert.Equal(new[] { "item1", "item2", "item3" }, result);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_Filter_Predicate()
+    {
+        var flow = AsyncFlow<int>.From(RangeAsync(10));
+        var result = new List<int>();
+
+        await foreach (var v in flow.Filter(x => x > 5))
+            result.Add(v);
+
+        Assert.Equal(new[] { 6, 7, 8, 9, 10 }, result);
+    }
+
+    [Fact]
+    public async Task AsyncFlow_Tee_SideEffect()
+    {
+        var sideEffects = new List<int>();
+        var flow = AsyncFlow<int>.From(RangeAsync(3));
+        var result = new List<int>();
+
+        await foreach (var v in flow.Tee(x => sideEffects.Add(x * 10)))
+            result.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3 }, result);
+        Assert.Equal(new[] { 10, 20, 30 }, sideEffects);
+    }
 }
 
 #endregion

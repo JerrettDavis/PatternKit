@@ -434,4 +434,323 @@ public sealed class AsyncProxyTests
     }
 
     #endregion
+
+    #region Additional AsyncProxy Tests
+
+    [Fact]
+    public async Task AsyncProxy_VirtualProxy_Caches_Subject()
+    {
+        var initCount = 0;
+        var proxy = AsyncProxy<int, int>.Create()
+            .VirtualProxy(async ct =>
+            {
+                Interlocked.Increment(ref initCount);
+                return (x, ct2) => new ValueTask<int>(x * 2);
+            })
+            .Build();
+
+        await proxy.ExecuteAsync(1);
+        await proxy.ExecuteAsync(2);
+        await proxy.ExecuteAsync(3);
+
+        Assert.Equal(1, initCount);
+    }
+
+    [Fact]
+    public async Task AsyncProxy_VirtualProxy_Sync_Factory()
+    {
+        var initialized = false;
+        var proxy = AsyncProxy<int, int>.Create()
+            .VirtualProxy(() =>
+            {
+                initialized = true;
+                return (x, ct) => new ValueTask<int>(x * 3);
+            })
+            .Build();
+
+        var result = await proxy.ExecuteAsync(10);
+
+        Assert.True(initialized);
+        Assert.Equal(30, result);
+    }
+
+    [Fact]
+    public async Task AsyncProxy_ProtectionProxy_Sync_Validator()
+    {
+        var proxy = AsyncProxy<int, int>.Create(async (x, ct) => x * 2)
+            .ProtectionProxy(x => x >= 0)
+            .Build();
+
+        var result = await proxy.ExecuteAsync(5);
+        Assert.Equal(10, result);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            proxy.ExecuteAsync(-1).AsTask());
+    }
+
+    [Fact]
+    public async Task AsyncProxy_Before_Sync_Action()
+    {
+        var log = new List<string>();
+        var proxy = AsyncProxy<int, int>.Create(async (x, ct) => x * 2)
+            .Before(x => log.Add($"before:{x}"))
+            .Build();
+
+        var result = await proxy.ExecuteAsync(5);
+
+        Assert.Equal(10, result);
+        Assert.Contains("before:5", log);
+    }
+
+    [Fact]
+    public async Task AsyncProxy_After_Sync_Action()
+    {
+        var log = new List<string>();
+        var proxy = AsyncProxy<int, int>.Create(async (x, ct) => x * 2)
+            .After((x, r) => log.Add($"after:{x}={r}"))
+            .Build();
+
+        var result = await proxy.ExecuteAsync(5);
+
+        Assert.Equal(10, result);
+        Assert.Contains("after:5=10", log);
+    }
+
+    [Fact]
+    public async Task AsyncProxy_VirtualProxy_Thread_Safe()
+    {
+        var initCount = 0;
+        var proxy = AsyncProxy<int, int>.Create()
+            .VirtualProxy(async ct =>
+            {
+                Interlocked.Increment(ref initCount);
+                await Task.Delay(10, ct); // simulate slow init
+                return (x, ct2) => new ValueTask<int>(x * 2);
+            })
+            .Build();
+
+        var tasks = Enumerable.Range(0, 10)
+            .Select(_ => proxy.ExecuteAsync(5).AsTask())
+            .ToArray();
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(1, initCount);
+        Assert.All(tasks, t => Assert.Equal(10, t.Result));
+    }
+
+    [Fact]
+    public void AsyncProxy_Intercept_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncProxy<int, int>.Create()
+                .Intercept(async (x, ct, next) => x));
+    }
+
+    [Fact]
+    public void AsyncProxy_Before_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncProxy<int, int>.Create()
+                .Before(async (x, ct) => { }));
+    }
+
+    [Fact]
+    public void AsyncProxy_After_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncProxy<int, int>.Create()
+                .After(async (x, r, ct) => { }));
+    }
+
+    [Fact]
+    public void AsyncProxy_ProtectionProxy_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncProxy<int, int>.Create()
+                .ProtectionProxy(async (x, ct) => true));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_VirtualProxy_Sync_Factory()
+    {
+        var initialized = false;
+        var executed = false;
+        var proxy = AsyncActionProxy<int>.Create()
+            .VirtualProxy(() =>
+            {
+                initialized = true;
+                return (x, ct) => { executed = true; return default; };
+            })
+            .Build();
+
+        await proxy.ExecuteAsync(5);
+
+        Assert.True(initialized);
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_ProtectionProxy_Sync_Validator()
+    {
+        var executed = false;
+        var proxy = AsyncActionProxy<int>.Create(async (x, ct) => { executed = true; })
+            .ProtectionProxy(x => x >= 0)
+            .Build();
+
+        await proxy.ExecuteAsync(5);
+        Assert.True(executed);
+
+        executed = false;
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            proxy.ExecuteAsync(-1).AsTask());
+        Assert.False(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Before_Sync()
+    {
+        var log = new List<string>();
+        var proxy = AsyncActionProxy<int>.Create(async (x, ct) => log.Add("subject"))
+            .Before(x => log.Add($"before:{x}"))
+            .Build();
+
+        await proxy.ExecuteAsync(5);
+
+        Assert.Equal(2, log.Count);
+        Assert.Equal("before:5", log[0]);
+        Assert.Equal("subject", log[1]);
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_After_Sync()
+    {
+        var log = new List<string>();
+        var proxy = AsyncActionProxy<int>.Create(async (x, ct) => log.Add("subject"))
+            .After(x => log.Add($"after:{x}"))
+            .Build();
+
+        await proxy.ExecuteAsync(5);
+
+        Assert.Equal(2, log.Count);
+        Assert.Equal("subject", log[0]);
+        Assert.Equal("after:5", log[1]);
+    }
+
+    [Fact]
+    public void AsyncActionProxy_Intercept_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionProxy<int>.Create()
+                .Intercept(async (x, ct, next) => { }));
+    }
+
+    [Fact]
+    public void AsyncActionProxy_Before_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionProxy<int>.Create()
+                .Before(async (x, ct) => { }));
+    }
+
+    [Fact]
+    public void AsyncActionProxy_After_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionProxy<int>.Create()
+                .After(async (x, ct) => { }));
+    }
+
+    [Fact]
+    public void AsyncActionProxy_ProtectionProxy_NoSubject_Throws()
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AsyncActionProxy<int>.Create()
+                .ProtectionProxy(async (x, ct) => true));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_VirtualProxy_Caches_Subject()
+    {
+        var initCount = 0;
+        var proxy = AsyncActionProxy<int>.Create()
+            .VirtualProxy(async ct =>
+            {
+                Interlocked.Increment(ref initCount);
+                return (x, ct2) => default;
+            })
+            .Build();
+
+        await proxy.ExecuteAsync(1);
+        await proxy.ExecuteAsync(2);
+        await proxy.ExecuteAsync(3);
+
+        Assert.Equal(1, initCount);
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_VirtualProxy_Thread_Safe()
+    {
+        var initCount = 0;
+        var execCount = 0;
+        var proxy = AsyncActionProxy<int>.Create()
+            .VirtualProxy(async ct =>
+            {
+                Interlocked.Increment(ref initCount);
+                await Task.Delay(10, ct);
+                return (x, ct2) => { Interlocked.Increment(ref execCount); return default; };
+            })
+            .Build();
+
+        var tasks = Enumerable.Range(0, 10)
+            .Select(_ => proxy.ExecuteAsync(5).AsTask())
+            .ToArray();
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(1, initCount);
+        Assert.Equal(10, execCount);
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Null_VirtualProxy_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncActionProxy<int>.Create()
+                .VirtualProxy((AsyncActionProxy<int>.SubjectFactory)null!));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Null_ProtectionProxy_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncActionProxy<int>.Create(async (x, ct) => { })
+                .ProtectionProxy((AsyncActionProxy<int>.AccessValidator)null!));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Null_Before_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncActionProxy<int>.Create(async (x, ct) => { })
+                .Before((AsyncActionProxy<int>.ActionHook)null!));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Null_After_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncActionProxy<int>.Create(async (x, ct) => { })
+                .After((AsyncActionProxy<int>.ActionHook)null!));
+    }
+
+    [Fact]
+    public async Task AsyncActionProxy_Null_Intercept_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncActionProxy<int>.Create(async (x, ct) => { })
+                .Intercept(null!));
+    }
+
+    #endregion
 }

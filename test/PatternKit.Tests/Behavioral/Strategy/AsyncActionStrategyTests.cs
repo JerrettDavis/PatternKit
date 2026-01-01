@@ -147,3 +147,197 @@ public sealed class AsyncActionStrategyTests(ITestOutputHelper output) : TinyBdd
             .AssertPassed();
     }
 }
+
+#region Additional AsyncActionStrategy Tests
+
+public sealed class AsyncActionStrategyBuilderTests
+{
+    [Fact]
+    public async Task TryExecuteAsync_WithDefault_ReturnsTrue()
+    {
+        var log = new List<string>();
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(n => n > 0).Then(_ => log.Add("positive"))
+            .Default(_ => log.Add("default"))
+            .Build();
+
+        var result = await strategy.TryExecuteAsync(0);
+
+        Assert.True(result);
+        Assert.Contains("default", log);
+    }
+
+    [Fact]
+    public async Task TryExecuteAsync_MatchingPredicate_ReturnsTrue()
+    {
+        var log = new List<string>();
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(n => n > 0).Then(_ => log.Add("positive"))
+            .Build();
+
+        var result = await strategy.TryExecuteAsync(5);
+
+        Assert.True(result);
+        Assert.Contains("positive", log);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_Respects_Cancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        var started = false;
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(async (n, ct) =>
+            {
+                started = true;
+                ct.ThrowIfCancellationRequested();
+                return n > 0;
+            })
+            .Then((n, ct) => default)
+            .Build();
+
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+            await strategy.ExecuteAsync(5, cts.Token));
+
+        Assert.True(started);
+    }
+
+    [Fact]
+    public async Task SyncPredicate_WithCancellationToken_Works()
+    {
+        var tokenReceived = false;
+        using var cts = new CancellationTokenSource();
+
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When((n, ct) =>
+            {
+                tokenReceived = ct == cts.Token;
+                return n > 0;
+            })
+            .Then((n, ct) => default)
+            .Build();
+
+        await strategy.ExecuteAsync(5, cts.Token);
+
+        Assert.True(tokenReceived);
+    }
+
+    [Fact]
+    public async Task Multiple_When_Branches_FirstMatch_Wins()
+    {
+        var log = new List<string>();
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(n => n % 2 == 0).Then(_ => log.Add("even"))
+            .When(n => n % 3 == 0).Then(_ => log.Add("div3"))
+            .When(n => n > 0).Then(_ => log.Add("positive"))
+            .Build();
+
+        await strategy.ExecuteAsync(6); // even and div3, but even wins
+
+        Assert.Single(log);
+        Assert.Equal("even", log[0]);
+    }
+
+    [Fact]
+    public async Task Async_Handler_Executes_Fully()
+    {
+        var completed = false;
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When((n, ct) => new ValueTask<bool>(true))
+            .Then(async (n, ct) =>
+            {
+                await Task.Delay(10, ct);
+                completed = true;
+            })
+            .Build();
+
+        await strategy.ExecuteAsync(1);
+
+        Assert.True(completed);
+    }
+
+    [Fact]
+    public async Task Empty_Strategy_WithDefault_UsesDefault()
+    {
+        var log = new List<string>();
+        var strategy = AsyncActionStrategy<int>.Create()
+            .Default(_ => log.Add("default"))
+            .Build();
+
+        await strategy.ExecuteAsync(42);
+
+        Assert.Single(log);
+        Assert.Equal("default", log[0]);
+    }
+
+    [Fact]
+    public async Task Empty_Strategy_NoDefault_Throws()
+    {
+        var strategy = AsyncActionStrategy<int>.Create().Build();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            strategy.ExecuteAsync(42).AsTask());
+    }
+
+    [Fact]
+    public async Task Sync_Then_Handler_Works()
+    {
+        var log = new List<string>();
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(n => n > 0).Then(n => log.Add($"value:{n}"))
+            .Build();
+
+        await strategy.ExecuteAsync(42);
+
+        Assert.Contains("value:42", log);
+    }
+
+    [Fact]
+    public async Task Multiple_Strategies_Independent()
+    {
+        var log1 = new List<string>();
+        var log2 = new List<string>();
+
+        var s1 = AsyncActionStrategy<int>.Create()
+            .When(n => n > 0).Then(_ => log1.Add("s1"))
+            .Build();
+
+        var s2 = AsyncActionStrategy<int>.Create()
+            .When(n => n > 0).Then(_ => log2.Add("s2"))
+            .Build();
+
+        await s1.ExecuteAsync(1);
+        await s2.ExecuteAsync(1);
+
+        Assert.Single(log1);
+        Assert.Single(log2);
+        Assert.Equal("s1", log1[0]);
+        Assert.Equal("s2", log2[0]);
+    }
+
+    [Fact]
+    public async Task Concurrent_Execution_Safe()
+    {
+        var counter = 0;
+        var strategy = AsyncActionStrategy<int>.Create()
+            .When(n => true)
+            .Then(async (n, ct) =>
+            {
+                await Task.Yield();
+                Interlocked.Increment(ref counter);
+            })
+            .Build();
+
+        var tasks = Enumerable.Range(0, 100)
+            .Select(_ => strategy.ExecuteAsync(1).AsTask())
+            .ToArray();
+
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(100, counter);
+    }
+}
+
+#endregion

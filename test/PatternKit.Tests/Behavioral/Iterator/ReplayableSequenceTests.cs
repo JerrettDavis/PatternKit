@@ -174,7 +174,7 @@ public sealed class ReplayableSequenceTests(ITestOutputHelper output) : TinyBddX
 
     [Scenario("LINQ Select over sequence does not advance cursor")]
     [Fact]
-    public Task LinqSelectOverSequenceDoesNotAdvanceCursor()  
+    public Task LinqSelectOverSequenceDoesNotAdvanceCursor()
         => Given("cursor at start 1..6", () => ReplayableSequence<int>.From(Enumerable.Range(1, 6)))
             .When("enumerating transformed projection", c =>
             {
@@ -184,5 +184,206 @@ public sealed class ReplayableSequenceTests(ITestOutputHelper output) : TinyBddX
             .Then("projected is 10|20", t => Expect.For(string.Join('|', t.projected)).ToBe("10|20"))
             .And("original cursor still at pos 0", t => t.c.GetCursor().Position == 0)
             .AssertPassed();
-    
+
 }
+
+#region Additional ReplayableSequence Tests
+
+public sealed class ReplayableSequenceBuilderTests
+{
+    [Fact]
+    public void Lookahead_NegativeOffset_Throws()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var cursor = seq.GetCursor();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Lookahead(-1));
+    }
+
+    [Fact]
+    public void Lookahead_BeyondSequence_ReturnsNone()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 3));
+        var cursor = seq.GetCursor();
+
+        var option = cursor.Lookahead(10); // way beyond end
+
+        Assert.False(option.HasValue);
+    }
+
+    [Fact]
+    public void Peek_EmptySequence_ReturnsFalse()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Empty<int>());
+        var cursor = seq.GetCursor();
+
+        var found = cursor.Peek(out var value);
+
+        Assert.False(found);
+        Assert.Equal(default, value);
+    }
+
+    [Fact]
+    public void TryNext_EmptySequence_ReturnsFalse()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Empty<int>());
+        var cursor = seq.GetCursor();
+
+        var found = cursor.TryNext(out var value, out var next);
+
+        Assert.False(found);
+        Assert.Equal(default, value);
+        Assert.Equal(0, next.Position);
+    }
+
+    [Fact]
+    public void AsEnumerable_FromNonZeroPosition()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var cursor = seq.GetCursor();
+        cursor.TryNext(out _, out cursor); // advance to position 1
+        cursor.TryNext(out _, out cursor); // advance to position 2
+
+        var remaining = cursor.AsEnumerable().ToList();
+
+        Assert.Equal(new[] { 3, 4, 5 }, remaining);
+    }
+
+    [Fact]
+    public void Fork_PreservesPosition()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var cursor = seq.GetCursor();
+        cursor.TryNext(out _, out cursor);
+        cursor.TryNext(out _, out cursor);
+
+        var fork = cursor.Fork();
+
+        Assert.Equal(cursor.Position, fork.Position);
+        Assert.Equal(2, fork.Position);
+    }
+
+    [Fact]
+    public void Batch_ZeroSize_Throws()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var cursor = seq.GetCursor();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(0).ToList());
+    }
+
+    [Fact]
+    public void Batch_NegativeSize_Throws()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var cursor = seq.GetCursor();
+
+        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(-1).ToList());
+    }
+
+    [Fact]
+    public void Batch_EmptySequence_YieldsNothing()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Empty<int>());
+        var cursor = seq.GetCursor();
+
+        var batches = cursor.Batch(3).ToList();
+
+        Assert.Empty(batches);
+    }
+
+    [Fact]
+    public void Batch_ExactMultiple_NoPartial()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 6));
+        var cursor = seq.GetCursor();
+
+        var batches = cursor.Batch(3).ToList();
+
+        Assert.Equal(2, batches.Count);
+        Assert.Equal(new[] { 1, 2, 3 }, batches[0]);
+        Assert.Equal(new[] { 4, 5, 6 }, batches[1]);
+    }
+
+    [Fact]
+    public void ConcurrentCursors_ShareBuffer()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 100));
+
+        var results = new List<int>[10];
+        var tasks = Enumerable.Range(0, 10).Select(i => Task.Run(() =>
+        {
+            var list = new List<int>();
+            var cursor = seq.GetCursor();
+            while (cursor.TryNext(out var v, out cursor))
+                list.Add(v);
+            results[i] = list;
+        })).ToArray();
+
+        Task.WaitAll(tasks);
+
+        foreach (var result in results)
+        {
+            Assert.Equal(100, result.Count);
+            Assert.Equal(Enumerable.Range(1, 100), result);
+        }
+    }
+
+    [Fact]
+    public void MultipleForks_IndependentPositions()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 10));
+        var c1 = seq.GetCursor();
+
+        // Advance c1 by 2
+        c1.TryNext(out _, out c1);
+        c1.TryNext(out _, out c1);
+
+        var c2 = c1.Fork();
+        var c3 = c1.Fork();
+
+        // Advance c2 by 3 more
+        c2.TryNext(out _, out c2);
+        c2.TryNext(out _, out c2);
+        c2.TryNext(out _, out c2);
+
+        Assert.Equal(2, c1.Position);
+        Assert.Equal(5, c2.Position);
+        Assert.Equal(2, c3.Position);
+    }
+
+#if !NETSTANDARD2_0
+    [Fact]
+    public async Task AsAsyncEnumerable_YieldsAllElements()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
+        var list = new List<int>();
+
+        await foreach (var v in seq.AsAsyncEnumerable())
+            list.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list);
+    }
+
+    [Fact]
+    public async Task AsAsyncEnumerable_RespectsToken()
+    {
+        var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 100));
+        using var cts = new CancellationTokenSource();
+        var list = new List<int>();
+
+        var ex = await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        {
+            await foreach (var v in seq.AsAsyncEnumerable(cts.Token))
+            {
+                list.Add(v);
+                if (list.Count == 5) cts.Cancel();
+            }
+        });
+
+        Assert.Equal(5, list.Count);
+    }
+#endif
+}
+
+#endregion
