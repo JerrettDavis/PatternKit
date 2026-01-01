@@ -172,3 +172,300 @@ public sealed class MementoTests(ITestOutputHelper output) : TinyBddXunitBase(ou
             .AssertPassed();
     }
 }
+
+#region Additional Memento Tests
+
+public sealed class MementoBuilderTests
+{
+    [Fact]
+    public void CanUndo_Empty_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        Assert.False(h.CanUndo);
+    }
+
+    [Fact]
+    public void CanUndo_SingleSnapshot_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        Assert.False(h.CanUndo);
+    }
+
+    [Fact]
+    public void CanUndo_MultipleSnapshots_ReturnsTrue()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        s = 2;
+        h.Save(in s);
+        Assert.True(h.CanUndo);
+    }
+
+    [Fact]
+    public void CanRedo_Empty_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        Assert.False(h.CanRedo);
+    }
+
+    [Fact]
+    public void CanRedo_AtEnd_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        Assert.False(h.CanRedo);
+    }
+
+    [Fact]
+    public void CanRedo_AfterUndo_ReturnsTrue()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        s = 2;
+        h.Save(in s);
+        h.Undo(ref s);
+        Assert.True(h.CanRedo);
+    }
+
+    [Fact]
+    public void Undo_Empty_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 42;
+        var result = h.Undo(ref s);
+        Assert.False(result);
+        Assert.Equal(42, s);
+    }
+
+    [Fact]
+    public void Undo_SingleSnapshot_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        var result = h.Undo(ref s);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void Redo_Empty_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 42;
+        var result = h.Redo(ref s);
+        Assert.False(result);
+        Assert.Equal(42, s);
+    }
+
+    [Fact]
+    public void Redo_AtEnd_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        var result = h.Redo(ref s);
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void TryGetCurrent_Empty_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var result = h.TryGetCurrent(out var snapshot);
+        Assert.False(result);
+        Assert.Equal(default, snapshot);
+    }
+
+    [Fact]
+    public void TryGetCurrent_WithSnapshot_ReturnsTrue()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 42;
+        h.Save(in s, tag: "test");
+        var result = h.TryGetCurrent(out var snapshot);
+        Assert.True(result);
+        Assert.Equal(42, snapshot.State);
+        Assert.Equal("test", snapshot.Tag);
+    }
+
+    [Fact]
+    public void CurrentVersion_Empty_ReturnsZero()
+    {
+        var h = Memento<int>.Create().Build();
+        Assert.Equal(0, h.CurrentVersion);
+    }
+
+    [Fact]
+    public void Count_Empty_ReturnsZero()
+    {
+        var h = Memento<int>.Create().Build();
+        Assert.Equal(0, h.Count);
+    }
+
+    [Fact]
+    public void Capacity_NegativeValue_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Memento<int>.Create().Capacity(-1));
+    }
+
+    [Fact]
+    public void Restore_EmptyHistory_ReturnsFalse()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 42;
+        var result = h.Restore(1, ref s);
+        Assert.False(result);
+        Assert.Equal(42, s);
+    }
+
+    [Fact]
+    public void History_ReturnsImmutableCopy()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        s = 2;
+        h.Save(in s);
+
+        var history1 = h.History;
+        var history2 = h.History;
+
+        Assert.NotSame(history1, history2);
+        Assert.Equal(2, history1.Count);
+        Assert.Equal(2, history2.Count);
+    }
+
+    [Fact]
+    public void ApplyWith_CustomApplier()
+    {
+        var log = new List<string>();
+        var h = Memento<int>.Create()
+            .ApplyWith((ref int target, int snap) =>
+            {
+                log.Add($"apply:{snap}");
+                target = snap;
+            })
+            .Build();
+
+        var s = 1;
+        h.Save(in s);
+        s = 2;
+        h.Save(in s);
+        h.Undo(ref s);
+
+        Assert.Contains("apply:1", log);
+        Assert.Equal(1, s);
+    }
+
+    [Fact]
+    public void DefaultCloner_ShallowCopies()
+    {
+        // Default cloner just returns the value (identity for value types)
+        var h = Memento<int>.Create().Build();
+        var s = 42;
+        h.Save(in s);
+        h.TryGetCurrent(out var snap);
+        Assert.Equal(42, snap.State);
+    }
+
+    [Fact]
+    public void Snapshot_HasTag_Property()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s, tag: "tagged");
+        s = 2;
+        h.Save(in s); // no tag
+
+        var history = h.History;
+        Assert.True(history[0].HasTag);
+        Assert.False(history[1].HasTag);
+    }
+
+    [Fact]
+    public void Snapshot_TimestampUtc_IsSet()
+    {
+        var before = DateTime.UtcNow;
+        var h = Memento<int>.Create().Build();
+        var s = 1;
+        h.Save(in s);
+        var after = DateTime.UtcNow;
+
+        h.TryGetCurrent(out var snap);
+        Assert.True(snap.TimestampUtc >= before);
+        Assert.True(snap.TimestampUtc <= after);
+    }
+
+    [Fact]
+    public void MultipleUndo_ReturnsToFirstState()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 0;
+        h.Save(in s); // v1
+        s = 1;
+        h.Save(in s); // v2
+        s = 2;
+        h.Save(in s); // v3
+        s = 3;
+        h.Save(in s); // v4
+
+        Assert.True(h.Undo(ref s));
+        Assert.Equal(2, s);
+        Assert.True(h.Undo(ref s));
+        Assert.Equal(1, s);
+        Assert.True(h.Undo(ref s));
+        Assert.Equal(0, s);
+        Assert.False(h.Undo(ref s));
+        Assert.Equal(0, s);
+    }
+
+    [Fact]
+    public void MultipleRedo_ReturnsToLastState()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 0;
+        h.Save(in s);
+        s = 1;
+        h.Save(in s);
+        s = 2;
+        h.Save(in s);
+
+        h.Undo(ref s);
+        h.Undo(ref s);
+
+        Assert.True(h.Redo(ref s));
+        Assert.Equal(1, s);
+        Assert.True(h.Redo(ref s));
+        Assert.Equal(2, s);
+        Assert.False(h.Redo(ref s));
+    }
+
+    [Fact]
+    public void SaveAfterUndo_TruncatesForwardHistory()
+    {
+        var h = Memento<int>.Create().Build();
+        var s = 0;
+        h.Save(in s); // v1
+        s = 1;
+        h.Save(in s); // v2
+        s = 2;
+        h.Save(in s); // v3
+
+        h.Undo(ref s); // cursor at v2
+        Assert.Equal(1, s);
+
+        s = 10;
+        h.Save(in s); // v4, should truncate v3
+
+        Assert.Equal(3, h.Count);
+        Assert.False(h.CanRedo);
+    }
+}
+
+#endregion

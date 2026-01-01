@@ -247,6 +247,52 @@ public sealed class FluentActionVisitorTests
         Assert.Throws<NotSupportedException>(() =>
             visitor.Visit(new ErrorEntry("No handler")));
     }
+
+    [Fact]
+    public void FluentActionVisitor_VisitDefault_With_Default_Handler()
+    {
+        var log = new List<string>();
+        var visitor = FluentActionVisitor<ActionElement>.Create()
+            .Default(e => log.Add($"default:{e.GetType().Name}"))
+            .Build();
+
+        // Call VisitDefault directly through interface
+        ((IActionVisitor)visitor).VisitDefault(new LogEntry("test"));
+
+        Assert.Single(log);
+        Assert.Equal("default:LogEntry", log[0]);
+    }
+
+    [Fact]
+    public void FluentActionVisitor_VisitDefault_Without_Default_Throws()
+    {
+        var visitor = FluentActionVisitor<ActionElement>.Create()
+            .When<LogEntry>(_ => { })
+            .Build();
+
+        Assert.Throws<NotSupportedException>(() =>
+            ((IActionVisitor)visitor).VisitDefault(new ErrorEntry("test")));
+    }
+
+    [Fact]
+    public void FluentActionVisitor_AllTypes_Handled()
+    {
+        var log = new List<string>();
+        var visitor = FluentActionVisitor<ActionElement>.Create()
+            .When<LogEntry>(e => log.Add($"LOG:{e.Message}"))
+            .When<ErrorEntry>(e => log.Add($"ERR:{e.Error}"))
+            .When<MetricEntry>(e => log.Add($"METRIC:{e.Name}={e.Value}"))
+            .Build();
+
+        visitor.Visit(new LogEntry("hello"));
+        visitor.Visit(new ErrorEntry("oops"));
+        visitor.Visit(new MetricEntry("cpu", 0.5));
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("LOG:hello", log[0]);
+        Assert.Equal("ERR:oops", log[1]);
+        Assert.Equal("METRIC:cpu=0.5", log[2]);
+    }
 }
 
 public sealed class AsyncFluentVisitorTests
@@ -466,3 +512,243 @@ public sealed class AsyncFluentActionVisitorTests
             visitor.VisitAsync(new AsyncErrorEntry("No handler")).AsTask());
     }
 }
+
+#region Additional FluentVisitor Coverage Tests
+
+public sealed class FluentVisitorCoverageTests
+{
+    private abstract record Elem : IVisitable
+    {
+        public abstract TResult Accept<TResult>(IVisitor<TResult> visitor);
+    }
+    private sealed record ElemA(string Value) : Elem
+    {
+        public override TResult Accept<TResult>(IVisitor<TResult> visitor)
+            => visitor is FluentVisitor<Elem, TResult> fv
+                ? fv.Handle(this)
+                : visitor.VisitDefault(this);
+    }
+    private sealed record ElemB(int Value) : Elem
+    {
+        public override TResult Accept<TResult>(IVisitor<TResult> visitor)
+            => visitor is FluentVisitor<Elem, TResult> fv
+                ? fv.Handle(this)
+                : visitor.VisitDefault(this);
+    }
+
+    [Fact]
+    public void FluentVisitor_When_Constant_Handler()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .When<ElemA>("constant-result")
+            .Build();
+
+        var result = visitor.Visit(new ElemA("test"));
+
+        Assert.Equal("constant-result", result);
+    }
+
+    [Fact]
+    public void FluentVisitor_Default_Constant()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .Default("default-constant")
+            .Build();
+
+        var result = visitor.Visit(new ElemA("test"));
+
+        Assert.Equal("default-constant", result);
+    }
+
+    [Fact]
+    public void FluentVisitor_VisitDefault_With_Default_Returns_Result()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .Default(e => "from-default")
+            .Build();
+
+        var result = ((IVisitor<string>)visitor).VisitDefault(new ElemA("test"));
+
+        Assert.Equal("from-default", result);
+    }
+
+    [Fact]
+    public void FluentVisitor_VisitDefault_Without_Default_Throws()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .When<ElemA>(e => e.Value)
+            .Build();
+
+        Assert.Throws<NotSupportedException>(() =>
+            ((IVisitor<string>)visitor).VisitDefault(new ElemB(42)));
+    }
+
+    [Fact]
+    public void FluentVisitor_Multiple_Handlers_Work()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .When<ElemA>(e => $"A:{e.Value}")
+            .When<ElemB>(e => $"B:{e.Value}")
+            .Build();
+
+        Assert.Equal("A:hello", visitor.Visit(new ElemA("hello")));
+        Assert.Equal("B:42", visitor.Visit(new ElemB(42)));
+    }
+
+    [Fact]
+    public void FluentVisitor_Handler_Override_Works()
+    {
+        var visitor = FluentVisitor<Elem, string>.Create()
+            .When<ElemA>(_ => "first")
+            .When<ElemA>(_ => "second")
+            .Build();
+
+        Assert.Equal("second", visitor.Visit(new ElemA("test")));
+    }
+}
+
+public sealed class AsyncFluentVisitorCoverageTests
+{
+    private abstract record AsyncElement : IAsyncVisitable
+    {
+        public abstract ValueTask<TResult> AcceptAsync<TResult>(IAsyncVisitor<TResult> visitor, CancellationToken ct);
+    }
+
+    private sealed record AsyncNumberElement(int Value) : AsyncElement
+    {
+        public override ValueTask<TResult> AcceptAsync<TResult>(IAsyncVisitor<TResult> visitor, CancellationToken ct)
+            => visitor is AsyncFluentVisitor<AsyncElement, TResult> fv
+                ? fv.HandleAsync(this, ct)
+                : visitor.VisitDefaultAsync(this, ct);
+    }
+
+    private sealed record AsyncTextElement(string Text) : AsyncElement
+    {
+        public override ValueTask<TResult> AcceptAsync<TResult>(IAsyncVisitor<TResult> visitor, CancellationToken ct)
+            => visitor is AsyncFluentVisitor<AsyncElement, TResult> fv
+                ? fv.HandleAsync(this, ct)
+                : visitor.VisitDefaultAsync(this, ct);
+    }
+
+    [Fact]
+    public async Task AsyncFluentVisitor_VisitDefaultAsync_With_Default()
+    {
+        var visitor = AsyncFluentVisitor<AsyncElement, string>.Create()
+            .Default(e => "default-handler")
+            .Build();
+
+        var result = await ((IAsyncVisitor<string>)visitor).VisitDefaultAsync(new AsyncNumberElement(42), CancellationToken.None);
+
+        Assert.Equal("default-handler", result);
+    }
+
+    [Fact]
+    public async Task AsyncFluentVisitor_VisitDefaultAsync_Without_Default_Throws()
+    {
+        var visitor = AsyncFluentVisitor<AsyncElement, string>.Create()
+            .When<AsyncNumberElement>(e => e.Value.ToString())
+            .Build();
+
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            ((IAsyncVisitor<string>)visitor).VisitDefaultAsync(new AsyncTextElement("test"), CancellationToken.None).AsTask());
+    }
+
+    [Fact]
+    public async Task AsyncFluentVisitor_Async_Handler_With_Cancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        var visitor = AsyncFluentVisitor<AsyncElement, string>.Create()
+            .When<AsyncNumberElement>(async (e, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                return e.Value.ToString();
+            })
+            .Build();
+
+        var result = await visitor.VisitAsync(new AsyncNumberElement(42), cts.Token);
+
+        Assert.Equal("42", result);
+    }
+
+    [Fact]
+    public async Task AsyncFluentVisitor_Sync_Handler_Ignores_CancellationToken()
+    {
+        using var cts = new CancellationTokenSource();
+        var visitor = AsyncFluentVisitor<AsyncElement, string>.Create()
+            .When<AsyncNumberElement>(e => e.Value.ToString())
+            .Build();
+
+        var result = await visitor.VisitAsync(new AsyncNumberElement(99), cts.Token);
+
+        Assert.Equal("99", result);
+    }
+}
+
+public sealed class AsyncFluentActionVisitorCoverageTests
+{
+    private abstract record AsyncActionElement : IAsyncActionVisitable
+    {
+        public abstract ValueTask AcceptAsync(IAsyncActionVisitor visitor, CancellationToken ct);
+    }
+
+    private sealed record AsyncLogElement(string Message) : AsyncActionElement
+    {
+        public override ValueTask AcceptAsync(IAsyncActionVisitor visitor, CancellationToken ct)
+            => visitor is AsyncFluentActionVisitor<AsyncActionElement> fv
+                ? fv.HandleAsync(this, ct)
+                : visitor.VisitDefaultAsync(this, ct);
+    }
+
+    private sealed record AsyncErrorElement(string Error) : AsyncActionElement
+    {
+        public override ValueTask AcceptAsync(IAsyncActionVisitor visitor, CancellationToken ct)
+            => visitor is AsyncFluentActionVisitor<AsyncActionElement> fv
+                ? fv.HandleAsync(this, ct)
+                : visitor.VisitDefaultAsync(this, ct);
+    }
+
+    [Fact]
+    public async Task AsyncFluentActionVisitor_VisitDefaultAsync_With_Default()
+    {
+        var log = new List<string>();
+        var visitor = AsyncFluentActionVisitor<AsyncActionElement>.Create()
+            .Default(e => log.Add("default"))
+            .Build();
+
+        await ((IAsyncActionVisitor)visitor).VisitDefaultAsync(new AsyncLogElement("test"), CancellationToken.None);
+
+        Assert.Single(log);
+        Assert.Equal("default", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncFluentActionVisitor_VisitDefaultAsync_Without_Default_Throws()
+    {
+        var visitor = AsyncFluentActionVisitor<AsyncActionElement>.Create()
+            .When<AsyncLogElement>(e => { })
+            .Build();
+
+        await Assert.ThrowsAsync<NotSupportedException>(() =>
+            ((IAsyncActionVisitor)visitor).VisitDefaultAsync(new AsyncErrorElement("err"), CancellationToken.None).AsTask());
+    }
+
+    [Fact]
+    public async Task AsyncFluentActionVisitor_Async_Handler_With_Cancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        var log = new List<string>();
+        var visitor = AsyncFluentActionVisitor<AsyncActionElement>.Create()
+            .When<AsyncLogElement>(async (e, ct) =>
+            {
+                ct.ThrowIfCancellationRequested();
+                log.Add(e.Message);
+            })
+            .Build();
+
+        await visitor.VisitAsync(new AsyncLogElement("hello"), cts.Token);
+
+        Assert.Single(log);
+    }
+}
+
+#endregion

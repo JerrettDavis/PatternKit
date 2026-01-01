@@ -383,6 +383,140 @@ public sealed class StateMachineBuilderTests
 
         Assert.False(handled);
     }
+
+    [Fact]
+    public void Default_Permit_To_Unconfigured_State()
+    {
+        // Default transition to a state that has no configuration (no hooks)
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit((in _) => log.Add("exit:A"))
+                .Otherwise().Permit(S.D).Do((in _) => log.Add("default:go-to-D"))
+            )
+            // S.D is NOT configured - tests the path where nextCfg is null
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("anything"));
+
+        Assert.True(handled);
+        Assert.Equal(S.D, state);
+        Assert.Equal(2, log.Count);
+        Assert.Equal("exit:A", log[0]);
+        Assert.Equal("default:go-to-D", log[1]);
+        // No enter:D because D has no config
+    }
+
+    [Fact]
+    public void Regular_Transition_To_Unconfigured_State()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit((in _) => log.Add("exit:A"))
+                .When((in e) => e.Kind == "go").Permit(S.D).Do((in _) => log.Add("effect"))
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("go"));
+
+        Assert.True(handled);
+        Assert.Equal(S.D, state);
+        Assert.Equal(2, log.Count);
+    }
+
+    [Fact]
+    public void Default_Stay_With_No_Effect()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .Otherwise().Stay().AsDefault()
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("anything"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+    }
+
+    [Fact]
+    public void Default_Permit_Same_State_Only_Effect()
+    {
+        // Default permits to same state - should only run effect, not exit/enter
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnEnter((in _) => log.Add("enter:A"))
+                .OnExit((in _) => log.Add("exit:A"))
+                .Otherwise().Permit(S.A).Do((in _) => log.Add("default-effect"))
+            )
+            .Build();
+
+        var state = S.A;
+        var handled = m.TryTransition(ref state, new E("x"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+        Assert.Single(log);
+        Assert.Equal("default-effect", log[0]);
+    }
+
+    [Fact]
+    public void Otherwise_AsDefault_Works()
+    {
+        var log = new List<string>();
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .Otherwise().Permit(S.B).AsDefault()
+            )
+            .InState(S.B, s => s
+                .OnEnter((in _) => log.Add("enter:B"))
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("any"));
+
+        Assert.Equal(S.B, state);
+        Assert.Contains("enter:B", log);
+    }
+
+    [Fact]
+    public void Transition_Throws_For_Unhandled()
+    {
+        var m = StateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .Build();
+
+        var state = S.A;
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            m.Transition(ref state, new E("nope")));
+
+        Assert.Contains("nope", ex.Message);
+        Assert.Contains("A", ex.Message);
+    }
+
+    [Fact]
+    public void NullComparer_Uses_Default()
+    {
+        var m = StateMachine<S, E>.Create()
+            .Comparer(null!)
+            .InState(S.A, s => s
+                .When((in e) => e.Kind == "go").Permit(S.B).End()
+            )
+            .Build();
+
+        var state = S.A;
+        m.TryTransition(ref state, new E("go"));
+
+        Assert.Equal(S.B, state);
+    }
 }
 
 #endregion

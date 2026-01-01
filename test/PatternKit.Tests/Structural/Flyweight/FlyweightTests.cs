@@ -192,3 +192,146 @@ public sealed class FlyweightTests(ITestOutputHelper output) : TinyBddXunitBase(
             .Then("contains two keys", snap => snap.Count == 2)
             .AssertPassed();
 }
+
+#region Additional Flyweight Tests
+
+public sealed class FlyweightBuilderTests
+{
+    [Fact]
+    public void WithFactory_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Flyweight<int, string>.Create().WithFactory(null!));
+    }
+
+    [Fact]
+    public void WithCapacity_Negative_Throws()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            Flyweight<int, string>.Create().WithCapacity(-1));
+    }
+
+    [Fact]
+    public void WithComparer_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Flyweight<int, string>.Create().WithComparer(null!));
+    }
+
+    [Fact]
+    public void Preload_Batch_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Flyweight<int, string>.Create().Preload(null!));
+    }
+
+    [Fact]
+    public void Preload_Batch_Empty_Returns_Builder()
+    {
+        var builder = Flyweight<int, string>.Create()
+            .WithFactory(i => i.ToString())
+            .Preload(Array.Empty<(int, string)>());
+
+        var fw = builder.Build();
+        Assert.Equal(0, fw.Count);
+    }
+
+    [Fact]
+    public void Preload_Batch_Works()
+    {
+        var fw = Flyweight<int, string>.Create()
+            .WithFactory(i => i.ToString())
+            .Preload((1, "one"), (2, "two"), (3, "three"))
+            .Build();
+
+        Assert.Equal(3, fw.Count);
+        Assert.Equal("one", fw.Get(1));
+        Assert.Equal("two", fw.Get(2));
+        Assert.Equal("three", fw.Get(3));
+    }
+
+    [Fact]
+    public void WithCapacity_Sets_Initial_Capacity()
+    {
+        var fw = Flyweight<int, string>.Create()
+            .WithFactory(i => i.ToString())
+            .WithCapacity(100)
+            .Build();
+
+        Assert.Equal(0, fw.Count);
+        fw.Get(1);
+        Assert.Equal(1, fw.Count);
+    }
+
+    [Fact]
+    public void Preload_Sets_Capacity_From_Count()
+    {
+        var fw = Flyweight<int, string>.Create()
+            .WithFactory(i => i.ToString())
+            .Preload((1, "a"), (2, "b"))
+            .Build();
+
+        Assert.Equal(2, fw.Count);
+    }
+
+    [Fact]
+    public void TryGetExisting_On_Preloaded_Key_Returns_True()
+    {
+        var fw = Flyweight<string, string>.Create()
+            .WithFactory(s => s)
+            .Preload("key", "value")
+            .Build();
+
+        Assert.True(fw.TryGetExisting("key", out var val));
+        Assert.Equal("value", val);
+    }
+
+    [Fact]
+    public void TryGetExisting_On_Missing_Key_Returns_False()
+    {
+        var fw = Flyweight<string, string>.Create()
+            .WithFactory(s => s)
+            .Build();
+
+        Assert.False(fw.TryGetExisting("missing", out _));
+    }
+
+    [Fact]
+    public void Get_With_In_Parameter_Works()
+    {
+        var fw = Flyweight<int, string>.Create()
+            .WithFactory(i => $"value:{i}")
+            .Build();
+
+        var key = 42;
+        var result = fw.Get(in key);
+
+        Assert.Equal("value:42", result);
+    }
+
+    [Fact]
+    public void Concurrent_Preload_And_Factory()
+    {
+        var factoryCalls = 0;
+        var fw = Flyweight<int, string>.Create()
+            .WithFactory(i =>
+            {
+                Interlocked.Increment(ref factoryCalls);
+                return $"created:{i}";
+            })
+            .Preload((1, "preloaded:1"))
+            .Build();
+
+        // Preloaded key should not call factory
+        var v1 = fw.Get(1);
+        Assert.Equal("preloaded:1", v1);
+        Assert.Equal(0, factoryCalls);
+
+        // New key should call factory
+        var v2 = fw.Get(2);
+        Assert.Equal("created:2", v2);
+        Assert.Equal(1, factoryCalls);
+    }
+}
+
+#endregion

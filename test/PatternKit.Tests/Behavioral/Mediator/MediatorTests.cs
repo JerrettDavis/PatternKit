@@ -404,3 +404,114 @@ public sealed class MediatorBuilderTests
 }
 
 #endregion
+
+#region TaskExtensions and MediatorHelpers Tests
+
+public sealed class TaskExtensionsTests
+{
+    [Fact]
+    public async Task AsValueTask_CompletedTask_ReturnsValueTask()
+    {
+        var task = Task.FromResult(42);
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        Assert.True(valueTask.IsCompletedSuccessfully);
+        Assert.Equal(42, await valueTask);
+    }
+
+    [Fact]
+    public async Task AsValueTask_PendingTask_ReturnsValueTask()
+    {
+        var task = Task.Run(async () =>
+        {
+            await Task.Delay(1);
+            return "result";
+        });
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        Assert.Equal("result", await valueTask);
+    }
+
+    [Fact]
+    public async Task AsValueTask_FaultedTask_PropagatesException()
+    {
+        var task = Task.FromException<int>(new InvalidOperationException("test error"));
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => valueTask.AsTask());
+        Assert.Equal("test error", ex.Message);
+    }
+}
+
+public sealed class MediatorHelpersTests
+{
+    [Fact]
+    public async Task Box_CompletedSuccessfully_ReturnsBoxedValue()
+    {
+        var valueTask = new ValueTask<int>(42);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        Assert.True(boxed.IsCompletedSuccessfully);
+        var result = await boxed;
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public async Task Box_PendingTask_AwaitsAndReturns()
+    {
+        var source = new TaskCompletionSource<string>();
+        var valueTask = new ValueTask<string>(source.Task);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        Assert.False(boxed.IsCompleted);
+        source.SetResult("async result");
+
+        var result = await boxed;
+        Assert.Equal("async result", result);
+    }
+
+    [Fact]
+    public async Task Box_NullResult_ReturnsNull()
+    {
+        var valueTask = new ValueTask<string?>((string?)null);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task Box_ReferenceType_BoxesCorrectly()
+    {
+        var obj = new object();
+        var valueTask = new ValueTask<object>(obj);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Same(obj, result);
+    }
+
+    [Fact]
+    public async Task Box_AsyncPath_BoxesCorrectly()
+    {
+        var valueTask = new ValueTask<int>(Task.Run(async () =>
+        {
+            await Task.Delay(1);
+            return 123;
+        }));
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Equal(123, result);
+    }
+}
+
+#endregion

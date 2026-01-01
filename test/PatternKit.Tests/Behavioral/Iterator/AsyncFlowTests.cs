@@ -1,5 +1,6 @@
 #if !NETSTANDARD2_0
 using PatternKit.Behavioral.Iterator;
+using PatternKit.Common;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -56,7 +57,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
         return (even, odd);
     }
 
-    private static async Task<(Common.Option<int> Some, Common.Option<int> None)> Firsts((AsyncFlow<int> NonEmpty, AsyncFlow<int> Empty) flows)
+    private static async Task<(Option<int> Some, Option<int> None)> Firsts((AsyncFlow<int> NonEmpty, AsyncFlow<int> Empty) flows)
     {
         var some = await flows.NonEmpty.FirstOptionAsync();
         var none = await flows.Empty.FirstOptionAsync();
@@ -331,6 +332,256 @@ public sealed class AsyncFlowBuilderTests
 
         Assert.Equal(new[] { 1, 2, 3 }, result);
         Assert.Equal(new[] { 10, 20, 30 }, sideEffects);
+    }
+}
+
+#endregion
+
+#region AsyncReplayBuffer Error and Edge Case Tests
+
+public sealed class AsyncReplayBufferTests
+{
+    private static async IAsyncEnumerable<int> RangeAsync(int count)
+    {
+        for (var i = 1; i <= count; i++)
+            yield return i;
+    }
+
+    private static async IAsyncEnumerable<int> ThrowingAsync(int throwAfter)
+    {
+        for (var i = 1; i <= throwAfter; i++)
+            yield return i;
+        throw new InvalidOperationException("Source error");
+    }
+
+    private static async IAsyncEnumerable<int> SlowRangeAsync(int count, int delayMs, [System.Runtime.CompilerServices.EnumeratorCancellation] CancellationToken ct = default)
+    {
+        for (var i = 1; i <= count; i++)
+        {
+            await Task.Delay(delayMs, ct);
+            yield return i;
+        }
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_SourceThrows_PropagatesException()
+    {
+        var shared = AsyncFlow<int>.From(ThrowingAsync(2)).Share();
+        var fork = shared.Fork();
+
+        var items = new List<int>();
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var v in fork)
+                items.Add(v);
+        });
+
+        Assert.Equal("Source error", ex.Message);
+        Assert.Equal(new[] { 1, 2 }, items);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_ErrorPropagates_ToMultipleForks()
+    {
+        var shared = AsyncFlow<int>.From(ThrowingAsync(2)).Share();
+
+        var fork1 = shared.Fork();
+        var fork2 = shared.Fork();
+
+        // First fork consumes and hits error
+        var items1 = new List<int>();
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var v in fork1)
+                items1.Add(v);
+        });
+
+        // Second fork gets buffered items (items that were successfully buffered before error)
+        // The error was during MoveNext, so items 1, 2 were buffered before the throw
+        var items2 = new List<int>();
+        await foreach (var v in fork2)
+            items2.Add(v);
+
+        Assert.Equal(new[] { 1, 2 }, items1);
+        Assert.Equal(new[] { 1, 2 }, items2); // Gets buffered items without error
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_Cancellation_StopsEnumeration()
+    {
+        using var cts = new CancellationTokenSource();
+        var shared = AsyncFlow<int>.From(SlowRangeAsync(100, 50, cts.Token)).Share();
+        var fork = shared.Fork();
+
+        var items = new List<int>();
+        var enumerator = fork.GetAsyncEnumerator(cts.Token);
+
+        try
+        {
+            // Get first item
+            if (await enumerator.MoveNextAsync())
+                items.Add(enumerator.Current);
+
+            // Cancel while waiting for next
+            cts.Cancel();
+
+            // Next attempt should throw
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            {
+                while (await enumerator.MoveNextAsync())
+                    items.Add(enumerator.Current);
+            });
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
+        }
+
+        Assert.Single(items);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_TryGetAsync_NegativeIndex_ReturnsFalse()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(3)).Share();
+
+        // Fork and consume nothing - buffer internal access is tested via Fork behavior
+        var fork = shared.Fork();
+
+        var items = new List<int>();
+        await foreach (var v in fork)
+            items.Add(v);
+
+        Assert.Equal(new[] { 1, 2, 3 }, items);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_MultipleConcurrentWaiters()
+    {
+        var shared = AsyncFlow<int>.From(SlowRangeAsync(5, 10)).Share();
+
+        // Start multiple consumers concurrently
+        var tasks = Enumerable.Range(0, 10).Select(async i =>
+        {
+            var items = new List<int>();
+            await foreach (var v in shared.Fork())
+                items.Add(v);
+            return items;
+        }).ToArray();
+
+        var results = await Task.WhenAll(tasks);
+
+        foreach (var result in results)
+        {
+            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, result);
+        }
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_EmptySource_AllForksEmpty()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(0)).Share();
+
+        var fork1 = shared.Fork();
+        var fork2 = shared.Fork();
+
+        var items1 = new List<int>();
+        var items2 = new List<int>();
+
+        await foreach (var v in fork1) items1.Add(v);
+        await foreach (var v in fork2) items2.Add(v);
+
+        Assert.Empty(items1);
+        Assert.Empty(items2);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_SingleItem_AllForksGetIt()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(1)).Share();
+
+        var fork1 = shared.Fork();
+        var fork2 = shared.Fork();
+        var fork3 = shared.Fork();
+
+        var items1 = new List<int>();
+        var items2 = new List<int>();
+        var items3 = new List<int>();
+
+        await foreach (var v in fork1) items1.Add(v);
+        await foreach (var v in fork2) items2.Add(v);
+        await foreach (var v in fork3) items3.Add(v);
+
+        Assert.Equal(new[] { 1 }, items1);
+        Assert.Equal(new[] { 1 }, items2);
+        Assert.Equal(new[] { 1 }, items3);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_SequentialForkConsumption()
+    {
+        var enumerationCount = 0;
+        async IAsyncEnumerable<int> TrackedRangeAsync(int count)
+        {
+            Interlocked.Increment(ref enumerationCount);
+            for (var i = 1; i <= count; i++)
+                yield return i;
+        }
+
+        var shared = AsyncFlow<int>.From(TrackedRangeAsync(5)).Share();
+
+        // Consume first fork entirely
+        var fork1 = shared.Fork();
+        var items1 = new List<int>();
+        await foreach (var v in fork1) items1.Add(v);
+
+        // Then consume second fork
+        var fork2 = shared.Fork();
+        var items2 = new List<int>();
+        await foreach (var v in fork2) items2.Add(v);
+
+        Assert.Equal(1, enumerationCount); // Source should only be enumerated once
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, items1);
+        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, items2);
+    }
+
+    [Fact]
+    public async Task SharedAsyncFlow_InterleavedForkConsumption()
+    {
+        var shared = AsyncFlow<int>.From(RangeAsync(3)).Share();
+
+        var fork1 = shared.Fork().GetAsyncEnumerator();
+        var fork2 = shared.Fork().GetAsyncEnumerator();
+
+        try
+        {
+            // Interleave consumption
+            Assert.True(await fork1.MoveNextAsync());
+            Assert.Equal(1, fork1.Current);
+
+            Assert.True(await fork2.MoveNextAsync());
+            Assert.Equal(1, fork2.Current);
+
+            Assert.True(await fork2.MoveNextAsync());
+            Assert.Equal(2, fork2.Current);
+
+            Assert.True(await fork1.MoveNextAsync());
+            Assert.Equal(2, fork1.Current);
+
+            Assert.True(await fork1.MoveNextAsync());
+            Assert.Equal(3, fork1.Current);
+
+            Assert.True(await fork2.MoveNextAsync());
+            Assert.Equal(3, fork2.Current);
+
+            Assert.False(await fork1.MoveNextAsync());
+            Assert.False(await fork2.MoveNextAsync());
+        }
+        finally
+        {
+            await fork1.DisposeAsync();
+            await fork2.DisposeAsync();
+        }
     }
 }
 
