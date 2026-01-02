@@ -40,6 +40,14 @@ jobs:
       - name: Build (Release)
         run: dotnet build PatternKit.slnx --configuration Release --no-restore /p:ContinuousIntegrationBuild=true
 
+      - name: Install DocFX
+        run: dotnet tool update -g docfx
+
+      - name: Build Documentation
+        run: |
+          docfx metadata docs/docfx.json
+          docfx build docs/docfx.json
+
       - name: Test with coverage
         run: |
           dotnet test PatternKit.slnx \
