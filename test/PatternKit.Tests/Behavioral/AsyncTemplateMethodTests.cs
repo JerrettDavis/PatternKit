@@ -87,15 +87,15 @@ public sealed class AsyncTemplateMethodTests(ITestOutputHelper output) : TinyBdd
 
     [Scenario("Cancellation is observed")]
     [Fact]
-    public Task Cancellation_Observed()
-        => Given("a template with long delay and a CTS", () => (tpl: new SampleAsyncTemplate(delayMs: 100), cts: new CancellationTokenSource(10)))
-           .When("ExecuteAsync with cancellation", ctx =>
-           {
-               try { ctx.tpl.ExecuteAsync(1, ctx.cts.Token).GetAwaiter().GetResult(); return false; }
-               catch (OperationCanceledException) { return true; }
-           })
-           .Then("throws OperationCanceledException", threw => threw)
-           .AssertPassed();
+    public async Task Cancellation_Observed()
+    {
+        var template = new SampleAsyncTemplate(delayMs: 100);
+        using var cts = new CancellationTokenSource(10);
+        
+        // Assert.ThrowsAnyAsync verifies that OperationCanceledException or derived types are thrown
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            async () => await template.ExecuteAsync(1, cts.Token));
+    }
 }
 
 #region Additional AsyncTemplateMethod Tests

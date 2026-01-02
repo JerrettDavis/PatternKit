@@ -7,7 +7,7 @@ public class VisitorGeneratorTests
 {
     // Test AST hierarchy used across tests
     private const string AstHierarchy = """
-                                        using PatternKit.Generators;
+                                        using PatternKit.Generators.Visitors;
 
                                         namespace PatternKit.Examples.Ast;
 
@@ -352,7 +352,7 @@ public class VisitorGeneratorTests
     {
 
         var code = """
-                   using PatternKit.Generators;
+                   using PatternKit.Generators.Visitors;
 
                    namespace PatternKit.Examples.Custom;
 
@@ -388,7 +388,7 @@ public class VisitorGeneratorTests
     {
 
         var code = """
-                   using PatternKit.Generators;
+                   using PatternKit.Generators.Visitors;
 
                    namespace PatternKit.Examples.SyncOnly;
 
@@ -430,7 +430,7 @@ public class VisitorGeneratorTests
     {
 
         var code = """
-                   using PatternKit.Generators;
+                   using PatternKit.Generators.Visitors;
 
                    namespace PatternKit.Examples.ResultOnly;
 

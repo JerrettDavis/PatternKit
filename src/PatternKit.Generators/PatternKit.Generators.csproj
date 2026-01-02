@@ -39,6 +39,7 @@
         <Compile Remove="GenerateStrategyAttribute.cs" />
         <Compile Remove="Builders\BuilderAttributes.cs" />
         <Compile Remove="Factories\FactoriesAttributes.cs" />
+        <Compile Remove="GenerateVisitorAttribute.cs" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(DOCFX)'!='true'">
