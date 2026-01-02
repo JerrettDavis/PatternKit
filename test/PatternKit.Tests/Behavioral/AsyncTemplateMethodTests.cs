@@ -92,11 +92,9 @@ public sealed class AsyncTemplateMethodTests(ITestOutputHelper output) : TinyBdd
         var template = new SampleAsyncTemplate(delayMs: 100);
         using var cts = new CancellationTokenSource(10);
         
-        // Use Assert.ThrowsAnyAsync to properly handle async cancellation
-        var ex = await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        // Assert.ThrowsAnyAsync verifies that OperationCanceledException or derived types are thrown
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
             async () => await template.ExecuteAsync(1, cts.Token));
-        
-        Assert.True(ex is OperationCanceledException or TaskCanceledException);
     }
 }
 
