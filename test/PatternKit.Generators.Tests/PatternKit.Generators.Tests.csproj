@@ -13,6 +13,7 @@
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
         <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
         <PackageReference Include="TinyBDD" Version="0.12.1" />
+        <PackageReference Include="TinyBDD.Xunit" Version="0.12.1" />
         <PackageReference Include="xunit" Version="2.9.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
           <PrivateAssets>all</PrivateAssets>
