@@ -1,4 +1,4 @@
-using PatternKit.Generators;
+using PatternKit.Generators.Visitors;
 
 namespace PatternKit.Examples.Generators.Visitors;
 

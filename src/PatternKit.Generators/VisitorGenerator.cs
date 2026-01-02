@@ -17,7 +17,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     {
         // Find all classes marked with [GenerateVisitor]
         var visitorRoots = context.SyntaxProvider.ForAttributeWithMetadataName(
-            fullyQualifiedMetadataName: "PatternKit.Generators.GenerateVisitorAttribute",
+            fullyQualifiedMetadataName: "PatternKit.Generators.Visitors.GenerateVisitorAttribute",
             predicate: static (node, _) => node is ClassDeclarationSyntax,
             transform: static (gasc, ct) => GetVisitorRoot(gasc, ct)
         ).Where(static x => x is not null);
