@@ -5,6 +5,8 @@ riderModule.iml
 /_ReSharper.Caches/
 .idea/
 _site/
-api/
+# Exclude generated API metadata files but keep index.md
+docs/api/*.yml
+docs/api/.manifest
 *.user
 TestResults/
