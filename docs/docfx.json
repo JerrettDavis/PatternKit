@@ -1,6 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/dotnet/docfx/main/schemas/docfx.schema.json",
-  "metadata": [],
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [
+            "src/PatternKit.Core/**.csproj",
+            "src/PatternKit.Generators.Abstractions/**.csproj"
+          ],
+          "src": ".."
+        }
+      ],
+      "dest": "api",
+      "includePrivateMembers": false,
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "properties": {
+        "TargetFramework": "net9.0"
+      }
+    }
+  ],
   "build": {
     "content": [
       {
