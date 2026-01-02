@@ -271,6 +271,121 @@ public sealed class AsyncTemplateTests
         Assert.Equal("after-2", log[1]);
     }
 
+    [Fact]
+    public async Task AsyncActionTemplate_Synchronized()
+    {
+        var count = 0;
+        var template = AsyncActionTemplate<int>.Create(async (x, ct) =>
+            {
+                var local = count;
+                await Task.Delay(10, ct);
+                count = local + 1;
+            })
+            .Synchronized()
+            .Build();
+
+        var tasks = Enumerable.Range(0, 5).Select(_ => template.ExecuteAsync(0)).ToArray();
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(5, count);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_Async_Before()
+    {
+        var log = new List<string>();
+        var template = AsyncActionTemplate<int>.Create((x, ct) => default)
+            .Before(async (x, ct) =>
+            {
+                await Task.Delay(1, ct);
+                log.Add("async-before");
+            })
+            .Build();
+
+        await template.ExecuteAsync(5);
+
+        Assert.Single(log);
+        Assert.Equal("async-before", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_Async_After()
+    {
+        var log = new List<string>();
+        var template = AsyncActionTemplate<int>.Create((x, ct) => default)
+            .After(async (x, ct) =>
+            {
+                await Task.Delay(1, ct);
+                log.Add("async-after");
+            })
+            .Build();
+
+        await template.ExecuteAsync(5);
+
+        Assert.Single(log);
+        Assert.Equal("async-after", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_OnError_Sync_Handler()
+    {
+        var log = new List<string>();
+        var template = AsyncActionTemplate<int>.Create((x, ct) =>
+            {
+                throw new InvalidOperationException("error");
+            })
+            .OnError((ctx, err) => log.Add($"error: {err}"))
+            .Build();
+
+        var (success, error) = await template.TryExecuteAsync(5);
+
+        Assert.False(success);
+        Assert.Single(log);
+        Assert.Contains("error", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_OnError_Async_Handler()
+    {
+        var log = new List<string>();
+        var template = AsyncActionTemplate<int>.Create((x, ct) =>
+            {
+                throw new InvalidOperationException("error");
+            })
+            .OnError(async (ctx, err, ct) =>
+            {
+                await Task.Delay(1, ct);
+                log.Add($"async-error: {err}");
+            })
+            .Build();
+
+        var (success, error) = await template.TryExecuteAsync(5);
+
+        Assert.False(success);
+        Assert.Single(log);
+        Assert.Contains("async-error", log[0]);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_OnError_Handler_Throws_IsSwallowed()
+    {
+        var log = new List<string>();
+        var template = AsyncActionTemplate<int>.Create((x, ct) =>
+            {
+                throw new InvalidOperationException("original");
+            })
+            .OnError((ctx, err) => throw new Exception("handler error"))
+            .OnError((ctx, err) => log.Add("second handler"))
+            .Build();
+
+        var (success, error) = await template.TryExecuteAsync(5);
+
+        Assert.False(success);
+        Assert.Equal("original", error);
+        Assert.Single(log);
+        Assert.Equal("second handler", log[0]);
+    }
+
     #endregion
 
     #region ActionTemplate<TIn> Tests

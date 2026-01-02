@@ -371,6 +371,103 @@ public sealed class AsyncStateMachineBuilderTests
         Assert.True(handled);
         Assert.Equal(S.B, state);
     }
+
+    [Fact]
+    public async Task Transition_To_Unconfigured_State_Works()
+    {
+        var log = new List<string>();
+        var m = AsyncStateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit(async (_, _) => log.Add("exit:A"))
+                .When((e, _) => new ValueTask<bool>(e.Kind == "go")).Permit(S.D).Do(async (_, _) => log.Add("effect:go"))
+            )
+            // S.D is NOT configured - tests the path where nextCfg is null
+            .Build();
+
+        var (handled, state) = await m.TryTransitionAsync(S.A, new E("go"));
+
+        Assert.True(handled);
+        Assert.Equal(S.D, state);
+        Assert.Equal(2, log.Count);
+        Assert.Equal("exit:A", log[0]);
+        Assert.Equal("effect:go", log[1]);
+        // No OnEnter for S.D since it's not configured
+    }
+
+    [Fact]
+    public async Task Default_Transition_To_Unconfigured_State()
+    {
+        var log = new List<string>();
+        var m = AsyncStateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit(async (_, _) => log.Add("exit:A"))
+                .Otherwise().Permit(S.D).Do(async (_, _) => log.Add("default:go-to-D"))
+            )
+            // S.D is NOT configured
+            .Build();
+
+        var (handled, state) = await m.TryTransitionAsync(S.A, new E("anything"));
+
+        Assert.True(handled);
+        Assert.Equal(S.D, state);
+        Assert.Equal(2, log.Count);
+        Assert.Equal("exit:A", log[0]);
+        Assert.Equal("default:go-to-D", log[1]);
+    }
+
+    [Fact]
+    public async Task Default_Transition_Without_Effect()
+    {
+        var m = AsyncStateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .Otherwise().Permit(S.B).AsDefault()
+            )
+            .InState(S.B, s => s
+                .OnEnter(async (_, _) => { }) // Has OnEnter but no effect in transition
+            )
+            .Build();
+
+        var (handled, state) = await m.TryTransitionAsync(S.A, new E("any"));
+
+        Assert.True(handled);
+        Assert.Equal(S.B, state);
+    }
+
+    [Fact]
+    public async Task Default_Stay_Without_Effect()
+    {
+        var log = new List<string>();
+        var m = AsyncStateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .OnExit(async (_, _) => log.Add("exit"))
+                .Otherwise().Stay().AsDefault()
+            )
+            .Build();
+
+        var (handled, state) = await m.TryTransitionAsync(S.A, new E("any"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+        Assert.Empty(log); // No exit because we stayed
+    }
+
+    [Fact]
+    public async Task Edge_Effect_Only_On_Stay()
+    {
+        var log = new List<string>();
+        var m = AsyncStateMachine<S, E>.Create()
+            .InState(S.A, s => s
+                .When((e, _) => new ValueTask<bool>(e.Kind == "stay")).Stay().Do(async (_, _) => log.Add("stayed"))
+            )
+            .Build();
+
+        var (handled, state) = await m.TryTransitionAsync(S.A, new E("stay"));
+
+        Assert.True(handled);
+        Assert.Equal(S.A, state);
+        Assert.Single(log);
+        Assert.Equal("stayed", log[0]);
+    }
 }
 
 #endregion

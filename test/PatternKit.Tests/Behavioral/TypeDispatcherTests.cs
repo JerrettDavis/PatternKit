@@ -140,3 +140,157 @@ public sealed class TypeDispatcherTests(ITestOutputHelper output) : TinyBddXunit
            .And("Neg returns default 0", r => r.neg == 0)
            .AssertPassed();
 }
+
+#region Additional TypeDispatcher Tests
+
+public sealed class TypeDispatcherBuilderTests
+{
+    private abstract record Node;
+    private sealed record Number(int Value) : Node;
+    private sealed record Add(Node Left, Node Right) : Node;
+    private sealed record Neg(Node Inner) : Node;
+
+    [Fact]
+    public void Default_Func_Overload_Works()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => $"num:{n.Value}")
+            .Default(n => $"default:{n.GetType().Name}")
+            .Build();
+
+        var result1 = dispatcher.Dispatch(new Number(5));
+        var result2 = dispatcher.Dispatch(new Neg(new Number(1)));
+
+        Assert.Equal("num:5", result1);
+        Assert.Equal("default:Neg", result2);
+    }
+
+    [Fact]
+    public void Default_Handler_Delegate_Works()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => $"num:{n.Value}")
+            .Default((in Node n) => $"handler:{n.GetType().Name}")
+            .Build();
+
+        var result = dispatcher.Dispatch(new Add(new Number(1), new Number(2)));
+
+        Assert.Equal("handler:Add", result);
+    }
+
+    [Fact]
+    public void TryDispatch_WithDefault_ReturnsTrue()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .Default(_ => "fallback")
+            .Build();
+
+        var success = dispatcher.TryDispatch(new Neg(new Number(1)), out var result);
+
+        Assert.True(success);
+        Assert.Equal("fallback", result);
+    }
+
+    [Fact]
+    public void TryDispatch_MatchesHandler_ReturnsTrue()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => $"matched:{n.Value}")
+            .Build();
+
+        var success = dispatcher.TryDispatch(new Number(42), out var result);
+
+        Assert.True(success);
+        Assert.Equal("matched:42", result);
+    }
+
+    [Fact]
+    public void TryDispatch_NoMatchNoDefault_ReturnsFalse()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => n.Value.ToString())
+            .Build();
+
+        var success = dispatcher.TryDispatch(new Neg(new Number(1)), out var result);
+
+        Assert.False(success);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Multiple_Handlers_FirstMatchWins()
+    {
+        var log = new List<string>();
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => { log.Add("number"); return "number"; })
+            .On<Node>(n => { log.Add("node"); return "node"; })
+            .Build();
+
+        var result = dispatcher.Dispatch(new Number(5));
+
+        Assert.Equal("number", result);
+        Assert.Single(log);
+        Assert.Equal("number", log[0]);
+    }
+
+    [Fact]
+    public void Empty_Dispatcher_TryDispatch_ReturnsFalse()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create().Build();
+
+        var success = dispatcher.TryDispatch(new Number(1), out _);
+
+        Assert.False(success);
+    }
+
+    [Fact]
+    public void Empty_Dispatcher_Dispatch_Throws()
+    {
+        var dispatcher = TypeDispatcher<Node, string>.Create().Build();
+
+        Assert.Throws<InvalidOperationException>(() => dispatcher.Dispatch(new Number(1)));
+    }
+
+    [Fact]
+    public void Constant_On_Multiple_Types()
+    {
+        var dispatcher = TypeDispatcher<Node, int>.Create()
+            .On<Number>(1)
+            .On<Add>(2)
+            .On<Neg>(3)
+            .Build();
+
+        Assert.Equal(1, dispatcher.Dispatch(new Number(100)));
+        Assert.Equal(2, dispatcher.Dispatch(new Add(new Number(1), new Number(2))));
+        Assert.Equal(3, dispatcher.Dispatch(new Neg(new Number(1))));
+    }
+
+    [Fact]
+    public void Handler_Receives_Correct_Type()
+    {
+        Node? captured = null;
+        var dispatcher = TypeDispatcher<Node, string>.Create()
+            .On<Number>(n => { captured = n; return "ok"; })
+            .Build();
+
+        dispatcher.Dispatch(new Number(42));
+
+        Assert.NotNull(captured);
+        Assert.IsType<Number>(captured);
+        Assert.Equal(42, ((Number)captured).Value);
+    }
+
+    [Fact]
+    public void Null_Node_Works_With_Default()
+    {
+        var dispatcher = TypeDispatcher<Node?, string>.Create()
+            .Default((in Node? n) => n is null ? "null" : "not-null")
+            .Build();
+
+        var result = dispatcher.Dispatch(null);
+
+        Assert.Equal("null", result);
+    }
+}
+
+#endregion

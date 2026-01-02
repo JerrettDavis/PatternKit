@@ -473,6 +473,277 @@ public sealed class CommandBuilderTests
 
         Assert.True(executed);
     }
+
+    [Fact]
+    public async Task Macro_Do_SlowPath_MiddleAsync()
+    {
+        // Test the slow path where the first command completes synchronously
+        // but a later command is async
+        var log = new List<string>();
+
+        var syncCmd = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("sync"))
+            .Build();
+
+        var asyncCmd = Command<Ctx>.Create()
+            .Do((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                return DoAsync(logRef, ct);
+                static async ValueTask DoAsync(List<string> l, CancellationToken ct2)
+                {
+                    await Task.Delay(10, ct2);
+                    l.Add("async");
+                }
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(syncCmd)
+            .Add(asyncCmd)
+            .Add(syncCmd)
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("sync", log[0]);
+        Assert.Equal("async", log[1]);
+        Assert.Equal("sync", log[2]);
+    }
+
+    [Fact]
+    public async Task Macro_Undo_SlowPath_MiddleAsync()
+    {
+        // Test the slow path for undo where the first undo completes synchronously
+        // but a later undo is async
+        var log = new List<string>();
+
+        var syncCmd = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("do:sync"))
+            .Undo(c => c.Log.Add("undo:sync"))
+            .Build();
+
+        var asyncCmd = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("do:async"))
+            .Undo((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                return UndoAsync(logRef, ct);
+                static async ValueTask UndoAsync(List<string> l, CancellationToken ct2)
+                {
+                    await Task.Delay(10, ct2);
+                    l.Add("undo:async");
+                }
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(syncCmd)
+            .Add(asyncCmd)
+            .Add(syncCmd)
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+        log.Clear();
+
+        if (macro.TryUndo(in ctx, out var vt))
+            await vt;
+
+        // Undo runs in reverse order
+        Assert.Equal(3, log.Count);
+        Assert.Equal("undo:sync", log[0]);
+        Assert.Equal("undo:async", log[1]);
+        Assert.Equal("undo:sync", log[2]);
+    }
+
+    [Fact]
+    public async Task Macro_First_Command_Async()
+    {
+        // Test when the very first command is async
+        var log = new List<string>();
+
+        var asyncCmd = Command<Ctx>.Create()
+            .Do((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                return DoAsync(logRef, ct);
+                static async ValueTask DoAsync(List<string> l, CancellationToken ct2)
+                {
+                    await Task.Delay(5, ct2);
+                    l.Add("async");
+                }
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(asyncCmd)
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+
+        Assert.Single(log);
+        Assert.Equal("async", log[0]);
+    }
+
+    [Fact]
+    public async Task Macro_Undo_First_Command_Async()
+    {
+        // Test when the first undo (last in order) is async
+        var log = new List<string>();
+
+        var asyncCmd = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("do"))
+            .Undo((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                return UndoAsync(logRef, ct);
+                static async ValueTask UndoAsync(List<string> l, CancellationToken ct2)
+                {
+                    await Task.Delay(5, ct2);
+                    l.Add("undo");
+                }
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(asyncCmd)
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+        log.Clear();
+
+        if (macro.TryUndo(in ctx, out var vt))
+            await vt;
+
+        Assert.Single(log);
+        Assert.Equal("undo", log[0]);
+    }
+
+    [Fact]
+    public async Task Macro_Multiple_Async_InSequence()
+    {
+        // Multiple async commands in sequence to exercise await chaining
+        var log = new List<string>();
+
+        Command<Ctx> MakeAsync(string name) => Command<Ctx>.Create()
+            .Do((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                var n = name;
+                return DoAsync(logRef, n, ct);
+                static async ValueTask DoAsync(List<string> l, string name, CancellationToken ct2)
+                {
+                    await Task.Delay(5, ct2);
+                    l.Add(name);
+                }
+            })
+            .Undo((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                var n = name;
+                return UndoAsync(logRef, n, ct);
+                static async ValueTask UndoAsync(List<string> l, string name, CancellationToken ct2)
+                {
+                    await Task.Delay(5, ct2);
+                    l.Add($"undo:{name}");
+                }
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(MakeAsync("A"))
+            .Add(MakeAsync("B"))
+            .Add(MakeAsync("C"))
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("A", log[0]);
+        Assert.Equal("B", log[1]);
+        Assert.Equal("C", log[2]);
+
+        log.Clear();
+
+        if (macro.TryUndo(in ctx, out var vt))
+            await vt;
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("undo:C", log[0]);
+        Assert.Equal("undo:B", log[1]);
+        Assert.Equal("undo:A", log[2]);
+    }
+
+    [Fact]
+    public async Task Macro_Undo_SkipsCommands_WithoutUndo_InSlowPath()
+    {
+        var log = new List<string>();
+
+        var withUndo = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("do:1"))
+            .Undo((in Ctx c, CancellationToken ct) =>
+            {
+                var logRef = c.Log;
+                return UndoAsync(logRef, ct);
+                static async ValueTask UndoAsync(List<string> l, CancellationToken ct2)
+                {
+                    await Task.Delay(5, ct2);
+                    l.Add("undo:1");
+                }
+            })
+            .Build();
+
+        var noUndo = Command<Ctx>.Create()
+            .Do(c => c.Log.Add("do:2"))
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(withUndo)
+            .Add(noUndo)
+            .Add(withUndo)
+            .Build();
+
+        var ctx = new Ctx(log);
+        await macro.Execute(in ctx);
+        log.Clear();
+
+        if (macro.TryUndo(in ctx, out var vt))
+            await vt;
+
+        // Should have 2 undos, skipping the middle command
+        Assert.Equal(2, log.Count);
+        Assert.Equal("undo:1", log[0]);
+        Assert.Equal("undo:1", log[1]);
+    }
+
+    [Fact]
+    public async Task Macro_CancellationToken_Propagates()
+    {
+        var tokenReceived = CancellationToken.None;
+        var cmd = Command<Ctx>.Create()
+            .Do((in c, ct) =>
+            {
+                tokenReceived = ct;
+                return default;
+            })
+            .Build();
+
+        var macro = Command<Ctx>.Macro()
+            .Add(cmd)
+            .Build();
+
+        var cts = new CancellationTokenSource();
+        var ctx = new Ctx([]);
+        await macro.Execute(in ctx, cts.Token);
+
+        Assert.Equal(cts.Token, tokenReceived);
+    }
 }
 
 #endregion

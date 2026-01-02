@@ -87,6 +87,93 @@ public sealed class AdapterTests(ITestOutputHelper output) : TinyBddXunitBase(ou
             .AssertPassed();
 }
 
+#region Additional Adapter Tests
+
+public sealed class AdapterEdgeCaseTests
+{
+    private sealed record Source(string First, string Last, int Age);
+
+    private sealed class Dest
+    {
+        public string? FullName { get; set; }
+        public int Age { get; set; }
+    }
+
+    [Fact]
+    public void TryAdapt_Exception_In_Seed_Returns_False()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => throw new InvalidOperationException("Seed failed"))
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
+
+        Assert.False(ok);
+        Assert.Null(dest);
+        Assert.Equal("Seed failed", error);
+    }
+
+    [Fact]
+    public void TryAdapt_Exception_In_Map_Returns_False()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((in Source s, Dest d) => throw new InvalidOperationException("Map failed"))
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
+
+        Assert.False(ok);
+        Assert.Null(dest);
+        Assert.Equal("Map failed", error);
+    }
+
+    [Fact]
+    public void TryAdapt_Success_NoValidators()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((in Source s, Dest d) => d.FullName = s.First)
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("Ada", "L", 30), out var dest, out var error);
+
+        Assert.True(ok);
+        Assert.NotNull(dest);
+        Assert.Equal("Ada", dest.FullName);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void Adapt_NoMaps_NoValidators_Works()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create((in Source s) => new Dest { Age = s.Age })
+            .Build();
+
+        var result = adapter.Adapt(new Source("X", "Y", 42));
+
+        Assert.Equal(42, result.Age);
+        Assert.Null(result.FullName);
+    }
+
+    [Fact]
+    public void Builder_Null_Seed_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Adapter<Source, Dest>.Create((Adapter<Source, Dest>.Seed)null!));
+    }
+
+    [Fact]
+    public void Builder_Null_SeedFrom_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Adapter<Source, Dest>.Create((Adapter<Source, Dest>.SeedFrom)null!));
+    }
+}
+
+#endregion
+
 public sealed class AsyncAdapterTests
 {
     private sealed record Source(string First, string Last, int Age);
