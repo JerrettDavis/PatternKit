@@ -1,7 +1,5 @@
 using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
-using PatternKit.Common;
-using PatternKit.Creational.Builder;
 
 namespace PatternKit.Generators.Tests;
 
@@ -41,13 +39,10 @@ public class VisitorGeneratorTests
     [Fact]
     public void Generates_Visitor_Infrastructure_Without_Diagnostics()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var comp = RoslynTestHelpers.CreateCompilation(
             AstHierarchy,
-            assemblyName: nameof(Generates_Visitor_Infrastructure_Without_Diagnostics),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Generates_Visitor_Infrastructure_Without_Diagnostics));
 
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
@@ -82,8 +77,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Sync_Result_Visitor_Dispatches_Correctly()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var user = AstHierarchy + """
                                        public static class Demo
@@ -115,8 +108,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Sync_Result_Visitor_Dispatches_Correctly),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Sync_Result_Visitor_Dispatches_Correctly));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
@@ -139,8 +131,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Sync_Action_Visitor_Executes_Side_Effects()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var user = AstHierarchy + """
                                        public static class ActionDemo
@@ -170,8 +160,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Sync_Action_Visitor_Executes_Side_Effects),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Sync_Action_Visitor_Executes_Side_Effects));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
@@ -194,8 +183,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Async_Result_Visitor_Supports_ValueTask()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var user = AstHierarchy + """
                                        public static class AsyncDemo
@@ -230,8 +217,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Async_Result_Visitor_Supports_ValueTask),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Async_Result_Visitor_Supports_ValueTask));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
@@ -256,8 +242,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Async_Action_Visitor_Supports_ValueTask()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var user = AstHierarchy + """
                                        public static class AsyncActionDemo
@@ -294,8 +278,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Async_Action_Visitor_Supports_ValueTask),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Async_Action_Visitor_Supports_ValueTask));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
@@ -320,8 +303,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Throws_When_No_Handler_Matches_And_No_Default()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var user = AstHierarchy + """
                                        public static class NoDefaultDemo
@@ -348,8 +329,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Throws_When_No_Handler_Matches_And_No_Default),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Throws_When_No_Handler_Matches_And_No_Default));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
@@ -370,8 +350,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Custom_Visitor_Interface_Name_Works()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var code = """
                    using PatternKit.Generators;
@@ -390,8 +368,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             code,
-            assemblyName: nameof(Custom_Visitor_Interface_Name_Works),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Custom_Visitor_Interface_Name_Works));
 
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
@@ -409,8 +386,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Disable_Async_Generation_Works()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var code = """
                    using PatternKit.Generators;
@@ -429,8 +404,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             code,
-            assemblyName: nameof(Disable_Async_Generation_Works),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Disable_Async_Generation_Works));
 
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
@@ -454,8 +428,6 @@ public class VisitorGeneratorTests
     [Fact]
     public void Disable_Actions_Generation_Works()
     {
-        var coreRef = MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location);
-        var commonRef = MetadataReference.CreateFromFile(typeof(Throw).Assembly.Location);
 
         var code = """
                    using PatternKit.Generators;
@@ -474,8 +446,7 @@ public class VisitorGeneratorTests
 
         var comp = RoslynTestHelpers.CreateCompilation(
             code,
-            assemblyName: nameof(Disable_Actions_Generation_Works),
-            extra: [coreRef, commonRef]);
+            assemblyName: nameof(Disable_Actions_Generation_Works));
 
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);

@@ -6,8 +6,9 @@ using System.Text;
 namespace PatternKit.Generators;
 
 /// <summary>
-/// Source generator that produces visitor pattern infrastructure including interfaces,
-/// Accept methods, and fluent builders for types marked with [GenerateVisitor].
+/// Source generator that produces GoF-compliant visitor pattern infrastructure with true double-dispatch.
+/// Generates visitor interfaces, Accept methods, and fluent builders for types marked with [GenerateVisitor].
+/// The generated code is self-contained with no dependencies on PatternKit.Core.
 /// </summary>
 [Generator]
 public sealed class VisitorGenerator : IIncrementalGenerator
