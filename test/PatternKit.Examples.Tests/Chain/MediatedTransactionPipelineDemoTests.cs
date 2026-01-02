@@ -202,17 +202,17 @@ public sealed class NickelCashOnlyRuleTests
     {
         var rule = new NickelCashOnlyRule();
 
-        Assert.Equal("nickel rounding (cash)", rule.Reason);
+        Assert.Equal("nickel (cash-only)", rule.Reason);
     }
 
     [Fact]
-    public void ShouldApply_Returns_True_For_Cash()
+    public void ShouldApply_Returns_True_For_Cash_With_NickelSku()
     {
         var rule = new NickelCashOnlyRule();
         var ctx = new TransactionContext
         {
             Customer = new Customer(null, 25),
-            Items = [new LineItem("TEST", 10m, 1)],
+            Items = [new LineItem("ROUND:NICKEL", 10m, 1)],
             Tender = new Tender(PaymentKind.Cash)
         };
 
@@ -226,11 +226,41 @@ public sealed class NickelCashOnlyRuleTests
         var ctx = new TransactionContext
         {
             Customer = new Customer(null, 25),
-            Items = [new LineItem("TEST", 10m, 1)],
+            Items = [new LineItem("ROUND:NICKEL", 10m, 1)],
             Tender = new Tender(PaymentKind.Card)
         };
 
         Assert.False(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_False_Without_NickelSku()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("TEST", 10m, 1)],
+            Tender = new Tender(PaymentKind.Cash)
+        };
+
+        Assert.False(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ComputeDelta_Rounds_To_Nearest_Nickel()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("ROUND:NICKEL", 10.03m, 1)]
+        };
+        ctx.RecomputeSubtotal();
+
+        var delta = rule.ComputeDelta(ctx);
+
+        Assert.Equal(0.02m, delta); // 10.03 -> 10.05
     }
 }
 
