@@ -1,4 +1,4 @@
-using PatternKit.Behavioral.Visitor;
+using PatternKit.Behavioral.TypeDispatcher;
 
 namespace PatternKit.Examples.VisitorDemo;
 
@@ -48,11 +48,11 @@ public sealed record Unknown(string Description, decimal Value) : Tender(Value);
 public static class ReceiptRendering
 {
     /// <summary>
-    /// Creates a result visitor that formats tenders into printable receipt lines.
+    /// Creates a type dispatcher that formats tenders into printable receipt lines.
     /// Includes a default formatter for unknown tender types.
     /// </summary>
-    /// <returns>A reusable, thread‑safe visitor instance.</returns>
-    public static Visitor<Tender, string> CreateRenderer() => Visitor<Tender, string>
+    /// <returns>A reusable, thread‑safe dispatcher instance.</returns>
+    public static TypeDispatcher<Tender, string> CreateRenderer() => TypeDispatcher<Tender, string>
         .Create()
         .On<Cash>(t => $"Cash          {t.Value,8:C}")
         .On<Card>(t => $"{t.Brand} ****{t.Last4,4} {t.Value,8:C}")
@@ -97,11 +97,11 @@ public sealed class CountersHandler : ITenderHandler
 public static class Routing
 {
     /// <summary>
-    /// Creates an action visitor that routes tenders to the provided handler.
+    /// Creates an action type dispatcher that routes tenders to the provided handler.
     /// </summary>
     /// <param name="handler">The handler receiving type‑specific callbacks.</param>
     /// <returns>A reusable, thread‑safe router.</returns>
-    public static ActionVisitor<Tender> CreateRouter(ITenderHandler handler) => ActionVisitor<Tender>
+    public static ActionTypeDispatcher<Tender> CreateRouter(ITenderHandler handler) => ActionTypeDispatcher<Tender>
         .Create()
         .On<Cash>(handler.Cash)
         .On<Card>(handler.Card)
@@ -137,10 +137,10 @@ public static class Demo
 
         foreach (var t in tenders)
         {
-            router.Visit(t);
+            router.Dispatch(t);
         }
 
-        var lines = tenders.Select(t => renderer.Visit(t)).ToArray();
+        var lines = tenders.Select(t => renderer.Dispatch(t)).ToArray();
         return (lines, counters);
     }
 }

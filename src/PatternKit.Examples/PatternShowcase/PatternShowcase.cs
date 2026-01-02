@@ -3,7 +3,7 @@ using PatternKit.Behavioral.Mediator;
 using PatternKit.Behavioral.Observer;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.Template;
-using PatternKit.Behavioral.Visitor;
+using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Creational.Factory;
 using PatternKit.Structural.Adapter;
 using PatternKit.Structural.Facade;
@@ -79,8 +79,8 @@ public static class PatternShowcase
         // 3) Strategy: compute discounts by customer/category
         var discount = BuildDiscountStrategy();
 
-        // 4) Visitor: compute payment fees by runtime payment type
-        var feeCalc = BuildFeeVisitor();
+        // 4) TypeDispatcher: compute payment fees by runtime payment type
+        var feeCalc = BuildFeeDispatcher();
 
         // 5) Mediator + Observer: orchestration/advisory signals
         var (mediator, events) = BuildMediatorAndEvents();
@@ -149,9 +149,9 @@ public static class PatternShowcase
             .Default(static (in _) => 0m)
             .Build();
 
-    /// <summary>Visitor that calculates fees for different payment types.</summary>
-    private static Visitor<Payment, decimal> BuildFeeVisitor()
-        => Visitor<Payment, decimal>.Create()
+    /// <summary>TypeDispatcher that calculates fees for different payment types.</summary>
+    private static TypeDispatcher<Payment, decimal> BuildFeeDispatcher()
+        => TypeDispatcher<Payment, decimal>.Create()
             .On<Cash>(static _ => 0m)
             .On<Card>(static c => Math.Max(0.30m, Math.Round(c.Amount * 0.029m, 2)))
             .Default(static _ => 0m)
@@ -174,7 +174,7 @@ public static class PatternShowcase
     /// <summary>Template pipeline that computes totals and executes reversible operations via commands.</summary>
     private static Template<OrderContext, string> BuildTemplatePipeline(
         Strategy<OrderContext, decimal> discount,
-        Visitor<Payment, decimal> feeCalc,
+        TypeDispatcher<Payment, decimal> feeCalc,
         Mediator mediator,
         Observer<string> events)
     {
@@ -205,7 +205,7 @@ public static class PatternShowcase
             {
                 ctx.Subtotal = ctx.Order.Items.Sum(i => i.UnitPrice * i.Quantity);
                 ctx.Discount = discount.Execute(in ctx);
-                ctx.Fees = feeCalc.Visit(ctx.Order.Payment);
+                ctx.Fees = feeCalc.Dispatch(ctx.Order.Payment);
 
                 // Run macro (throws propagate)
                 macro.Execute(in ctx);

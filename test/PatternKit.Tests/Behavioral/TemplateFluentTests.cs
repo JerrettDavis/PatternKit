@@ -104,3 +104,419 @@ public sealed class TemplateFluentTests(ITestOutputHelper output) : TinyBddXunit
            .And("max concurrency is 1", r => r.holder[1] == 1)
            .AssertPassed();
 }
+
+#region Additional Template Tests
+
+public sealed class ActionTemplateTests
+{
+    [Fact]
+    public void ActionTemplate_Execute_NoHooks()
+    {
+        var executed = false;
+        var tpl = ActionTemplate<int>.Create(ctx => executed = true).Build();
+
+        tpl.Execute(42);
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public void ActionTemplate_Execute_WithBefore()
+    {
+        var log = new List<string>();
+        var tpl = ActionTemplate<int>.Create(ctx => log.Add("step"))
+            .Before(ctx => log.Add("before"))
+            .Build();
+
+        tpl.Execute(1);
+
+        Assert.Equal(new[] { "before", "step" }, log);
+    }
+
+    [Fact]
+    public void ActionTemplate_Execute_WithAfter()
+    {
+        var log = new List<string>();
+        var tpl = ActionTemplate<int>.Create(ctx => log.Add("step"))
+            .After(ctx => log.Add("after"))
+            .Build();
+
+        tpl.Execute(1);
+
+        Assert.Equal(new[] { "step", "after" }, log);
+    }
+
+    [Fact]
+    public void ActionTemplate_Execute_WithAllHooks()
+    {
+        var log = new List<string>();
+        var tpl = ActionTemplate<int>.Create(ctx => log.Add($"step:{ctx}"))
+            .Before(ctx => log.Add($"before:{ctx}"))
+            .After(ctx => log.Add($"after:{ctx}"))
+            .Build();
+
+        tpl.Execute(42);
+
+        Assert.Equal(new[] { "before:42", "step:42", "after:42" }, log);
+    }
+
+    [Fact]
+    public void ActionTemplate_TryExecute_Success()
+    {
+        var executed = false;
+        var tpl = ActionTemplate<int>.Create(ctx => executed = true).Build();
+
+        var ok = tpl.TryExecute(42, out var error);
+
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public void ActionTemplate_TryExecute_Error()
+    {
+        string? observedError = null;
+        var tpl = ActionTemplate<int>.Create(_ => throw new InvalidOperationException("boom"))
+            .OnError((ctx, err) => observedError = err)
+            .Build();
+
+        var ok = tpl.TryExecute(42, out var error);
+
+        Assert.False(ok);
+        Assert.Equal("boom", error);
+        Assert.Equal("boom", observedError);
+    }
+
+    [Fact]
+    public void ActionTemplate_Synchronized()
+    {
+        var concurrent = 0;
+        var maxConcurrent = 0;
+        var tpl = ActionTemplate<int>.Create(_ =>
+        {
+            var c = Interlocked.Increment(ref concurrent);
+            maxConcurrent = Math.Max(maxConcurrent, c);
+            Thread.Sleep(10);
+            Interlocked.Decrement(ref concurrent);
+        }).Synchronized().Build();
+
+        var tasks = Enumerable.Range(0, 4).Select(_ => Task.Run(() => tpl.Execute(1))).ToArray();
+        Task.WaitAll(tasks);
+
+        Assert.Equal(1, maxConcurrent);
+    }
+
+    [Fact]
+    public void ActionTemplate_MultipleHooks_Compose()
+    {
+        var count = 0;
+        var tpl = ActionTemplate<int>.Create(_ => { })
+            .Before(_ => count++)
+            .Before(_ => count++)
+            .After(_ => count++)
+            .After(_ => count++)
+            .OnError((_, _) => count++)
+            .OnError((_, _) => count++)
+            .Build();
+
+        tpl.Execute(1);
+
+        Assert.Equal(4, count); // 2 before + 2 after
+    }
+}
+
+public sealed class AsyncTemplateTests
+{
+    [Fact]
+    public async Task AsyncTemplate_Execute_Simple()
+    {
+        var tpl = AsyncTemplate<int, string>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            return ctx.ToString();
+        }).Build();
+
+        var result = await tpl.ExecuteAsync(42);
+
+        Assert.Equal("42", result);
+    }
+
+    [Fact]
+    public async Task AsyncTemplate_Execute_WithHooks()
+    {
+        var log = new List<string>();
+        var tpl = AsyncTemplate<int, string>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            log.Add($"step:{ctx}");
+            return ctx.ToString();
+        })
+        .Before((ctx, ct) => { log.Add($"before:{ctx}"); return default; })
+        .After((ctx, res, ct) => { log.Add($"after:{ctx}:{res}"); return default; })
+        .Build();
+
+        var result = await tpl.ExecuteAsync(42);
+
+        Assert.Equal("42", result);
+        Assert.Equal(new[] { "before:42", "step:42", "after:42:42" }, log);
+    }
+
+    [Fact]
+    public async Task AsyncTemplate_TryExecuteAsync_Success()
+    {
+        var tpl = AsyncTemplate<int, string>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            return ctx.ToString();
+        }).Build();
+
+        var (ok, result, error) = await tpl.TryExecuteAsync(42);
+
+        Assert.True(ok);
+        Assert.Equal("42", result);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public async Task AsyncTemplate_TryExecuteAsync_Error()
+    {
+        string? observedError = null;
+        var tpl = AsyncTemplate<int, string>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            throw new InvalidOperationException("boom");
+        })
+        .OnError((ctx, err, ct) => { observedError = err; return default; })
+        .Build();
+
+        var (ok, result, error) = await tpl.TryExecuteAsync(42);
+
+        Assert.False(ok);
+        Assert.Equal("boom", error);
+        Assert.Equal("boom", observedError);
+    }
+
+    [Fact]
+    public async Task AsyncTemplate_Synchronized()
+    {
+        var concurrent = 0;
+        var maxConcurrent = 0;
+        var tpl = AsyncTemplate<int, int>.Create(async (ctx, ct) =>
+        {
+            var c = Interlocked.Increment(ref concurrent);
+            maxConcurrent = Math.Max(maxConcurrent, c);
+            await Task.Delay(10, ct);
+            Interlocked.Decrement(ref concurrent);
+            return ctx * 2;
+        }).Synchronized().Build();
+
+        var tasks = Enumerable.Range(0, 4).Select(_ => tpl.ExecuteAsync(1)).ToArray();
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(1, maxConcurrent);
+    }
+}
+
+public sealed class AsyncActionTemplateTests
+{
+    [Fact]
+    public async Task AsyncActionTemplate_Execute_Simple()
+    {
+        var executed = false;
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            executed = true;
+        }).Build();
+
+        await tpl.ExecuteAsync(42);
+
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_Execute_WithHooks()
+    {
+        var log = new List<string>();
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            log.Add($"step:{ctx}");
+        })
+        .Before((ctx, ct) => { log.Add($"before:{ctx}"); return default; })
+        .After((ctx, ct) => { log.Add($"after:{ctx}"); return default; })
+        .Build();
+
+        await tpl.ExecuteAsync(42);
+
+        Assert.Equal(new[] { "before:42", "step:42", "after:42" }, log);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_TryExecuteAsync_Success()
+    {
+        var executed = false;
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            executed = true;
+        }).Build();
+
+        var (ok, error) = await tpl.TryExecuteAsync(42);
+
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_TryExecuteAsync_Error()
+    {
+        string? observedError = null;
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) =>
+        {
+            await Task.Yield();
+            throw new InvalidOperationException("boom");
+        })
+        .OnError((ctx, err, ct) => { observedError = err; return default; })
+        .Build();
+
+        var (ok, error) = await tpl.TryExecuteAsync(42);
+
+        Assert.False(ok);
+        Assert.Equal("boom", error);
+        Assert.Equal("boom", observedError);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_Synchronized()
+    {
+        var concurrent = 0;
+        var maxConcurrent = 0;
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) =>
+        {
+            var c = Interlocked.Increment(ref concurrent);
+            maxConcurrent = Math.Max(maxConcurrent, c);
+            await Task.Delay(10, ct);
+            Interlocked.Decrement(ref concurrent);
+        }).Synchronized().Build();
+
+        var tasks = Enumerable.Range(0, 4).Select(_ => tpl.ExecuteAsync(1)).ToArray();
+        await Task.WhenAll(tasks);
+
+        Assert.Equal(1, maxConcurrent);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_MultipleHooks_Compose()
+    {
+        var count = 0;
+        var tpl = AsyncActionTemplate<int>.Create(async (ctx, ct) => await Task.Yield())
+            .Before((_, _) => { Interlocked.Increment(ref count); return default; })
+            .Before((_, _) => { Interlocked.Increment(ref count); return default; })
+            .After((_, _) => { Interlocked.Increment(ref count); return default; })
+            .After((_, _) => { Interlocked.Increment(ref count); return default; })
+            .Build();
+
+        await tpl.ExecuteAsync(1);
+
+        Assert.Equal(4, count);
+    }
+
+    [Fact]
+    public async Task AsyncActionTemplate_Cancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        var tokenReceived = false;
+        var tpl = AsyncActionTemplate<int>.Create((ctx, ct) =>
+        {
+            tokenReceived = ct == cts.Token;
+            return default;
+        }).Build();
+
+        await tpl.ExecuteAsync(1, cts.Token);
+
+        Assert.True(tokenReceived);
+    }
+}
+
+public sealed class TemplateBuilderTests
+{
+    [Fact]
+    public void Template_Create_NullStep_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Template<int, int>.Create(null!));
+    }
+
+    [Fact]
+    public void Template_TryExecute_Synchronized_Success()
+    {
+        var tpl = Template<int, int>.Create(x => x * 2)
+            .Synchronized()
+            .Build();
+
+        var ok = tpl.TryExecute(21, out var result, out var error);
+
+        Assert.True(ok);
+        Assert.Equal(42, result);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void Template_TryExecute_Synchronized_Error()
+    {
+        var errorObserved = false;
+        var tpl = Template<int, int>.Create(_ => throw new Exception("oops"))
+            .Synchronized()
+            .OnError((_, _) => errorObserved = true)
+            .Build();
+
+        var ok = tpl.TryExecute(1, out var result, out var error);
+
+        Assert.False(ok);
+        Assert.NotNull(error);
+        Assert.True(errorObserved);
+    }
+
+    [Fact]
+    public void ActionTemplate_Create_NullStep_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            ActionTemplate<int>.Create(null!));
+    }
+
+    [Fact]
+    public void ActionTemplate_TryExecute_Synchronized_Success()
+    {
+        var executed = false;
+        var tpl = ActionTemplate<int>.Create(_ => executed = true)
+            .Synchronized()
+            .Build();
+
+        var ok = tpl.TryExecute(1, out var error);
+
+        Assert.True(ok);
+        Assert.Null(error);
+        Assert.True(executed);
+    }
+
+    [Fact]
+    public void ActionTemplate_TryExecute_Synchronized_Error()
+    {
+        var errorObserved = false;
+        var tpl = ActionTemplate<int>.Create(_ => throw new Exception("oops"))
+            .Synchronized()
+            .OnError((_, _) => errorObserved = true)
+            .Build();
+
+        var ok = tpl.TryExecute(1, out var error);
+
+        Assert.False(ok);
+        Assert.NotNull(error);
+        Assert.True(errorObserved);
+    }
+}
+
+#endregion

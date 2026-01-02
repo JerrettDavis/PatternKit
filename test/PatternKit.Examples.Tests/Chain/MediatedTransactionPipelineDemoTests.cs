@@ -5,6 +5,265 @@ using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.Chain;
 
+public sealed class CashTenderStrategyTests
+{
+    [Fact]
+    public void Kind_Is_Cash()
+    {
+        var devices = new DeviceBus();
+        var strategy = new CashTenderStrategy(devices);
+
+        Assert.Equal(PaymentKind.Cash, strategy.Kind);
+    }
+
+    [Fact]
+    public void TryApply_Applies_Payment()
+    {
+        var devices = new DeviceBus();
+        var strategy = new CashTenderStrategy(devices);
+        var ctx = CreateContext(10m);
+        var tender = new Tender(PaymentKind.Cash, CashGiven: 20m);
+
+        var result = strategy.TryApply(ctx, tender);
+
+        Assert.Null(result); // success
+        Assert.Equal(10m, ctx.CashChange);
+    }
+
+    [Fact]
+    public void TryApply_Exact_Payment_No_Change()
+    {
+        var devices = new DeviceBus();
+        var strategy = new CashTenderStrategy(devices);
+        var ctx = CreateContext(10m);
+        var tender = new Tender(PaymentKind.Cash, CashGiven: 10m);
+
+        var result = strategy.TryApply(ctx, tender);
+
+        Assert.Null(result); // success
+        Assert.Null(ctx.CashChange);
+    }
+
+    [Fact]
+    public void TryApply_Returns_Null_When_NoDue()
+    {
+        var devices = new DeviceBus();
+        var strategy = new CashTenderStrategy(devices);
+        var ctx = CreateContext(10m);
+        ctx.ApplyPayment(10m, "already paid"); // Fully paid
+        var tender = new Tender(PaymentKind.Cash, CashGiven: 10m);
+
+        var result = strategy.TryApply(ctx, tender);
+
+        Assert.Null(result);
+    }
+
+    private static TransactionContext CreateContext(decimal price)
+    {
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(LoyaltyId: null, AgeYears: 25),
+            Items = [new LineItem("TEST", price, 1)]
+        };
+        ctx.RecomputeSubtotal();
+        return ctx;
+    }
+}
+
+public sealed class CardTenderStrategyTests
+{
+    [Fact]
+    public void Kind_Is_Card()
+    {
+        var processors = new CardProcessors(new Dictionary<CardVendor, ICardProcessor>
+        {
+            [CardVendor.Unknown] = new GenericProcessor("test")
+        });
+        var strategy = new CardTenderStrategy(processors);
+
+        Assert.Equal(PaymentKind.Card, strategy.Kind);
+    }
+
+    [Fact]
+    public void TryApply_Authorizes_And_Captures()
+    {
+        var processors = new CardProcessors(new Dictionary<CardVendor, ICardProcessor>
+        {
+            [CardVendor.Unknown] = new GenericProcessor("test"),
+            [CardVendor.Visa] = new GenericProcessor("visa")
+        });
+        var strategy = new CardTenderStrategy(processors);
+        var ctx = CreateContext(50m);
+        var tender = new Tender(PaymentKind.Card, Vendor: CardVendor.Visa);
+
+        var result = strategy.TryApply(ctx, tender);
+
+        Assert.Null(result); // success
+        Assert.Contains(ctx.Log, l => l.Contains("captured"));
+    }
+
+    [Fact]
+    public void TryApply_Returns_Null_When_NoDue()
+    {
+        var processors = new CardProcessors(new Dictionary<CardVendor, ICardProcessor>
+        {
+            [CardVendor.Unknown] = new GenericProcessor("test")
+        });
+        var strategy = new CardTenderStrategy(processors);
+        var ctx = CreateContext(10m);
+        ctx.ApplyPayment(10m, "already paid"); // Fully paid
+        var tender = new Tender(PaymentKind.Card, Vendor: CardVendor.Visa);
+
+        var result = strategy.TryApply(ctx, tender);
+
+        Assert.Null(result);
+    }
+
+    private static TransactionContext CreateContext(decimal price)
+    {
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(LoyaltyId: null, AgeYears: 25),
+            Items = [new LineItem("TEST", price, 1)]
+        };
+        ctx.RecomputeSubtotal();
+        return ctx;
+    }
+}
+
+public sealed class NoopCharityTrackerTests
+{
+    [Fact]
+    public void Track_Does_Not_Throw()
+    {
+        var tracker = new NoopCharityTracker();
+
+        tracker.Track("TestCharity", Guid.NewGuid(), 0.50m, 10.50m);
+    }
+}
+
+public sealed class CharityRoundUpRuleTests
+{
+    [Fact]
+    public void Reason_Is_Set()
+    {
+        var rule = new CharityRoundUpRule(new NoopCharityTracker());
+
+        Assert.Equal("charity round-up", rule.Reason);
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_True_When_CharitySku_Present()
+    {
+        var rule = new CharityRoundUpRule(new NoopCharityTracker());
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("CHARITY:UNICEF", 1m, 1)]
+        };
+
+        Assert.True(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_False_When_No_CharitySku()
+    {
+        var rule = new CharityRoundUpRule(new NoopCharityTracker());
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("REGULAR", 10m, 1)]
+        };
+
+        Assert.False(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ComputeDelta_Rounds_Up_To_Dollar()
+    {
+        var rule = new CharityRoundUpRule(new NoopCharityTracker());
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("CHARITY:TEST", 10.25m, 1)]
+        };
+        ctx.RecomputeSubtotal();
+
+        var delta = rule.ComputeDelta(ctx);
+
+        Assert.Equal(0.75m, delta); // 10.25 -> 11.00
+    }
+}
+
+public sealed class NickelCashOnlyRuleTests
+{
+    [Fact]
+    public void Reason_Is_Set()
+    {
+        var rule = new NickelCashOnlyRule();
+
+        Assert.Equal("nickel (cash-only)", rule.Reason);
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_True_For_Cash_With_NickelSku()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("ROUND:NICKEL", 10m, 1)],
+            Tender = new Tender(PaymentKind.Cash)
+        };
+
+        Assert.True(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_False_For_Card()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("ROUND:NICKEL", 10m, 1)],
+            Tender = new Tender(PaymentKind.Card)
+        };
+
+        Assert.False(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ShouldApply_Returns_False_Without_NickelSku()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("TEST", 10m, 1)],
+            Tender = new Tender(PaymentKind.Cash)
+        };
+
+        Assert.False(rule.ShouldApply(ctx));
+    }
+
+    [Fact]
+    public void ComputeDelta_Rounds_To_Nearest_Nickel()
+    {
+        var rule = new NickelCashOnlyRule();
+        var ctx = new TransactionContext
+        {
+            Customer = new Customer(null, 25),
+            Items = [new LineItem("ROUND:NICKEL", 10.03m, 1)]
+        };
+        ctx.RecomputeSubtotal();
+
+        var delta = rule.ComputeDelta(ctx);
+
+        Assert.Equal(0.02m, delta); // 10.03 -> 10.05
+    }
+}
+
 
 [Collection("Culture")]
 [Feature("Mediated Transaction pipeline – cash + loyalty + cigarettes")]

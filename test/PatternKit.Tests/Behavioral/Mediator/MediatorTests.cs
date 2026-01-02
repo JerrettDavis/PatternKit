@@ -106,3 +106,412 @@ public sealed class MediatorTests(ITestOutputHelper output) : TinyBddXunitBase(o
         .AssertPassed();
 #endif
 }
+
+#region Additional Mediator Tests
+
+public sealed class MediatorBuilderTests
+{
+    private sealed record Ping(int Value);
+    private sealed record Pong(string Value);
+    private sealed record Alert(string Message);
+
+    [Fact]
+    public async Task Send_NoHandler_Throws()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create().Build();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => m.Send<Ping, Pong>(new Ping(1)).AsTask());
+    }
+
+    [Fact]
+    public async Task Send_NullResult_ReturnsDefault()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Command<Ping, Pong>((in p, _) => new ValueTask<Pong>((Pong)null!))
+            .Build();
+
+        var result = await m.Send<Ping, Pong>(new Ping(1));
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task Publish_NoHandlers_NoOp()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create().Build();
+
+        // Should not throw
+        await m.Publish(new Alert("test"));
+    }
+
+    [Fact]
+    public async Task Publish_SingleHandler_Executes()
+    {
+        var received = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Notification<Alert>((in a, _) => { received.Add(a.Message); return default; })
+            .Build();
+
+        await m.Publish(new Alert("hello"));
+
+        Assert.Single(received);
+        Assert.Equal("hello", received[0]);
+    }
+
+    [Fact]
+    public async Task Publish_MultipleHandlers_AllExecute()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Notification<Alert>((in a, _) => { log.Add($"h1:{a.Message}"); return default; })
+            .Notification<Alert>((in a, _) => { log.Add($"h2:{a.Message}"); return default; })
+            .Notification<Alert>((in a, _) => { log.Add($"h3:{a.Message}"); return default; })
+            .Build();
+
+        await m.Publish(new Alert("test"));
+
+        Assert.Equal(3, log.Count);
+        Assert.Equal("h1:test", log[0]);
+        Assert.Equal("h2:test", log[1]);
+        Assert.Equal("h3:test", log[2]);
+    }
+
+    [Fact]
+    public async Task Pre_Behavior_Runs_Before_Handler()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Pre((in _, _) => { log.Add("pre"); return default; })
+            .Command<Ping, Pong>((in p, _) => { log.Add("handler"); return new ValueTask<Pong>(new Pong("done")); })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        Assert.Equal(new[] { "pre", "handler" }, log);
+    }
+
+    [Fact]
+    public async Task Post_Behavior_Runs_After_Handler()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Post((in _, _, _) => { log.Add("post"); return default; })
+            .Command<Ping, Pong>((in p, _) => { log.Add("handler"); return new ValueTask<Pong>(new Pong("done")); })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        Assert.Equal(new[] { "handler", "post" }, log);
+    }
+
+    [Fact]
+    public async Task Multiple_Pre_And_Post_Behaviors()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Pre((in _, _) => { log.Add("pre1"); return default; })
+            .Pre((in _, _) => { log.Add("pre2"); return default; })
+            .Post((in _, _, _) => { log.Add("post1"); return default; })
+            .Post((in _, _, _) => { log.Add("post2"); return default; })
+            .Command<Ping, Pong>((in p, _) => { log.Add("handler"); return new ValueTask<Pong>(new Pong("done")); })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        Assert.Equal(new[] { "pre1", "pre2", "handler", "post1", "post2" }, log);
+    }
+
+    [Fact]
+    public async Task Whole_Behavior_Wraps_Handler()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Whole((in req, ct, next) =>
+            {
+                log.Add("whole:before");
+                var result = next(in req, ct);
+                log.Add("whole:after");
+                return result;
+            })
+            .Command<Ping, Pong>((in p, _) => { log.Add("handler"); return new ValueTask<Pong>(new Pong("done")); })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        Assert.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
+    }
+
+    [Fact]
+    public async Task Multiple_Whole_Behaviors_Wrap_InOrder()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Whole((in req, ct, next) =>
+            {
+                log.Add("outer:before");
+                var result = next(in req, ct);
+                log.Add("outer:after");
+                return result;
+            })
+            .Whole((in req, ct, next) =>
+            {
+                log.Add("inner:before");
+                var result = next(in req, ct);
+                log.Add("inner:after");
+                return result;
+            })
+            .Command<Ping, Pong>((in p, _) => { log.Add("handler"); return new ValueTask<Pong>(new Pong("done")); })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        // Last registered is innermost
+        Assert.Equal(new[] { "outer:before", "inner:before", "handler", "inner:after", "outer:after" }, log);
+    }
+
+    [Fact]
+    public async Task Sync_Command_Handler()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Command<Ping, Pong>(static (in p) => new Pong($"sync:{p.Value}"))
+            .Build();
+
+        var result = await m.Send<Ping, Pong>(new Ping(42));
+
+        Assert.NotNull(result);
+        Assert.Equal("sync:42", result!.Value);
+    }
+
+    [Fact]
+    public async Task Async_Whole_Behavior()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Whole((in req, ct, next) =>
+            {
+                log.Add("whole:before");
+                return WholeAsync(req, ct, next, log);
+                static async ValueTask<object?> WholeAsync(object? r, CancellationToken c, PatternKit.Behavioral.Mediator.Mediator.MediatorNext n, List<string> l)
+                {
+                    await Task.Yield();
+                    var result = await n(in r, c);
+                    l.Add("whole:after");
+                    return result;
+                }
+            })
+            .Command<Ping, Pong>((in p, _) =>
+            {
+                var val = p.Value;
+                return HandlerAsync(val, log);
+                static async ValueTask<Pong> HandlerAsync(int v, List<string> l)
+                {
+                    await Task.Yield();
+                    l.Add("handler");
+                    return new Pong("done");
+                }
+            })
+            .Build();
+
+        await m.Send<Ping, Pong>(new Ping(1));
+
+        Assert.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
+    }
+
+    [Fact]
+    public async Task Publish_With_Behaviors()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Pre((in _, _) => { log.Add("pre"); return default; })
+            .Post((in _, _, _) => { log.Add("post"); return default; })
+            .Notification<Alert>((in a, _) => { log.Add($"handler:{a.Message}"); return default; })
+            .Build();
+
+        await m.Publish(new Alert("test"));
+
+        Assert.Equal(new[] { "pre", "handler:test", "post" }, log);
+    }
+
+#if NET8_0_OR_GREATER
+    [Fact]
+    public async Task Stream_NoHandler_Throws()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create().Build();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        {
+            await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
+        });
+    }
+
+    [Fact]
+    public async Task Stream_Yields_All_Items()
+    {
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Stream<Ping, int>(static (in p, _) => RangeAsync(p.Value, 5))
+            .Build();
+
+        var items = new List<int>();
+        await foreach (var x in m.Stream<Ping, int>(new Ping(10)))
+            items.Add(x);
+
+        Assert.Equal(new[] { 10, 11, 12, 13, 14 }, items);
+    }
+
+    private static async IAsyncEnumerable<int> RangeAsync(int start, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            await Task.Yield();
+            yield return start + i;
+        }
+    }
+
+    [Fact]
+    public async Task Stream_PrePost_Behaviors()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Pre((in _, _) => { log.Add("pre"); return default; })
+            .Post((in _, _, _) => { log.Add("post"); return default; })
+            .Stream<Ping, int>(static (in p, _) => RangeAsync(p.Value, 2))
+            .Build();
+
+        await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
+
+        Assert.Contains("pre", log);
+        Assert.Contains("post", log);
+    }
+
+    [Fact]
+    public async Task Stream_With_Whole_Behavior()
+    {
+        var log = new List<string>();
+        var m = PatternKit.Behavioral.Mediator.Mediator.Create()
+            .Whole((in req, ct, next) =>
+            {
+                log.Add("whole");
+                return next(in req, ct);
+            })
+            .Stream<Ping, int>(static (in p, _) => RangeAsync(p.Value, 3))
+            .Build();
+
+        await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
+
+        Assert.Contains("whole", log);
+    }
+#endif
+}
+
+#endregion
+
+#region TaskExtensions and MediatorHelpers Tests
+
+public sealed class TaskExtensionsTests
+{
+    [Fact]
+    public async Task AsValueTask_CompletedTask_ReturnsValueTask()
+    {
+        var task = Task.FromResult(42);
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        Assert.True(valueTask.IsCompletedSuccessfully);
+        Assert.Equal(42, await valueTask);
+    }
+
+    [Fact]
+    public async Task AsValueTask_PendingTask_ReturnsValueTask()
+    {
+        var task = Task.Run(async () =>
+        {
+            await Task.Delay(1);
+            return "result";
+        });
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        Assert.Equal("result", await valueTask);
+    }
+
+    [Fact]
+    public async Task AsValueTask_FaultedTask_PropagatesException()
+    {
+        var task = Task.FromException<int>(new InvalidOperationException("test error"));
+
+        var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => valueTask.AsTask());
+        Assert.Equal("test error", ex.Message);
+    }
+}
+
+public sealed class MediatorHelpersTests
+{
+    [Fact]
+    public async Task Box_CompletedSuccessfully_ReturnsBoxedValue()
+    {
+        var valueTask = new ValueTask<int>(42);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        Assert.True(boxed.IsCompletedSuccessfully);
+        var result = await boxed;
+        Assert.Equal(42, result);
+    }
+
+    [Fact]
+    public async Task Box_PendingTask_AwaitsAndReturns()
+    {
+        var source = new TaskCompletionSource<string>();
+        var valueTask = new ValueTask<string>(source.Task);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        Assert.False(boxed.IsCompleted);
+        source.SetResult("async result");
+
+        var result = await boxed;
+        Assert.Equal("async result", result);
+    }
+
+    [Fact]
+    public async Task Box_NullResult_ReturnsNull()
+    {
+        var valueTask = new ValueTask<string?>((string?)null);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task Box_ReferenceType_BoxesCorrectly()
+    {
+        var obj = new object();
+        var valueTask = new ValueTask<object>(obj);
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Same(obj, result);
+    }
+
+    [Fact]
+    public async Task Box_AsyncPath_BoxesCorrectly()
+    {
+        var valueTask = new ValueTask<int>(Task.Run(async () =>
+        {
+            await Task.Delay(1);
+            return 123;
+        }));
+
+        var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
+
+        var result = await boxed;
+        Assert.Equal(123, result);
+    }
+}
+
+#endregion

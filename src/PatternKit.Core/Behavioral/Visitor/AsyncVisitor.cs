@@ -4,11 +4,16 @@ using PatternKit.Creational.Builder;
 namespace PatternKit.Behavioral.Visitor;
 
 /// <summary>
-/// Visitor (fluent, typed dispatch, async result).
+/// Type-based dispatcher (fluent, typed dispatch, async result).
 /// Maps runtime types deriving from <typeparamref name="TBase"/> to asynchronous handlers that
 /// produce a <typeparamref name="TResult"/> and executes the first matching handler (first-match-wins).
 /// </summary>
 /// <remarks>
+/// <para>
+/// <b>DEPRECATION NOTICE:</b> This class has been renamed to <see cref="TypeDispatcher.AsyncTypeDispatcher{TBase, TResult}"/>
+/// to better reflect its actual behavior. This class uses runtime type checking (Strategy-like pattern),
+/// NOT the Gang of Four Visitor pattern with double dispatch.
+/// </para>
 /// <para>
 /// Register handlers with <see cref="Builder.On{T}(System.Func{T,System.Threading.CancellationToken,System.Threading.Tasks.ValueTask{TResult}})"/>.
 /// Registration order matters; add more specific types before base types. If no handler matches, an optional
@@ -19,6 +24,7 @@ namespace PatternKit.Behavioral.Visitor;
 /// </remarks>
 /// <typeparam name="TBase">The base type for visitable elements.</typeparam>
 /// <typeparam name="TResult">The result type of visit operations.</typeparam>
+[Obsolete("Use AsyncTypeDispatcher<TBase, TResult> instead. This class has been renamed to better reflect its behavior (type-based dispatch, not GoF Visitor pattern).")]
 public sealed class AsyncVisitor<TBase, TResult>
 {
     /// <summary>Asynchronous predicate to determine if a handler applies.</summary>

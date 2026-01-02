@@ -5,6 +5,10 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <InternalsVisibleTo Include="PatternKit.Tests" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Structural\" />
     </ItemGroup>
 

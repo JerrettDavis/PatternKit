@@ -40,7 +40,7 @@ jobs:
         run: dotnet restore PatternKit.slnx --use-lock-file
 
       - name: Build
-        run: dotnet build PatternKit.slnx --configuration Release --no-restore
+        run: dotnet build PatternKit.slnx --configuration Release 
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3

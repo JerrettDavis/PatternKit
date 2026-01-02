@@ -213,3 +213,235 @@ public sealed class AsyncObserverTests(ITestOutputHelper output) : TinyBddXunitB
             .AssertPassed();
     }
 }
+
+#region Additional AsyncObserver Tests
+
+public sealed class AsyncObserverEdgeCaseTests
+{
+    private readonly record struct Evt(int Id);
+
+    [Fact]
+    public void SubscriberCount_ReflectsSubscriptions()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+
+        Assert.Equal(0, observer.SubscriberCount);
+
+        var sub1 = observer.Subscribe(_ => default);
+        Assert.Equal(1, observer.SubscriberCount);
+
+        var sub2 = observer.Subscribe(_ => default);
+        Assert.Equal(2, observer.SubscriberCount);
+
+        sub1.Dispose();
+        Assert.Equal(1, observer.SubscriberCount);
+
+        sub2.Dispose();
+        Assert.Equal(0, observer.SubscriberCount);
+    }
+
+    [Fact]
+    public void DoubleDispose_IsHarmless()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var sub = observer.Subscribe(_ => default);
+
+        Assert.Equal(1, observer.SubscriberCount);
+
+        sub.Dispose();
+        Assert.Equal(0, observer.SubscriberCount);
+
+        // Second dispose should not throw or cause issues
+        sub.Dispose();
+        Assert.Equal(0, observer.SubscriberCount);
+    }
+
+    [Fact]
+    public async Task Cancellation_StopsPublish()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var log = new List<int>();
+
+        observer.Subscribe(async e =>
+        {
+            await Task.Delay(10);
+            log.Add(e.Id);
+        });
+
+        var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => observer.PublishAsync(new Evt(1), cts.Token).AsTask());
+
+        Assert.Empty(log);
+    }
+
+    [Fact]
+    public async Task Cancellation_DuringHandlerExecution()
+    {
+        // Default policy is ThrowAggregate, so handler exceptions become AggregateException
+        var observer = AsyncObserver<Evt>.Create().ThrowFirstError().Build();
+        var log = new List<int>();
+        var cts = new CancellationTokenSource();
+
+        observer.Subscribe(async e =>
+        {
+            log.Add(e.Id);
+            await Task.Yield();
+        });
+
+        observer.Subscribe(e =>
+        {
+            cts.Cancel(); // Cancel during execution
+            cts.Token.ThrowIfCancellationRequested();
+            log.Add(e.Id + 100);
+            return default;
+        });
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => observer.PublishAsync(new Evt(1), cts.Token).AsTask());
+
+        Assert.Single(log);
+        Assert.Equal(1, log[0]);
+    }
+
+    [Fact]
+    public async Task SyncErrorSink_Adapter_Works()
+    {
+        var errors = new List<Exception>();
+        var observer = AsyncObserver<Evt>.Create()
+            .OnError((Exception ex, in Evt e) => errors.Add(ex))
+            .SwallowErrors()
+            .Build();
+
+        var log = new List<int>();
+        observer.Subscribe(_ => throw new InvalidOperationException("test"));
+        observer.Subscribe(e => { log.Add(e.Id); return default; });
+
+        await observer.PublishAsync(new Evt(42));
+
+        Assert.Single(errors);
+        Assert.IsType<InvalidOperationException>(errors[0]);
+        Assert.Single(log);
+    }
+
+    [Fact]
+    public async Task ErrorSink_Exception_IsSwallowed()
+    {
+        var observer = AsyncObserver<Evt>.Create()
+            .OnError((ex, e) => throw new Exception("sink error"))
+            .SwallowErrors()
+            .Build();
+
+        var log = new List<int>();
+        observer.Subscribe(_ => throw new InvalidOperationException("handler error"));
+        observer.Subscribe(e => { log.Add(e.Id); return default; });
+
+        // Should not throw - sink errors are swallowed
+        await observer.PublishAsync(new Evt(1));
+
+        Assert.Single(log);
+    }
+
+    [Fact]
+    public async Task PredicateFilter_FalseSkipsHandler()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var log = new List<int>();
+
+        observer.Subscribe(
+            e => new ValueTask<bool>(e.Id > 10),
+            e => { log.Add(e.Id); return default; });
+
+        await observer.PublishAsync(new Evt(5));
+        Assert.Empty(log);
+
+        await observer.PublishAsync(new Evt(15));
+        Assert.Single(log);
+        Assert.Equal(15, log[0]);
+    }
+
+    [Fact]
+    public async Task NullPredicate_AlwaysRuns()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var log = new List<int>();
+
+        observer.Subscribe(null, e => { log.Add(e.Id); return default; });
+
+        await observer.PublishAsync(new Evt(1));
+        await observer.PublishAsync(new Evt(2));
+
+        Assert.Equal(2, log.Count);
+    }
+
+    [Fact]
+    public async Task ConcurrentSubscribeUnsubscribe()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var subscriptions = new List<IDisposable>();
+
+        // Subscribe many handlers concurrently
+        var subscribeTasks = Enumerable.Range(0, 50)
+            .Select(_ => Task.Run(() =>
+            {
+                var sub = observer.Subscribe(_ => default);
+                lock (subscriptions) subscriptions.Add(sub);
+            }))
+            .ToArray();
+
+        await Task.WhenAll(subscribeTasks);
+
+        Assert.Equal(50, observer.SubscriberCount);
+
+        // Unsubscribe concurrently
+        var unsubscribeTasks = subscriptions
+            .Select(s => Task.Run(() => s.Dispose()))
+            .ToArray();
+
+        await Task.WhenAll(unsubscribeTasks);
+
+        Assert.Equal(0, observer.SubscriberCount);
+    }
+
+    [Fact]
+    public async Task ThrowAggregate_NoErrors_NoException()
+    {
+        var observer = AsyncObserver<Evt>.Create()
+            .ThrowAggregate()
+            .Build();
+
+        var log = new List<int>();
+        observer.Subscribe(e => { log.Add(e.Id); return default; });
+
+        await observer.PublishAsync(new Evt(1));
+
+        Assert.Single(log);
+    }
+
+    [Fact]
+    public async Task EmptyObserver_PublishDoesNothing()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+
+        await observer.PublishAsync(new Evt(1));
+        // No exception, nothing happens
+    }
+
+    [Fact]
+    public async Task Subscribe_Handler_Only_Overload()
+    {
+        var observer = AsyncObserver<Evt>.Create().Build();
+        var log = new List<int>();
+
+        observer.Subscribe(e => { log.Add(e.Id); return default; });
+
+        await observer.PublishAsync(new Evt(42));
+
+        Assert.Single(log);
+        Assert.Equal(42, log[0]);
+    }
+}
+
+#endregion

@@ -139,3 +139,260 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
             .Then("throws ArgumentNullException", ex => ex is ArgumentNullException)
             .AssertPassed();
 }
+
+#region Additional Factory Tests
+
+public sealed class FactoryBuilderTests
+{
+    [Fact]
+    public void TryCreate_ValidKey_ReturnsTrue()
+    {
+        var factory = Factory<string, int>.Create()
+            .Map("one", () => 1)
+            .Map("two", () => 2)
+            .Build();
+
+        var success = factory.TryCreate("one", out var value);
+
+        Assert.True(success);
+        Assert.Equal(1, value);
+    }
+
+    [Fact]
+    public void TryCreate_MissingKey_WithDefault_ReturnsTrue()
+    {
+        var factory = Factory<string, int>.Create()
+            .Map("one", () => 1)
+            .Default(() => -1)
+            .Build();
+
+        var success = factory.TryCreate("unknown", out var value);
+
+        Assert.True(success);
+        Assert.Equal(-1, value);
+    }
+
+    [Fact]
+    public void TryCreate_MissingKey_NoDefault_ReturnsFalse()
+    {
+        var factory = Factory<string, int>.Create()
+            .Map("one", () => 1)
+            .Build();
+
+        var success = factory.TryCreate("unknown", out var value);
+
+        Assert.False(success);
+        Assert.Equal(default, value);
+    }
+
+    [Fact]
+    public void Create_MultipleKeys_AllWork()
+    {
+        var factory = Factory<int, string>.Create()
+            .Map(1, () => "one")
+            .Map(2, () => "two")
+            .Map(3, () => "three")
+            .Build();
+
+        Assert.Equal("one", factory.Create(1));
+        Assert.Equal("two", factory.Create(2));
+        Assert.Equal("three", factory.Create(3));
+    }
+
+    [Fact]
+    public void Create_EnumKey_Works()
+    {
+        var factory = Factory<DayOfWeek, string>.Create()
+            .Map(DayOfWeek.Monday, () => "Start of week")
+            .Map(DayOfWeek.Friday, () => "End of week")
+            .Default(() => "Mid week")
+            .Build();
+
+        Assert.Equal("Start of week", factory.Create(DayOfWeek.Monday));
+        Assert.Equal("End of week", factory.Create(DayOfWeek.Friday));
+        Assert.Equal("Mid week", factory.Create(DayOfWeek.Wednesday));
+    }
+
+    [Fact]
+    public void Default_CalledMultipleTimes_LastWins()
+    {
+        var factory = Factory<string, string>.Create()
+            .Default(() => "first")
+            .Default(() => "second")
+            .Default(() => "third")
+            .Build();
+
+        Assert.Equal("third", factory.Create("unknown"));
+    }
+
+    [Fact]
+    public void Factory_WithInput_ValidKey_UsesMapping()
+    {
+        var factory = Factory<string, int, string>.Create()
+            .Map("repeat", (in int n) => new string('x', n))
+            .Build();
+
+        var result = factory.Create("repeat", 5);
+
+        Assert.Equal("xxxxx", result);
+    }
+
+    [Fact]
+    public void Factory_WithInput_TryCreate_ValidKey()
+    {
+        var factory = Factory<string, int, int>.Create()
+            .Map("double", (in int x) => x * 2)
+            .Map("triple", (in int x) => x * 3)
+            .Build();
+
+        var success = factory.TryCreate("triple", 10, out var value);
+
+        Assert.True(success);
+        Assert.Equal(30, value);
+    }
+
+    [Fact]
+    public void Factory_WithInput_TryCreate_MissingKey_WithDefault()
+    {
+        var factory = Factory<string, int, int>.Create()
+            .Map("double", (in int x) => x * 2)
+            .Default((in int x) => x)
+            .Build();
+
+        var success = factory.TryCreate("noop", 42, out var value);
+
+        Assert.True(success);
+        Assert.Equal(42, value);
+    }
+
+    [Fact]
+    public void Factory_WithInput_Comparer_Works()
+    {
+        var factory = Factory<string, int, int>.Create(StringComparer.OrdinalIgnoreCase)
+            .Map("multiply", (in int x) => x * 10)
+            .Build();
+
+        var result = factory.Create("MULTIPLY", 5);
+
+        Assert.Equal(50, result);
+    }
+
+    [Fact]
+    public void Factory_WithInput_MultipleBuilds_Independent()
+    {
+        var builder = Factory<string, int, int>.Create()
+            .Map("add", (in int x) => x + 1);
+
+        var f1 = builder.Build();
+        builder.Map("add", (in int x) => x + 10);
+        var f2 = builder.Build();
+
+        Assert.Equal(6, f1.Create("add", 5));
+        Assert.Equal(15, f2.Create("add", 5));
+    }
+
+    [Fact]
+    public void Factory_CreatorReturnsNull_Works()
+    {
+        var factory = Factory<string, string?>.Create()
+            .Map("null", () => null)
+            .Build();
+
+        var result = factory.Create("null");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void Factory_WithComplexOutput_Works()
+    {
+        var factory = Factory<string, TestProduct>.Create()
+            .Map("widget", () => new TestProduct("Widget", 10.0m))
+            .Map("gadget", () => new TestProduct("Gadget", 25.0m))
+            .Build();
+
+        var widget = factory.Create("widget");
+        var gadget = factory.Create("gadget");
+
+        Assert.Equal("Widget", widget.Name);
+        Assert.Equal(10.0m, widget.Price);
+        Assert.Equal("Gadget", gadget.Name);
+        Assert.Equal(25.0m, gadget.Price);
+    }
+
+    private record TestProduct(string Name, decimal Price);
+
+    [Fact]
+    public void Factory_EmptyFactory_Create_Throws()
+    {
+        var factory = Factory<string, string>.Create().Build();
+
+        Assert.Throws<InvalidOperationException>(() => factory.Create("any"));
+    }
+
+    [Fact]
+    public void Factory_EmptyFactory_TryCreate_ReturnsFalse()
+    {
+        var factory = Factory<string, string>.Create().Build();
+
+        var success = factory.TryCreate("any", out var value);
+
+        Assert.False(success);
+        Assert.Null(value);
+    }
+
+    [Fact]
+    public void Factory_WithInput_EmptyFactory_Create_Throws()
+    {
+        var factory = Factory<string, int, int>.Create().Build();
+
+        Assert.Throws<InvalidOperationException>(() => factory.Create("any", 1));
+    }
+
+    [Fact]
+    public void Factory_WithInput_EmptyFactory_TryCreate_ReturnsFalse()
+    {
+        var factory = Factory<string, int, int>.Create().Build();
+
+        var success = factory.TryCreate("any", 1, out var value);
+
+        Assert.False(success);
+        Assert.Equal(default, value);
+    }
+
+    [Fact]
+    public void Factory_IntKey_Works()
+    {
+        var factory = Factory<int, string>.Create()
+            .Map(1, () => "one")
+            .Map(2, () => "two")
+            .Default(() => "unknown")
+            .Build();
+
+        Assert.Equal("one", factory.Create(1));
+        Assert.Equal("two", factory.Create(2));
+        Assert.Equal("unknown", factory.Create(999));
+    }
+
+    [Fact]
+    public void Factory_NullComparer_UsesDefault()
+    {
+        var factory = Factory<string, string>.Create(null)
+            .Map("test", () => "value")
+            .Build();
+
+        Assert.Equal("value", factory.Create("test"));
+    }
+
+    [Fact]
+    public void Factory_WithInput_NullComparer_UsesDefault()
+    {
+        var factory = Factory<string, int, int>.Create(null)
+            .Map("double", (in int x) => x * 2)
+            .Build();
+
+        Assert.Equal(20, factory.Create("double", 10));
+    }
+}
+
+#endregion

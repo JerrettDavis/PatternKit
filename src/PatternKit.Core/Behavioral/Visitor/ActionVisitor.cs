@@ -4,11 +4,16 @@ using PatternKit.Creational.Builder;
 namespace PatternKit.Behavioral.Visitor;
 
 /// <summary>
-/// Visitor (fluent, typed dispatch, action).
+/// Type-based dispatcher (fluent, typed dispatch, action).
 /// Maps runtime types deriving from <typeparamref name="TBase"/> to side-effecting actions and
 /// executes the first matching action (first-match-wins).
 /// </summary>
 /// <remarks>
+/// <para>
+/// <b>DEPRECATION NOTICE:</b> This class has been renamed to <see cref="TypeDispatcher.ActionTypeDispatcher{TBase}"/>
+/// to better reflect its actual behavior. This class uses runtime type checking (Strategy-like pattern),
+/// NOT the Gang of Four Visitor pattern with double dispatch.
+/// </para>
 /// <para>
 /// Use <see cref="Builder.On{T}(System.Action{T})"/> to register actions for concrete types
 /// (<c>where T : TBase</c>). Registration order matters: register more specific types before base types.
@@ -18,6 +23,7 @@ namespace PatternKit.Behavioral.Visitor;
 /// <para><b>Thread-safety:</b> built instances are immutable and thread-safe; the builder is not.</para>
 /// </remarks>
 /// <typeparam name="TBase">The base type for visitable elements.</typeparam>
+[Obsolete("Use ActionTypeDispatcher<TBase> instead. This class has been renamed to better reflect its behavior (type-based dispatch, not GoF Visitor pattern).")]
 public sealed class ActionVisitor<TBase>
 {
     /// <summary>Predicate to determine if an action applies to a node.</summary>

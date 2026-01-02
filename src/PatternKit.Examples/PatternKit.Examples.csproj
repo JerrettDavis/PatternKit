@@ -6,9 +6,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj"/>
-        <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
-                          ReferenceOutputAssembly="true"
-                          AdditionalProperties="TargetFramework=netstandard2.0" />
+        <ProjectReference Include="..\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" />
         <ProjectReference Include="..\PatternKit.Generators\PatternKit.Generators.csproj"
                           OutputItemType="Analyzer"
                           ReferenceOutputAssembly="false"

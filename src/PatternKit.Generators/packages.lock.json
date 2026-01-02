@@ -116,6 +116,9 @@
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.1.0"
         }
+      },
+      "patternkit.generators.abstractions": {
+        "type": "Project"
       }
     }
   }

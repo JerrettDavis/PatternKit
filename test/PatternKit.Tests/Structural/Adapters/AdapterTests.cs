@@ -86,3 +86,308 @@ public sealed class AdapterTests(ITestOutputHelper output) : TinyBddXunitBase(ou
             .And("both valid", t => t.Item1.FullName == "A B" && t.Item2.FullName == "C D")
             .AssertPassed();
 }
+
+#region Additional Adapter Tests
+
+public sealed class AdapterEdgeCaseTests
+{
+    private sealed record Source(string First, string Last, int Age);
+
+    private sealed class Dest
+    {
+        public string? FullName { get; set; }
+        public int Age { get; set; }
+    }
+
+    [Fact]
+    public void TryAdapt_Exception_In_Seed_Returns_False()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => throw new InvalidOperationException("Seed failed"))
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
+
+        Assert.False(ok);
+        Assert.Null(dest);
+        Assert.Equal("Seed failed", error);
+    }
+
+    [Fact]
+    public void TryAdapt_Exception_In_Map_Returns_False()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((in Source s, Dest d) => throw new InvalidOperationException("Map failed"))
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
+
+        Assert.False(ok);
+        Assert.Null(dest);
+        Assert.Equal("Map failed", error);
+    }
+
+    [Fact]
+    public void TryAdapt_Success_NoValidators()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((in Source s, Dest d) => d.FullName = s.First)
+            .Build();
+
+        var ok = adapter.TryAdapt(new Source("Ada", "L", 30), out var dest, out var error);
+
+        Assert.True(ok);
+        Assert.NotNull(dest);
+        Assert.Equal("Ada", dest.FullName);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void Adapt_NoMaps_NoValidators_Works()
+    {
+        var adapter = Adapter<Source, Dest>
+            .Create((in Source s) => new Dest { Age = s.Age })
+            .Build();
+
+        var result = adapter.Adapt(new Source("X", "Y", 42));
+
+        Assert.Equal(42, result.Age);
+        Assert.Null(result.FullName);
+    }
+
+    [Fact]
+    public void Builder_Null_Seed_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Adapter<Source, Dest>.Create((Adapter<Source, Dest>.Seed)null!));
+    }
+
+    [Fact]
+    public void Builder_Null_SeedFrom_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            Adapter<Source, Dest>.Create((Adapter<Source, Dest>.SeedFrom)null!));
+    }
+}
+
+#endregion
+
+public sealed class AsyncAdapterTests
+{
+    private sealed record Source(string First, string Last, int Age);
+
+    private sealed class Dest
+    {
+        public string? FullName { get; set; }
+        public int Age { get; set; }
+        public bool Adult { get; set; }
+        public List<string> Log { get; } = [];
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Basic_Adapt()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) =>
+            {
+                dest.FullName = $"{src.First} {src.Last}";
+                dest.Age = src.Age;
+            })
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("Ada", "Lovelace", 30));
+
+        Assert.Equal("Ada Lovelace", result.FullName);
+        Assert.Equal(30, result.Age);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Async_Seed()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(async ct =>
+            {
+                await Task.Delay(1, ct);
+                return new Dest { Log = { "async-seed" } };
+            })
+            .Map((src, dest) => dest.FullName = src.First)
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("Test", "User", 25));
+
+        Assert.Contains("async-seed", result.Log);
+        Assert.Equal("Test", result.FullName);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_SeedFrom_Uses_Input()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create((Source src) => new Dest { Age = src.Age })
+            .Map((src, dest) => dest.FullName = src.First)
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("X", "Y", 42));
+
+        Assert.Equal(42, result.Age);
+        Assert.Equal("X", result.FullName);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Async_SeedFrom()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(async (Source src, CancellationToken ct) =>
+            {
+                await Task.Delay(1, ct);
+                return new Dest { Age = src.Age * 2 };
+            })
+            .Map((src, dest) => dest.FullName = src.First)
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("X", "Y", 10));
+
+        Assert.Equal(20, result.Age);
+        Assert.Equal("X", result.FullName);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Async_Map_Step()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map(async (src, dest, ct) =>
+            {
+                await Task.Delay(1, ct);
+                dest.FullName = $"{src.First} {src.Last}";
+            })
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("Ada", "Lovelace", 30));
+
+        Assert.Equal("Ada Lovelace", result.FullName);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Require_Validation_Passes()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.Age = src.Age)
+            .Require((src, dest) => dest.Age > 0 ? null : "Age must be positive")
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("A", "B", 30));
+
+        Assert.Equal(30, result.Age);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Require_Validation_Fails()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.Age = src.Age)
+            .Require((src, dest) => dest.Age > 0 ? null : "Age must be positive")
+            .Build();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => adapter.AdaptAsync(new Source("A", "B", -1)).AsTask());
+
+        Assert.Equal("Age must be positive", ex.Message);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Async_Require_Validation()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.Age = src.Age)
+            .Require(async (src, dest, ct) =>
+            {
+                await Task.Delay(1, ct);
+                return dest.Age > 0 ? null : "Age must be positive";
+            })
+            .Build();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => adapter.AdaptAsync(new Source("A", "B", -5)).AsTask());
+
+        Assert.Equal("Age must be positive", ex.Message);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_TryAdapt_Returns_Success()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.FullName = src.First)
+            .Build();
+
+        var (success, result, error) = await adapter.TryAdaptAsync(new Source("Ada", "L", 30));
+
+        Assert.True(success);
+        Assert.NotNull(result);
+        Assert.Equal("Ada", result.FullName);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_TryAdapt_Returns_Validation_Error()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.Age = src.Age)
+            .Require((src, dest) => dest.Age > 0 ? null : "Age must be positive")
+            .Build();
+
+        var (success, result, error) = await adapter.TryAdaptAsync(new Source("A", "B", -1));
+
+        Assert.False(success);
+        Assert.Null(result);
+        Assert.Equal("Age must be positive", error);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_TryAdapt_Catches_Exception()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => throw new InvalidOperationException("Map failed"))
+            .Build();
+
+        var (success, result, error) = await adapter.TryAdaptAsync(new Source("A", "B", 30));
+
+        Assert.False(success);
+        Assert.Null(result);
+        Assert.Equal("Map failed", error);
+    }
+
+    [Fact]
+    public async Task AsyncAdapter_Multiple_Maps_In_Order()
+    {
+        var adapter = AsyncAdapter<Source, Dest>
+            .Create(() => new Dest())
+            .Map((src, dest) => dest.Log.Add("map1"))
+            .Map((src, dest) => dest.Log.Add("map2"))
+            .Map((src, dest) => dest.Log.Add("map3"))
+            .Build();
+
+        var result = await adapter.AdaptAsync(new Source("A", "B", 30));
+
+        Assert.Equal(3, result.Log.Count);
+        Assert.Equal("map1", result.Log[0]);
+        Assert.Equal("map2", result.Log[1]);
+        Assert.Equal("map3", result.Log[2]);
+    }
+
+    [Fact]
+    public void AsyncAdapter_Seed_Null_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            AsyncAdapter<Source, Dest>.Create((AsyncAdapter<Source, Dest>.Seed)null!));
+    }
+}

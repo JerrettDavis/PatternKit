@@ -193,3 +193,179 @@ public sealed class AsyncStrategyTests(ITestOutputHelper output) : TinyBddXunitB
             .AssertPassed();
     }
 }
+
+#region Additional AsyncStrategy Tests
+
+public sealed class AsyncStrategyEdgeCaseTests
+{
+    [Fact]
+    public async Task SyncPredicate_WithCancellationToken_Adapter()
+    {
+        var tokenReceived = CancellationToken.None;
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When((n, ct) =>
+            {
+                tokenReceived = ct;
+                return n > 0;
+            })
+            .Then((_, _) => new ValueTask<string>("positive"))
+            .Build();
+
+        var cts = new CancellationTokenSource();
+        var result = await strategy.ExecuteAsync(5, cts.Token);
+
+        Assert.Equal("positive", result);
+        Assert.Equal(cts.Token, tokenReceived);
+    }
+
+    [Fact]
+    public async Task SyncPredicate_Without_CancellationToken_Adapter()
+    {
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When(n => n % 2 == 0)
+            .Then((_, _) => new ValueTask<string>("even"))
+            .Default(_ => "odd")
+            .Build();
+
+        Assert.Equal("even", await strategy.ExecuteAsync(4));
+        Assert.Equal("odd", await strategy.ExecuteAsync(5));
+    }
+
+    [Fact]
+    public async Task SyncDefault_Adapter()
+    {
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When(n => false)
+            .Then((_, _) => new ValueTask<string>("never"))
+            .Default(n => $"default:{n}")
+            .Build();
+
+        var result = await strategy.ExecuteAsync(42);
+
+        Assert.Equal("default:42", result);
+    }
+
+    [Fact]
+    public async Task Empty_Strategy_Throws()
+    {
+        var strategy = AsyncStrategy<int, string>.Create().Build();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => strategy.ExecuteAsync(1).AsTask());
+    }
+
+    [Fact]
+    public async Task Multiple_Predicates_First_Match_Wins()
+    {
+        var log = new List<string>();
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When((n, _) =>
+            {
+                log.Add("pred1");
+                return new ValueTask<bool>(n > 0);
+            })
+            .Then((_, _) => new ValueTask<string>("first"))
+            .When((n, _) =>
+            {
+                log.Add("pred2");
+                return new ValueTask<bool>(n > 0);
+            })
+            .Then((_, _) => new ValueTask<string>("second"))
+            .Build();
+
+        var result = await strategy.ExecuteAsync(5);
+
+        Assert.Equal("first", result);
+        Assert.Single(log); // Only first predicate evaluated
+        Assert.Equal("pred1", log[0]);
+    }
+
+    [Fact]
+    public async Task All_Predicates_Evaluated_Until_Match()
+    {
+        var log = new List<string>();
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When((n, _) =>
+            {
+                log.Add("pred1");
+                return new ValueTask<bool>(n > 100);
+            })
+            .Then((_, _) => new ValueTask<string>("first"))
+            .When((n, _) =>
+            {
+                log.Add("pred2");
+                return new ValueTask<bool>(n > 50);
+            })
+            .Then((_, _) => new ValueTask<string>("second"))
+            .When((n, _) =>
+            {
+                log.Add("pred3");
+                return new ValueTask<bool>(n > 0);
+            })
+            .Then((_, _) => new ValueTask<string>("third"))
+            .Build();
+
+        var result = await strategy.ExecuteAsync(5);
+
+        Assert.Equal("third", result);
+        Assert.Equal(3, log.Count);
+    }
+
+    [Fact]
+    public async Task Handler_Receives_Input_And_Token()
+    {
+        int? capturedInput = null;
+        CancellationToken capturedToken = default;
+
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When((_, _) => new ValueTask<bool>(true))
+            .Then((n, ct) =>
+            {
+                capturedInput = n;
+                capturedToken = ct;
+                return new ValueTask<string>("ok");
+            })
+            .Build();
+
+        var cts = new CancellationTokenSource();
+        await strategy.ExecuteAsync(42, cts.Token);
+
+        Assert.Equal(42, capturedInput);
+        Assert.Equal(cts.Token, capturedToken);
+    }
+
+    [Fact]
+    public async Task Default_Only_Strategy()
+    {
+        var strategy = AsyncStrategy<int, string>.Create()
+            .Default((n, _) => new ValueTask<string>($"default:{n}"))
+            .Build();
+
+        var result = await strategy.ExecuteAsync(99);
+
+        Assert.Equal("default:99", result);
+    }
+
+    [Fact]
+    public async Task AsyncPredicate_And_Handler()
+    {
+        var strategy = AsyncStrategy<int, string>.Create()
+            .When(async (n, ct) =>
+            {
+                await Task.Delay(1, ct);
+                return n > 0;
+            })
+            .Then(async (n, ct) =>
+            {
+                await Task.Delay(1, ct);
+                return $"async:{n}";
+            })
+            .Build();
+
+        var result = await strategy.ExecuteAsync(5);
+
+        Assert.Equal("async:5", result);
+    }
+}
+
+#endregion

@@ -4,11 +4,16 @@ using PatternKit.Creational.Builder;
 namespace PatternKit.Behavioral.Visitor;
 
 /// <summary>
-/// Visitor (fluent, typed dispatch, result).
+/// Type-based dispatcher (fluent, typed dispatch, result).
 /// Maps runtime types deriving from <typeparamref name="TBase"/> to result-producing handlers
 /// and executes the first matching handler (first-match-wins).
 /// </summary>
 /// <remarks>
+/// <para>
+/// <b>DEPRECATION NOTICE:</b> This class has been renamed to <see cref="TypeDispatcher.TypeDispatcher{TBase, TResult}"/>
+/// to better reflect its actual behavior. This class uses runtime type checking (Strategy-like pattern),
+/// NOT the Gang of Four Visitor pattern with double dispatch.
+/// </para>
 /// <para>
 /// Use <see cref="Builder.On{T}(System.Func{T,TResult})"/> to register handlers for concrete types
 /// (<c>where T : TBase</c>). Registration order matters: register more specific types before base types.
@@ -21,11 +26,12 @@ namespace PatternKit.Behavioral.Visitor;
 /// </para>
 /// <para>
 /// <b>Performance:</b> dispatch is performed by evaluating registered predicates in order. For large numbers of
-/// registrations or hot paths, consider grouping by type or composing multiple visitors for locality.
+/// registrations or hot paths, consider grouping by type or composing multiple dispatchers for locality.
 /// </para>
 /// </remarks>
 /// <typeparam name="TBase">The base type for visitable elements.</typeparam>
 /// <typeparam name="TResult">The return type of visit operations.</typeparam>
+[Obsolete("Use TypeDispatcher<TBase, TResult> instead. This class has been renamed to better reflect its behavior (type-based dispatch, not GoF Visitor pattern).")]
 public sealed class Visitor<TBase, TResult>
 {
     /// <summary>Predicate to determine if a handler applies to a node.</summary>

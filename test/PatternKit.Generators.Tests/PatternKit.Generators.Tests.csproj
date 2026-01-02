@@ -27,6 +27,7 @@
     <ItemGroup>
       <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
       <ProjectReference Include="..\..\src\PatternKit.Examples\PatternKit.Examples.csproj" />
+      <ProjectReference Include="..\..\src\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" />
       <ProjectReference Include="..\..\src\PatternKit.Generators\PatternKit.Generators.csproj" />
     </ItemGroup>
 

@@ -6,6 +6,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PatternKit.Generators.Builders;
 
+// Local copy of BuilderModel enum to avoid assembly loading issues
+internal enum BuilderModel
+{
+    MutableInstance = 0,
+    StateProjection = 1
+}
+
 [Generator]
 public sealed class BuilderGenerator : IIncrementalGenerator
 {
