@@ -17,7 +17,7 @@ namespace PatternKit.Generators.Tests;
 public class VisitorGeneratorComprehensiveTests
 {
     private const string SimpleHierarchy = """
-        using PatternKit.Generators;
+        using PatternKit.Generators.Visitors;
 
         namespace Test;
 
@@ -466,7 +466,7 @@ public class VisitorGeneratorComprehensiveTests
     public void Behavior_Deep_Hierarchy_Three_Levels_Handled_Correctly()
     {
         var user = """
-            using PatternKit.Generators;
+            using PatternKit.Generators.Visitors;
 
             namespace Test;
 
@@ -515,7 +515,7 @@ public class VisitorGeneratorComprehensiveTests
     public void Behavior_Multiple_Siblings_In_Hierarchy_All_Visitable()
     {
         var user = """
-            using PatternKit.Generators;
+            using PatternKit.Generators.Visitors;
 
             namespace Test;
 
