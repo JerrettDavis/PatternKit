@@ -1,0 +1,25 @@
+# Code Owners for PatternKit
+# These users will be automatically requested for review when PRs are opened
+
+# Global owners
+* @jerrettdavis
+
+# Workflows and CI/CD
+/.github/ @jerrettdavis
+
+# Documentation
+/docs/ @jerrettdavis
+*.md @jerrettdavis
+
+# Core library
+/src/PatternKit.Core/ @jerrettdavis
+
+# Generators
+/src/PatternKit.Generators/ @jerrettdavis
+/src/PatternKit.Generators.Abstractions/ @jerrettdavis
+
+# Examples
+/src/PatternKit.Examples/ @jerrettdavis
+
+# Tests
+/test/ @jerrettdavis
