@@ -4,12 +4,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-[assembly: GenerateDispatcher(
-    Namespace = "PatternKit.Examples.Messaging",
-    Name = "ExampleDispatcher",
-    IncludeStreaming = true,
-    IncludeObjectOverloads = false,
-    Visibility = GeneratedVisibility.Public)]
+// NOTE: The comprehensive production demo in MediatorComprehensiveDemo/ComprehensiveDemo.cs
+// generates the dispatcher for this assembly. This file contains simple usage examples only.
 
 namespace PatternKit.Examples.Messaging;
 
@@ -35,12 +31,14 @@ public record PagedItem(int Id, string Name);
 /// Examples demonstrating the Source-Generated Mediator pattern.
 /// The Mediator pattern reduces coupling by centralizing communication between components.
 /// This source-generated variant provides zero runtime dependencies on PatternKit.
+/// 
+/// NOTE: Uses the ProductionDispatcher generated in MediatorComprehensiveDemo/ComprehensiveDemo.cs
 /// </summary>
 public static class DispatcherUsageExamples
 {
     public static async Task BasicCommandExample()
     {
-        var dispatcher = ExampleDispatcher.Create()
+        var dispatcher = global::PatternKit.Examples.Messaging.SourceGenerated.ProductionDispatcher.Create()
             .Command<CreateUser, UserCreated>((req, ct) =>
                 new ValueTask<UserCreated>(new UserCreated(1, req.Username)))
             .Build();
@@ -56,7 +54,7 @@ public static class DispatcherUsageExamples
     {
         var log = new List<string>();
 
-        var dispatcher = ExampleDispatcher.Create()
+        var dispatcher = global::PatternKit.Examples.Messaging.SourceGenerated.ProductionDispatcher.Create()
             .Notification<UserRegistered>((n, ct) =>
             {
                 log.Add($"Sending welcome email to {n.Email}");
@@ -83,7 +81,7 @@ public static class DispatcherUsageExamples
 
     public static async Task StreamExample()
     {
-        var dispatcher = ExampleDispatcher.Create()
+        var dispatcher = global::PatternKit.Examples.Messaging.SourceGenerated.ProductionDispatcher.Create()
             .Stream<SearchQuery, SearchResult>(SearchAsync)
             .Build();
 
@@ -114,7 +112,7 @@ public static class DispatcherUsageExamples
     {
         var log = new List<string>();
 
-        var dispatcher = ExampleDispatcher.Create()
+        var dispatcher = global::PatternKit.Examples.Messaging.SourceGenerated.ProductionDispatcher.Create()
             .Pre<SendEmail>((req, ct) =>
             {
                 log.Add($"Pre: Validating email to {req.To}");
