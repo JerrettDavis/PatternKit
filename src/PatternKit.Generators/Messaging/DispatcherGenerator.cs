@@ -1,0 +1,463 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
+
+namespace PatternKit.Generators.Messaging;
+
+[Generator]
+public sealed class DispatcherGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        // Find assembly attributes
+        var assemblyAttributes = context.CompilationProvider.Select((compilation, _) =>
+        {
+            var attr = compilation.Assembly.GetAttributes()
+                .Where(a => a.AttributeClass?.Name == "GenerateDispatcherAttribute" &&
+                           a.AttributeClass.ContainingNamespace.ToDisplayString() == "PatternKit.Generators.Messaging")
+                .FirstOrDefault();
+            
+            return (compilation, (AttributeData?)attr);
+        });
+
+        context.RegisterSourceOutput(assemblyAttributes, (spc, data) =>
+        {
+            var (compilation, attr) = data;
+            if (attr == null) return;
+
+            if (!TryReadAttribute(attr, out var config, out var error))
+            {
+                ReportDiagnostic(spc, "PKD006", error ?? "Invalid GenerateDispatcher configuration", 
+                    DiagnosticSeverity.Error, Location.None);
+                return;
+            }
+
+            GenerateDispatcher(spc, compilation, config);
+        });
+    }
+
+    private static bool TryReadAttribute(AttributeData attr, out DispatcherConfig config, out string? error)
+    {
+        error = null;
+        var args = attr.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        
+        config = new DispatcherConfig
+        {
+            Namespace = GetStringValue(args, "Namespace") ?? "Generated.Messaging",
+            Name = GetStringValue(args, "Name") ?? "AppDispatcher",
+            IncludeObjectOverloads = GetBoolValue(args, "IncludeObjectOverloads", false),
+            IncludeStreaming = GetBoolValue(args, "IncludeStreaming", true),
+            Visibility = GetIntValue(args, "Visibility", 0)
+        };
+
+        return true;
+    }
+
+    private static string? GetStringValue(Dictionary<string, TypedConstant> args, string key) =>
+        args.TryGetValue(key, out var value) ? value.Value as string : null;
+
+    private static bool GetBoolValue(Dictionary<string, TypedConstant> args, string key, bool defaultValue) =>
+        args.TryGetValue(key, out var value) && value.Value is bool b ? b : defaultValue;
+
+    private static int GetIntValue(Dictionary<string, TypedConstant> args, string key, int defaultValue) =>
+        args.TryGetValue(key, out var value) && value.Value is int i ? i : defaultValue;
+
+    private static void GenerateDispatcher(SourceProductionContext spc, Compilation compilation, DispatcherConfig config)
+    {
+        var visibility = config.Visibility == 0 ? "public" : "internal";
+        
+        var sources = new[]
+        {
+            ($"{config.Name}.g.cs", GenerateMainDispatcherFile(config, visibility)),
+            ($"{config.Name}.Builder.g.cs", GenerateBuilderFile(config, visibility)),
+            ($"{config.Name}.Contracts.g.cs", GenerateContractsFile(config, visibility))
+        };
+
+        foreach (var (fileName, source) in sources)
+        {
+            spc.AddSource(fileName, SourceText.From(source, Encoding.UTF8));
+        }
+    }
+
+    private static string GenerateMainDispatcherFile(DispatcherConfig config, string visibility)
+    {
+        var sb = CreateFileHeader();
+        
+        var usings = new List<string> 
+        { 
+            "System", 
+            "System.Collections.Generic", 
+            "System.Threading", 
+            "System.Threading.Tasks" 
+        };
+        
+        if (config.IncludeStreaming)
+        {
+            usings.Add("System.Runtime.CompilerServices");
+        }
+        
+        AppendUsings(sb, usings.ToArray());
+        AppendNamespaceAndClassHeader(sb, config.Namespace, visibility, config.Name);
+        
+        // Internal state
+        sb.AppendLine("    private readonly Dictionary<Type, Delegate> _commandHandlers = new();");
+        sb.AppendLine("    private readonly Dictionary<Type, List<Delegate>> _notificationHandlers = new();");
+        
+        if (config.IncludeStreaming)
+        {
+            sb.AppendLine("    private readonly Dictionary<Type, Delegate> _streamHandlers = new();");
+        }
+        
+        sb.AppendLine("    private readonly Dictionary<Type, List<Delegate>> _commandPipelines = new();");
+        
+        if (config.IncludeStreaming)
+        {
+            sb.AppendLine("    private readonly Dictionary<Type, List<Delegate>> _streamPipelines = new();");
+        }
+        
+        sb.AppendLine();
+        sb.AppendLine("    private " + config.Name + "() { }");
+        sb.AppendLine();
+        
+        // Create method
+        sb.AppendLine($"    {visibility} static Builder Create() => new Builder();");
+        sb.AppendLine();
+        
+        // Send method (commands)
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Sends a command and returns a response.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public async ValueTask<TResponse> Send<TRequest, TResponse>(TRequest request, CancellationToken ct = default)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var requestType = typeof(TRequest);");
+        sb.AppendLine("        if (!_commandHandlers.TryGetValue(requestType, out var handlerDelegate))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            throw new InvalidOperationException($\"No handler registered for command type {requestType.Name}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        var handler = (Func<TRequest, CancellationToken, ValueTask<TResponse>>)handlerDelegate;");
+        sb.AppendLine();
+        sb.AppendLine("        // Execute pipelines if registered");
+        sb.AppendLine("        if (_commandPipelines.TryGetValue(requestType, out var pipelines))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return await ExecuteWithPipeline(request, handler, pipelines, ct);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        return await handler(request, ct);");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        
+        // Publish method (notifications)
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine("    /// Publishes a notification to all registered handlers.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine("    public async ValueTask Publish<TNotification>(TNotification notification, CancellationToken ct = default)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var notificationType = typeof(TNotification);");
+        sb.AppendLine("        if (!_notificationHandlers.TryGetValue(notificationType, out var handlers))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return; // No-op if no handlers");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        foreach (var handlerDelegate in handlers)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var handler = (Func<TNotification, CancellationToken, ValueTask>)handlerDelegate;");
+        sb.AppendLine("            await handler(notification, ct);");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        
+        // Stream method
+        if (config.IncludeStreaming)
+        {
+            sb.AppendLine("    /// <summary>");
+            sb.AppendLine("    /// Streams items from a stream request.");
+            sb.AppendLine("    /// </summary>");
+            sb.AppendLine("    public async IAsyncEnumerable<TItem> Stream<TRequest, TItem>(TRequest request, [EnumeratorCancellation] CancellationToken ct = default)");
+            sb.AppendLine("    {");
+            sb.AppendLine("        var requestType = typeof(TRequest);");
+            sb.AppendLine("        if (!_streamHandlers.TryGetValue(requestType, out var handlerDelegate))");
+            sb.AppendLine("        {");
+            sb.AppendLine("            throw new InvalidOperationException($\"No stream handler registered for request type {requestType.Name}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine("        var handler = (Func<TRequest, CancellationToken, IAsyncEnumerable<TItem>>)handlerDelegate;");
+            sb.AppendLine("        var stream = handler(request, ct);");
+            sb.AppendLine();
+            sb.AppendLine("        await foreach (var item in stream.WithCancellation(ct))");
+            sb.AppendLine("        {");
+            sb.AppendLine("            yield return item;");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        
+        // Helper method for pipeline execution
+        sb.AppendLine("    private async ValueTask<TResponse> ExecuteWithPipeline<TRequest, TResponse>(");
+        sb.AppendLine("        TRequest request,");
+        sb.AppendLine("        Func<TRequest, CancellationToken, ValueTask<TResponse>> handler,");
+        sb.AppendLine("        List<Delegate> pipelines,");
+        sb.AppendLine("        CancellationToken ct)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        // Execute Pre hooks");
+        sb.AppendLine("        foreach (var pipeline in pipelines)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (pipeline is Func<TRequest, CancellationToken, ValueTask> pre)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                await pre(request, ct);");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        // Execute handler");
+        sb.AppendLine("        var response = await handler(request, ct);");
+        sb.AppendLine();
+        sb.AppendLine("        // Execute Post hooks");
+        sb.AppendLine("        foreach (var pipeline in pipelines)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (pipeline is Func<TRequest, TResponse, CancellationToken, ValueTask> post)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                await post(request, response, ct);");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        
+        sb.AppendLine("}");
+        
+        return sb.ToString();
+    }
+
+    private static string GenerateBuilderFile(DispatcherConfig config, string visibility)
+    {
+        var sb = CreateFileHeader();
+        AppendUsings(sb, "System", "System.Collections.Generic", "System.Threading", "System.Threading.Tasks");
+        AppendNamespaceAndClassHeader(sb, config.Namespace, visibility, config.Name);
+        
+        sb.AppendLine($"    {visibility} sealed class Builder");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        private readonly {config.Name} _dispatcher = new();");
+        sb.AppendLine();
+        
+        // Command registration
+        sb.AppendLine("        public Builder Command<TRequest, TResponse>(Func<TRequest, CancellationToken, ValueTask<TResponse>> handler)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var requestType = typeof(TRequest);");
+        sb.AppendLine("            if (_dispatcher._commandHandlers.ContainsKey(requestType))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                throw new InvalidOperationException($\"Handler for {requestType.Name} already registered\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("            _dispatcher._commandHandlers[requestType] = handler;");
+        sb.AppendLine("            return this;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        
+        // Notification registration
+        sb.AppendLine("        public Builder Notification<TNotification>(Func<TNotification, CancellationToken, ValueTask> handler)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var notificationType = typeof(TNotification);");
+        sb.AppendLine("            if (!_dispatcher._notificationHandlers.TryGetValue(notificationType, out var handlers))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                handlers = new List<Delegate>();");
+        sb.AppendLine("                _dispatcher._notificationHandlers[notificationType] = handlers;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            handlers.Add(handler);");
+        sb.AppendLine("            return this;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        
+        // Stream registration
+        if (config.IncludeStreaming)
+        {
+            sb.AppendLine("        public Builder Stream<TRequest, TItem>(Func<TRequest, CancellationToken, IAsyncEnumerable<TItem>> handler)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var requestType = typeof(TRequest);");
+            sb.AppendLine("            if (_dispatcher._streamHandlers.ContainsKey(requestType))");
+            sb.AppendLine("            {");
+            sb.AppendLine("                throw new InvalidOperationException($\"Stream handler for {requestType.Name} already registered\");");
+            sb.AppendLine("            }");
+            sb.AppendLine("            _dispatcher._streamHandlers[requestType] = handler;");
+            sb.AppendLine("            return this;");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+        }
+        
+        // Pipeline registration - Pre
+        sb.AppendLine("        public Builder Pre<TRequest>(Func<TRequest, CancellationToken, ValueTask> pre)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var requestType = typeof(TRequest);");
+        sb.AppendLine("            if (!_dispatcher._commandPipelines.TryGetValue(requestType, out var pipelines))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                pipelines = new List<Delegate>();");
+        sb.AppendLine("                _dispatcher._commandPipelines[requestType] = pipelines;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            pipelines.Add(pre);");
+        sb.AppendLine("            return this;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        
+        // Pipeline registration - Post
+        sb.AppendLine("        public Builder Post<TRequest, TResponse>(Func<TRequest, TResponse, CancellationToken, ValueTask> post)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var requestType = typeof(TRequest);");
+        sb.AppendLine("            if (!_dispatcher._commandPipelines.TryGetValue(requestType, out var pipelines))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                pipelines = new List<Delegate>();");
+        sb.AppendLine("                _dispatcher._commandPipelines[requestType] = pipelines;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            pipelines.Add(post);");
+        sb.AppendLine("            return this;");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        
+        // Build method
+        sb.AppendLine($"        public {config.Name} Build() => _dispatcher;");
+        
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        
+        return sb.ToString();
+    }
+
+    private static string GenerateContractsFile(DispatcherConfig config, string visibility)
+    {
+        var sb = CreateFileHeader();
+        AppendUsings(sb, "System.Collections.Generic", "System.Threading", "System.Threading.Tasks");
+        
+        sb.AppendLine($"namespace {config.Namespace};");
+        sb.AppendLine();
+        
+        // Command handler interface
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Handler for a command that returns a response.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"{visibility} interface ICommandHandler<TRequest, TResponse>");
+        sb.AppendLine("{");
+        sb.AppendLine("    ValueTask<TResponse> Handle(TRequest request, CancellationToken ct);");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        
+        // Notification handler interface
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Handler for a notification.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"{visibility} interface INotificationHandler<TNotification>");
+        sb.AppendLine("{");
+        sb.AppendLine("    ValueTask Handle(TNotification notification, CancellationToken ct);");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        
+        // Stream handler interface
+        if (config.IncludeStreaming)
+        {
+            sb.AppendLine("/// <summary>");
+            sb.AppendLine("/// Handler for a stream request.");
+            sb.AppendLine("/// </summary>");
+            sb.AppendLine($"{visibility} interface IStreamHandler<TRequest, TItem>");
+            sb.AppendLine("{");
+            sb.AppendLine("    IAsyncEnumerable<TItem> Handle(TRequest request, CancellationToken ct);");
+            sb.AppendLine("}");
+            sb.AppendLine();
+        }
+        
+        // Command pipeline delegates
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Delegate for invoking the next command handler in the pipeline.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"{visibility} delegate ValueTask<TResponse> CommandNext<TResponse>();");
+        sb.AppendLine();
+        
+        // Command pipeline interface
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine("/// Pipeline for command handling.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"{visibility} interface ICommandPipeline<TRequest, TResponse>");
+        sb.AppendLine("{");
+        sb.AppendLine("    ValueTask Pre(TRequest request, CancellationToken ct);");
+        sb.AppendLine("    ValueTask<TResponse> Around(TRequest request, CancellationToken ct, CommandNext<TResponse> next);");
+        sb.AppendLine("    ValueTask Post(TRequest request, TResponse response, CancellationToken ct);");
+        sb.AppendLine("    ValueTask OnError(TRequest request, System.Exception ex, CancellationToken ct);");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        
+        if (config.IncludeStreaming)
+        {
+            // Stream pipeline delegates
+            sb.AppendLine("/// <summary>");
+            sb.AppendLine("/// Delegate for invoking the next stream handler in the pipeline.");
+            sb.AppendLine("/// </summary>");
+            sb.AppendLine($"{visibility} delegate IAsyncEnumerable<TItem> StreamNext<TItem>();");
+            sb.AppendLine();
+            
+            // Stream pipeline interface
+            sb.AppendLine("/// <summary>");
+            sb.AppendLine("/// Pipeline for stream handling.");
+            sb.AppendLine("/// </summary>");
+            sb.AppendLine($"{visibility} interface IStreamPipeline<TRequest, TItem>");
+            sb.AppendLine("{");
+            sb.AppendLine("    ValueTask Pre(TRequest request, CancellationToken ct);");
+            sb.AppendLine("    IAsyncEnumerable<TItem> Around(TRequest request, CancellationToken ct, StreamNext<TItem> next);");
+            sb.AppendLine("    ValueTask Post(TRequest request, CancellationToken ct);");
+            sb.AppendLine("    ValueTask OnError(TRequest request, System.Exception ex, CancellationToken ct);");
+            sb.AppendLine("}");
+        }
+        
+        return sb.ToString();
+    }
+
+    private static void ReportDiagnostic(
+        SourceProductionContext spc,
+        string id,
+        string message,
+        DiagnosticSeverity severity,
+        Location location)
+    {
+        var descriptor = new DiagnosticDescriptor(
+            id,
+            message,
+            message,
+            "PatternKit.Messaging",
+            severity,
+            isEnabledByDefault: true);
+        
+        spc.ReportDiagnostic(Diagnostic.Create(descriptor, location));
+    }
+
+    private static StringBuilder CreateFileHeader()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine();
+        return sb;
+    }
+
+    private static void AppendUsings(StringBuilder sb, params string[] usings)
+    {
+        foreach (var ns in usings)
+        {
+            sb.AppendLine($"using {ns};");
+        }
+        sb.AppendLine();
+    }
+
+    private static void AppendNamespaceAndClassHeader(StringBuilder sb, string ns, string visibility, string className)
+    {
+        sb.AppendLine($"namespace {ns};");
+        sb.AppendLine();
+        sb.AppendLine($"{visibility} sealed partial class {className}");
+        sb.AppendLine("{");
+    }
+
+    private sealed class DispatcherConfig
+    {
+        public string Namespace { get; set; } = "Generated.Messaging";
+        public string Name { get; set; } = "AppDispatcher";
+        public bool IncludeObjectOverloads { get; set; }
+        public bool IncludeStreaming { get; set; } = true;
+        public int Visibility { get; set; }
+    }
+}
