@@ -3,8 +3,17 @@ using System;
 namespace PatternKit.Generators.Messaging;
 
 /// <summary>
-/// Marks an assembly for message dispatcher generation.
-/// The generated dispatcher will be independent of PatternKit at runtime.
+/// Marks an assembly for source-generated Mediator pattern implementation.
+/// 
+/// The Mediator pattern reduces coupling between components by centralizing communication
+/// through a mediator object. This source generator produces a standalone mediator with
+/// zero PatternKit runtime dependencies.
+/// 
+/// The generated mediator supports:
+/// - Commands (request → response)
+/// - Notifications (fan-out to multiple handlers)
+/// - Streams (async enumerable results)
+/// - Pipelines (pre/post hooks for cross-cutting concerns)
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public sealed class GenerateDispatcherAttribute : Attribute

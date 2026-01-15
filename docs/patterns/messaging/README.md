@@ -1,10 +1,12 @@
 # Messaging Patterns
 
-This section covers messaging and event-driven patterns in PatternKit.
+This section covers messaging and event-driven patterns in PatternKit, with a focus on the **Mediator pattern**.
 
-## Message Dispatcher (Source Generated)
+## Mediator (Source Generated)
 
-A **zero-dependency**, **source-generated** message dispatcher for commands, notifications, and streams.
+A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
+
+The **Mediator pattern** reduces coupling between components by centralizing communication through a mediator object. This source-generated variant provides compile-time code generation with zero runtime dependencies on PatternKit.
 
 [Learn More →](dispatcher.md)
 
@@ -22,13 +24,13 @@ using PatternKit.Generators.Messaging;
 public record CreateUser(string Username, string Email);
 public record UserCreated(int UserId, string Username);
 
-// Build dispatcher
+// Build mediator
 var dispatcher = AppDispatcher.Create()
     .Command<CreateUser, UserCreated>((req, ct) =>
         new ValueTask<UserCreated>(new UserCreated(1, req.Username)))
     .Build();
 
-// Use dispatcher
+// Use mediator
 var result = await dispatcher.Send<CreateUser, UserCreated>(
     new CreateUser("alice", "alice@example.com"),
     cancellationToken);
@@ -52,15 +54,15 @@ var result = await dispatcher.Send<CreateUser, UserCreated>(
 
 ### Related Patterns
 
-The Message Dispatcher complements other PatternKit patterns:
+The Source-Generated Mediator complements other PatternKit patterns:
 
-- **Mediator** - For in-memory pub/sub without code generation
+- **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
+- **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
-- **Observer** - For reactive event handling
 
 ### When to Use
 
-Use the source-generated Message Dispatcher when you need:
+Use the source-generated Mediator when you need:
 
 - ✅ Decoupled message handling in your application
 - ✅ Compile-time verification of message flows

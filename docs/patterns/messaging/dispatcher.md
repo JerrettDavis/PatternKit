@@ -1,8 +1,8 @@
-# Message Dispatcher (Source Generated)
+# Mediator (Source Generated)
 
 ## Overview
 
-The Message Dispatcher pattern provides a standalone, source-generated message dispatcher for handling:
+The **Mediator pattern** provides a standalone, source-generated mediator for decoupling communication between components. This implementation handles:
 
 - **Commands** (request → response)
 - **Notifications** (fan-out to multiple handlers)
@@ -162,6 +162,33 @@ All generated code is **independent of PatternKit** and contains only BCL depend
 
 See `PatternKit.Examples/Messaging/DispatcherExample.cs` for complete working examples.
 
+## What is the Mediator Pattern?
+
+The **Mediator pattern** is a behavioral design pattern that reduces coupling between components by having them communicate through a central mediator object instead of directly with each other. This pattern:
+
+- **Centralizes communication logic**: All message routing happens in one place
+- **Reduces dependencies**: Components don't need to know about each other
+- **Simplifies maintenance**: Changes to message flow are isolated to the mediator
+- **Enables cross-cutting concerns**: Behaviors like logging, validation, and metrics can be applied uniformly
+
+### Source-Generated vs Runtime Mediator
+
+PatternKit offers two Mediator implementations:
+
+1. **Runtime Mediator** ([docs](../behavioral/mediator/index.md)) - A pre-built, allocation-light mediator using `PatternKit.Behavioral.Mediator`
+2. **Source-Generated Mediator** (this document) - A compile-time generated mediator with **zero PatternKit runtime dependency**
+
+Choose the source-generated variant when:
+- You need **zero runtime dependencies** (for libraries/NuGet packages)
+- You want **AOT compatibility** without reflection
+- You prefer **compile-time verification** of message flows
+- You need **maximum performance** with no abstraction overhead
+
+Choose the runtime mediator when:
+- You want **immediate use** without code generation setup
+- You need **dynamic handler registration** at runtime
+- You're building an application (not a library)
+
 ## Best Practices
 
 1. **Use value types** for messages when possible (records with value semantics)
@@ -176,3 +203,18 @@ See `PatternKit.Examples/Messaging/DispatcherExample.cs` for complete working ex
 - **No reflection** - all dispatch is compile-time generated
 - **Deterministic** - no runtime scanning or dynamic discovery
 - **Minimal overhead** - direct delegate invocation
+
+## Related Patterns
+
+- **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime dependency
+- **[Observer](../behavioral/observer/index.md)** - For simpler pub/sub scenarios without request/response
+- **[Command](../behavioral/command/index.md)** - For encapsulating requests as objects
+
+## Future Enhancements
+
+Future versions may include:
+- Object-based overloads (for dynamic scenarios)
+- Parallel notification execution
+- Around hooks for full pipeline wrapping
+- OnError handlers for exception handling
+- Module registration for organizing handlers

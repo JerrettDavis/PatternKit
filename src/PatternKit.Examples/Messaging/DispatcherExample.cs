@@ -32,7 +32,9 @@ public record PagedRequest(int PageNumber, int PageSize);
 public record PagedItem(int Id, string Name);
 
 /// <summary>
-/// Example showing how to use the generated dispatcher.
+/// Examples demonstrating the Source-Generated Mediator pattern.
+/// The Mediator pattern reduces coupling by centralizing communication between components.
+/// This source-generated variant provides zero runtime dependencies on PatternKit.
 /// </summary>
 public static class DispatcherUsageExamples
 {
