@@ -55,14 +55,10 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         // Check that generated source doesn't reference PatternKit
-        foreach (var result in run.Results)
+        foreach (var text in run.Results.SelectMany(result => result.GeneratedSources.Select(generated => generated.SourceText.ToString())))
         {
-            foreach (var generated in result.GeneratedSources)
-            {
-                var text = generated.SourceText.ToString();
-                Assert.DoesNotContain("using PatternKit", text);
-                Assert.DoesNotContain("PatternKit.", text);
-            }
+            Assert.DoesNotContain("using PatternKit", text);
+            Assert.DoesNotContain("PatternKit.", text);
         }
     }
 

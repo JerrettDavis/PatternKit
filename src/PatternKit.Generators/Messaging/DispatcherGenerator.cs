@@ -13,15 +13,12 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         // Find assembly attributes
         var assemblyAttributes = context.CompilationProvider.Select((compilation, _) =>
         {
-            foreach (var attr in compilation.Assembly.GetAttributes())
-            {
-                if (attr.AttributeClass?.Name == "GenerateDispatcherAttribute" &&
-                    attr.AttributeClass.ContainingNamespace.ToDisplayString() == "PatternKit.Generators.Messaging")
-                {
-                    return (compilation, (AttributeData?)attr);
-                }
-            }
-            return (compilation, (AttributeData?)null);
+            var attr = compilation.Assembly.GetAttributes()
+                .Where(a => a.AttributeClass?.Name == "GenerateDispatcherAttribute" &&
+                           a.AttributeClass.ContainingNamespace.ToDisplayString() == "PatternKit.Generators.Messaging")
+                .FirstOrDefault();
+            
+            return (compilation, (AttributeData?)attr);
         });
 
         context.RegisterSourceOutput(assemblyAttributes, (spc, data) =>
