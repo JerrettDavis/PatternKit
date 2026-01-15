@@ -106,7 +106,7 @@ public record PaymentProcessedEvent(int OrderId, decimal Amount, bool Success) :
 
 public class CreateCustomerHandler : global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<CreateCustomerCommand, Customer>
 {
-    private static int _nextId = 1;
+    private static int _nextId = 0;
     private readonly ILogger _logger;
     
     public CreateCustomerHandler(ILogger logger)
@@ -117,14 +117,15 @@ public class CreateCustomerHandler : global::PatternKit.Examples.Messaging.Sourc
     public ValueTask<Customer> Handle(CreateCustomerCommand request, CancellationToken ct)
     {
         _logger.Log($"Creating customer: {request.Name}");
-        var customer = new Customer(_nextId++, request.Name, request.Email, request.CreditLimit);
+        var id = System.Threading.Interlocked.Increment(ref _nextId);
+        var customer = new Customer(id, request.Name, request.Email, request.CreditLimit);
         return new ValueTask<Customer>(customer);
     }
 }
 
 public class PlaceOrderHandler : global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<PlaceOrderCommand, Order>
 {
-    private static int _nextOrderId = 1000;
+    private static int _nextOrderId = 999;
     private readonly ILogger _logger;
     
     public PlaceOrderHandler(ILogger logger)
@@ -136,7 +137,8 @@ public class PlaceOrderHandler : global::PatternKit.Examples.Messaging.SourceGen
     {
         _logger.Log($"Placing order for customer {request.CustomerId}");
         var total = request.Items.Sum(i => i.Price * i.Quantity);
-        var order = new Order(_nextOrderId++, request.CustomerId, request.Items, total, OrderStatus.Pending);
+        var orderId = System.Threading.Interlocked.Increment(ref _nextOrderId);
+        var order = new Order(orderId, request.CustomerId, request.Items, total, OrderStatus.Pending);
         return new ValueTask<Order>(order);
     }
 }
