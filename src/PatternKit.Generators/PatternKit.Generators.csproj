@@ -15,10 +15,7 @@
     <ItemGroup>
         <None Include="$(TargetDir)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
         <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
-        <None Include="..\PatternKit.Generators.Abstractions\bin\$(Configuration)\netstandard2.0\PatternKit.Generators.Abstractions.dll"
-              Pack="true"
-              PackagePath="analyzers/dotnet/cs"
-              Visible="false" />
+        <None Include="..\PatternKit.Generators.Abstractions\bin\$(Configuration)\netstandard2.0\PatternKit.Generators.Abstractions.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
     <ItemGroup>
@@ -28,7 +25,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" PrivateAssets="all" />
-        <PackageReference Include="System.Collections.Immutable" Version="10.0.1" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.2" />
     </ItemGroup>
 
     <ItemGroup>
