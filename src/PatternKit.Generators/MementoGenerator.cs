@@ -246,6 +246,10 @@ public sealed class MementoGenerator : IIncrementalGenerator
                 if (prop.GetMethod is null || prop.GetMethod.DeclaredAccessibility != Accessibility.Public)
                     continue;
 
+                // Skip computed properties (no setter and not init-only)
+                if (prop.SetMethod is null && !prop.IsRequired)
+                    continue;
+
                 memberType = prop.Type;
                 isReadOnly = prop.SetMethod is null;
                 isInitOnly = prop.SetMethod?.IsInitOnly ?? false;
