@@ -198,10 +198,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var mementoSource = result.Results
+        var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
+        
+        Assert.NotEqual(default, mementoSourceResult);
+        var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Memento includes Text but not InternalId
         Assert.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
@@ -230,10 +232,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var mementoSource = result.Results
+        var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
+        
+        Assert.NotEqual(default, mementoSourceResult);
+        var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Memento includes Text but not InternalData
         Assert.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
@@ -282,10 +286,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var mementoSource = result.Results
+        var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
+        
+        Assert.NotEqual(default, mementoSourceResult);
+        var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Verify Capture and RestoreNew methods exist
         Assert.Contains("public static EditorStateMemento Capture", mementoSource);
@@ -308,10 +314,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var caretakerSource = result.Results
+        var caretakerSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
+        
+        Assert.NotEqual(default, caretakerSourceResult);
+        var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
         // Verify caretaker has undo/redo functionality
         Assert.Contains("public bool Undo()", caretakerSource);
@@ -340,10 +348,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var mementoSource = result.Results
+        var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
+        
+        Assert.NotEqual(default, mementoSourceResult);
+        var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Verify MementoVersion property exists
         Assert.Contains("public int MementoVersion", mementoSource);
@@ -365,10 +375,12 @@ public class MementoGeneratorTests
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         
-        var caretakerSource = result.Results
+        var caretakerSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"))
-            .SourceText.ToString();
+            .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
+        
+        Assert.NotEqual(default, caretakerSourceResult);
+        var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
         // Verify capacity setting
         Assert.Contains("private const int MaxCapacity = 50", caretakerSource);
