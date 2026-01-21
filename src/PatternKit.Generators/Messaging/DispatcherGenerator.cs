@@ -315,6 +315,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Sends a command and returns a response (object-based overload).");
+        sb.AppendLine("    /// Note: Uses reflection. For best performance, use generic Send<TRequest, TResponse>.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    public async ValueTask<object?> Send(object request, CancellationToken ct = default)");
         sb.AppendLine("    {");
@@ -363,6 +364,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Publishes a notification to all registered handlers (object-based overload).");
+        sb.AppendLine("    /// Note: Uses reflection. For best performance, use generic Publish<TNotification>.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    public async ValueTask Publish(object notification, CancellationToken ct = default)");
         sb.AppendLine("    {");
@@ -392,6 +394,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Streams items from a stream request (object-based overload).");
+        sb.AppendLine("    /// Note: Uses reflection. For best performance, use generic Stream<TRequest, TItem>.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine("    public async IAsyncEnumerable<object?> Stream(object request, [EnumeratorCancellation] CancellationToken ct = default)");
         sb.AppendLine("    {");

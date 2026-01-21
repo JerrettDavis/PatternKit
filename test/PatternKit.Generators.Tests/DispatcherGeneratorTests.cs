@@ -606,6 +606,75 @@ public class DispatcherGeneratorTests
     }
 
     [Fact]
+    public void AroundMiddleware_ModifiesRequestAndResponse_VerifiesNesting()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+            using System.Threading;
+            using System.Threading.Tasks;
+            
+            [assembly: GenerateDispatcher(Namespace = "MyApp.Messaging", Name = "AppDispatcher")]
+            
+            namespace MyApp;
+            
+            using MyApp.Messaging;
+
+            public record Request(int Value);
+            public record Response(int Value);
+            
+            public static class Demo
+            {
+                public static async Task<int> Run()
+                {
+                    var dispatcher = AppDispatcher.Create()
+                        .Command<Request, Response>((req, ct) => 
+                            new ValueTask<Response>(new Response(req.Value)))
+                        .Around<Request, Response>(async (req, ct, next) =>
+                        {
+                            // Outer Around adds 10 after handler
+                            var result = await next();
+                            return new Response(result.Value + 10);
+                        }, order: 1)
+                        .Around<Request, Response>(async (req, ct, next) =>
+                        {
+                            // Inner Around multiplies by 2 after handler
+                            var result = await next();
+                            return new Response(result.Value * 2);
+                        }, order: 2)
+                        .Build();
+                    
+                    var response = await dispatcher.Send<Request, Response>(new Request(5), default);
+                    return response.Value;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AroundMiddleware_ModifiesRequestAndResponse_VerifiesNesting));
+
+        var gen = new PatternKit.Generators.Messaging.DispatcherGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success);
+        
+        pe.Seek(0, SeekOrigin.Begin);
+        var asm = System.Reflection.Assembly.Load(pe.ToArray());
+        var demo = asm.GetType("MyApp.Demo");
+        var run = demo!.GetMethod("Run");
+        var task = (Task<int>)run!.Invoke(null, null)!;
+        var result = task.Result;
+        
+        // Flow: 5 -> handler(5) -> inner(*2=10) -> outer(+10=20)
+        Assert.Equal(20, result);
+    }
+
+    [Fact]
     public void AroundMiddleware_WithPreAndPost_ExecutesInCorrectOrder()
     {
         var source = """
