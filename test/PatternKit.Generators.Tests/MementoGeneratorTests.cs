@@ -1,6 +1,5 @@
 using Microsoft.CodeAnalysis;
 using PatternKit.Common;
-using PatternKit.Creational.Builder;
 
 namespace PatternKit.Generators.Tests;
 

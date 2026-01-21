@@ -121,10 +121,12 @@ public static class GameStateDemo
             if (!_history.Undo())
                 return false;
 
-            // Use the generated memento to restore the previous state
-            var currentState = _history.Current;
-            var memento = GameStateMemento.Capture(in currentState);
-            memento.Restore(_state);
+            // Copy state directly from history's current state (no intermediate memento needed)
+            _state.PlayerX = _history.Current.PlayerX;
+            _state.PlayerY = _history.Current.PlayerY;
+            _state.Health = _history.Current.Health;
+            _state.Score = _history.Current.Score;
+            _state.Level = _history.Current.Level;
             
             return true;
         }
@@ -137,10 +139,12 @@ public static class GameStateDemo
             if (!_history.Redo())
                 return false;
 
-            // Use the generated memento to restore the next state
-            var currentState = _history.Current;
-            var memento = GameStateMemento.Capture(in currentState);
-            memento.Restore(_state);
+            // Copy state directly from history's current state (no intermediate memento needed)
+            _state.PlayerX = _history.Current.PlayerX;
+            _state.PlayerY = _history.Current.PlayerY;
+            _state.Health = _history.Current.Health;
+            _state.Score = _history.Current.Score;
+            _state.Level = _history.Current.Level;
             
             return true;
         }
