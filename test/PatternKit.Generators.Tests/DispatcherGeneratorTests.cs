@@ -601,7 +601,8 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
         
-        // Order 1 wraps Order 2, so: Around1 Before -> Around2 Before -> Handler -> Around2 After -> Around1 After
+        // Order: 1 (outer) wraps 2 (inner)
+        // Execution: Around1:Before -> Around2:Before -> Handler -> Around2:After -> Around1:After
         Assert.Equal("Around1:Before|Around2:Before|Handler|Around2:After|Around1:After", result);
     }
 

@@ -340,6 +340,8 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        // Handle generic ValueTask<TResponse>");
+        sb.AppendLine("        // Note: This reflection-based path is only used for object overloads (opt-in)");
+        sb.AppendLine("        // Regular generic Send<TRequest, TResponse> is zero-reflection");
         sb.AppendLine("        var resultType = result?.GetType();");
         sb.AppendLine("        if (resultType != null && resultType.IsGenericType && resultType.GetGenericTypeDefinition() == typeof(ValueTask<>))");
         sb.AppendLine("        {");
