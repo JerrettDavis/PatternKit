@@ -382,8 +382,8 @@ public class MementoGeneratorTests
         Assert.NotEqual(default, caretakerSourceResult);
         var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
-        // Verify capacity setting
-        Assert.Contains("private const int MaxCapacity = 50", caretakerSource);
-        Assert.Contains("if (_states.Count > MaxCapacity)", caretakerSource);
+        // Verify capacity setting (using regex for flexibility)
+        Assert.Matches(@"private\s+const\s+int\s+MaxCapacity\s*=\s*50", caretakerSource);
+        Assert.Matches(@"if\s*\(\s*_states\.Count\s*>\s*MaxCapacity\s*\)", caretakerSource);
     }
 }

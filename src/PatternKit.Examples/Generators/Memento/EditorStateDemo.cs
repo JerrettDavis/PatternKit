@@ -1,6 +1,6 @@
 using PatternKit.Generators;
 
-namespace PatternKit.Examples.Generators.MementoDemo;
+namespace PatternKit.Examples.Generators.Memento;
 
 /// <summary>
 /// Demonstrates the Memento pattern source generator with a text editor scenario.

@@ -1,6 +1,6 @@
 using PatternKit.Generators;
 
-namespace PatternKit.Examples.Generators.MementoDemo;
+namespace PatternKit.Examples.Generators.Memento;
 
 /// <summary>
 /// Demonstrates the Memento pattern with a game state scenario.
@@ -121,15 +121,10 @@ public static class GameStateDemo
             if (!_history.Undo())
                 return false;
 
-            // The caretaker returns the previous state, so we restore it to _state
-            // Since we're using a mutable class, we need to manually copy the properties
-            // The generated memento includes a Restore() method for this
-            var previousState = _history.Current;
-            _state.PlayerX = previousState.PlayerX;
-            _state.PlayerY = previousState.PlayerY;
-            _state.Health = previousState.Health;
-            _state.Score = previousState.Score;
-            _state.Level = previousState.Level;
+            // Use the generated memento to restore the previous state
+            var currentState = _history.Current;
+            var memento = GameStateMemento.Capture(in currentState);
+            memento.Restore(_state);
             
             return true;
         }
@@ -142,12 +137,10 @@ public static class GameStateDemo
             if (!_history.Redo())
                 return false;
 
-            var nextState = _history.Current;
-            _state.PlayerX = nextState.PlayerX;
-            _state.PlayerY = nextState.PlayerY;
-            _state.Health = nextState.Health;
-            _state.Score = nextState.Score;
-            _state.Level = nextState.Level;
+            // Use the generated memento to restore the next state
+            var currentState = _history.Current;
+            var memento = GameStateMemento.Capture(in currentState);
+            memento.Restore(_state);
             
             return true;
         }

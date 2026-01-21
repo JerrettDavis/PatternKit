@@ -214,18 +214,14 @@ public sealed class MementoGenerator : IIncrementalGenerator
         var members = new List<MemberInfo>();
         var includeAll = config.InclusionMode == 0; // IncludeAll
 
-        foreach (var member in typeSymbol.GetMembers())
+        // Filter to only public instance properties and fields
+        var candidateMembers = typeSymbol.GetMembers()
+            .Where(m => (m is IPropertySymbol || m is IFieldSymbol) && 
+                        !m.IsStatic && 
+                        m.DeclaredAccessibility == Accessibility.Public);
+
+        foreach (var member in candidateMembers)
         {
-            if (member is not IPropertySymbol property && member is not IFieldSymbol field)
-                continue;
-
-            if (member.IsStatic)
-                continue;
-
-            // Check accessibility
-            if (member.DeclaredAccessibility != Accessibility.Public)
-                continue;
-
             // Check for attributes
             var hasIgnore = HasAttribute(member, "PatternKit.Generators.MementoIgnoreAttribute");
             var hasInclude = HasAttribute(member, "PatternKit.Generators.MementoIncludeAttribute");
@@ -246,8 +242,10 @@ public sealed class MementoGenerator : IIncrementalGenerator
                 if (prop.GetMethod is null || prop.GetMethod.DeclaredAccessibility != Accessibility.Public)
                     continue;
 
-                // Skip computed properties (no setter and not init-only)
-                if (prop.SetMethod is null && !prop.IsRequired)
+                // Skip properties that cannot be restored:
+                // - computed properties (no setter)
+                // - init-only properties on non-record types
+                if (prop.SetMethod is null || (prop.SetMethod.IsInitOnly && !typeSymbol.IsRecord))
                     continue;
 
                 memberType = prop.Type;
@@ -411,14 +409,36 @@ public sealed class MementoGenerator : IIncrementalGenerator
             if (typeInfo.Members.Count > 0)
             {
                 // Check if we can use positional parameters (primary constructor)
+                // Verify parameter names and types match the members
                 var primaryCtor = typeInfo.TypeSymbol.Constructors.FirstOrDefault(c => 
-                    c.Parameters.Length == typeInfo.Members.Count);
+                {
+                    if (c.Parameters.Length != typeInfo.Members.Count)
+                        return false;
+                    
+                    // Check if parameter names and types match members (case-insensitive for names)
+                    for (int i = 0; i < c.Parameters.Length; i++)
+                    {
+                        var param = c.Parameters[i];
+                        var member = typeInfo.Members.FirstOrDefault(m => 
+                            string.Equals(m.Name, param.Name, StringComparison.OrdinalIgnoreCase) &&
+                            SymbolEqualityComparer.Default.Equals(m.TypeSymbol, param.Type));
+                        
+                        if (member is null)
+                            return false;
+                    }
+                    
+                    return true;
+                });
                 
                 if (primaryCtor is not null)
                 {
-                    // Use positional constructor
+                    // Use positional constructor, ordered by parameter order
                     sb.Append("(");
-                    sb.Append(string.Join(", ", typeInfo.Members.Select(m => $"this.{m.Name}")));
+                    var orderedMembers = primaryCtor.Parameters
+                        .Select(p => typeInfo.Members.First(m => 
+                            string.Equals(m.Name, p.Name, StringComparison.OrdinalIgnoreCase)))
+                        .ToList();
+                    sb.Append(string.Join(", ", orderedMembers.Select(m => $"this.{m.Name}")));
                     sb.AppendLine(");");
                 }
                 else
@@ -440,13 +460,14 @@ public sealed class MementoGenerator : IIncrementalGenerator
         }
         else
         {
-            // For classes/structs, use object initializer
+            // For classes/structs, use object initializer (only include settable members)
             sb.Append($"        return new {typeInfo.TypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}");
-            if (typeInfo.Members.Count > 0)
+            var settableMembers = typeInfo.Members.Where(m => !m.IsReadOnly && !m.IsInitOnly).ToList();
+            if (settableMembers.Count > 0)
             {
                 sb.AppendLine("()");
                 sb.AppendLine("        {");
-                foreach (var member in typeInfo.Members)
+                foreach (var member in settableMembers)
                 {
                     sb.AppendLine($"            {member.Name} = this.{member.Name},");
                 }
@@ -467,12 +488,11 @@ public sealed class MementoGenerator : IIncrementalGenerator
         sb.AppendLine($"    public void Restore({typeInfo.TypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} originator)");
         sb.AppendLine("    {");
 
-        foreach (var member in typeInfo.Members)
+        // Filter to only settable members
+        var settableMembers = typeInfo.Members.Where(m => !m.IsReadOnly && !m.IsInitOnly);
+        foreach (var member in settableMembers)
         {
-            if (!member.IsReadOnly && !member.IsInitOnly)
-            {
-                sb.AppendLine($"        originator.{member.Name} = this.{member.Name};");
-            }
+            sb.AppendLine($"        originator.{member.Name} = this.{member.Name};");
         }
 
         sb.AppendLine("    }");
