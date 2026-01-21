@@ -31,3 +31,9 @@ BP002 | PatternKit.Builders | Error | Diagnostics
 BP003 | PatternKit.Builders | Error | Diagnostics
 BA001 | PatternKit.Builders | Warning | Diagnostics
 BA002 | PatternKit.Builders | Warning | Diagnostics
+PKMEM001 | PatternKit.Generators.Memento | Error | Type marked with [Memento] must be partial
+PKMEM002 | PatternKit.Generators.Memento | Warning | Member is inaccessible for memento capture or restore
+PKMEM003 | PatternKit.Generators.Memento | Warning | Unsafe reference capture
+PKMEM004 | PatternKit.Generators.Memento | Error | Clone strategy requested but mechanism missing
+PKMEM005 | PatternKit.Generators.Memento | Error | Record restore generation failed
+PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrictions prevent in-place restore
