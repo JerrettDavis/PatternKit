@@ -335,14 +335,19 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         var returnType = method.ReturnType;
         var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        return typeName.StartsWith("System.Threading.Tasks.Task") ||
-               typeName.StartsWith("System.Threading.Tasks.ValueTask");
+        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
+               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
     }
 
     private static string FormatDefaultValue(IParameterSymbol param)
     {
         if (param.ExplicitDefaultValue is null)
+        {
+            // For value types (structs), use 'default' instead of 'null'
+            if (param.Type.IsValueType)
+                return "default";
             return "null";
+        }
 
         if (param.Type.TypeKind == TypeKind.Enum)
             return $"{param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{param.ExplicitDefaultValue}";
