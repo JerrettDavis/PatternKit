@@ -445,7 +445,23 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return b ? "true" : "false";
 
         if (param.ExplicitDefaultValue is char c)
-            return $"'{c}'";
+        {
+            // Properly escape character literals
+            return c switch
+            {
+                '\'' => @"'\''",
+                '\\' => @"'\\'",
+                '\0' => @"'\0'",
+                '\a' => @"'\a'",
+                '\b' => @"'\b'",
+                '\f' => @"'\f'",
+                '\n' => @"'\n'",
+                '\r' => @"'\r'",
+                '\t' => @"'\t'",
+                '\v' => @"'\v'",
+                _ => $"'{c}'"
+            };
+        }
 
         return param.ExplicitDefaultValue.ToString()!;
     }
