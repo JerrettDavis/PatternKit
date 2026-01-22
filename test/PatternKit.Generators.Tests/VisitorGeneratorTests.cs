@@ -828,4 +828,141 @@ public class VisitorGeneratorTests
             .ToArray();
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public void Generates_Visitor_For_Record_Hierarchy()
+    {
+        const string recordHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Records;
+
+            [GenerateVisitor]
+            public abstract partial record Message;
+
+            public partial record TextMessage(string Content) : Message;
+
+            public partial record ImageMessage(byte[] Data, string Format) : Message;
+
+            public partial record AudioMessage(string Url, int DurationSeconds) : Message;
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            recordHierarchy,
+            assemblyName: nameof(Generates_Visitor_For_Record_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // No generator diagnostics
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Confirm we generated expected files
+        var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        
+        // Interfaces
+        Assert.Contains("IMessageVisitor.Interfaces.g.cs", names);
+        
+        // Accept methods for each record type
+        Assert.Contains("Message.Accept.g.cs", names);
+        Assert.Contains("TextMessage.Accept.g.cs", names);
+        Assert.Contains("ImageMessage.Accept.g.cs", names);
+        Assert.Contains("AudioMessage.Accept.g.cs", names);
+        
+        // Builders
+        Assert.Contains("MessageVisitorBuilder.g.cs", names);
+
+        // Verify compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Record_Visitor_Dispatches_Correctly()
+    {
+        const string recordHierarchyWithUsage = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Records;
+
+            [GenerateVisitor]
+            public abstract partial record Message;
+
+            public partial record TextMessage(string Content) : Message;
+
+            public partial record ImageMessage(byte[] Data, string Format) : Message;
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var formatter = new MessageVisitorBuilder<string>()
+                        .When<TextMessage>(m => $"Text: {m.Content}")
+                        .When<ImageMessage>(m => $"Image: {m.Format}")
+                        .Default(_ => "Unknown")
+                        .Build();
+
+                    var text = new TextMessage("Hello World");
+                    var image = new ImageMessage(new byte[] { 1, 2, 3 }, "PNG");
+
+                    var textStr = text.Accept(formatter);
+                    var imageStr = image.Accept(formatter);
+
+                    return $"{textStr}|{imageStr}";
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            recordHierarchyWithUsage,
+            assemblyName: nameof(Record_Visitor_Dispatches_Correctly));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Emit and execute
+        using var pe = new MemoryStream();
+        using var pdb = new MemoryStream();
+        var res = updated.Emit(pe, pdb);
+        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        pe.Position = 0;
+
+        var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
+        var demo = asm.GetType("PatternKit.Examples.Records.Demo")!;
+        var runMethod = demo.GetMethod("Run")!;
+        var result = (string)runMethod.Invoke(null, null)!;
+
+        Assert.Equal("Text: Hello World|Image: PNG", result);
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS002_EmittedWhenInterfaceBaseTypeNotPartial()
+    {
+        const string nonPartialInterface = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public interface INotPartial { }
+            
+            public partial class DerivedType : INotPartial { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialInterface,
+            assemblyName: nameof(Diagnostic_PKVIS002_EmittedWhenInterfaceBaseTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS002 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        
+        var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
+        Assert.Contains("INotPartial", pkvis002.GetMessage());
+    }
 }

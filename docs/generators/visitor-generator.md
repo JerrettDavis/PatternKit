@@ -552,21 +552,6 @@ public partial class PartialBase { } // Correct
 
 **Solution:** Add the `partial` keyword to the type declaration.
 
-### PKVIS003: Type not accessible
-
-**Severity:** Warning
-
-Types must be `public` or `internal` for visitor generation to work properly.
-
-```csharp
-[GenerateVisitor]
-private partial class PrivateBase { } // Warning!
-
-// Fix:
-[GenerateVisitor]
-public partial class PublicBase { } // Correct
-```
-
 ### PKVIS004: Derived type must be partial
 
 **Severity:** Error

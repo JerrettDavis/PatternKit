@@ -200,8 +200,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 root.BaseName));
         }
         
-        // Check if base type is partial (only for classes and structs, not interfaces)
-        if (root.BaseType.TypeKind != TypeKind.Interface && !IsPartial(root.BaseType))
+        // Check if base type is partial (all types need to be partial for Accept method generation)
+        if (!IsPartial(root.BaseType))
         {
             var location = root.BaseType.Locations.FirstOrDefault();
             context.ReportDiagnostic(Diagnostic.Create(
@@ -212,16 +212,13 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         }
         
         // Check if derived types are partial
-        foreach (var derivedType in root.DerivedTypes)
+        foreach (var derivedType in root.DerivedTypes.Where(dt => !IsPartial(dt)))
         {
-            if (!IsPartial(derivedType))
-            {
-                var location = derivedType.Locations.FirstOrDefault();
-                context.ReportDiagnostic(Diagnostic.Create(
-                    Diagnostics.DerivedTypeNotPartial,
-                    location,
-                    derivedType.Name));
-            }
+            var location = derivedType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.DerivedTypeNotPartial,
+                location,
+                derivedType.Name));
         }
         
         // Generate visitor interfaces
@@ -237,18 +234,10 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     private static bool IsPartial(INamedTypeSymbol type)
     {
         // Check if any of the declarations is marked as partial
-        foreach (var syntaxRef in type.DeclaringSyntaxReferences)
-        {
-            var syntax = syntaxRef.GetSyntax();
-            if (syntax is TypeDeclarationSyntax typeDecl)
-            {
-                if (typeDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return type.DeclaringSyntaxReferences
+            .Select(syntaxRef => syntaxRef.GetSyntax())
+            .OfType<TypeDeclarationSyntax>()
+            .Any(typeDecl => typeDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)));
     }
 
     private static void GenerateVisitorInterfaces(SourceProductionContext context, VisitorRootInfo root)
@@ -358,13 +347,23 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 sb.AppendLine();
             }
 
-            // Determine the type keyword (class, struct, interface, record)
-            string typeKeyword = type.TypeKind switch
+            // Determine the type keyword (class, struct, interface, record, record struct)
+            string typeKeyword;
+            if (type.IsRecord)
             {
-                TypeKind.Interface => "interface",
-                TypeKind.Struct => "struct",
-                _ => "class"
-            };
+                typeKeyword = type.TypeKind == TypeKind.Struct
+                    ? "record struct"
+                    : "record";
+            }
+            else
+            {
+                typeKeyword = type.TypeKind switch
+                {
+                    TypeKind.Interface => "interface",
+                    TypeKind.Struct => "struct",
+                    _ => "class"
+                };
+            }
 
             sb.AppendLine($"public partial {typeKeyword} {type.Name}");
             sb.AppendLine("{");
@@ -850,17 +849,6 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             "Type '{0}' must be declared as partial to allow Accept method generation",
             Category,
             DiagnosticSeverity.Error,
-            isEnabledByDefault: true);
-        
-        /// <summary>
-        /// PKVIS003: Type not accessible for visitor generation.
-        /// </summary>
-        public static readonly DiagnosticDescriptor TypeNotAccessible = new(
-            "PKVIS003",
-            "Type not accessible",
-            "Type '{0}' is not accessible. Visitor generation requires public or internal types",
-            Category,
-            DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
         
         /// <summary>
