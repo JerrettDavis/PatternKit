@@ -12,6 +12,7 @@ namespace PatternKit.Generators.Visitors;
 /// <item>Fluent builder APIs for composing visitors</item>
 /// </list>
 /// <example>
+/// <para>Class-based hierarchy:</para>
 /// <code>
 /// [GenerateVisitor]
 /// public partial class AstNode { }
@@ -19,9 +20,17 @@ namespace PatternKit.Generators.Visitors;
 /// public partial class Expression : AstNode { }
 /// public partial class Statement : AstNode { }
 /// </code>
+/// <para>Interface-based hierarchy:</para>
+/// <code>
+/// [GenerateVisitor]
+/// public partial interface IShape { }
+/// 
+/// public partial class Circle : IShape { }
+/// public partial class Rectangle : IShape { }
+/// </code>
 /// </example>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public sealed class GenerateVisitorAttribute : Attribute
 {
     /// <summary>

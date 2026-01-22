@@ -15,10 +15,13 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Find all classes marked with [GenerateVisitor]
+        // Find all types (classes, interfaces, structs, records) marked with [GenerateVisitor]
         var visitorRoots = context.SyntaxProvider.ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: "PatternKit.Generators.Visitors.GenerateVisitorAttribute",
-            predicate: static (node, _) => node is ClassDeclarationSyntax,
+            predicate: static (node, _) => node is ClassDeclarationSyntax 
+                                        or InterfaceDeclarationSyntax 
+                                        or StructDeclarationSyntax 
+                                        or RecordDeclarationSyntax,
             transform: static (gasc, ct) => GetVisitorRoot(gasc, ct)
         ).Where(static x => x is not null);
 
@@ -52,6 +55,20 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
         var baseName = baseType.Name;
         var baseFullName = baseType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        
+        // Generate visitor interface name intelligently
+        // If base name starts with "I" and is an interface, don't add another "I"
+        string defaultVisitorName;
+        if (baseType.TypeKind == TypeKind.Interface && baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
+        {
+            // Interface name like "IShape" -> "IShapeVisitor"
+            defaultVisitorName = $"{baseName}Visitor";
+        }
+        else
+        {
+            // Class name like "Shape" -> "IShapeVisitor"
+            defaultVisitorName = $"I{baseName}Visitor";
+        }
 
         // Discover derived types in the same assembly
         var derivedTypes = autoDiscover 
@@ -63,7 +80,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             BaseName: baseName,
             BaseFullName: baseFullName,
             BaseType: baseType,
-            VisitorInterfaceName: visitorInterfaceName ?? $"I{baseName}Visitor",
+            VisitorInterfaceName: visitorInterfaceName ?? defaultVisitorName,
             GenerateAsync: generateAsync,
             GenerateActions: generateActions,
             DerivedTypes: derivedTypes
@@ -89,26 +106,73 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             var semanticModel = compilation.GetSemanticModel(tree);
             var root = tree.GetRoot();
             
+            // Discover classes
             foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
                 var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-                if (symbol is null) continue;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
                 
-                // Check if this type derives from baseType
-                var current = symbol.BaseType;
-                while (current is not null)
+                if (IsDerivedFrom(symbol, baseType))
                 {
-                    if (SymbolEqualityComparer.Default.Equals(current, baseType))
-                    {
-                        derived.Add(symbol);
-                        break;
-                    }
-                    current = current.BaseType;
+                    derived.Add(symbol);
+                }
+            }
+            
+            // Discover structs
+            foreach (var structDecl in root.DescendantNodes().OfType<StructDeclarationSyntax>())
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(structDecl) as INamedTypeSymbol;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
+                
+                if (ImplementsInterface(symbol, baseType))
+                {
+                    derived.Add(symbol);
+                }
+            }
+            
+            // Discover records
+            foreach (var recordDecl in root.DescendantNodes().OfType<RecordDeclarationSyntax>())
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(recordDecl) as INamedTypeSymbol;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
+                
+                if (IsDerivedFrom(symbol, baseType))
+                {
+                    derived.Add(symbol);
                 }
             }
         }
         
         return derived.ToImmutableArray();
+    }
+    
+    private static bool IsDerivedFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
+    {
+        // Check class inheritance
+        var current = type.BaseType;
+        while (current is not null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                return true;
+            current = current.BaseType;
+        }
+        
+        // Check interface implementation
+        return ImplementsInterface(type, baseType);
+    }
+    
+    private static bool ImplementsInterface(INamedTypeSymbol type, INamedTypeSymbol interfaceType)
+    {
+        if (interfaceType.TypeKind != TypeKind.Interface)
+            return false;
+            
+        foreach (var iface in type.AllInterfaces)
+        {
+            if (SymbolEqualityComparer.Default.Equals(iface, interfaceType))
+                return true;
+        }
+        
+        return false;
     }
 
     private static void GenerateVisitorInfrastructure(SourceProductionContext context, VisitorRootInfo root)
@@ -230,7 +294,15 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"public partial class {type.Name}");
+            // Determine the type keyword (class, struct, interface, record)
+            string typeKeyword = type.TypeKind switch
+            {
+                TypeKind.Interface => "interface",
+                TypeKind.Struct => "struct",
+                _ => "class"
+            };
+
+            sb.AppendLine($"public partial {typeKeyword} {type.Name}");
             sb.AppendLine("{");
 
             // Sync Accept with result
