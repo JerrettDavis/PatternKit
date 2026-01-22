@@ -177,6 +177,40 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
     private static void GenerateVisitorInfrastructure(SourceProductionContext context, VisitorRootInfo root)
     {
+        // Check if we have any concrete types to visit
+        if (root.DerivedTypes.IsEmpty)
+        {
+            var location = root.BaseType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.NoConcretTypes,
+                location,
+                root.BaseName));
+        }
+        
+        // Check if base type is partial (only for classes and structs, not interfaces)
+        if (root.BaseType.TypeKind != TypeKind.Interface && !IsPartial(root.BaseType))
+        {
+            var location = root.BaseType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.TypeMustBePartial,
+                location,
+                root.BaseName));
+            return; // Can't generate if not partial
+        }
+        
+        // Check if derived types are partial
+        foreach (var derivedType in root.DerivedTypes)
+        {
+            if (!IsPartial(derivedType))
+            {
+                var location = derivedType.Locations.FirstOrDefault();
+                context.ReportDiagnostic(Diagnostic.Create(
+                    Diagnostics.DerivedTypeNotPartial,
+                    location,
+                    derivedType.Name));
+            }
+        }
+        
         // Generate visitor interfaces
         GenerateVisitorInterfaces(context, root);
         
@@ -185,6 +219,23 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         
         // Generate fluent builders
         GenerateFluentBuilders(context, root);
+    }
+    
+    private static bool IsPartial(INamedTypeSymbol type)
+    {
+        // Check if any of the declarations is marked as partial
+        foreach (var syntaxRef in type.DeclaringSyntaxReferences)
+        {
+            var syntax = syntaxRef.GetSyntax();
+            if (syntax is TypeDeclarationSyntax typeDecl)
+            {
+                if (typeDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private static void GenerateVisitorInterfaces(SourceProductionContext context, VisitorRootInfo root)
@@ -758,4 +809,56 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         bool GenerateActions,
         ImmutableArray<INamedTypeSymbol> DerivedTypes
     );
+    
+    /// <summary>
+    /// Diagnostic descriptors for visitor pattern generation.
+    /// </summary>
+    private static class Diagnostics
+    {
+        private const string Category = "PatternKit.Generators.Visitor";
+        
+        /// <summary>
+        /// PKVIS001: No concrete types found for a marked base type.
+        /// </summary>
+        public static readonly DiagnosticDescriptor NoConcretTypes = new(
+            "PKVIS001",
+            "No concrete types found",
+            "No concrete types implementing or deriving from '{0}' were found. Add derived types or set AutoDiscoverDerivedTypes = false",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+        
+        /// <summary>
+        /// PKVIS002: Type must be partial for Accept method generation.
+        /// </summary>
+        public static readonly DiagnosticDescriptor TypeMustBePartial = new(
+            "PKVIS002",
+            "Type must be partial",
+            "Type '{0}' must be declared as partial to allow Accept method generation",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        /// <summary>
+        /// PKVIS003: Type not accessible for visitor generation.
+        /// </summary>
+        public static readonly DiagnosticDescriptor TypeNotAccessible = new(
+            "PKVIS003",
+            "Type not accessible",
+            "Type '{0}' is not accessible. Visitor generation requires public or internal types",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+        
+        /// <summary>
+        /// PKVIS004: Derived type is not partial.
+        /// </summary>
+        public static readonly DiagnosticDescriptor DerivedTypeNotPartial = new(
+            "PKVIS004",
+            "Derived type must be partial",
+            "Derived type '{0}' must be declared as partial to allow Accept method generation",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+    }
 }
