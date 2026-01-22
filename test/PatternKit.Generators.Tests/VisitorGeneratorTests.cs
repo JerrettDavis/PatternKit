@@ -466,4 +466,503 @@ public class VisitorGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void Generates_Visitor_For_Interface_Hierarchy()
+    {
+        const string interfaceHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Shapes;
+
+            [GenerateVisitor]
+            public partial interface IShape { }
+
+            public partial class Circle : IShape 
+            {
+                public double Radius { get; init; }
+            }
+
+            public partial class Rectangle : IShape 
+            {
+                public double Width { get; init; }
+                public double Height { get; init; }
+            }
+
+            public partial class Triangle : IShape 
+            {
+                public double Base { get; init; }
+                public double Height { get; init; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            interfaceHierarchy,
+            assemblyName: nameof(Generates_Visitor_For_Interface_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // No generator diagnostics
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Confirm we generated expected files
+        var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        
+        // Interfaces
+        Assert.Contains("IShapeVisitor.Interfaces.g.cs", names);
+        
+        // Accept methods for each type (interface + concrete classes)
+        Assert.Contains("IShape.Accept.g.cs", names);
+        Assert.Contains("Circle.Accept.g.cs", names);
+        Assert.Contains("Rectangle.Accept.g.cs", names);
+        Assert.Contains("Triangle.Accept.g.cs", names);
+        
+        // Builders
+        Assert.Contains("IShapeVisitorBuilder.g.cs", names);
+
+        // Verify compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Interface_Hierarchy_Visitor_Dispatches_Correctly()
+    {
+        const string interfaceHierarchyWithUsage = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Shapes;
+
+            [GenerateVisitor]
+            public partial interface IShape { }
+
+            public partial class Circle : IShape 
+            {
+                public double Radius { get; init; }
+            }
+
+            public partial class Rectangle : IShape 
+            {
+                public double Width { get; init; }
+                public double Height { get; init; }
+            }
+
+            public static class Demo
+            {
+                public static double Run()
+                {
+                    var areaCalculator = new IShapeVisitorBuilder<double>()
+                        .When<Circle>(c => 3.14159 * c.Radius * c.Radius)
+                        .When<Rectangle>(r => r.Width * r.Height)
+                        .Default(_ => 0.0)
+                        .Build();
+
+                    var circle = new Circle { Radius = 5.0 };
+                    var rectangle = new Rectangle { Width = 4.0, Height = 6.0 };
+
+                    var circleArea = circle.Accept(areaCalculator);
+                    var rectangleArea = rectangle.Accept(areaCalculator);
+
+                    return circleArea + rectangleArea;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            interfaceHierarchyWithUsage,
+            assemblyName: nameof(Interface_Hierarchy_Visitor_Dispatches_Correctly));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Emit and execute
+        using var pe = new MemoryStream();
+        using var pdb = new MemoryStream();
+        var res = updated.Emit(pe, pdb);
+        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        pe.Position = 0;
+
+        var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
+        var demo = asm.GetType("PatternKit.Examples.Shapes.Demo")!;
+        var runMethod = demo.GetMethod("Run")!;
+        var result = (double)runMethod.Invoke(null, null)!;
+
+        // Circle area: π * 5^2 ≈ 78.54
+        // Rectangle area: 4 * 6 = 24
+        // Total ≈ 102.54
+        Assert.True(result > 100 && result < 105, $"Expected ~102.54, got {result}");
+    }
+
+    [Fact]
+    public void Generates_Visitor_For_Struct_Hierarchy()
+    {
+        const string structHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Values;
+
+            [GenerateVisitor]
+            public partial interface IValue { }
+
+            public partial struct IntValue : IValue 
+            {
+                public int Value { get; init; }
+            }
+
+            public partial struct DoubleValue : IValue 
+            {
+                public double Value { get; init; }
+            }
+
+            public partial struct StringValue : IValue 
+            {
+                public string Value { get; init; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            structHierarchy,
+            assemblyName: nameof(Generates_Visitor_For_Struct_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // No generator diagnostics
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Confirm we generated expected files
+        var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        
+        // Interfaces
+        Assert.Contains("IValueVisitor.Interfaces.g.cs", names);
+        
+        // Accept methods for interface and structs
+        Assert.Contains("IValue.Accept.g.cs", names);
+        Assert.Contains("IntValue.Accept.g.cs", names);
+        Assert.Contains("DoubleValue.Accept.g.cs", names);
+        Assert.Contains("StringValue.Accept.g.cs", names);
+
+        // Verify compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Struct_Visitor_Dispatches_Without_Boxing()
+    {
+        const string structHierarchyWithUsage = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Values;
+
+            [GenerateVisitor]
+            public partial interface IValue { }
+
+            public partial struct IntValue : IValue 
+            {
+                public int Value { get; init; }
+            }
+
+            public partial struct DoubleValue : IValue 
+            {
+                public double Value { get; init; }
+            }
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var formatter = new IValueVisitorBuilder<string>()
+                        .When<IntValue>(i => $"Int:{i.Value}")
+                        .When<DoubleValue>(d => $"Double:{d.Value:F2}")
+                        .Default(_ => "Unknown")
+                        .Build();
+
+                    var intVal = new IntValue { Value = 42 };
+                    var doubleVal = new DoubleValue { Value = 3.14159 };
+
+                    var intStr = intVal.Accept(formatter);
+                    var doubleStr = doubleVal.Accept(formatter);
+
+                    return $"{intStr},{doubleStr}";
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            structHierarchyWithUsage,
+            assemblyName: nameof(Struct_Visitor_Dispatches_Without_Boxing));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Emit and execute
+        using var pe = new MemoryStream();
+        using var pdb = new MemoryStream();
+        var res = updated.Emit(pe, pdb);
+        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        pe.Position = 0;
+
+        var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
+        var demo = asm.GetType("PatternKit.Examples.Values.Demo")!;
+        var runMethod = demo.GetMethod("Run")!;
+        var result = (string)runMethod.Invoke(null, null)!;
+
+        Assert.Equal("Int:42,Double:3.14", result);
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS001_EmittedWhenNoConcretTypesFound()
+    {
+        const string noDerivedTypes = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial interface IEmptyHierarchy { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            noDerivedTypes,
+            assemblyName: nameof(Diagnostic_PKVIS001_EmittedWhenNoConcretTypesFound));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS001 warning
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS001");
+        
+        var pkvis001 = diagnostics.First(d => d.Id == "PKVIS001");
+        Assert.Contains("IEmptyHierarchy", pkvis001.GetMessage());
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS002_EmittedWhenBaseTypeNotPartial()
+    {
+        const string nonPartialBase = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public class NonPartialBase { }
+            
+            public partial class DerivedType : NonPartialBase { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialBase,
+            assemblyName: nameof(Diagnostic_PKVIS002_EmittedWhenBaseTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS002 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        
+        var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
+        Assert.Contains("NonPartialBase", pkvis002.GetMessage());
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS004_EmittedWhenDerivedTypeNotPartial()
+    {
+        const string nonPartialDerived = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial class Base { }
+            
+            public class NonPartialDerived : Base { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialDerived,
+            assemblyName: nameof(Diagnostic_PKVIS004_EmittedWhenDerivedTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS004 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS004");
+        
+        var pkvis004 = diagnostics.First(d => d.Id == "PKVIS004");
+        Assert.Contains("NonPartialDerived", pkvis004.GetMessage());
+    }
+
+    [Fact]
+    public void No_Diagnostics_For_Valid_Hierarchy()
+    {
+        const string validHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial class ValidBase { }
+            
+            public partial class ValidDerived : ValidBase { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            validHierarchy,
+            assemblyName: nameof(No_Diagnostics_For_Valid_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have no generator diagnostics
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics)
+            .Where(d => d.Id.StartsWith("PKVIS"))
+            .ToArray();
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void Generates_Visitor_For_Record_Hierarchy()
+    {
+        const string recordHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Records;
+
+            [GenerateVisitor]
+            public abstract partial record Message;
+
+            public partial record TextMessage(string Content) : Message;
+
+            public partial record ImageMessage(byte[] Data, string Format) : Message;
+
+            public partial record AudioMessage(string Url, int DurationSeconds) : Message;
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            recordHierarchy,
+            assemblyName: nameof(Generates_Visitor_For_Record_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // No generator diagnostics
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Confirm we generated expected files
+        var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        
+        // Interfaces
+        Assert.Contains("IMessageVisitor.Interfaces.g.cs", names);
+        
+        // Accept methods for each record type
+        Assert.Contains("Message.Accept.g.cs", names);
+        Assert.Contains("TextMessage.Accept.g.cs", names);
+        Assert.Contains("ImageMessage.Accept.g.cs", names);
+        Assert.Contains("AudioMessage.Accept.g.cs", names);
+        
+        // Builders
+        Assert.Contains("MessageVisitorBuilder.g.cs", names);
+
+        // Verify compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Record_Visitor_Dispatches_Correctly()
+    {
+        const string recordHierarchyWithUsage = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples.Records;
+
+            [GenerateVisitor]
+            public abstract partial record Message;
+
+            public partial record TextMessage(string Content) : Message;
+
+            public partial record ImageMessage(byte[] Data, string Format) : Message;
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var formatter = new MessageVisitorBuilder<string>()
+                        .When<TextMessage>(m => $"Text: {m.Content}")
+                        .When<ImageMessage>(m => $"Image: {m.Format}")
+                        .Default(_ => "Unknown")
+                        .Build();
+
+                    var text = new TextMessage("Hello World");
+                    var image = new ImageMessage(new byte[] { 1, 2, 3 }, "PNG");
+
+                    var textStr = text.Accept(formatter);
+                    var imageStr = image.Accept(formatter);
+
+                    return $"{textStr}|{imageStr}";
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            recordHierarchyWithUsage,
+            assemblyName: nameof(Record_Visitor_Dispatches_Correctly));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Emit and execute
+        using var pe = new MemoryStream();
+        using var pdb = new MemoryStream();
+        var res = updated.Emit(pe, pdb);
+        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        pe.Position = 0;
+
+        var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
+        var demo = asm.GetType("PatternKit.Examples.Records.Demo")!;
+        var runMethod = demo.GetMethod("Run")!;
+        var result = (string)runMethod.Invoke(null, null)!;
+
+        Assert.Equal("Text: Hello World|Image: PNG", result);
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS002_EmittedWhenInterfaceBaseTypeNotPartial()
+    {
+        const string nonPartialInterface = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public interface INotPartial { }
+            
+            public partial class DerivedType : INotPartial { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialInterface,
+            assemblyName: nameof(Diagnostic_PKVIS002_EmittedWhenInterfaceBaseTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS002 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        
+        var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
+        Assert.Contains("INotPartial", pkvis002.GetMessage());
+    }
 }

@@ -37,3 +37,6 @@ PKMEM003 | PatternKit.Generators.Memento | Warning | Unsafe reference capture
 PKMEM004 | PatternKit.Generators.Memento | Error | Clone strategy requested but mechanism missing
 PKMEM005 | PatternKit.Generators.Memento | Error | Record restore generation failed
 PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrictions prevent in-place restore
+PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
+PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
+PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation

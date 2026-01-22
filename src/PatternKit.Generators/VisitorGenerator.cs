@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Text;
@@ -15,10 +16,13 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Find all classes marked with [GenerateVisitor]
+        // Find all types (classes, interfaces, structs, records) marked with [GenerateVisitor]
         var visitorRoots = context.SyntaxProvider.ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: "PatternKit.Generators.Visitors.GenerateVisitorAttribute",
-            predicate: static (node, _) => node is ClassDeclarationSyntax,
+            predicate: static (node, _) => node is ClassDeclarationSyntax 
+                                        or InterfaceDeclarationSyntax 
+                                        or StructDeclarationSyntax 
+                                        or RecordDeclarationSyntax,
             transform: static (gasc, ct) => GetVisitorRoot(gasc, ct)
         ).Where(static x => x is not null);
 
@@ -52,6 +56,9 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
         var baseName = baseType.Name;
         var baseFullName = baseType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        
+        // Generate default visitor interface name
+        var defaultVisitorName = GetDefaultVisitorInterfaceName(baseType);
 
         // Discover derived types in the same assembly
         var derivedTypes = autoDiscover 
@@ -63,11 +70,34 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             BaseName: baseName,
             BaseFullName: baseFullName,
             BaseType: baseType,
-            VisitorInterfaceName: visitorInterfaceName ?? $"I{baseName}Visitor",
+            VisitorInterfaceName: visitorInterfaceName ?? defaultVisitorName,
             GenerateAsync: generateAsync,
             GenerateActions: generateActions,
             DerivedTypes: derivedTypes
         );
+    }
+    
+    /// <summary>
+    /// Generates a default visitor interface name based on the base type.
+    /// For interfaces with I-prefix (e.g., IShape), generates IShapeVisitor.
+    /// For other types (e.g., Shape), generates IShapeVisitor.
+    /// </summary>
+    private static string GetDefaultVisitorInterfaceName(INamedTypeSymbol baseType)
+    {
+        var baseName = baseType.Name;
+        
+        // If base is an interface with I-prefix (Hungarian notation), don't add another I
+        if (baseType.TypeKind == TypeKind.Interface && 
+            baseName.StartsWith("I") && 
+            baseName.Length > 1 && 
+            char.IsUpper(baseName[1]))
+        {
+            // Interface name like "IShape" -> "IShapeVisitor"
+            return $"{baseName}Visitor";
+        }
+        
+        // Class name like "Shape" -> "IShapeVisitor"
+        return $"I{baseName}Visitor";
     }
 
     private static T? GetAttributeProperty<T>(AttributeData attr, string propertyName)
@@ -89,30 +119,108 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             var semanticModel = compilation.GetSemanticModel(tree);
             var root = tree.GetRoot();
             
+            // Discover classes
             foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
                 var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
-                if (symbol is null) continue;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
                 
-                // Check if this type derives from baseType
-                var current = symbol.BaseType;
-                while (current is not null)
+                if (IsDerivedFrom(symbol, baseType))
                 {
-                    if (SymbolEqualityComparer.Default.Equals(current, baseType))
-                    {
-                        derived.Add(symbol);
-                        break;
-                    }
-                    current = current.BaseType;
+                    derived.Add(symbol);
+                }
+            }
+            
+            // Discover structs
+            foreach (var structDecl in root.DescendantNodes().OfType<StructDeclarationSyntax>())
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(structDecl) as INamedTypeSymbol;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
+                
+                if (IsDerivedFrom(symbol, baseType))
+                {
+                    derived.Add(symbol);
+                }
+            }
+            
+            // Discover records
+            foreach (var recordDecl in root.DescendantNodes().OfType<RecordDeclarationSyntax>())
+            {
+                var symbol = semanticModel.GetDeclaredSymbol(recordDecl) as INamedTypeSymbol;
+                if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
+                
+                if (IsDerivedFrom(symbol, baseType))
+                {
+                    derived.Add(symbol);
                 }
             }
         }
         
         return derived.ToImmutableArray();
     }
+    
+    private static bool IsDerivedFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
+    {
+        // Check class inheritance
+        var current = type.BaseType;
+        while (current is not null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current, baseType))
+                return true;
+            current = current.BaseType;
+        }
+        
+        // Check interface implementation
+        return ImplementsInterface(type, baseType);
+    }
+    
+    private static bool ImplementsInterface(INamedTypeSymbol type, INamedTypeSymbol interfaceType)
+    {
+        if (interfaceType.TypeKind != TypeKind.Interface)
+            return false;
+            
+        foreach (var iface in type.AllInterfaces)
+        {
+            if (SymbolEqualityComparer.Default.Equals(iface, interfaceType))
+                return true;
+        }
+        
+        return false;
+    }
 
     private static void GenerateVisitorInfrastructure(SourceProductionContext context, VisitorRootInfo root)
     {
+        // Check if we have any concrete types to visit
+        if (root.DerivedTypes.IsEmpty)
+        {
+            var location = root.BaseType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.NoConcretTypes,
+                location,
+                root.BaseName));
+        }
+        
+        // Check if base type is partial (all types need to be partial for Accept method generation)
+        if (!IsPartial(root.BaseType))
+        {
+            var location = root.BaseType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.TypeMustBePartial,
+                location,
+                root.BaseName));
+            return; // Can't generate if not partial
+        }
+        
+        // Check if derived types are partial
+        foreach (var derivedType in root.DerivedTypes.Where(dt => !IsPartial(dt)))
+        {
+            var location = derivedType.Locations.FirstOrDefault();
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.DerivedTypeNotPartial,
+                location,
+                derivedType.Name));
+        }
+        
         // Generate visitor interfaces
         GenerateVisitorInterfaces(context, root);
         
@@ -121,6 +229,15 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         
         // Generate fluent builders
         GenerateFluentBuilders(context, root);
+    }
+    
+    private static bool IsPartial(INamedTypeSymbol type)
+    {
+        // Check if any of the declarations is marked as partial
+        return type.DeclaringSyntaxReferences
+            .Select(syntaxRef => syntaxRef.GetSyntax())
+            .OfType<TypeDeclarationSyntax>()
+            .Any(typeDecl => typeDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)));
     }
 
     private static void GenerateVisitorInterfaces(SourceProductionContext context, VisitorRootInfo root)
@@ -230,7 +347,25 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 sb.AppendLine();
             }
 
-            sb.AppendLine($"public partial class {type.Name}");
+            // Determine the type keyword (class, struct, interface, record, record struct)
+            string typeKeyword;
+            if (type.IsRecord)
+            {
+                typeKeyword = type.TypeKind == TypeKind.Struct
+                    ? "record struct"
+                    : "record";
+            }
+            else
+            {
+                typeKeyword = type.TypeKind switch
+                {
+                    TypeKind.Interface => "interface",
+                    TypeKind.Struct => "struct",
+                    _ => "class"
+                };
+            }
+
+            sb.AppendLine($"public partial {typeKeyword} {type.Name}");
             sb.AppendLine("{");
 
             // Sync Accept with result
@@ -686,4 +821,45 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         bool GenerateActions,
         ImmutableArray<INamedTypeSymbol> DerivedTypes
     );
+    
+    /// <summary>
+    /// Diagnostic descriptors for visitor pattern generation.
+    /// </summary>
+    private static class Diagnostics
+    {
+        private const string Category = "PatternKit.Generators.Visitor";
+        
+        /// <summary>
+        /// PKVIS001: No concrete types found for a marked base type.
+        /// </summary>
+        public static readonly DiagnosticDescriptor NoConcretTypes = new(
+            "PKVIS001",
+            "No concrete types found",
+            "No concrete types implementing or deriving from '{0}' were found. Add derived types or set AutoDiscoverDerivedTypes = false",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+        
+        /// <summary>
+        /// PKVIS002: Type must be partial for Accept method generation.
+        /// </summary>
+        public static readonly DiagnosticDescriptor TypeMustBePartial = new(
+            "PKVIS002",
+            "Type must be partial",
+            "Type '{0}' must be declared as partial to allow Accept method generation",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+        
+        /// <summary>
+        /// PKVIS004: Derived type is not partial.
+        /// </summary>
+        public static readonly DiagnosticDescriptor DerivedTypeNotPartial = new(
+            "PKVIS004",
+            "Derived type must be partial",
+            "Derived type '{0}' must be declared as partial to allow Accept method generation",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+    }
 }
