@@ -219,9 +219,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
         foreach (var member in allMembers)
         {
-            // Check for ignore attribute
-            if (HasAttribute(member, "PatternKit.Generators.Decorator.DecoratorIgnoreAttribute"))
-                continue;
+            // Check for ignore attribute - these will still be forwarded but marked as non-virtual
+            var isIgnored = HasAttribute(member, "PatternKit.Generators.Decorator.DecoratorIgnoreAttribute");
 
             // Only process methods and properties
             if (member is IMethodSymbol method)
@@ -254,6 +253,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     ReturnType = returnType,
                     IsAsync = isAsync,
                     IsVoid = method.ReturnsVoid,
+                    IsIgnored = isIgnored,
                     Parameters = method.Parameters.Select(p => new ParameterInfo
                     {
                         Name = p.Name,
@@ -287,7 +287,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     ReturnType = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                     HasGetter = property.GetMethod is not null,
                     HasSetter = property.SetMethod is not null,
-                    IsAsync = false
+                    IsAsync = false,
+                    IsIgnored = isIgnored
                 };
 
                 members.Add(propInfo);
@@ -407,11 +408,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         {
             if (member.MemberType == MemberType.Method)
             {
-                GenerateForwardingMethod(sb, member, config);
+                GenerateForwardingMethod(sb, member, contractInfo, config);
             }
             else if (member.MemberType == MemberType.Property)
             {
-                GenerateForwardingProperty(sb, member, config);
+                GenerateForwardingProperty(sb, member, contractInfo, config);
             }
         }
 
@@ -427,13 +428,17 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private void GenerateForwardingMethod(StringBuilder sb, MemberInfo member, DecoratorConfig config)
+    private void GenerateForwardingMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
     {
         var asyncKeyword = member.IsAsync ? "async " : "";
         var awaitKeyword = member.IsAsync ? "await " : "";
+        // For abstract classes, use "override"; for interfaces, use "virtual"
+        var modifierKeyword = member.IsIgnored 
+            ? "" 
+            : (contractInfo.IsAbstractClass ? "override " : "virtual ");
         
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
-        sb.Append($"    public virtual {asyncKeyword}{member.ReturnType} {member.Name}(");
+        sb.Append($"    public {modifierKeyword}{asyncKeyword}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -491,10 +496,15 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.AppendLine();
     }
 
-    private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, DecoratorConfig config)
+    private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
     {
+        // For abstract classes, use "override"; for interfaces, use "virtual"
+        var modifierKeyword = member.IsIgnored 
+            ? "" 
+            : (contractInfo.IsAbstractClass ? "override " : "virtual ");
+        
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
-        sb.Append($"    public virtual {member.ReturnType} {member.Name}");
+        sb.Append($"    public {modifierKeyword}{member.ReturnType} {member.Name}");
 
         if (member.HasGetter && member.HasSetter)
         {
@@ -583,6 +593,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         public string ReturnType { get; set; } = "";
         public bool IsAsync { get; set; }
         public bool IsVoid { get; set; }
+        public bool IsIgnored { get; set; }
         public List<ParameterInfo> Parameters { get; set; } = new();
         public bool HasGetter { get; set; }
         public bool HasSetter { get; set; }
