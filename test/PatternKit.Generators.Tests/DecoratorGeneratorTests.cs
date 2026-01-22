@@ -13,7 +13,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IStorage
+            public interface IStorage
             {
                 string ReadFile(string path);
                 void WriteFile(string path, string content);
@@ -65,7 +65,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IAsyncStorage
+            public interface IAsyncStorage
             {
                 Task<string> ReadFileAsync(string path, CancellationToken ct = default);
                 ValueTask WriteFileAsync(string path, string content, CancellationToken ct = default);
@@ -107,7 +107,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IConfiguration
+            public interface IConfiguration
             {
                 string ApiKey { get; set; }
                 int Timeout { get; }
@@ -148,7 +148,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IRepository
+            public interface IRepository
             {
                 void Save(string data);
                 
@@ -192,7 +192,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator(BaseTypeName = "CustomStorageDecorator", HelpersTypeName = "CustomHelpers")]
-            public partial interface IStorage
+            public interface IStorage
             {
                 string ReadFile(string path);
             }
@@ -228,7 +228,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator(Composition = DecoratorCompositionMode.None)]
-            public partial interface IStorage
+            public interface IStorage
             {
                 string ReadFile(string path);
             }
@@ -307,7 +307,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IStorage
+            public interface IStorage
             {
                 string ReadFile(string path, int bufferSize = 4096);
                 void WriteFile(string path, string content, bool append = false);
@@ -344,7 +344,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IStorage
+            public interface IStorage
             {
                 void Zebra();
                 void Apple();
@@ -389,7 +389,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface ICalculator
+            public interface ICalculator
             {
                 void Calculate(ref int value);
                 void TryParse(string input, out int result);
@@ -431,7 +431,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IStorage
+            public interface IStorage
             {
                 Stream OpenRead(string path);
                 ValueTask<Stream> OpenReadAsync(string path, CancellationToken ct = default);
@@ -483,7 +483,7 @@ public class DecoratorGeneratorTests
             }
 
             [GenerateDecorator]
-            public partial interface IStorage : IReadable
+            public interface IStorage : IReadable
             {
                 void Write(string data);
             }
@@ -519,7 +519,7 @@ public class DecoratorGeneratorTests
             namespace TestNamespace;
 
             [GenerateDecorator]
-            public partial interface IService
+            public interface IService
             {
                 string Execute(string input);
             }
