@@ -12,6 +12,10 @@ This 780+ line demo implements a complete e-commerce domain with:
 - ✅ **Event-Driven Architecture** with notification fan-out
 - ✅ **Async Streaming** with `IAsyncEnumerable<T>`
 - ✅ **Pipeline Behaviors** for cross-cutting concerns
+- ✅ **Around Middleware** for wrapping handlers
+- ✅ **OnError Handling** for exception management
+- ✅ **Module System** for modular registration
+- ✅ **Object Overloads** for dynamic dispatch (optional)
 - ✅ **Repository Pattern** for data access
 - ✅ **Real-World Domain** (e-commerce scenario)
 
@@ -43,6 +47,111 @@ var customer = await dispatcher.Send<CreateCustomerCommand, Customer>(
     default);
 ```
 
+## New Features
+
+### Around Middleware
+
+Wrap handler execution with full control over the pipeline:
+
+```csharp
+var dispatcher = AppDispatcher.Create()
+    .Command<MyCommand, MyResponse>(handler)
+    .Around<MyCommand, MyResponse>(async (req, ct, next) =>
+    {
+        // Before handler
+        Console.WriteLine("Before");
+        
+        var result = await next();
+        
+        // After handler
+        Console.WriteLine("After");
+        
+        return result;
+    }, order: 1)
+    .Build();
+```
+
+### OnError Handling
+
+Handle exceptions gracefully with error handlers:
+
+```csharp
+var dispatcher = AppDispatcher.Create()
+    .Command<FailingCommand, Result>(handler)
+    .OnError<FailingCommand, Result>((req, ex, ct) =>
+    {
+        Console.WriteLine($"Error: {ex.Message}");
+        return ValueTask.CompletedTask;
+    })
+    .Build();
+```
+
+### Module System
+
+Organize handlers into reusable modules:
+
+```csharp
+public class OrderModule : IModule
+{
+    public void Register(IDispatcherBuilder builder)
+    {
+        builder.Command<PlaceOrder, Order>(PlaceOrderHandler);
+        builder.Notification<OrderPlaced>(NotifyInventory);
+        builder.Notification<OrderPlaced>(SendConfirmation);
+    }
+}
+
+var dispatcher = AppDispatcher.Create()
+    .AddModule(new OrderModule())
+    .Build();
+```
+
+### Object Overloads
+
+Enable dynamic dispatch for runtime scenarios:
+
+```csharp
+// Generate with object overloads enabled
+[assembly: GenerateDispatcher(
+    Namespace = "MyApp",
+    Name = "AppDispatcher",
+    IncludeObjectOverloads = true)]
+
+// Use dynamically
+object command = new GetCustomer(id);
+var result = await dispatcher.Send(command, ct);
+```
+
+### Stream Pipelines
+
+Add pipeline hooks for stream requests:
+
+```csharp
+var dispatcher = AppDispatcher.Create()
+    .Stream<SearchProducts, Product>(SearchHandler)
+    .PreStream<SearchProducts>((req, ct) =>
+    {
+        Console.WriteLine($"Searching for: {req.Query}");
+        return ValueTask.CompletedTask;
+    })
+    .Build();
+```
+
+### Pipeline Ordering
+
+Control execution order with explicit ordering:
+
+```csharp
+var dispatcher = AppDispatcher.Create()
+    .Around<Cmd, Resp>(OuterMiddleware, order: 1)
+    .Around<Cmd, Resp>(InnerMiddleware, order: 2)
+    .Pre<Cmd>(PreHook, order: 0)
+    .Post<Cmd, Resp>(PostHook, order: 0)
+    .Build();
+
+// Execution order: Pre(0) -> Around(1) -> Around(2) -> Handler -> Post(0)
+```
+
 ## Architecture
 
 ### Domain Model
@@ -68,6 +177,46 @@ var customer = await dispatcher.Send<CreateCustomerCommand, Customer>(
 
 **Streams:**
 - `SearchProductsQuery` → `IAsyncEnumerable<ProductSearchResult>`
+
+## Pipeline Execution Flow
+
+### Command with Full Pipeline
+
+```
+Request → Pre Hooks (ordered) 
+       → Around Middleware (outer to inner)
+       → Handler
+       → Around Middleware (inner to outer)
+       → Post Hooks (ordered)
+       → Response
+
+On Exception:
+       → OnError Hooks (ordered)
+       → Exception propagated
+```
+
+### Example with Multiple Behaviors
+
+```csharp
+var dispatcher = AppDispatcher.Create()
+    .Pre<Cmd>(ValidateRequest, order: 0)
+    .Around<Cmd, Resp>(LoggingMiddleware, order: 1)
+    .Around<Cmd, Resp>(TransactionMiddleware, order: 2)
+    .Command<Cmd, Resp>(Handler)
+    .Post<Cmd, Resp>(CacheResult, order: 0)
+    .OnError<Cmd, Resp>(LogError, order: 0)
+    .Build();
+
+// Execution flow:
+// 1. Pre: ValidateRequest
+// 2. Around(1) Begin: LoggingMiddleware
+// 3. Around(2) Begin: TransactionMiddleware
+// 4. Handler
+// 5. Around(2) End: TransactionMiddleware
+// 6. Around(1) End: LoggingMiddleware
+// 7. Post: CacheResult
+// On error: LogError
+```
 
 ### Extension Methods
 
