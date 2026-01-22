@@ -173,12 +173,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 case nameof(Decorator.GenerateDecoratorAttribute.Composition):
                     config.Composition = (int)named.Value.Value!;
                     break;
-                case nameof(Decorator.GenerateDecoratorAttribute.GenerateAsync):
-                    config.GenerateAsync = (bool)named.Value.Value!;
-                    break;
-                case nameof(Decorator.GenerateDecoratorAttribute.ForceAsync):
-                    config.ForceAsync = (bool)named.Value.Value!;
-                    break;
+                // GenerateAsync and ForceAsync are reserved for future use - not parsed
             }
         }
 
@@ -696,8 +691,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         public string BaseTypeName { get; set; } = "";
         public string HelpersTypeName { get; set; } = "";
         public int Composition { get; set; } = 1; // HelpersOnly
-        public bool GenerateAsync { get; set; }
-        public bool ForceAsync { get; set; }
+        // GenerateAsync and ForceAsync are reserved for future use - not stored in config
     }
 
     private class ContractInfo
