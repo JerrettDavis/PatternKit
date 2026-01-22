@@ -715,4 +715,117 @@ public class VisitorGeneratorTests
 
         Assert.Equal("Int:42,Double:3.14", result);
     }
+
+    [Fact]
+    public void Diagnostic_PKVIS001_EmittedWhenNoConcretTypesFound()
+    {
+        const string noDerivedTypes = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial interface IEmptyHierarchy { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            noDerivedTypes,
+            assemblyName: nameof(Diagnostic_PKVIS001_EmittedWhenNoConcretTypesFound));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS001 warning
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS001");
+        
+        var pkvis001 = diagnostics.First(d => d.Id == "PKVIS001");
+        Assert.Contains("IEmptyHierarchy", pkvis001.GetMessage());
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS002_EmittedWhenBaseTypeNotPartial()
+    {
+        const string nonPartialBase = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public class NonPartialBase { }
+            
+            public partial class DerivedType : NonPartialBase { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialBase,
+            assemblyName: nameof(Diagnostic_PKVIS002_EmittedWhenBaseTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS002 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        
+        var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
+        Assert.Contains("NonPartialBase", pkvis002.GetMessage());
+    }
+
+    [Fact]
+    public void Diagnostic_PKVIS004_EmittedWhenDerivedTypeNotPartial()
+    {
+        const string nonPartialDerived = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial class Base { }
+            
+            public class NonPartialDerived : Base { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            nonPartialDerived,
+            assemblyName: nameof(Diagnostic_PKVIS004_EmittedWhenDerivedTypeNotPartial));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have PKVIS004 error
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKVIS004");
+        
+        var pkvis004 = diagnostics.First(d => d.Id == "PKVIS004");
+        Assert.Contains("NonPartialDerived", pkvis004.GetMessage());
+    }
+
+    [Fact]
+    public void No_Diagnostics_For_Valid_Hierarchy()
+    {
+        const string validHierarchy = """
+            using PatternKit.Generators.Visitors;
+
+            namespace PatternKit.Examples;
+
+            [GenerateVisitor]
+            public partial class ValidBase { }
+            
+            public partial class ValidDerived : ValidBase { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            validHierarchy,
+            assemblyName: nameof(No_Diagnostics_For_Valid_Hierarchy));
+
+        var gen = new VisitorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should have no generator diagnostics
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics)
+            .Where(d => d.Id.StartsWith("PKVIS"))
+            .ToArray();
+        Assert.Empty(diagnostics);
+    }
 }
