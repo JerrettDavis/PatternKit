@@ -79,7 +79,7 @@ public class DecoratorGeneratorTests
         // No generator diagnostics
         Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
 
-        // Verify generated content contains async methods
+        // Verify generated content contains async method forwarding (direct forwarding without async/await)
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "IAsyncStorage.Decorator.g.cs")
@@ -87,11 +87,10 @@ public class DecoratorGeneratorTests
 
         Assert.Contains("public", generatedSource);
         Assert.Contains("virtual", generatedSource);
-        Assert.Contains("async", generatedSource);
         Assert.Contains("ReadFileAsync", generatedSource);
-        Assert.Contains("await Inner.ReadFileAsync", generatedSource);
+        Assert.Contains("=> Inner.ReadFileAsync", generatedSource);
         Assert.Contains("WriteFileAsync", generatedSource);
-        Assert.Contains("await Inner.WriteFileAsync", generatedSource);
+        Assert.Contains("=> Inner.WriteFileAsync", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -462,7 +461,7 @@ public class DecoratorGeneratorTests
         Assert.Contains("Exists", generatedSource);
         Assert.Contains("Delete", generatedSource);
         Assert.Contains("virtual", generatedSource);
-        Assert.Contains("async", generatedSource);
+        // Async methods use direct forwarding (no async/await keywords)
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -574,5 +573,137 @@ public class DecoratorGeneratorTests
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC001_UnsupportedTargetType()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public class ConcreteClass  // Not abstract
+            {
+                public void Method() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC001_UnsupportedTargetType));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC001 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC001");
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("ConcreteClass"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC002_UnsupportedMemberKind_Event()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+            using System;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IWithEvent
+            {
+                event EventHandler Changed;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC002_UnsupportedMemberKind_Event));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC002 diagnostic for the event
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC003_NameConflict_BaseType()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IService
+            {
+                void Execute();
+            }
+
+            // This conflicts with the generated name
+            public class ServiceDecoratorBase
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC003_NameConflict_BaseType));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC003 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecoratorBase"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC003_NameConflict_HelpersType()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IService
+            {
+                void Execute();
+            }
+
+            // This conflicts with the generated helpers name
+            public static class ServiceDecorators
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC003_NameConflict_HelpersType));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC003 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecorators"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC002_Indexer()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IIndexable
+            {
+                string this[int index] { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC002_Indexer));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC002 diagnostic for the indexer
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
     }
 }

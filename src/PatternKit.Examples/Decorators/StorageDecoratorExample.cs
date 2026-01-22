@@ -25,9 +25,9 @@ public class InMemoryFileStorage : IFileStorage
 
     public string ReadFile(string path)
     {
-        if (!_files.ContainsKey(path))
+        if (!_files.TryGetValue(path, out var content))
             throw new FileNotFoundException($"File not found: {path}");
-        return _files[path];
+        return content;
     }
 
     public void WriteFile(string path, string content)

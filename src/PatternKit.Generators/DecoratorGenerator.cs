@@ -15,15 +15,15 @@ namespace PatternKit.Generators;
 public sealed class DecoratorGenerator : IIncrementalGenerator
 {
     // Diagnostic IDs
-    private const string DiagIdTypeNotPartial = "PKDEC001";
+    private const string DiagIdUnsupportedTargetType = "PKDEC001";
     private const string DiagIdUnsupportedMember = "PKDEC002";
     private const string DiagIdNameConflict = "PKDEC003";
     private const string DiagIdInaccessibleMember = "PKDEC004";
 
-    private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
-        id: DiagIdTypeNotPartial,
-        title: "Type marked with [GenerateDecorator] must be partial",
-        messageFormat: "Type '{0}' is marked with [GenerateDecorator] but is not declared as partial. Add the 'partial' keyword to the type declaration.",
+    private static readonly DiagnosticDescriptor UnsupportedTargetTypeDescriptor = new(
+        id: DiagIdUnsupportedTargetType,
+        title: "Unsupported target type for decorator generation",
+        messageFormat: "Type '{0}' cannot be used as a decorator contract. Only interfaces and abstract classes are supported.",
         category: "PatternKit.Generators.Decorator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -82,21 +82,20 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         AttributeData attribute,
         SyntaxNode node)
     {
-        // Check if type is partial (for interfaces and abstract classes)
+        // Check if type is interface or abstract class
         if (contractSymbol.TypeKind == TypeKind.Interface)
         {
-            // Interfaces don't need to be partial
+            // Interfaces are supported
         }
         else if (contractSymbol.TypeKind == TypeKind.Class && contractSymbol.IsAbstract)
         {
-            // Abstract classes should be partial if we want to add members
-            // But we're generating a separate class, so not required
+            // Abstract classes are supported
         }
         else
         {
-            // Not an interface or abstract class - error
+            // Not an interface or abstract class - unsupported target type
             context.ReportDiagnostic(Diagnostic.Create(
-                TypeNotPartialDescriptor,
+                UnsupportedTargetTypeDescriptor,
                 node.GetLocation(),
                 contractSymbol.Name));
             return;
@@ -117,6 +116,16 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 NameConflictDescriptor,
                 node.GetLocation(),
                 config.BaseTypeName));
+            return;
+        }
+
+        // Check for helpers name conflict if composition helpers are enabled
+        if (config.Composition != 0 && HasNameConflict(contractSymbol, config.HelpersTypeName))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                NameConflictDescriptor,
+                node.GetLocation(),
+                config.HelpersTypeName));
             return;
         }
 
@@ -234,7 +243,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
 
                 // Skip inaccessible methods
-                if (method.DeclaredAccessibility != Accessibility.Public)
+                if (method.DeclaredAccessibility != Accessibility.Public && method.DeclaredAccessibility != Accessibility.Internal)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
@@ -266,12 +275,23 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             }
             else if (member is IPropertySymbol property)
             {
+                // Indexer properties are not supported in v1
+                if (property.IsIndexer)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        UnsupportedMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        member.Name,
+                        "Indexer"));
+                    continue;
+                }
+
                 // For abstract classes, only include virtual or abstract properties
                 if (contractInfo.IsAbstractClass && !property.IsVirtual && !property.IsAbstract)
                     continue;
 
                 // Skip inaccessible properties
-                if (property.DeclaredAccessibility != Accessibility.Public)
+                if (property.DeclaredAccessibility != Accessibility.Public && property.DeclaredAccessibility != Accessibility.Internal)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
@@ -302,29 +322,80 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     member.Name,
                     "Event"));
             }
+            else if (member is IFieldSymbol or INamedTypeSymbol)
+            {
+                // Fields and nested types are not supported
+                context.ReportDiagnostic(Diagnostic.Create(
+                    UnsupportedMemberDescriptor,
+                    member.Locations.FirstOrDefault(),
+                    member.Name,
+                    member.Kind.ToString()));
+            }
         }
 
-        // Sort members by name for deterministic ordering
-        return members.OrderBy(m => m.Name, StringComparer.Ordinal).ToList();
+        // Sort members for deterministic ordering by kind, name, and signature
+        return members.OrderBy(m => GetMemberSortKey(m), StringComparer.Ordinal).ToList();
+    }
+
+    private static string GetMemberSortKey(MemberInfo member)
+    {
+        // Create a stable sort key: kind + name + parameter signature
+        var sb = new StringBuilder();
+        sb.Append((int)member.MemberType); // 0 for Method, 1 for Property
+        sb.Append('_');
+        sb.Append(member.Name);
+        
+        if (member.MemberType == MemberType.Method && member.Parameters.Count > 0)
+        {
+            sb.Append('(');
+            for (int i = 0; i < member.Parameters.Count; i++)
+            {
+                if (i > 0) sb.Append(',');
+                var param = member.Parameters[i];
+                sb.Append(param.RefKind switch
+                {
+                    RefKind.Ref => "ref ",
+                    RefKind.Out => "out ",
+                    RefKind.In => "in ",
+                    _ => ""
+                });
+                sb.Append(param.Type);
+            }
+            sb.Append(')');
+        }
+        
+        return sb.ToString();
     }
 
     private IEnumerable<ISymbol> GetAllInterfaceMembers(INamedTypeSymbol type)
     {
         var members = new List<ISymbol>();
+        var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+
+        void AddMembers(IEnumerable<ISymbol> symbols)
+        {
+            foreach (var symbol in symbols)
+            {
+                if (seen.Add(symbol))
+                {
+                    members.Add(symbol);
+                }
+            }
+        }
 
         if (type.TypeKind == TypeKind.Interface)
         {
             // For interfaces, collect from this interface and all base interfaces
-            members.AddRange(type.GetMembers());
+            AddMembers(type.GetMembers());
             foreach (var baseInterface in type.AllInterfaces)
             {
-                members.AddRange(baseInterface.GetMembers());
+                AddMembers(baseInterface.GetMembers());
             }
         }
         else if (type.TypeKind == TypeKind.Class && type.IsAbstract)
         {
             // For abstract classes, collect all members (we'll filter virtual/abstract later)
-            members.AddRange(type.GetMembers());
+            AddMembers(type.GetMembers());
         }
 
         return members;
@@ -349,14 +420,32 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return "null";
         }
 
-        if (param.Type.TypeKind == TypeKind.Enum)
-            return $"{param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{param.ExplicitDefaultValue}";
+        if (param.Type.TypeKind == TypeKind.Enum && param.Type is INamedTypeSymbol enumType)
+        {
+            // Try to resolve the enum field name corresponding to the default value
+            foreach (var member in enumType.GetMembers().OfType<IFieldSymbol>())
+            {
+                if (member.HasConstantValue && Equals(member.ConstantValue, param.ExplicitDefaultValue))
+                {
+                    return $"{enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{member.Name}";
+                }
+            }
+            
+            // Fallback: cast the numeric value
+            return $"({enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}){param.ExplicitDefaultValue}";
+        }
 
         if (param.ExplicitDefaultValue is string str)
-            return $"\"{str}\"";
+        {
+            // Properly escape strings
+            return $"\"{str.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}\"";
+        }
 
         if (param.ExplicitDefaultValue is bool b)
             return b ? "true" : "false";
+
+        if (param.ExplicitDefaultValue is char c)
+            return $"'{c}'";
 
         return param.ExplicitDefaultValue.ToString()!;
     }
@@ -365,6 +454,20 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     {
         return symbol.GetAttributes().Any(a =>
             a.AttributeClass?.ToDisplayString() == attributeName);
+    }
+
+    private static string GetAccessibilityKeyword(Accessibility accessibility)
+    {
+        return accessibility switch
+        {
+            Accessibility.Public => "public",
+            Accessibility.Internal => "internal",
+            Accessibility.Protected => "protected",
+            Accessibility.ProtectedOrInternal => "protected internal",
+            Accessibility.ProtectedAndInternal => "private protected",
+            Accessibility.Private => "private",
+            _ => "public"
+        };
     }
 
     private static bool HasNameConflict(INamedTypeSymbol contractSymbol, string generatedName)
@@ -391,8 +494,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
         // Generate base decorator class
         var contractFullName = contractInfo.ContractSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
         sb.AppendLine($"/// <summary>Base decorator for {contractInfo.ContractName}. All members forward to Inner.</summary>");
-        sb.AppendLine($"public abstract partial class {config.BaseTypeName} : {contractFullName}");
+        sb.AppendLine($"{accessibility} abstract partial class {config.BaseTypeName} : {contractFullName}");
         sb.AppendLine("{");
 
         // Constructor
@@ -435,15 +539,14 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
     private void GenerateForwardingMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
     {
-        var asyncKeyword = member.IsAsync ? "async " : "";
-        var awaitKeyword = member.IsAsync ? "await " : "";
-        // For abstract classes, use "override"; for interfaces, use "virtual"
+        // For async methods, use direct forwarding (return Inner.X()) instead of async/await
+        // to avoid unnecessary state machine allocation
         var modifierKeyword = member.IsIgnored 
             ? "" 
             : (contractInfo.IsAbstractClass ? "override " : "virtual ");
         
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
-        sb.Append($"    public {modifierKeyword}{asyncKeyword}{member.ReturnType} {member.Name}(");
+        sb.Append($"    public {modifierKeyword}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -462,11 +565,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.Append(paramList);
         sb.AppendLine(")");
 
-        // Generate method body
+        // Generate method body - use direct forwarding for all methods including async
         if (member.IsVoid)
         {
             sb.AppendLine("    {");
-            sb.Append($"        {awaitKeyword}Inner.{member.Name}(");
+            sb.Append($"        Inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -483,7 +586,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
         else
         {
-            sb.Append($"        => {awaitKeyword}Inner.{member.Name}(");
+            sb.Append($"        => Inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -537,9 +640,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     private void GenerateCompositionHelpers(StringBuilder sb, ContractInfo contractInfo, DecoratorConfig config)
     {
         var contractFullName = contractInfo.ContractSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
 
         sb.AppendLine($"/// <summary>Composition helpers for {contractInfo.ContractName} decorators.</summary>");
-        sb.AppendLine($"public static partial class {config.HelpersTypeName}");
+        sb.AppendLine($"{accessibility} static partial class {config.HelpersTypeName}");
         sb.AppendLine("{");
         sb.AppendLine($"    /// <summary>");
         sb.AppendLine($"    /// Composes multiple decorators in order.");

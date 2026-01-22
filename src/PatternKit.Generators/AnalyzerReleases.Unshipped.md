@@ -40,7 +40,7 @@ PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrict
 PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
 PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
 PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation
-PKDEC001 | PatternKit.Generators.Decorator | Error | Type marked with [GenerateDecorator] must be partial
+PKDEC001 | PatternKit.Generators.Decorator | Error | Unsupported target type for decorator generation
 PKDEC002 | PatternKit.Generators.Decorator | Warning | Unsupported member kind for decorator generation
 PKDEC003 | PatternKit.Generators.Decorator | Error | Name conflict for generated decorator types
 PKDEC004 | PatternKit.Generators.Decorator | Warning | Member is not accessible for decorator generation

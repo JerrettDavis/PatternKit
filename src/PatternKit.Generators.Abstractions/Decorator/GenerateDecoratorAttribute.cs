@@ -27,14 +27,16 @@ public sealed class GenerateDecoratorAttribute : Attribute
     public DecoratorCompositionMode Composition { get; set; } = DecoratorCompositionMode.HelpersOnly;
 
     /// <summary>
-    /// When true, generates async-specific helpers even if no async methods are present.
-    /// Default is false (async support is inferred from contract).
+    /// Reserved for future use.
+    /// Currently ignored by the Decorator generator and has no effect on generated code.
+    /// Default is false.
     /// </summary>
     public bool GenerateAsync { get; set; }
 
     /// <summary>
-    /// When true, all methods become async (converts sync to async).
-    /// Default is false (preserves exact signatures from contract).
+    /// Reserved for future use.
+    /// Currently ignored by the Decorator generator and has no effect on generated code.
+    /// Default is false.
     /// </summary>
     public bool ForceAsync { get; set; }
 }
