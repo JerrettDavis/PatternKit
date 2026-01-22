@@ -19,6 +19,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     private const string DiagIdUnsupportedMember = "PKDEC002";
     private const string DiagIdNameConflict = "PKDEC003";
     private const string DiagIdInaccessibleMember = "PKDEC004";
+    private const string DiagIdGenericContract = "PKDEC005";
 
     private static readonly DiagnosticDescriptor UnsupportedTargetTypeDescriptor = new(
         id: DiagIdUnsupportedTargetType,
@@ -33,7 +34,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         title: "Unsupported member kind for decorator generation",
         messageFormat: "Member '{0}' of kind '{1}' is not supported in decorator generation (v1). Only methods and properties are supported.",
         category: "PatternKit.Generators.Decorator",
-        defaultSeverity: DiagnosticSeverity.Warning,
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     private static readonly DiagnosticDescriptor NameConflictDescriptor = new(
@@ -50,6 +51,14 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         messageFormat: "Member '{0}' cannot be accessed for decorator forwarding. Ensure the member is public or internal with InternalsVisibleTo.",
         category: "PatternKit.Generators.Decorator",
         defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor GenericContractDescriptor = new(
+        id: DiagIdGenericContract,
+        title: "Generic contracts are not supported for decorator generation",
+        messageFormat: "Generic type '{0}' cannot be used as a decorator contract. Generic contracts are not supported in v1.",
+        category: "PatternKit.Generators.Decorator",
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -101,6 +110,16 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return;
         }
 
+        // Check for generic contracts (not supported in v1)
+        if (contractSymbol.TypeParameters.Length > 0)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                GenericContractDescriptor,
+                node.GetLocation(),
+                contractSymbol.Name));
+            return;
+        }
+
         // Parse attribute arguments
         var config = ParseDecoratorConfig(attribute, contractSymbol);
 
@@ -119,8 +138,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return;
         }
 
-        // Check for helpers name conflict if composition helpers are enabled
-        if (config.Composition != 0 && HasNameConflict(contractSymbol, config.HelpersTypeName))
+        // Check for helpers name conflict only if composition helpers will be generated
+        if (config.Composition == 1 && HasNameConflict(contractSymbol, config.HelpersTypeName))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 NameConflictDescriptor,
@@ -258,6 +277,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     IsAsync = isAsync,
                     IsVoid = method.ReturnsVoid,
                     IsIgnored = isIgnored,
+                    Accessibility = method.DeclaredAccessibility,
+                    OriginalSymbol = method,
                     Parameters = method.Parameters.Select(p => new ParameterInfo
                     {
                         Name = p.Name,
@@ -302,8 +323,13 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     ReturnType = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                     HasGetter = property.GetMethod is not null,
                     HasSetter = property.SetMethod is not null,
+                    IsInitOnly = property.SetMethod?.IsInitOnly ?? false,
                     IsAsync = false,
-                    IsIgnored = isIgnored
+                    IsIgnored = isIgnored,
+                    Accessibility = property.DeclaredAccessibility,
+                    GetterAccessibility = property.GetMethod?.DeclaredAccessibility ?? property.DeclaredAccessibility,
+                    SetterAccessibility = property.SetMethod?.DeclaredAccessibility ?? property.DeclaredAccessibility,
+                    OriginalSymbol = property
                 };
 
                 members.Add(propInfo);
@@ -365,35 +391,84 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     private IEnumerable<ISymbol> GetAllInterfaceMembers(INamedTypeSymbol type)
     {
         var members = new List<ISymbol>();
-        var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
+        var seenSignatures = new HashSet<string>();
 
-        void AddMembers(IEnumerable<ISymbol> symbols)
+        void AddMember(ISymbol symbol)
         {
-            foreach (var symbol in symbols)
+            // Create a signature key for deduplication
+            var signature = GetMemberSignature(symbol);
+            if (seenSignatures.Add(signature))
             {
-                if (seen.Add(symbol))
-                {
-                    members.Add(symbol);
-                }
+                members.Add(symbol);
             }
         }
 
         if (type.TypeKind == TypeKind.Interface)
         {
             // For interfaces, collect from this interface and all base interfaces
-            AddMembers(type.GetMembers());
+            foreach (var member in type.GetMembers())
+            {
+                AddMember(member);
+            }
             foreach (var baseInterface in type.AllInterfaces)
             {
-                AddMembers(baseInterface.GetMembers());
+                foreach (var member in baseInterface.GetMembers())
+                {
+                    AddMember(member);
+                }
             }
         }
         else if (type.TypeKind == TypeKind.Class && type.IsAbstract)
         {
             // For abstract classes, collect all members (we'll filter virtual/abstract later)
-            AddMembers(type.GetMembers());
+            foreach (var member in type.GetMembers())
+            {
+                AddMember(member);
+            }
         }
 
         return members;
+    }
+
+    private static string GetMemberSignature(ISymbol symbol)
+    {
+        var sb = new StringBuilder();
+        sb.Append(symbol.Kind);
+        sb.Append('_');
+        sb.Append(symbol.Name);
+        
+        if (symbol is IMethodSymbol method)
+        {
+            sb.Append('(');
+            for (int i = 0; i < method.Parameters.Length; i++)
+            {
+                if (i > 0) sb.Append(',');
+                var param = method.Parameters[i];
+                sb.Append(param.RefKind switch
+                {
+                    RefKind.Ref => "ref ",
+                    RefKind.Out => "out ",
+                    RefKind.In => "in ",
+                    _ => ""
+                });
+                sb.Append(param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            }
+            sb.Append(')');
+            sb.Append(':');
+            sb.Append(method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+        else if (symbol is IPropertySymbol property)
+        {
+            sb.Append(':');
+            sb.Append(property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+        else if (symbol is IEventSymbol eventSymbol)
+        {
+            sb.Append(':');
+            sb.Append(eventSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+        
+        return sb.ToString();
     }
 
     private static bool IsAsyncMethod(IMethodSymbol method)
@@ -418,9 +493,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         if (param.Type.TypeKind == TypeKind.Enum && param.Type is INamedTypeSymbol enumType)
         {
             // Try to resolve the enum field name corresponding to the default value
-            foreach (var member in enumType.GetMembers().OfType<IFieldSymbol>())
+            foreach (var member in enumType.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue))
             {
-                if (member.HasConstantValue && Equals(member.ConstantValue, param.ExplicitDefaultValue))
+                if (Equals(member.ConstantValue, param.ExplicitDefaultValue))
                 {
                     return $"{enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{member.Name}";
                 }
@@ -430,35 +505,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return $"({enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}){param.ExplicitDefaultValue}";
         }
 
-        if (param.ExplicitDefaultValue is string str)
-        {
-            // Properly escape strings
-            return $"\"{str.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r").Replace("\t", "\\t")}\"";
-        }
-
-        if (param.ExplicitDefaultValue is bool b)
-            return b ? "true" : "false";
-
-        if (param.ExplicitDefaultValue is char c)
-        {
-            // Properly escape character literals
-            return c switch
-            {
-                '\'' => @"'\''",
-                '\\' => @"'\\'",
-                '\0' => @"'\0'",
-                '\a' => @"'\a'",
-                '\b' => @"'\b'",
-                '\f' => @"'\f'",
-                '\n' => @"'\n'",
-                '\r' => @"'\r'",
-                '\t' => @"'\t'",
-                '\v' => @"'\v'",
-                _ => $"'{c}'"
-            };
-        }
-
-        return param.ExplicitDefaultValue.ToString()!;
+        // Use Roslyn's culture-invariant literal formatting for all other types
+        return SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false);
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)
@@ -552,12 +600,27 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     {
         // For async methods, use direct forwarding (return Inner.X()) instead of async/await
         // to avoid unnecessary state machine allocation
-        var modifierKeyword = member.IsIgnored 
-            ? "" 
-            : (contractInfo.IsAbstractClass ? "override " : "virtual ");
+        
+        // Determine the modifier keyword
+        string modifierKeyword;
+        if (contractInfo.IsAbstractClass)
+        {
+            // For abstract class contracts, always override the contract member.
+            // If the member is ignored, seal the override to prevent further overriding
+            // while still satisfying the abstract/virtual contract.
+            modifierKeyword = member.IsIgnored ? "sealed override " : "override ";
+        }
+        else
+        {
+            // For non-abstract contracts (e.g., interfaces), only non-ignored members are virtual.
+            modifierKeyword = member.IsIgnored ? "" : "virtual ";
+        }
+        
+        // Preserve the original member's accessibility to avoid widening on overrides
+        var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
         
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
-        sb.Append($"    public {modifierKeyword}{member.ReturnType} {member.Name}(");
+        sb.Append($"    {accessibilityKeyword} {modifierKeyword}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -617,20 +680,51 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
     private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
     {
-        // For abstract classes, use "override"; for interfaces, use "virtual"
-        var modifierKeyword = member.IsIgnored 
-            ? "" 
-            : (contractInfo.IsAbstractClass ? "override " : "virtual ");
+        // Determine the modifier keyword
+        string modifierKeyword;
+        if (contractInfo.IsAbstractClass)
+        {
+            // For abstract class contracts, always override.
+            // If ignored, seal the override to prevent further overriding.
+            modifierKeyword = member.IsIgnored ? "sealed override " : "override ";
+        }
+        else
+        {
+            // For interfaces, only non-ignored members are virtual.
+            modifierKeyword = member.IsIgnored ? "" : "virtual ";
+        }
+        
+        // Preserve the original member's accessibility
+        var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
         
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
-        sb.Append($"    public {modifierKeyword}{member.ReturnType} {member.Name}");
+        sb.Append($"    {accessibilityKeyword} {modifierKeyword}{member.ReturnType} {member.Name}");
+
+        // Determine accessor-level modifiers
+        string getterModifier = "";
+        string setterModifier = "";
+        
+        if (contractInfo.IsAbstractClass)
+        {
+            // For abstract classes, apply accessor modifiers when accessibility differs from property
+            if (member.HasGetter && member.GetterAccessibility != member.Accessibility)
+            {
+                getterModifier = GetAccessibilityKeyword(member.GetterAccessibility) + " ";
+            }
+            if (member.HasSetter && member.SetterAccessibility != member.Accessibility)
+            {
+                setterModifier = GetAccessibilityKeyword(member.SetterAccessibility) + " ";
+            }
+        }
 
         if (member.HasGetter && member.HasSetter)
         {
             sb.AppendLine();
             sb.AppendLine("    {");
-            sb.AppendLine($"        get => Inner.{member.Name};");
-            sb.AppendLine($"        set => Inner.{member.Name} = value;");
+            sb.AppendLine($"        {getterModifier}get => Inner.{member.Name};");
+            // Use init instead of set if the original property uses init
+            var setKeyword = member.IsInitOnly ? "init" : "set";
+            sb.AppendLine($"        {setterModifier}{setKeyword} => Inner.{member.Name} = value;");
             sb.AppendLine("    }");
         }
         else if (member.HasGetter)
@@ -641,7 +735,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         {
             sb.AppendLine();
             sb.AppendLine("    {");
-            sb.AppendLine($"        set => Inner.{member.Name} = value;");
+            var setKeyword = member.IsInitOnly ? "init" : "set";
+            sb.AppendLine($"        {setterModifier}{setKeyword} => Inner.{member.Name} = value;");
             sb.AppendLine("    }");
         }
 
@@ -716,6 +811,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         public List<ParameterInfo> Parameters { get; set; } = new();
         public bool HasGetter { get; set; }
         public bool HasSetter { get; set; }
+        public bool IsInitOnly { get; set; }
+        public Accessibility Accessibility { get; set; } = Accessibility.Public;
+        public Accessibility GetterAccessibility { get; set; } = Accessibility.Public;
+        public Accessibility SetterAccessibility { get; set; } = Accessibility.Public;
+        public ISymbol? OriginalSymbol { get; set; }
     }
 
     private class ParameterInfo
