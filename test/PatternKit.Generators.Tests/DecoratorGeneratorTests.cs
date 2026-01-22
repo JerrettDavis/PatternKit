@@ -706,4 +706,93 @@ public class DecoratorGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
     }
+
+    [Fact]
+    public void Diagnostic_PKDEC005_GenericContract()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IGenericService<T>
+            {
+                T Process(T input);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC005_GenericContract));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC005 diagnostic for the generic contract
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC005" && d.GetMessage().Contains("IGenericService"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC002_InitOnlyProperty()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IConfig
+            {
+                string Name { get; init; }
+                int Value { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC002_InitOnlyProperty));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC002 diagnostic for the init-only property
+        // Init setters are incompatible with the decorator pattern
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Name"));
+    }
+
+     [Fact]
+    public void GenerateDecoratorForAbstractClass_WithInternalProtectedMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public abstract class ServiceBase
+            {
+                public abstract void PublicMethod();
+                protected internal abstract void ProtectedInternalMethod();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForAbstractClass_WithInternalProtectedMembers));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify generated content contains correct accessibility
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "ServiceBase.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("public override", generatedSource);
+        Assert.Contains("PublicMethod", generatedSource);
+        Assert.Contains("protected internal override", generatedSource);
+        Assert.Contains("ProtectedInternalMethod", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

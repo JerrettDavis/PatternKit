@@ -257,7 +257,12 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
 
                 // Skip inaccessible methods
-                if (method.DeclaredAccessibility != Accessibility.Public && method.DeclaredAccessibility != Accessibility.Internal)
+                // For abstract classes, allow public/internal/protected internal
+                // Pure protected can't be forwarded because Inner.ProtectedMethod() isn't accessible
+                var isAccessible = method.DeclaredAccessibility == Accessibility.Public || 
+                                  method.DeclaredAccessibility == Accessibility.Internal ||
+                                  method.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
+                if (!isAccessible)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
@@ -307,12 +312,30 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
 
                 // Skip inaccessible properties
-                if (property.DeclaredAccessibility != Accessibility.Public && property.DeclaredAccessibility != Accessibility.Internal)
+                // For abstract classes, allow public/internal/protected internal
+                // Pure protected can't be forwarded because Inner.Property isn't accessible
+                var isAccessible = property.DeclaredAccessibility == Accessibility.Public || 
+                                  property.DeclaredAccessibility == Accessibility.Internal ||
+                                  property.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
+                if (!isAccessible)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
                         member.Locations.FirstOrDefault(),
                         member.Name));
+                    continue;
+                }
+
+                // Properties with init-only setters are not supported
+                // The decorator pattern is incompatible with init setters because
+                // you cannot assign to init-only properties after object construction
+                if (property.SetMethod?.IsInitOnly ?? false)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        UnsupportedMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        property.Name,
+                        "Init-only property"));
                     continue;
                 }
 
@@ -722,9 +745,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine("    {");
             sb.AppendLine($"        {getterModifier}get => Inner.{member.Name};");
-            // Use init instead of set if the original property uses init
-            var setKeyword = member.IsInitOnly ? "init" : "set";
-            sb.AppendLine($"        {setterModifier}{setKeyword} => Inner.{member.Name} = value;");
+            // Note: Init setters cannot be properly forwarded in decorators
+            // Always use 'set' for forwarding since we can't assign to init-only properties
+            sb.AppendLine($"        {setterModifier}set => Inner.{member.Name} = value;");
             sb.AppendLine("    }");
         }
         else if (member.HasGetter)
@@ -735,8 +758,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         {
             sb.AppendLine();
             sb.AppendLine("    {");
-            var setKeyword = member.IsInitOnly ? "init" : "set";
-            sb.AppendLine($"        {setterModifier}{setKeyword} => Inner.{member.Name} = value;");
+            // Always use 'set' for forwarding
+            sb.AppendLine($"        {setterModifier}set => Inner.{member.Name} = value;");
             sb.AppendLine("    }");
         }
 
