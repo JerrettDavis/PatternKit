@@ -1113,6 +1113,94 @@ public class DispatcherGeneratorTests
         Assert.Equal("Handler:Test", result);
     }
 
+    [Fact]
+    public void ObjectOverloads_Stream_DispatchesCorrectly()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+            using System;
+            using System.Collections.Generic;
+            using System.Runtime.CompilerServices;
+            using System.Threading;
+            using System.Threading.Tasks;
+            
+            [assembly: GenerateDispatcher(
+                Namespace = "MyApp.Messaging", 
+                Name = "AppDispatcher",
+                IncludeStreaming = true,
+                IncludeObjectOverloads = true)]
+            
+            namespace MyApp;
+            
+            using MyApp.Messaging;
+
+            public record RangeRequest(int Start, int Count);
+            
+            public static class Demo
+            {
+                private static async IAsyncEnumerable<int> GenerateRange(RangeRequest req, [EnumeratorCancellation] CancellationToken ct)
+                {
+                    for (int i = req.Start; i < req.Start + req.Count; i++)
+                    {
+                        yield return i;
+                    }
+                }
+                
+                public static async Task<string> Run()
+                {
+                    try
+                    {
+                        var dispatcher = AppDispatcher.Create()
+                            .Stream<RangeRequest, int>(GenerateRange)
+                            .Build();
+                        
+                        var items = new List<int>();
+                        object request = new RangeRequest(10, 5);
+                        
+                        await foreach (var item in dispatcher.Stream(request, default))
+                        {
+                            items.Add((int)item!);
+                        }
+                        
+                        return string.Join(",", items);
+                    }
+                    catch (Exception ex)
+                    {
+                        return $"ERROR:{ex.Message}";
+                    }
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ObjectOverloads_Stream_DispatchesCorrectly));
+
+        var gen = new PatternKit.Generators.Messaging.DispatcherGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success);
+        
+        pe.Seek(0, SeekOrigin.Begin);
+        var asm = System.Reflection.Assembly.Load(pe.ToArray());
+        var demo = asm.GetType("MyApp.Demo");
+        var run = demo!.GetMethod("Run");
+        var task = (Task<string>)run!.Invoke(null, null)!;
+        var result = task.Result;
+        
+        // Should either be the expected result or an error message
+        if (result.StartsWith("ERROR:"))
+        {
+            Assert.Fail($"Test threw exception: {result}");
+        }
+        Assert.Equal("10,11,12,13,14", result);
+    }
+
     #endregion
 
     #region Module System Tests

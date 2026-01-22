@@ -198,7 +198,7 @@ On Exception:
 ### Example with Multiple Behaviors
 
 ```csharp
-dispatcher.Create()
+var dispatcher = AppDispatcher.Create()
     .Pre<Cmd>(ValidateRequest, order: 0)
     .Around<Cmd, Resp>(LoggingMiddleware, order: 1)
     .Around<Cmd, Resp>(TransactionMiddleware, order: 2)
