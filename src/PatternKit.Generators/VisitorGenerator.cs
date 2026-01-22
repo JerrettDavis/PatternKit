@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Text;
@@ -56,19 +57,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         var baseName = baseType.Name;
         var baseFullName = baseType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         
-        // Generate visitor interface name intelligently
-        // If base name starts with "I" and is an interface, don't add another "I"
-        string defaultVisitorName;
-        if (baseType.TypeKind == TypeKind.Interface && baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
-        {
-            // Interface name like "IShape" -> "IShapeVisitor"
-            defaultVisitorName = $"{baseName}Visitor";
-        }
-        else
-        {
-            // Class name like "Shape" -> "IShapeVisitor"
-            defaultVisitorName = $"I{baseName}Visitor";
-        }
+        // Generate default visitor interface name
+        var defaultVisitorName = GetDefaultVisitorInterfaceName(baseType);
 
         // Discover derived types in the same assembly
         var derivedTypes = autoDiscover 
@@ -85,6 +75,29 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             GenerateActions: generateActions,
             DerivedTypes: derivedTypes
         );
+    }
+    
+    /// <summary>
+    /// Generates a default visitor interface name based on the base type.
+    /// For interfaces with I-prefix (e.g., IShape), generates IShapeVisitor.
+    /// For other types (e.g., Shape), generates IShapeVisitor.
+    /// </summary>
+    private static string GetDefaultVisitorInterfaceName(INamedTypeSymbol baseType)
+    {
+        var baseName = baseType.Name;
+        
+        // If base is an interface with I-prefix (Hungarian notation), don't add another I
+        if (baseType.TypeKind == TypeKind.Interface && 
+            baseName.StartsWith("I") && 
+            baseName.Length > 1 && 
+            char.IsUpper(baseName[1]))
+        {
+            // Interface name like "IShape" -> "IShapeVisitor"
+            return $"{baseName}Visitor";
+        }
+        
+        // Class name like "Shape" -> "IShapeVisitor"
+        return $"I{baseName}Visitor";
     }
 
     private static T? GetAttributeProperty<T>(AttributeData attr, string propertyName)
@@ -229,7 +242,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             var syntax = syntaxRef.GetSyntax();
             if (syntax is TypeDeclarationSyntax typeDecl)
             {
-                if (typeDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
+                if (typeDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
                 {
                     return true;
                 }
