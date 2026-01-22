@@ -137,7 +137,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 var symbol = semanticModel.GetDeclaredSymbol(structDecl) as INamedTypeSymbol;
                 if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
                 
-                if (ImplementsInterface(symbol, baseType))
+                if (IsDerivedFrom(symbol, baseType))
                 {
                     derived.Add(symbol);
                 }

@@ -539,7 +539,7 @@ public partial interface IEmptyHierarchy { }
 
 **Severity:** Error
 
-The base type (class or struct, not interface) must be declared as `partial` to allow Accept method generation.
+The base type (class, struct, or interface) must be declared as `partial` to allow Accept method generation.
 
 ```csharp
 [GenerateVisitor]
