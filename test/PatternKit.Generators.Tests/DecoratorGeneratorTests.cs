@@ -795,4 +795,93 @@ public class DecoratorGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void Diagnostic_PKDEC002_GenericMethod()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IGenericService
+            {
+                T Process<T>(T input);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC002_GenericMethod));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC002 diagnostic for the generic method
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Generic method"));
+    }
+
+    [Fact]
+    public void GenerateDecoratorForInterface_IgnoresStaticMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IService
+            {
+                void InstanceMethod();
+                static void StaticMethod() { }
+                string InstanceProperty { get; set; }
+                static string StaticProperty { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForInterface_IgnoresStaticMembers));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics for static members
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify generated content contains only instance members
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "IService.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("InstanceMethod", generatedSource);
+        Assert.Contains("InstanceProperty", generatedSource);
+        Assert.DoesNotContain("StaticMethod", generatedSource);
+        Assert.DoesNotContain("StaticProperty", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC004_PropertyWithProtectedSetter()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public abstract class ServiceBase
+            {
+                public abstract string Name { get; protected set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC004_PropertyWithProtectedSetter));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC004 diagnostic for the property with protected setter
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC004" && d.GetMessage().Contains("Name"));
+    }
 }

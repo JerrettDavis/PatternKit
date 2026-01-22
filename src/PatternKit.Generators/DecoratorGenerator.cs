@@ -48,7 +48,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InaccessibleMemberDescriptor = new(
         id: DiagIdInaccessibleMember,
         title: "Member is not accessible for decorator generation",
-        messageFormat: "Member '{0}' cannot be accessed for decorator forwarding. Ensure the member is public or internal with InternalsVisibleTo.",
+        messageFormat: "Member '{0}' cannot be forwarded by the generated decorator. Only members accessible from the decorator type (public, internal, or protected internal) can be forwarded; purely protected or private protected members on the inner type are not accessible.",
         category: "PatternKit.Generators.Decorator",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -252,6 +252,21 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 if (method.MethodKind != MethodKind.Ordinary)
                     continue;
 
+                // Skip static methods; decorators only forward instance members
+                if (method.IsStatic)
+                    continue;
+
+                // Generic methods are not supported in v1
+                if (method.TypeParameters.Length > 0)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        UnsupportedMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        method.Name,
+                        "Generic method"));
+                    continue;
+                }
+
                 // For abstract classes, only include virtual or abstract methods
                 if (contractInfo.IsAbstractClass && !method.IsVirtual && !method.IsAbstract)
                     continue;
@@ -302,9 +317,27 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
                 }
 
+                // Skip static properties; decorators only forward instance members
+                if (property.IsStatic)
+                    continue;
+
                 // For abstract classes, only include virtual or abstract properties
                 if (contractInfo.IsAbstractClass && !property.IsVirtual && !property.IsAbstract)
                     continue;
+
+                // Check accessor-level accessibility
+                // Property may be public but have protected/private accessors
+                bool getterAccessible = property.GetMethod == null || IsAccessibleForDecorator(property.GetMethod.DeclaredAccessibility);
+                bool setterAccessible = property.SetMethod == null || IsAccessibleForDecorator(property.SetMethod.DeclaredAccessibility);
+                
+                if (!getterAccessible || !setterAccessible)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        InaccessibleMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        member.Name));
+                    continue;
+                }
 
                 // Skip inaccessible properties
                 if (!IsAccessibleForDecorator(property.DeclaredAccessibility))
@@ -356,14 +389,29 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     member.Name,
                     "Event"));
             }
-            else if (member is IFieldSymbol or INamedTypeSymbol)
+            else if (member is IFieldSymbol fieldSymbol)
             {
-                // Fields and nested types are not supported
-                context.ReportDiagnostic(Diagnostic.Create(
-                    UnsupportedMemberDescriptor,
-                    member.Locations.FirstOrDefault(),
-                    member.Name,
-                    member.Kind.ToString()));
+                // Fields are not supported; only report for forwardable API-surface members
+                if (IsAccessibleForDecorator(fieldSymbol.DeclaredAccessibility))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        UnsupportedMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        member.Name,
+                        member.Kind.ToString()));
+                }
+            }
+            else if (member is INamedTypeSymbol typeSymbol)
+            {
+                // Nested types are not supported; only report for forwardable API-surface members
+                if (IsAccessibleForDecorator(typeSymbol.DeclaredAccessibility))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        UnsupportedMemberDescriptor,
+                        member.Locations.FirstOrDefault(),
+                        member.Name,
+                        member.Kind.ToString()));
+                }
             }
         }
 
@@ -625,19 +673,13 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         // to avoid unnecessary state machine allocation
         
         // Determine the modifier keyword
-        string modifierKeyword;
-        if (contractInfo.IsAbstractClass)
-        {
+        string modifierKeyword = contractInfo.IsAbstractClass
             // For abstract class contracts, always override the contract member.
             // If the member is ignored, seal the override to prevent further overriding
             // while still satisfying the abstract/virtual contract.
-            modifierKeyword = member.IsIgnored ? "sealed override " : "override ";
-        }
-        else
-        {
+            ? (member.IsIgnored ? "sealed override " : "override ")
             // For non-abstract contracts (e.g., interfaces), only non-ignored members are virtual.
-            modifierKeyword = member.IsIgnored ? "" : "virtual ";
-        }
+            : (member.IsIgnored ? "" : "virtual ");
         
         // Preserve the original member's accessibility to avoid widening on overrides
         var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
@@ -704,18 +746,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
     {
         // Determine the modifier keyword
-        string modifierKeyword;
-        if (contractInfo.IsAbstractClass)
-        {
-            // For abstract class contracts, always override.
-            // If ignored, seal the override to prevent further overriding.
-            modifierKeyword = member.IsIgnored ? "sealed override " : "override ";
-        }
-        else
-        {
-            // For interfaces, only non-ignored members are virtual.
-            modifierKeyword = member.IsIgnored ? "" : "virtual ";
-        }
+        string modifierKeyword = contractInfo.IsAbstractClass
+            ? (member.IsIgnored ? "sealed override " : "override ")
+            : (member.IsIgnored ? "" : "virtual ");
         
         // Preserve the original member's accessibility
         var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
