@@ -757,7 +757,7 @@ public class DecoratorGeneratorTests
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Name"));
     }
 
-     [Fact]
+    [Fact]
     public void GenerateDecoratorForAbstractClass_WithInternalProtectedMembers()
     {
         const string source = """

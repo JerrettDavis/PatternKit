@@ -257,12 +257,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
 
                 // Skip inaccessible methods
-                // For abstract classes, allow public/internal/protected internal
-                // Pure protected can't be forwarded because Inner.ProtectedMethod() isn't accessible
-                var isAccessible = method.DeclaredAccessibility == Accessibility.Public || 
-                                  method.DeclaredAccessibility == Accessibility.Internal ||
-                                  method.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
-                if (!isAccessible)
+                if (!IsAccessibleForDecorator(method.DeclaredAccessibility))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
@@ -312,12 +307,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     continue;
 
                 // Skip inaccessible properties
-                // For abstract classes, allow public/internal/protected internal
-                // Pure protected can't be forwarded because Inner.Property isn't accessible
-                var isAccessible = property.DeclaredAccessibility == Accessibility.Public || 
-                                  property.DeclaredAccessibility == Accessibility.Internal ||
-                                  property.DeclaredAccessibility == Accessibility.ProtectedOrInternal;
-                if (!isAccessible)
+                if (!IsAccessibleForDecorator(property.DeclaredAccessibility))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
@@ -516,12 +506,13 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         if (param.Type.TypeKind == TypeKind.Enum && param.Type is INamedTypeSymbol enumType)
         {
             // Try to resolve the enum field name corresponding to the default value
-            foreach (var member in enumType.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue))
+            var enumField = enumType.GetMembers()
+                .OfType<IFieldSymbol>()
+                .FirstOrDefault(f => f.HasConstantValue && Equals(f.ConstantValue, param.ExplicitDefaultValue));
+            
+            if (enumField != null)
             {
-                if (Equals(member.ConstantValue, param.ExplicitDefaultValue))
-                {
-                    return $"{enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{member.Name}";
-                }
+                return $"{enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{enumField.Name}";
             }
             
             // Fallback: cast the numeric value
@@ -536,6 +527,15 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     {
         return symbol.GetAttributes().Any(a =>
             a.AttributeClass?.ToDisplayString() == attributeName);
+    }
+
+    private static bool IsAccessibleForDecorator(Accessibility accessibility)
+    {
+        // Allow public/internal/protected internal
+        // Pure protected can't be forwarded because Inner.Member() isn't accessible through the base type reference
+        return accessibility == Accessibility.Public || 
+               accessibility == Accessibility.Internal ||
+               accessibility == Accessibility.ProtectedOrInternal;
     }
 
     private static string GetAccessibilityKeyword(Accessibility accessibility)
