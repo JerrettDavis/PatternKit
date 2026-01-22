@@ -1,6 +1,6 @@
 # Visitor Pattern Generator
 
-The Visitor Pattern Generator automatically generates fluent, type-safe visitor infrastructure for class hierarchies marked with the `[GenerateVisitor]` attribute. This eliminates boilerplate code and provides modern C# ergonomics including async/await support, ValueTask, and generic type inference.
+The Visitor Pattern Generator automatically generates fluent, type-safe visitor infrastructure for hierarchies marked with the `[GenerateVisitor]` attribute. It supports class, interface, struct, and record hierarchies, eliminating boilerplate code and providing modern C# ergonomics including async/await support, ValueTask, and generic type inference.
 
 ## Overview
 
@@ -116,6 +116,129 @@ var asyncLogger = new AstNodeAsyncActionVisitorBuilder()
     .Build();
 
 await myExpression.AcceptAsync(asyncLogger);
+```
+
+## Supported Hierarchy Types
+
+The visitor generator supports multiple types of hierarchies, providing flexibility in design:
+
+### Class-Based Hierarchies
+
+Traditional class inheritance hierarchies are fully supported:
+
+```csharp
+[GenerateVisitor]
+public abstract partial class Animal
+{
+}
+
+public partial class Dog : Animal
+{
+    public string Breed { get; init; }
+}
+
+public partial class Cat : Animal
+{
+    public bool IsIndoor { get; init; }
+}
+```
+
+### Interface-Based Hierarchies
+
+Hierarchies based on interfaces work seamlessly:
+
+```csharp
+[GenerateVisitor]
+public partial interface IShape
+{
+}
+
+public partial class Circle : IShape
+{
+    public double Radius { get; init; }
+}
+
+public partial class Rectangle : IShape
+{
+    public double Width { get; init; }
+    public double Height { get; init; }
+}
+
+public partial class Triangle : IShape
+{
+    public double Base { get; init; }
+    public double Height { get; init; }
+}
+```
+
+**Note:** For interface base types, the generated visitor interface name is intelligently derived. `IShape` generates `IShapeVisitor` (not `IIShapeVisitor`).
+
+### Struct-Based Hierarchies
+
+Value types can implement visitable interfaces for allocation-free visitor patterns:
+
+```csharp
+[GenerateVisitor]
+public partial interface IValue
+{
+}
+
+public partial struct IntValue : IValue
+{
+    public int Value { get; init; }
+}
+
+public partial struct DoubleValue : IValue
+{
+    public double Value { get; init; }
+}
+
+// No boxing occurs during visitation
+var visitor = new IValueVisitorBuilder<string>()
+    .When<IntValue>(i => $"Int:{i.Value}")
+    .When<DoubleValue>(d => $"Double:{d.Value:F2}")
+    .Build();
+
+var intVal = new IntValue { Value = 42 };
+var result = intVal.Accept(visitor); // "Int:42"
+```
+
+### Record Types
+
+Records are also supported:
+
+```csharp
+[GenerateVisitor]
+public abstract partial record Message;
+
+public partial record TextMessage(string Content) : Message;
+public partial record ImageMessage(byte[] Data, string Format) : Message;
+```
+
+### Mixed Hierarchies
+
+You can mix interfaces, classes, and structs in complex hierarchies:
+
+```csharp
+[GenerateVisitor]
+public partial interface INode
+{
+}
+
+public abstract partial class Expression : INode
+{
+}
+
+public partial class Literal : Expression
+{
+    public object Value { get; init; }
+}
+
+public partial struct Position : INode
+{
+    public int Line { get; init; }
+    public int Column { get; init; }
+}
 ```
 
 ## Attribute Options
@@ -390,6 +513,77 @@ var validator = new DocumentVisitorBuilder<ValidationResult>()
     .Default(_ => ValidationResult.Invalid("Unknown type"))
     .Build();
 ```
+
+## Diagnostics
+
+The generator provides helpful diagnostics to catch common issues:
+
+### PKVIS001: No concrete types found
+
+**Severity:** Warning
+
+This warning appears when the generator cannot find any concrete types implementing or deriving from the marked base type.
+
+```csharp
+[GenerateVisitor]
+public partial interface IEmptyHierarchy { }
+
+// Warning PKVIS001: No concrete types implementing or deriving from 'IEmptyHierarchy' were found
+```
+
+**Solutions:**
+- Add concrete types that implement the interface or derive from the class
+- Set `AutoDiscoverDerivedTypes = false` if you're building types manually
+
+### PKVIS002: Type must be partial
+
+**Severity:** Error
+
+The base type (class or struct, not interface) must be declared as `partial` to allow Accept method generation.
+
+```csharp
+[GenerateVisitor]
+public class NonPartialBase { } // Error!
+
+// Fix:
+[GenerateVisitor]
+public partial class PartialBase { } // Correct
+```
+
+**Solution:** Add the `partial` keyword to the type declaration.
+
+### PKVIS003: Type not accessible
+
+**Severity:** Warning
+
+Types must be `public` or `internal` for visitor generation to work properly.
+
+```csharp
+[GenerateVisitor]
+private partial class PrivateBase { } // Warning!
+
+// Fix:
+[GenerateVisitor]
+public partial class PublicBase { } // Correct
+```
+
+### PKVIS004: Derived type must be partial
+
+**Severity:** Error
+
+All derived types must be `partial` to allow Accept method generation.
+
+```csharp
+[GenerateVisitor]
+public partial class Base { }
+
+public class Derived : Base { } // Error!
+
+// Fix:
+public partial class Derived : Base { } // Correct
+```
+
+**Solution:** Add the `partial` keyword to all derived types in the hierarchy.
 
 ## Troubleshooting
 
