@@ -248,6 +248,7 @@ var facade = new MyFacade(invoiceService, paymentGateway, taxService);
 - [PatternKit Documentation](../../../README.md)
 - [Facade Pattern (Gang of Four)](https://en.wikipedia.org/wiki/Facade_pattern)
 - [Source Generator Attributes](../../../docs/generators.md)
+- [Test Suite](../../../../test/PatternKit.Generators.Tests/FacadeGeneratorTests.cs) - See working test patterns
 
 ## Running the Examples
 
@@ -260,8 +261,3 @@ BillingFacadeDemo.Run();
 ```
 
 These demonstrations show realistic usage scenarios and output results to the console.
-
-## Additional Resources
-
-- [Facade Pattern (Gang of Four)](https://en.wikipedia.org/wiki/Facade_pattern)
-- [Test Suite](../../../../test/PatternKit.Generators.Tests/FacadeGeneratorTests.cs) - See working test patterns

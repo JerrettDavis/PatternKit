@@ -62,11 +62,12 @@ public class FacadeSpecsTests
         var facade = new ShippingFacade(estimator, rateCalculator, validator);
 
         // Act
-        var days = facade.EstimateDeliveryDays(destination: "priority", speed: "local");
+        // Note: Due to host-first parameter ordering (tracked for v2), 
+        // the facade may reorder parameters. This test validates routing works.
+        var days = facade.EstimateDeliveryDays(destination: "local", speed: "standard");
 
-        // Assert  
-        // Note: Parameters may be reordered by generator - this test validates facade routing
-        Assert.True(days > 0);
+        // Assert - Just verify a valid result is returned
+        Assert.True(days > 0 && days <= 12);
     }
 
     [Fact]

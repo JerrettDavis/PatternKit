@@ -140,7 +140,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 var semanticModel = compilation.GetSemanticModel(tree);
                 var root = tree.GetRoot();
                 
-                foreach (var methodDecl in root.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(m => true))
+                foreach (var methodDecl in root.DescendantNodes().OfType<MethodDeclarationSyntax>())
                 {
                     var methodSymbol = semanticModel.GetDeclaredSymbol(methodDecl);
                     if (methodSymbol is null) continue;
@@ -323,6 +323,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 location,
                 facadeTypeName,
                 containingNamespace.ToDisplayString()));
+            return false;
         }
 
         // Check for unmapped contract methods
@@ -552,6 +553,12 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     var refPrefix = GetRefKind(contractParam.RefKind).Trim();
                     args.Add(string.IsNullOrEmpty(refPrefix) ? contractParam.Name : $"{refPrefix} {contractParam.Name}");
                 }
+                else
+                {
+                    // Fallback: pass through the mapping method parameter itself
+                    var refPrefix = GetRefKind(param.RefKind).Trim();
+                    args.Add(string.IsNullOrEmpty(refPrefix) ? param.Name : $"{refPrefix} {param.Name}");
+                }
             }
         }
         
@@ -568,7 +575,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 continue;
             
             // Look for parameters that are not in the contract
-            foreach (var param in method.MappingMethod.Parameters.Where(p => true))
+            foreach (var param in method.MappingMethod.Parameters)
             {
                 // Skip if it matches a contract parameter
                 if (method.Symbol.Parameters.Any(cp => 
