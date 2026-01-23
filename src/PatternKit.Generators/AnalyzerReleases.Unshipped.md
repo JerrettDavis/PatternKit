@@ -45,3 +45,4 @@ PKDEC002 | PatternKit.Generators.Decorator | Error | Unsupported member kind for
 PKDEC003 | PatternKit.Generators.Decorator | Error | Name conflict for generated decorator types
 PKDEC004 | PatternKit.Generators.Decorator | Warning | Member is not accessible for decorator generation
 PKDEC005 | PatternKit.Generators.Decorator | Error | Generic contracts are not supported for decorator generation
+PKDEC006 | PatternKit.Generators.Decorator | Error | Nested types are not supported for decorator generation

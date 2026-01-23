@@ -29,12 +29,12 @@ public class DecoratorGeneratorTests
 
         // Decorator class is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("IStorage.Decorator.g.cs", names);
+        Assert.Contains("TestNamespace_IStorage.Decorator.g.cs", names);
 
         // Verify generated content contains expected elements
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.True(generatedSource.Length > 100, $"Generated source is too short ({generatedSource.Length} chars): {generatedSource}");
@@ -82,7 +82,7 @@ public class DecoratorGeneratorTests
         // Verify generated content contains async method forwarding (direct forwarding without async/await)
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IAsyncStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IAsyncStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("public", generatedSource);
@@ -124,7 +124,7 @@ public class DecoratorGeneratorTests
         // Verify generated content contains properties
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IConfiguration.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IConfiguration.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("public virtual string ApiKey", generatedSource);
@@ -166,7 +166,7 @@ public class DecoratorGeneratorTests
         // Verify generated content - ignored methods are still forwarded but not virtual
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IRepository.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IRepository.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("void Save", generatedSource);
@@ -207,7 +207,7 @@ public class DecoratorGeneratorTests
         // Verify custom names are used
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("class CustomStorageDecorator", generatedSource);
@@ -243,7 +243,7 @@ public class DecoratorGeneratorTests
         // Verify composition helpers are NOT generated
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("class StorageDecoratorBase", generatedSource);
@@ -282,7 +282,7 @@ public class DecoratorGeneratorTests
         // Verify only virtual/abstract members are included
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "StorageBase.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_StorageBase.Decorator.g.cs")
             .SourceText.ToString();
 
         // For abstract classes, methods use "override" not "virtual"
@@ -323,7 +323,7 @@ public class DecoratorGeneratorTests
         // Verify default parameters are preserved
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("int bufferSize = 4096", generatedSource);
@@ -362,7 +362,7 @@ public class DecoratorGeneratorTests
         // Verify members are ordered alphabetically
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         var appleIndex = generatedSource.IndexOf("void Apple");
@@ -406,7 +406,7 @@ public class DecoratorGeneratorTests
         // Verify ref/out/in parameters are preserved
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "ICalculator.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_ICalculator.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("ref int value", generatedSource);
@@ -451,7 +451,7 @@ public class DecoratorGeneratorTests
         // Verify all methods are generated correctly
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("OpenRead", generatedSource);
@@ -498,7 +498,7 @@ public class DecoratorGeneratorTests
         // Verify inherited members are included
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IStorage.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("public virtual string Read", generatedSource);
@@ -783,7 +783,7 @@ public class DecoratorGeneratorTests
         // Verify generated content contains correct accessibility
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "ServiceBase.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_ServiceBase.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("public override", generatedSource);
@@ -848,7 +848,7 @@ public class DecoratorGeneratorTests
         // Verify generated content contains only instance members
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IService.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IService.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("InstanceMethod", generatedSource);
@@ -910,7 +910,7 @@ public class DecoratorGeneratorTests
         // Verify generated content preserves params modifier
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IService.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IService.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("params", generatedSource);
@@ -951,7 +951,7 @@ public class DecoratorGeneratorTests
         // Verify generated content includes both base and derived methods
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "DerivedClass.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_DerivedClass.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("BaseMethod", generatedSource);
@@ -963,7 +963,7 @@ public class DecoratorGeneratorTests
     }
 
     [Fact]
-    public void Diagnostic_PKDEC001_NestedType()
+    public void Diagnostic_PKDEC006_NestedType()
     {
         const string source = """
             using PatternKit.Generators.Decorator;
@@ -980,13 +980,13 @@ public class DecoratorGeneratorTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC001_NestedType));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC006_NestedType));
         var gen = new DecoratorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        // Should have PKDEC001 diagnostic for nested type
+        // Should have PKDEC006 diagnostic for nested type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC001");
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC006");
     }
 
     [Fact]
@@ -1015,7 +1015,7 @@ public class DecoratorGeneratorTests
         // Verify generated content includes ref/ref readonly modifiers
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "IRefService.Decorator.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IRefService.Decorator.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("ref int GetRef()", generatedSource);

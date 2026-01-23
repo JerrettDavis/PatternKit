@@ -15,8 +15,16 @@ namespace PatternKit.Generators;
 [Generator]
 public sealed class DecoratorGenerator : IIncrementalGenerator
 {
+    // Symbol display format that preserves nullable annotations
+    private static readonly SymbolDisplayFormat TypeFormat = new(
+        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
     // Diagnostic IDs
     private const string DiagIdUnsupportedTargetType = "PKDEC001";
+    private const string DiagIdNestedType = "PKDEC006";
     private const string DiagIdUnsupportedMember = "PKDEC002";
     private const string DiagIdNameConflict = "PKDEC003";
     private const string DiagIdInaccessibleMember = "PKDEC004";
@@ -58,6 +66,14 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         id: DiagIdGenericContract,
         title: "Generic contracts are not supported for decorator generation",
         messageFormat: "Generic type '{0}' cannot be used as a decorator contract. Generic contracts are not supported in v1.",
+        category: "PatternKit.Generators.Decorator",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor NestedTypeDescriptor = new(
+        id: DiagIdNestedType,
+        title: "Nested types are not supported for decorator generation",
+        messageFormat: "Nested type '{0}' cannot be used as a decorator contract. Only top-level types are supported.",
         category: "PatternKit.Generators.Decorator",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -115,7 +131,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         if (contractSymbol.ContainingType != null)
         {
             context.ReportDiagnostic(Diagnostic.Create(
-                UnsupportedTargetTypeDescriptor,
+                NestedTypeDescriptor,
                 node.GetLocation(),
                 contractSymbol.Name));
             return;
@@ -164,7 +180,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         var decoratorSource = GenerateBaseDecorator(contractInfo, config, context);
         if (!string.IsNullOrEmpty(decoratorSource))
         {
-            var fileName = $"{contractSymbol.Name}.Decorator.g.cs";
+            // Use namespace + simple name to avoid collisions while keeping it readable
+            var ns = contractSymbol.ContainingNamespace.IsGlobalNamespace 
+                ? "" 
+                : contractSymbol.ContainingNamespace.ToDisplayString().Replace(".", "_") + "_";
+            var fileName = $"{ns}{contractSymbol.Name}.Decorator.g.cs";
             context.AddSource(fileName, decoratorSource);
         }
     }
@@ -294,7 +314,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 }
 
                 var isAsync = IsAsyncMethod(method);
-                var baseReturnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var baseReturnType = method.ReturnType.ToDisplayString(TypeFormat);
                 var returnType = method.ReturnsByRef
                     ? "ref " + baseReturnType
                     : method.ReturnsByRefReadonly
@@ -316,7 +336,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     Parameters = method.Parameters.Select(p => new ParameterInfo
                     {
                         Name = p.Name,
-                        Type = p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                        Type = p.Type.ToDisplayString(TypeFormat),
                         HasDefaultValue = p.HasExplicitDefaultValue,
                         DefaultValue = p.HasExplicitDefaultValue ? FormatDefaultValue(p) : null,
                         RefKind = p.RefKind,
@@ -387,7 +407,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     Name = property.Name,
                     MemberType = MemberType.Property,
-                    ReturnType = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    ReturnType = property.Type.ToDisplayString(TypeFormat),
                     HasGetter = property.GetMethod is not null,
                     HasSetter = property.SetMethod is not null,
                     IsInitOnly = property.SetMethod?.IsInitOnly ?? false,
@@ -563,13 +583,47 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
     }
 
+    private static bool CanTypeAcceptNull(ITypeSymbol type)
+    {
+        if (type is null)
+            return false;
+
+        // All reference types can accept null
+        if (type.IsReferenceType)
+            return true;
+
+        // Nullable reference types / annotated types can accept null
+        if (type.NullableAnnotation == NullableAnnotation.Annotated)
+            return true;
+
+        // Type parameters without a value type constraint can accept null
+        if (type is ITypeParameterSymbol typeParam)
+            return !typeParam.HasValueTypeConstraint;
+
+        // Nullable<T> value types can accept null
+        if (type is INamedTypeSymbol named &&
+            named.IsGenericType &&
+            named.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private static string FormatDefaultValue(IParameterSymbol param)
     {
         if (param.ExplicitDefaultValue is null)
         {
-            // For value types (structs), use 'default' instead of 'null'
+            // Preserve 'null' for types that can accept null (including Nullable<T> and unconstrained type parameters)
+            if (CanTypeAcceptNull(param.Type))
+                return "null";
+
+            // For non-nullable value types (structs), use 'default'
             if (param.Type.IsValueType)
                 return "default";
+
+            // Fallback to 'null' for any remaining cases
             return "null";
         }
 
@@ -582,11 +636,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             
             if (enumField != null)
             {
-                return $"{enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{enumField.Name}";
+                return $"{enumType.ToDisplayString(TypeFormat)}.{enumField.Name}";
             }
             
             // Fallback: cast the numeric value
-            return $"({enumType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}){param.ExplicitDefaultValue}";
+            return $"({enumType.ToDisplayString(TypeFormat)}){param.ExplicitDefaultValue}";
         }
 
         // Use Roslyn's culture-invariant literal formatting for all other types
@@ -645,7 +699,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
 
         // Generate base decorator class
-        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(TypeFormat);
         var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
         sb.AppendLine($"/// <summary>Base decorator for {contractInfo.ContractName}. All members forward to Inner.</summary>");
         sb.AppendLine($"{accessibility} abstract partial class {config.BaseTypeName} : {contractFullName}");
@@ -828,7 +882,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
     private void GenerateCompositionHelpers(StringBuilder sb, ContractInfo contractInfo, DecoratorConfig config)
     {
-        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(TypeFormat);
         var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
 
         sb.AppendLine($"/// <summary>Composition helpers for {contractInfo.ContractName} decorators.</summary>");
