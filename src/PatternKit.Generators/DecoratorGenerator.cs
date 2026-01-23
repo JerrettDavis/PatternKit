@@ -2,7 +2,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using PatternKit.Generators.Decorator;
-using System.Collections.Immutable;
 using System.Text;
 
 namespace PatternKit.Generators;
@@ -80,10 +79,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Find all types (interfaces or abstract classes) marked with [GenerateDecorator]
+        // Find all types (interfaces, abstract classes, or records) marked with [GenerateDecorator]
         var decoratorContracts = context.SyntaxProvider.ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: "PatternKit.Generators.Decorator.GenerateDecoratorAttribute",
-            predicate: static (node, _) => node is InterfaceDeclarationSyntax or ClassDeclarationSyntax,
+            predicate: static (node, _) => node is InterfaceDeclarationSyntax or ClassDeclarationSyntax or RecordDeclarationSyntax,
             transform: static (ctx, _) => ctx
         );
 
