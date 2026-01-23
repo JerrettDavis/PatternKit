@@ -40,3 +40,9 @@ PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrict
 PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
 PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
 PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation
+PKFCD001 | PatternKit.Generators.Facade | Error | Type must be partial for facade generation
+PKFCD002 | PatternKit.Generators.Facade | Error | No mapped method found for contract member
+PKFCD003 | PatternKit.Generators.Facade | Error | Multiple mappings found for contract member
+PKFCD004 | PatternKit.Generators.Facade | Error | Signature mismatch between map method and contract member
+PKFCD005 | PatternKit.Generators.Facade | Error | Facade type name conflicts with existing type
+PKFCD006 | PatternKit.Generators.Facade | Warning | Async mapping detected but generation disabled
