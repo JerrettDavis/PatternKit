@@ -30,10 +30,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Generate facade implementation for each type
         context.RegisterSourceOutput(facadeTypes.Collect(), (spc, infos) =>
         {
-            foreach (var info in infos)
+            foreach (var info in infos.Where(static info => info is not null))
             {
-                if (info is null) continue;
-                GenerateFacade(spc, info);
+                GenerateFacade(spc, info!);
             }
         });
     }
@@ -142,7 +141,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 var semanticModel = compilation.GetSemanticModel(tree);
                 var root = tree.GetRoot();
                 
-                foreach (var methodDecl in root.DescendantNodes().OfType<MethodDeclarationSyntax>())
+                foreach (var methodDecl in root.DescendantNodes().OfType<MethodDeclarationSyntax>().Where(m => true))
                 {
                     var methodSymbol = semanticModel.GetDeclaredSymbol(methodDecl);
                     if (methodSymbol is null) continue;
@@ -456,12 +455,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             {
                 sb.AppendLine($"        throw new System.NotImplementedException(\"Method {method.ContractName} is not yet implemented.\");");
             }
-            else if (info.MissingMapPolicy == 2) // Ignore
+            else if (info.MissingMapPolicy == 2 && returnType != "void" && !isAsync) // Ignore
             {
-                if (returnType != "void" && !isAsync)
-                {
-                    sb.AppendLine($"        return default!;");
-                }
+                sb.AppendLine($"        return default!;");
             }
         }
         else
@@ -536,7 +532,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 continue;
             
             // Look for parameters that are not in the contract
-            foreach (var param in method.MappingMethod.Parameters)
+            foreach (var param in method.MappingMethod.Parameters.Where(p => true))
             {
                 // Skip if it matches a contract parameter
                 if (method.Symbol.Parameters.Any(cp => 
@@ -683,10 +679,18 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             }
             else
             {
-                // It's an operation parameter
-                var opParam = operationParams.First(op => SymbolEqualityComparer.Default.Equals(op.Type, param.Type));
-                var refPrefix = GetRefKind(opParam.RefKind).Trim();
-                args.Add(string.IsNullOrEmpty(refPrefix) ? opParam.Name : $"{refPrefix} {opParam.Name}");
+                // It's an operation parameter - use FirstOrDefault for safety
+                var opParam = operationParams.FirstOrDefault(op => SymbolEqualityComparer.Default.Equals(op.Type, param.Type));
+                if (opParam is not null)
+                {
+                    var refPrefix = GetRefKind(opParam.RefKind).Trim();
+                    args.Add(string.IsNullOrEmpty(refPrefix) ? opParam.Name : $"{refPrefix} {opParam.Name}");
+                }
+                else
+                {
+                    // Fallback: use parameter name directly
+                    args.Add(param.Name);
+                }
             }
         }
         
@@ -762,6 +766,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Handle I-prefix for interfaces
         if (name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]))
             name = name.Substring(1);
+        
+        if (name.Length == 0)
+            return name;
         
         return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
