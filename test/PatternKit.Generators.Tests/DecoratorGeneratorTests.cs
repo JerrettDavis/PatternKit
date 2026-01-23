@@ -173,7 +173,7 @@ public class DecoratorGeneratorTests
         Assert.Contains("virtual", generatedSource); // Save should be virtual
         Assert.Contains("InternalMethod", generatedSource); // Still present, forwarded to Inner
         
-        // InternalMethod should be present and non-virtual (sealed)
+        // InternalMethod should be present and non-virtual (i.e., not declared as virtual)
         // We can't easily check "public void InternalMethod" vs "public virtual void InternalMethod"
         // so we'll just verify it compiles and InternalMethod exists
 

@@ -701,7 +701,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         return existingTypes.Length > 0;
     }
 
-    private string GenerateBaseDecorator(ContractInfo contractInfo, DecoratorConfig config, SourceProductionContext context)
+    private string GenerateBaseDecorator(ContractInfo contractInfo, DecoratorConfig config, SourceProductionContext _)
     {
         var sb = new StringBuilder();
         sb.AppendLine("#nullable enable");
@@ -760,7 +760,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private void GenerateForwardingMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
+    private void GenerateForwardingMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig _)
     {
         // For async methods, use direct forwarding (return Inner.X()) instead of async/await
         // to avoid unnecessary state machine allocation
@@ -841,7 +841,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.AppendLine();
     }
 
-    private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig config)
+    private void GenerateForwardingProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, DecoratorConfig _)
     {
         // Determine the modifier keyword
         string modifierKeyword = contractInfo.IsAbstractClass
