@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using PatternKit.Generators.Decorator;
 using System.Collections.Immutable;
 using System.Text;
 
@@ -110,6 +111,16 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return;
         }
 
+        // Check for nested types (not supported - accessibility issues)
+        if (contractSymbol.ContainingType != null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                UnsupportedTargetTypeDescriptor,
+                node.GetLocation(),
+                contractSymbol.Name));
+            return;
+        }
+
         // Check for generic contracts (not supported in v1)
         if (contractSymbol.TypeParameters.Length > 0)
         {
@@ -139,7 +150,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
 
         // Check for helpers name conflict only if composition helpers will be generated
-        if (config.Composition == 1 && HasNameConflict(contractSymbol, config.HelpersTypeName))
+        if ((DecoratorCompositionMode)config.Composition == DecoratorCompositionMode.HelpersOnly &&
+            HasNameConflict(contractSymbol, config.HelpersTypeName))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 NameConflictDescriptor,
@@ -282,7 +294,12 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 }
 
                 var isAsync = IsAsyncMethod(method);
-                var returnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var baseReturnType = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var returnType = method.ReturnsByRef
+                    ? "ref " + baseReturnType
+                    : method.ReturnsByRefReadonly
+                        ? "ref readonly " + baseReturnType
+                        : baseReturnType;
 
                 members.Add(new MemberInfo
                 {
@@ -294,13 +311,17 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     IsIgnored = isIgnored,
                     Accessibility = method.DeclaredAccessibility,
                     OriginalSymbol = method,
+                    ReturnsByRef = method.ReturnsByRef,
+                    ReturnsByRefReadonly = method.ReturnsByRefReadonly,
                     Parameters = method.Parameters.Select(p => new ParameterInfo
                     {
                         Name = p.Name,
                         Type = p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
                         HasDefaultValue = p.HasExplicitDefaultValue,
                         DefaultValue = p.HasExplicitDefaultValue ? FormatDefaultValue(p) : null,
-                        RefKind = p.RefKind
+                        RefKind = p.RefKind,
+                        IsParams = p.IsParams,
+                        IsThis = p.IsThis
                     }).ToList()
                 });
             }
@@ -389,29 +410,23 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                     member.Name,
                     "Event"));
             }
-            else if (member is IFieldSymbol fieldSymbol)
+            else if (member is IFieldSymbol fieldSymbol && IsAccessibleForDecorator(fieldSymbol.DeclaredAccessibility))
             {
                 // Fields are not supported; only report for forwardable API-surface members
-                if (IsAccessibleForDecorator(fieldSymbol.DeclaredAccessibility))
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        UnsupportedMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
-                        member.Name,
-                        member.Kind.ToString()));
-                }
+                context.ReportDiagnostic(Diagnostic.Create(
+                    UnsupportedMemberDescriptor,
+                    member.Locations.FirstOrDefault(),
+                    member.Name,
+                    member.Kind.ToString()));
             }
-            else if (member is INamedTypeSymbol typeSymbol)
+            else if (member is INamedTypeSymbol typeSymbol && IsAccessibleForDecorator(typeSymbol.DeclaredAccessibility))
             {
                 // Nested types are not supported; only report for forwardable API-surface members
-                if (IsAccessibleForDecorator(typeSymbol.DeclaredAccessibility))
-                {
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        UnsupportedMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
-                        member.Name,
-                        member.Kind.ToString()));
-                }
+                context.ReportDiagnostic(Diagnostic.Create(
+                    UnsupportedMemberDescriptor,
+                    member.Locations.FirstOrDefault(),
+                    member.Name,
+                    member.Kind.ToString()));
             }
         }
 
@@ -481,10 +496,17 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
         else if (type.TypeKind == TypeKind.Class && type.IsAbstract)
         {
-            // For abstract classes, collect all members (we'll filter virtual/abstract later)
-            foreach (var member in type.GetMembers())
+            // For abstract classes, collect members from this type and all base types
+            // (we'll filter virtual/abstract later). We walk the BaseType chain to ensure
+            // inherited virtual/abstract members are also considered part of the contract.
+            INamedTypeSymbol? current = type;
+            while (current != null && current.SpecialType != SpecialType.System_Object)
             {
-                AddMember(member);
+                foreach (var member in current.GetMembers())
+                {
+                    AddMember(member);
+                }
+                current = current.BaseType;
             }
         }
 
@@ -658,7 +680,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         // Generate composition helpers if requested
-        if (config.Composition == 1) // HelpersOnly
+        if ((DecoratorCompositionMode)config.Composition == DecoratorCompositionMode.HelpersOnly)
         {
             sb.AppendLine();
             GenerateCompositionHelpers(sb, contractInfo, config);
@@ -697,8 +719,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 RefKind.In => "in ",
                 _ => ""
             };
+            // Preserve additional parameter modifiers (params, this)
+            var paramsModifier = p.IsParams ? "params " : "";
+            var thisModifier = p.IsThis ? "this " : "";
             var defaultVal = p.HasDefaultValue ? $" = {p.DefaultValue}" : "";
-            return $"{refKind}{p.Type} {p.Name}{defaultVal}";
+            return $"{thisModifier}{paramsModifier}{refKind}{p.Type} {p.Name}{defaultVal}";
         }));
 
         sb.Append(paramList);
@@ -725,7 +750,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
         else
         {
-            sb.Append($"        => Inner.{member.Name}(");
+            // For ref returns, we need to put "ref" before the invocation
+            var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
+            sb.Append($"        => {refModifier}Inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -872,6 +899,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         public Accessibility GetterAccessibility { get; set; } = Accessibility.Public;
         public Accessibility SetterAccessibility { get; set; } = Accessibility.Public;
         public ISymbol? OriginalSymbol { get; set; }
+        public bool ReturnsByRef { get; set; }
+        public bool ReturnsByRefReadonly { get; set; }
     }
 
     private class ParameterInfo
@@ -881,6 +910,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         public bool HasDefaultValue { get; set; }
         public string? DefaultValue { get; set; }
         public RefKind RefKind { get; set; }
+        public bool IsParams { get; set; }
+        public bool IsThis { get; set; }
     }
 
     private enum MemberType

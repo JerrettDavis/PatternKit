@@ -884,4 +884,145 @@ public class DecoratorGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC004" && d.GetMessage().Contains("Name"));
     }
+
+    [Fact]
+    public void GenerateDecoratorForInterface_SupportsParamsModifier()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IService
+            {
+                void ProcessMany(params string[] items);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForInterface_SupportsParamsModifier));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify generated content preserves params modifier
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "IService.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("params", generatedSource);
+        Assert.Contains("params string[] items", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenerateDecoratorForAbstractClass_InheritsVirtualMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            public abstract class BaseClass
+            {
+                public abstract void BaseMethod();
+            }
+
+            [GenerateDecorator]
+            public abstract class DerivedClass : BaseClass
+            {
+                public abstract void DerivedMethod();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForAbstractClass_InheritsVirtualMembers));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify generated content includes both base and derived methods
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "DerivedClass.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("BaseMethod", generatedSource);
+        Assert.Contains("DerivedMethod", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void Diagnostic_PKDEC001_NestedType()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            public class OuterClass
+            {
+                [GenerateDecorator]
+                public interface INestedService
+                {
+                    void DoWork();
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC001_NestedType));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKDEC001 diagnostic for nested type
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC001");
+    }
+
+    [Fact]
+    public void GenerateDecoratorForInterface_SupportsRefReturns()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IRefService
+            {
+                ref int GetRef();
+                ref readonly int GetRefReadonly();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForInterface_SupportsRefReturns));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify generated content includes ref/ref readonly modifiers
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "IRefService.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("ref int GetRef()", generatedSource);
+        Assert.Contains("ref readonly int GetRefReadonly()", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
