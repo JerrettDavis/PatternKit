@@ -1225,5 +1225,77 @@ public class FacadeGeneratorTests
         Assert.NotNull(facadeType);
     }
 
+    [Fact]
+    public void Diagnostic_PKFCD003_DuplicateMappings()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace PatternKit.Examples;
+
+            [GenerateFacade]
+            public partial interface IDuplicateMappingFacade
+            {
+                int Calculate(int a, int b);
+            }
+
+            public static class Subsystem
+            {
+                [FacadeMap(MemberName = "Calculate")]
+                public static int AddNumbers(int a, int b) => a + b;
+                
+                [FacadeMap(MemberName = "Calculate")]
+                public static int MultiplyNumbers(int a, int b) => a * b;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Diagnostic_PKFCD003_DuplicateMappings),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKFCD003");
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("has multiple methods marked with [FacadeMap]"));
+    }
+
+    [Fact]
+    public void Diagnostic_PKFCD005_TypeNameConflict()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace PatternKit.Examples;
+
+            // Existing type with the name MyFacade
+            public class MyFacade
+            {
+                public void DoSomething() { }
+            }
+
+            [GenerateFacade(FacadeTypeName = "MyFacade")]
+            public static partial class MyFacadeHost
+            {
+                [FacadeExpose]
+                public static string GetData() => "data";
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Diagnostic_PKFCD005_TypeNameConflict),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKFCD005");
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("conflicts with an existing type"));
+    }
+
     #endregion
 }

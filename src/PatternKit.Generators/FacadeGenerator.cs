@@ -131,9 +131,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 "PatternKit.Generators.Facade.FacadeIgnoreAttribute"))
                 continue;
 
-            // Look for mapping method marked with [FacadeMap]
-            IMethodSymbol? mappingMethod = null;
-            AttributeData? mapAttr = null;
+            // Look for mapping methods marked with [FacadeMap]
+            var candidateMappings = new List<(IMethodSymbol method, AttributeData attr)>();
             
             // Search for methods with [FacadeMap] in the same compilation
             foreach (var tree in compilation.SyntaxTrees)
@@ -158,21 +157,32 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     {
                         if (memberName == method.Name)
                         {
-                            mappingMethod = methodSymbol;
-                            mapAttr = attr;
-                            break;
+                            candidateMappings.Add((methodSymbol, attr));
                         }
                     }
                     else if (SignaturesMatch(method, methodSymbol))
                     {
-                        mappingMethod = methodSymbol;
-                        mapAttr = attr;
-                        break;
+                        candidateMappings.Add((methodSymbol, attr));
                     }
                 }
-                
-                if (mappingMethod is not null)
-                    break;
+            }
+            
+            // Check for duplicate mappings (PKFCD003)
+            IMethodSymbol? mappingMethod = null;
+            AttributeData? mapAttr = null;
+            bool hasDuplicateMapping = false;
+            
+            if (candidateMappings.Count > 1)
+            {
+                hasDuplicateMapping = true;
+                // Use the first mapping found
+                mappingMethod = candidateMappings[0].method;
+                mapAttr = candidateMappings[0].attr;
+            }
+            else if (candidateMappings.Count == 1)
+            {
+                mappingMethod = candidateMappings[0].method;
+                mapAttr = candidateMappings[0].attr;
             }
             
             methods.Add(new MethodInfo(
@@ -182,7 +192,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 HasCancellationToken: HasCancellationTokenParameter(method),
                 MapAttribute: mapAttr,
                 MappingMethod: mappingMethod,
-                IsExposed: false
+                IsExposed: false,
+                HasDuplicateMapping: hasDuplicateMapping
             ));
         }
         
@@ -299,11 +310,36 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             return false;
         }
 
+        // Check for type name conflicts (PKFCD005)
+        var facadeTypeName = info.FacadeTypeName;
+        var containingNamespace = info.TargetType.ContainingNamespace;
+        
+        // Search for existing type with same name in the same namespace
+        var existingType = containingNamespace.GetTypeMembers(facadeTypeName).FirstOrDefault();
+        if (existingType != null && !SymbolEqualityComparer.Default.Equals(existingType, info.TargetType))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.TypeNameConflict,
+                location,
+                facadeTypeName,
+                containingNamespace.ToDisplayString()));
+        }
+
         // Check for unmapped contract methods
         if (!info.IsHostFirst)
         {
             foreach (var method in info.Methods)
             {
+                // Check for duplicate mappings (PKFCD003)
+                if (method.HasDuplicateMapping)
+                {
+                    var methodLocation = method.Symbol.Locations.FirstOrDefault() ?? location;
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        Diagnostics.MultipleMappings,
+                        methodLocation,
+                        method.ContractName));
+                }
+                
                 if (method.MappingMethod is null)
                 {
                     if (info.MissingMapPolicy == 0) // Error
@@ -791,7 +827,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         bool HasCancellationToken,
         AttributeData? MapAttribute,
         IMethodSymbol? MappingMethod = null,
-        bool IsExposed = false
+        bool IsExposed = false,
+        bool HasDuplicateMapping = false
     );
 
     private record struct DependencyInfo(
