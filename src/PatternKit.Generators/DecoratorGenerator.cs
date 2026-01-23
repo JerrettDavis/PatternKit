@@ -267,6 +267,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         SourceProductionContext context)
     {
         var members = new List<MemberInfo>();
+        var hasErrors = false;
 
         // Get all members from the contract and its base types
         var allMembers = GetAllInterfaceMembers(contractSymbol);
@@ -292,9 +293,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         UnsupportedMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         method.Name,
                         "Generic method"));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -307,8 +309,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -351,9 +354,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         UnsupportedMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name,
                         "Indexer"));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -374,8 +378,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -384,8 +389,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         InaccessibleMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -396,9 +402,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         UnsupportedMemberDescriptor,
-                        member.Locations.FirstOrDefault(),
+                        member.Locations.FirstOrDefault() ?? Location.None,
                         property.Name,
                         "Init-only property"));
+                    hasErrors = true;
                     continue;
                 }
 
@@ -425,28 +432,38 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 // Events not supported in v1
                 context.ReportDiagnostic(Diagnostic.Create(
                     UnsupportedMemberDescriptor,
-                    member.Locations.FirstOrDefault(),
+                    member.Locations.FirstOrDefault() ?? Location.None,
                     member.Name,
                     "Event"));
+                hasErrors = true;
             }
             else if (member is IFieldSymbol fieldSymbol && IsAccessibleForDecorator(fieldSymbol.DeclaredAccessibility))
             {
                 // Fields are not supported; only report for forwardable API-surface members
                 context.ReportDiagnostic(Diagnostic.Create(
                     UnsupportedMemberDescriptor,
-                    member.Locations.FirstOrDefault(),
+                    member.Locations.FirstOrDefault() ?? Location.None,
                     member.Name,
                     member.Kind.ToString()));
+                hasErrors = true;
             }
             else if (member is INamedTypeSymbol typeSymbol && IsAccessibleForDecorator(typeSymbol.DeclaredAccessibility))
             {
                 // Nested types are not supported; only report for forwardable API-surface members
                 context.ReportDiagnostic(Diagnostic.Create(
                     UnsupportedMemberDescriptor,
-                    member.Locations.FirstOrDefault(),
+                    member.Locations.FirstOrDefault() ?? Location.None,
                     member.Name,
                     member.Kind.ToString()));
+                hasErrors = true;
             }
+        }
+
+        // If any errors were reported, return empty list to skip generation
+        // This prevents generating incomplete decorator bases that won't compile
+        if (hasErrors)
+        {
+            return new List<MemberInfo>();
         }
 
         // Sort members for deterministic ordering by kind, name, and signature
