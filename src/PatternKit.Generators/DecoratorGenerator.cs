@@ -212,15 +212,15 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         {
             switch (named.Key)
             {
-                case nameof(Decorator.GenerateDecoratorAttribute.BaseTypeName):
+                case nameof(GenerateDecoratorAttribute.BaseTypeName):
                     if (named.Value.Value is string baseTypeName && !string.IsNullOrWhiteSpace(baseTypeName))
                         config.BaseTypeName = baseTypeName;
                     break;
-                case nameof(Decorator.GenerateDecoratorAttribute.HelpersTypeName):
+                case nameof(GenerateDecoratorAttribute.HelpersTypeName):
                     if (named.Value.Value is string helpersTypeName && !string.IsNullOrWhiteSpace(helpersTypeName))
                         config.HelpersTypeName = helpersTypeName;
                     break;
-                case nameof(Decorator.GenerateDecoratorAttribute.Composition):
+                case nameof(GenerateDecoratorAttribute.Composition):
                     config.Composition = (int)named.Value.Value!;
                     break;
                 // GenerateAsync and ForceAsync are reserved for future use - not parsed
@@ -251,8 +251,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
         if (contractInfo.Members.Count == 0)
         {
-            // No members to forward - this might be intentional, but warn
-            return contractInfo;
+            // No members to forward - skip generation to avoid emitting invalid decorators
+            // (Could be empty due to hasErrors=true in GetMembersForDecorator, or truly no members)
+            return null;
         }
 
         // Detect if any async members exist
@@ -311,7 +312,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                         InaccessibleMemberDescriptor,
                         member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
-                    hasErrors = true;
+                    // PKDEC004 is a warning, not an error - don't set hasErrors
                     continue;
                 }
 
@@ -380,7 +381,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                         InaccessibleMemberDescriptor,
                         member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
-                    hasErrors = true;
+                    // PKDEC004 is a warning, not an error - don't set hasErrors
                     continue;
                 }
 
@@ -391,7 +392,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                         InaccessibleMemberDescriptor,
                         member.Locations.FirstOrDefault() ?? Location.None,
                         member.Name));
-                    hasErrors = true;
+                    // PKDEC004 is a warning, not an error - don't set hasErrors
                     continue;
                 }
 
