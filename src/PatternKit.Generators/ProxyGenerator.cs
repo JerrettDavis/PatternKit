@@ -363,6 +363,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 }
 
                 var isAsync = IsAsyncMethod(method);
+                var isGenericAsyncReturnType = isAsync && IsGenericAsyncReturnType(method);
                 var hasCancellationToken = method.Parameters.Any(p => IsCancellationToken(p.Type));
                 var baseReturnType = method.ReturnType.ToDisplayString(TypeFormat);
                 var returnType = method.ReturnsByRef
@@ -379,6 +380,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                     IsAsync = isAsync,
                     IsVoid = method.ReturnsVoid,
                     HasCancellationToken = hasCancellationToken,
+                    IsGenericAsyncReturnType = isGenericAsyncReturnType,
                     Accessibility = method.DeclaredAccessibility,
                     OriginalSymbol = method,
                     ReturnsByRef = method.ReturnsByRef,
@@ -597,6 +599,21 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
                typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
+    }
+    
+    private static bool IsGenericAsyncReturnType(IMethodSymbol method)
+    {
+        // Check if the return type is a generic Task<T> or ValueTask<T>
+        var returnType = method.ReturnType;
+        if (returnType is not INamedTypeSymbol namedType)
+            return false;
+            
+        if (!namedType.IsGenericType)
+            return false;
+            
+        var fullName = namedType.ConstructedFrom.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return fullName == "global::System.Threading.Tasks.Task<T>" ||
+               fullName == "global::System.Threading.Tasks.ValueTask<T>";
     }
 
     private static bool IsCancellationToken(ITypeSymbol type)
@@ -1139,8 +1156,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine("            __context.SetResult(__task);");
             
             // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
-            // If ReturnType contains<, it's generic so has a result value
-            if (member.ReturnType.Contains("<"))
+            if (member.IsGenericAsyncReturnType)
             {
                 sb.AppendLine("            var __result = await __task.ConfigureAwait(false);");
             }
@@ -1187,7 +1203,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         {
             // For async methods, check if it's Task<T>/ValueTask<T> (has a generic parameter)
             // vs Task/ValueTask (no generic parameter)
-            if (member.IsAsync && !member.ReturnType.Contains("<"))
+            if (member.IsAsync && !member.IsGenericAsyncReturnType)
             {
                 // Task or ValueTask with no result value - don't return anything
             }
@@ -1210,7 +1226,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         {
             sb.AppendLine("            for (int __i = 0; __i < _interceptors!.Count; __i++)");
             sb.AppendLine("            {");
-            sb.AppendLine("                await _interceptors[__i].OnExceptionAsync(__context, __ex);");
+            sb.AppendLine("                await _interceptors[__i].OnExceptionAsync(__context, __ex).ConfigureAwait(false);");
             sb.AppendLine("            }");
         }
 
@@ -1348,7 +1364,11 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine("    {");
             foreach (var param in member.Parameters)
             {
-                sb.AppendLine($"        {char.ToUpper(param.Name[0]) + param.Name.Substring(1)} = {param.Name};");
+                // Capitalize first letter of parameter name for property name
+                var propName = string.IsNullOrEmpty(param.Name) 
+                    ? "Parameter" 
+                    : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                sb.AppendLine($"        {propName} = {param.Name};");
             }
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -1360,7 +1380,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Parameter properties
         foreach (var param in member.Parameters)
         {
-            var propName = char.ToUpper(param.Name[0]) + param.Name.Substring(1);
+            // Capitalize first letter of parameter name for property name
+            var propName = string.IsNullOrEmpty(param.Name) 
+                ? "Parameter" 
+                : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
             sb.AppendLine();
             sb.AppendLine($"    /// <summary>Gets the {param.Name} parameter.</summary>");
             sb.AppendLine($"    public {param.Type} {propName} {{ get; }}");
@@ -1423,6 +1446,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         public bool IsAsync { get; set; }
         public bool IsVoid { get; set; }
         public bool HasCancellationToken { get; set; }
+        public bool IsGenericAsyncReturnType { get; set; } // True for Task<T>/ValueTask<T>, false for Task/ValueTask
         public List<ParameterInfo> Parameters { get; set; } = new();
         public bool HasGetter { get; set; }
         public bool HasSetter { get; set; }
