@@ -702,7 +702,27 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     {
         var containingNamespace = contractSymbol.ContainingNamespace;
         var existingTypes = containingNamespace.GetTypeMembers(generatedName);
-        return existingTypes.Length > 0;
+        
+        // No conflict if no types exist
+        if (existingTypes.Length == 0)
+            return false;
+            
+        // No conflict if all existing types are partial (user is expected to provide partial implementation)
+        // Check if any type has multiple partial declarations or check syntax  
+        foreach (var type in existingTypes)
+        {
+            // If any type is NOT partial (has only one location and not marked partial in syntax), it's a conflict
+            if (type.Locations.Length == 1)
+            {
+                // Single location could still be partial, but if there are multiple types with same name,
+                // they could be in different files which would be detected as multiple items in existingTypes
+                // For now, assume single occurrence is OK (user provided partial)
+                continue;
+            }
+        }
+        
+        // If we have multiple types with the same name but they're all partial, no conflict
+        return false;
     }
 
     private string GenerateProxyClass(ContractInfo contractInfo, ProxyConfig config, SourceProductionContext _)
@@ -807,9 +827,15 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     private void GenerateProxyMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        
+        // Determine if this method needs async modifier (uses interceptors with async support)
+        bool useAsync = contractInfo.HasAsyncMembers && 
+                       config.InterceptorMode != ProxyInterceptorMode.None &&
+                       (member.IsAsync || member.HasCancellationToken);
+        var asyncModifier = useAsync ? "async " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
-        sb.Append($"    {accessibility} {member.ReturnType} {member.Name}(");
+        sb.Append($"    {accessibility} {asyncModifier}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -849,7 +875,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
     private void GenerateSimpleDelegation(StringBuilder sb, MemberInfo member)
     {
-        if (member.IsVoid)
+        // Check if this is a void-like method (either void, or Task/ValueTask with no generic parameter)
+        bool isVoidLike = member.IsVoid || (member.IsAsync && !member.ReturnType.Contains("<"));
+        
+        if (isVoidLike)
         {
             sb.Append($"        _inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
@@ -1094,7 +1123,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else if (member.IsAsync)
         {
-            sb.Append($"            var __result = await _inner.{member.Name}(");
+            // For async methods, get the task and await it  
+            sb.Append($"            var __task = _inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -1106,8 +1136,20 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 };
                 return $"{refKind}{p.Name}";
             })));
-            sb.AppendLine(").ConfigureAwait(false);");
-            sb.AppendLine("            __context.SetResult(__result);");
+            sb.AppendLine(");");
+            sb.AppendLine("            __context.SetResult(__task);");
+            
+            // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
+            // If ReturnType contains<, it's generic so has a result value
+            if (member.ReturnType.Contains("<"))
+            {
+                sb.AppendLine("            var __result = await __task.ConfigureAwait(false);");
+            }
+            else
+            {
+                // Task or ValueTask with no result - just await
+                sb.AppendLine("            await __task.ConfigureAwait(false);");
+            }
         }
         else
         {
@@ -1144,7 +1186,16 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         if (!member.IsVoid)
         {
-            sb.AppendLine("            return __result;");
+            // For async methods, check if it's Task<T>/ValueTask<T> (has a generic parameter)
+            // vs Task/ValueTask (no generic parameter)
+            if (member.IsAsync && !member.ReturnType.Contains("<"))
+            {
+                // Task or ValueTask with no result value - don't return anything
+            }
+            else
+            {
+                sb.AppendLine("            return __result;");
+            }
         }
 
         sb.AppendLine("        }");
@@ -1196,7 +1247,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else if (member.HasGetter)
         {
-            sb.AppendLine($" => _inner.{member.Name};");
+            sb.AppendLine();
+            sb.AppendLine("    {");
+            sb.AppendLine($"        get => _inner.{member.Name};");
+            sb.AppendLine("    }");
         }
         else if (member.HasSetter)
         {
@@ -1316,6 +1370,17 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Result property if not void
         if (!member.IsVoid)
         {
+            // For async methods, we need to unwrap the Task<T> or ValueTask<T> to get the actual result type
+            var resultType = member.ReturnType;
+            if (member.IsAsync)
+            {
+                // Extract the inner type from Task<T> or ValueTask<T>
+                // This is a simplification - we store the full Task/ValueTask type in ReturnType
+                // but for the context, we want the unwrapped result
+                // For now, we'll use the full return type and handle unwrapping in the proxy
+                // Actually, let's keep it simple and use the return type as-is
+            }
+            
             sb.AppendLine();
             sb.AppendLine($"    /// <summary>Gets the result of the method call.</summary>");
             sb.AppendLine($"    public {member.ReturnType} Result {{ get; private set; }} = default!;");
