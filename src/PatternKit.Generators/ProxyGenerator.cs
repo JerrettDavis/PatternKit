@@ -875,11 +875,9 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
     private void GenerateSimpleDelegation(StringBuilder sb, MemberInfo member)
     {
-        // Check if this is a void-like method (either void, or Task/ValueTask with no generic parameter)
-        bool isVoidLike = member.IsVoid || (member.IsAsync && !member.ReturnType.Contains("<"));
-        
-        if (isVoidLike)
+        if (member.IsVoid)
         {
+            // True void methods - no return
             sb.Append($"        _inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
@@ -896,6 +894,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else
         {
+            // Non-void methods - return the result
             var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
             sb.Append($"        return {refModifier}_inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>

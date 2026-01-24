@@ -73,7 +73,7 @@ public class ProxyGeneratorTests
 
             namespace TestNamespace;
 
-            [GenerateProxy]
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.None)]
             public partial interface IAsyncUserService
             {
                 Task<string> GetUserAsync(int id, CancellationToken ct = default);
@@ -88,15 +88,15 @@ public class ProxyGeneratorTests
         // No generator diagnostics
         Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
 
-        // Verify async interceptor methods are generated
-        var interceptorSource = result.Results
+        // Verify simple delegation (no interceptor)
+        var proxySource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "TestNamespace_IAsyncUserService.Proxy.Interceptor.g.cs")
+            .First(gs => gs.HintName == "TestNamespace_IAsyncUserService.Proxy.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("ValueTask BeforeAsync(MethodContext context)", interceptorSource);
-        Assert.Contains("ValueTask AfterAsync(MethodContext context)", interceptorSource);
-        Assert.Contains("ValueTask OnExceptionAsync(MethodContext context", interceptorSource);
+        Assert.Contains("return _inner.GetUserAsync", proxySource);
+        Assert.Contains("_inner.DeleteUserAsync", proxySource);
+        Assert.DoesNotContain("_interceptor", proxySource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
