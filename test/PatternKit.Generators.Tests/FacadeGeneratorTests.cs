@@ -1298,4 +1298,433 @@ public class FacadeGeneratorTests
     }
 
     #endregion
+
+    #region Auto-Facade Mode Tests
+
+    [Fact]
+    public void AutoFacade_SimpleExternalType_GeneratesAllMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+                int Method2(string arg);
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_SimpleExternalType_GeneratesAllMembers),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void Method1()", generatedSource);
+        Assert.Contains("int Method2(string arg)", generatedSource);
+        Assert.Contains("_target.Method1()", generatedSource);
+        Assert.Contains("return _target.Method2(arg)", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_WithInclude_OnlyGeneratesSpecifiedMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+                void Method2();
+                void Method3();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", Include = new[] { "Method1", "Method3" })]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_WithInclude_OnlyGeneratesSpecifiedMembers),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void Method1()", generatedSource);
+        Assert.Contains("void Method3()", generatedSource);
+        Assert.DoesNotContain("void Method2()", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_WithExclude_GeneratesAllExceptExcluded()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+                void Method2();
+                void Method3();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", Exclude = new[] { "Method2" })]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_WithExclude_GeneratesAllExceptExcluded),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void Method1()", generatedSource);
+        Assert.Contains("void Method3()", generatedSource);
+        Assert.DoesNotContain("void Method2()", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_WithMemberPrefix_AppliesPrefix()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Log(string message);
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", MemberPrefix = "External")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_WithMemberPrefix_AppliesPrefix),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void ExternalLog(string message)", generatedSource);
+        Assert.DoesNotContain("void Log(string message)", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_MultipleAttributes_GeneratesComposite()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface ILogger1
+            {
+                void Log1(string msg);
+            }
+
+            public interface ILogger2
+            {
+                void Log2(string msg);
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.ILogger1", MemberPrefix = "L1", FieldName = "_logger1")]
+            [GenerateFacade(TargetTypeName = "TestNs.ILogger2", MemberPrefix = "L2", FieldName = "_logger2")]
+            public partial interface IUnifiedLogger { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_MultipleAttributes_GeneratesComposite),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void L1Log1(string msg)", generatedSource);
+        Assert.Contains("void L2Log2(string msg)", generatedSource);
+        Assert.Contains("_logger1.Log1(msg)", generatedSource);
+        Assert.Contains("_logger2.Log2(msg)", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_GenericMethods_PreservesTypeParameters()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Log<TState>(TState state) where TState : class;
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_GenericMethods_PreservesTypeParameters),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void Log<TState>(TState state)", generatedSource);
+        Assert.Contains("where TState : class", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_InvalidTargetType_ReportsDiagnostic()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            [GenerateFacade(TargetTypeName = "NonExistent.Type")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_InvalidTargetType_ReportsDiagnostic),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var diagnostics = run.Results[0].Diagnostics;
+        Assert.Contains(diagnostics, d => d.Id == "PKFAC001");
+    }
+
+    [Fact]
+    public void AutoFacade_BothIncludeAndExclude_ReportsDiagnostic()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(
+                TargetTypeName = "TestNs.IExternal",
+                Include = new[] { "Method1" },
+                Exclude = new[] { "Method2" }
+            )]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_BothIncludeAndExclude_ReportsDiagnostic),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var diagnostics = run.Results[0].Diagnostics;
+        Assert.Contains(diagnostics, d => d.Id == "PKFAC002");
+    }
+
+    [Fact]
+    public void AutoFacade_IncludeNonExistentMember_ReportsDiagnostic()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+                void Method2();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", Include = new[] { "Method1", "NonExistent" })]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_IncludeNonExistentMember_ReportsDiagnostic),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var diagnostics = run.Results[0].Diagnostics;
+        Assert.Contains(diagnostics, d => d.Id == "PKFAC004" && d.GetMessage().Contains("NonExistent"));
+    }
+
+    [Fact]
+    public void AutoFacade_RefOutInParameters_ForwardsCorrectly()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void MethodWithRef(ref int value);
+                void MethodWithOut(out string result);
+                void MethodWithIn(in double value);
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_RefOutInParameters_ForwardsCorrectly),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("void MethodWithRef(ref int value)", generatedSource);
+        Assert.Contains("void MethodWithOut(out string result)", generatedSource);
+        Assert.Contains("void MethodWithIn(in double value)", generatedSource);
+        Assert.Contains("_target.MethodWithRef(ref value)", generatedSource);
+        Assert.Contains("_target.MethodWithOut(out result)", generatedSource);
+        Assert.Contains("_target.MethodWithIn(in value)", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_OnNonInterface_ReportsDiagnostic()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal")]
+            public partial class MyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_OnNonInterface_ReportsDiagnostic),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var diagnostics = run.Results[0].Diagnostics;
+        Assert.Contains(diagnostics, d => d.Id == "PKFAC005");
+    }
+
+    [Fact]
+    public void AutoFacade_InterfaceWithMultipleLeadingI_OnlyRemovesFirstI()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IIExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IIExternal")]
+            public partial interface IIMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_InterfaceWithMultipleLeadingI_OnlyRemovesFirstI),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        // Should generate IIMyFacadeImpl (only first I removed from IIMyFacade)
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_FieldNameWithoutUnderscore_UsesThisQualifier()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", FieldName = "myTarget")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_FieldNameWithoutUnderscore_UsesThisQualifier),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        // Field name is "myTarget", parameter name is also "myTarget", so should use "this." qualifier
+        Assert.Contains("private readonly global::TestNs.IExternal myTarget;", generatedSource);
+        Assert.Contains("public MyFacadeImpl(global::TestNs.IExternal myTarget)", generatedSource);
+        Assert.Contains("this.myTarget = myTarget ?? throw new System.ArgumentNullException(nameof(myTarget));", generatedSource);
+    }
+
+    #endregion
 }

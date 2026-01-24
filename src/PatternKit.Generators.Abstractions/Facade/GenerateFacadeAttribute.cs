@@ -5,8 +5,9 @@ namespace PatternKit.Generators.Facade;
 /// Can be applied to:
 /// - Partial interface/class (contract-first): defines the facade surface to be implemented
 /// - Static partial class (host-first): contains methods to expose as facade operations
+/// - Partial interface/class (auto-facade): auto-generate members from external type
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, AllowMultiple = true, Inherited = false)]
 public sealed class GenerateFacadeAttribute : Attribute
 {
     /// <summary>
@@ -33,4 +34,31 @@ public sealed class GenerateFacadeAttribute : Attribute
     /// Default: Error (emit diagnostic)
     /// </summary>
     public FacadeMissingMapPolicy MissingMap { get; set; } = FacadeMissingMapPolicy.Error;
+
+    /// <summary>
+    /// Fully qualified name of external type to facade (e.g., "Microsoft.Extensions.Logging.ILogger").
+    /// When specified, enables Auto-Facade mode.
+    /// </summary>
+    public string? TargetTypeName { get; set; }
+
+    /// <summary>
+    /// Member names to include (null = include all). Mutually exclusive with Exclude.
+    /// </summary>
+    public string[]? Include { get; set; }
+
+    /// <summary>
+    /// Member names to exclude (null = exclude none). Mutually exclusive with Include.
+    /// </summary>
+    public string[]? Exclude { get; set; }
+
+    /// <summary>
+    /// Prefix for generated member names (default: none).
+    /// Useful when applying multiple [GenerateFacade] attributes.
+    /// </summary>
+    public string? MemberPrefix { get; set; }
+
+    /// <summary>
+    /// Field name for the backing instance (default: "_target" or "_target{N}" for multiple attributes).
+    /// </summary>
+    public string? FieldName { get; set; }
 }
