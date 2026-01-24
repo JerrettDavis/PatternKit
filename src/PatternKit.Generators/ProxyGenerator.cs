@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
 
@@ -676,17 +677,45 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
 
         // Use Roslyn's culture-invariant literal formatting for all other types
-        // Note: FormatPrimitive is a helper that formats primitive values as C# literals
         var value = param.ExplicitDefaultValue;
         return value switch
         {
-            string s => $"\"{s.Replace("\\", "\\\\").Replace("\"", "\\\"")}\"",
-            char c => $"'{c}'",
+            string s => FormatStringLiteral(s),
+            char c => FormatCharLiteral(c),
             bool b => b ? "true" : "false",
             float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f",
             double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture) + "d",
             decimal m => m.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m",
-            _ => value?.ToString() ?? "null"
+            null => "null",
+            _ => value.ToString()
+        };
+    }
+
+    private static string FormatStringLiteral(string s)
+    {
+        // Escape special characters in string literals
+        return "\"" + s
+            .Replace("\\", "\\\\")
+            .Replace("\"", "\\\"")
+            .Replace("\n", "\\n")
+            .Replace("\r", "\\r")
+            .Replace("\t", "\\t")
+            .Replace("\0", "\\0")
+            + "\"";
+    }
+
+    private static string FormatCharLiteral(char c)
+    {
+        // Escape special characters in char literals
+        return c switch
+        {
+            '\\' => "'\\\\'",
+            '\'' => "'\\''",
+            '\n' => "'\\n'",
+            '\r' => "'\\r'",
+            '\t' => "'\\t'",
+            '\0' => "'\\0'",
+            _ => $"'{c}'"
         };
     }
 
@@ -726,21 +755,23 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         if (existingTypes.Length == 0)
             return false;
             
-        // No conflict if all existing types are partial (user is expected to provide partial implementation)
-        // Check if any type has multiple partial declarations or check syntax  
-        foreach (var type in existingTypes)
+        // Check if existing types are partial declarations that the user is providing
+        foreach (var type in existingTypes.Where(t => t.DeclaringSyntaxReferences.Length > 0))
         {
-            // If any type is NOT partial (has only one location and not marked partial in syntax), it's a conflict
-            if (type.Locations.Length == 1)
+            foreach (var syntaxRef in type.DeclaringSyntaxReferences)
             {
-                // Single location could still be partial, but if there are multiple types with same name,
-                // they could be in different files which would be detected as multiple items in existingTypes
-                // For now, assume single occurrence is OK (user provided partial)
-                continue;
+                var syntax = syntaxRef.GetSyntax();
+                // Check if the type declaration has the 'partial' modifier
+                if (syntax is TypeDeclarationSyntax typeDecl && 
+                    !typeDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
+                {
+                    // Found a non-partial type with the same name - this is a conflict
+                    return true;
+                }
             }
         }
         
-        // If we have multiple types with the same name but they're all partial, no conflict
+        // All existing types are partial or have no syntax (shouldn't happen) - no conflict
         return false;
     }
 
@@ -980,10 +1011,11 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine();
 
-        // Create method context
+        // Create method context (handle out parameters specially - they're not yet assigned)
         var contextTypeName = $"{member.Name}MethodContext";
         sb.Append($"        var __context = new {contextTypeName}(");
-        sb.Append(string.Join(", ", member.Parameters.Select(p => p.Name)));
+        sb.Append(string.Join(", ", member.Parameters.Select(p => 
+            p.RefKind == RefKind.Out ? "default" : p.Name)));
         sb.AppendLine(");");
         sb.AppendLine();
 
@@ -1084,7 +1116,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else if (config.InterceptorMode == ProxyInterceptorMode.Pipeline)
         {
-            sb.AppendLine("            for (int __i = 0; __i < _interceptors!.Count; __i++)");
+            // OnException in descending order (unwinding the stack)
+            sb.AppendLine("            for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)");
             sb.AppendLine("            {");
             sb.AppendLine("                _interceptors[__i].OnException(__context, __ex);");
             sb.AppendLine("            }");
@@ -1203,16 +1236,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine("            }");
         }
 
-        if (!member.IsVoid)
+        // Return statement (only for non-void and for async methods with generic Task<T>/ValueTask<T>)
+        if (!member.IsVoid && (!member.IsAsync || member.IsGenericAsyncReturnType))
         {
-            // For async methods, check if it's Task<T>/ValueTask<T> (has a generic parameter)
-            // vs Task/ValueTask (no generic parameter)
-            // For non-void async methods with generic return (Task<T>, ValueTask<T>), return the result
-            // For Task/ValueTask (non-generic), the result is the task itself, which is already awaited
-            if (!member.IsAsync || member.IsGenericAsyncReturnType)
-            {
-                sb.AppendLine("            return __result;");
-            }
+            sb.AppendLine("            return __result;");
         }
 
         sb.AppendLine("        }");
@@ -1226,7 +1253,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else if (config.InterceptorMode == ProxyInterceptorMode.Pipeline)
         {
-            sb.AppendLine("            for (int __i = 0; __i < _interceptors!.Count; __i++)");
+            // OnExceptionAsync in descending order (unwinding the stack)
+            sb.AppendLine("            for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)");
             sb.AppendLine("            {");
             sb.AppendLine("                await _interceptors[__i].OnExceptionAsync(__context, __ex).ConfigureAwait(false);");
             sb.AppendLine("            }");
@@ -1379,32 +1407,41 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         sb.AppendLine("    /// <inheritdoc />");
         sb.AppendLine($"    public override string MethodName => \"{member.Name}\";");
 
-        // Parameter properties
+        // Parameter properties with conflict avoidance
+        var paramIndex = 0;
+        var usedPropNames = new System.Collections.Generic.HashSet<string> { "MethodName", "Arguments", "Result" };
+        
         foreach (var param in member.Parameters)
         {
             // Capitalize first letter of parameter name for property name
-            var propName = string.IsNullOrEmpty(param.Name) 
-                ? "Parameter" 
-                : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+            string propName;
+            if (string.IsNullOrEmpty(param.Name))
+            {
+                propName = $"Parameter{paramIndex}";
+            }
+            else
+            {
+                propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                
+                // Avoid conflicts with reserved property names
+                if (usedPropNames.Contains(propName))
+                {
+                    propName = $"Arg_{propName}";
+                }
+            }
+            
+            usedPropNames.Add(propName);
+            
             sb.AppendLine();
-            sb.AppendLine($"    /// <summary>Gets the {param.Name} parameter.</summary>");
+            sb.AppendLine($"    /// <summary>Gets the {param.Name ?? "parameter"} parameter.</summary>");
             sb.AppendLine($"    public {param.Type} {propName} {{ get; }}");
+            
+            paramIndex++;
         }
 
         // Result property if not void
         if (!member.IsVoid)
         {
-            // For async methods, we need to unwrap the Task<T> or ValueTask<T> to get the actual result type
-            var resultType = member.ReturnType;
-            if (member.IsAsync)
-            {
-                // Extract the inner type from Task<T> or ValueTask<T>
-                // This is a simplification - we store the full Task/ValueTask type in ReturnType
-                // but for the context, we want the unwrapped result
-                // For now, we'll use the full return type and handle unwrapping in the proxy
-                // Actually, let's keep it simple and use the return type as-is
-            }
-            
             sb.AppendLine();
             sb.AppendLine($"    /// <summary>Gets the result of the method call.</summary>");
             sb.AppendLine($"    public {member.ReturnType} Result {{ get; private set; }} = default!;");

@@ -128,9 +128,9 @@ public interface IUserServiceInterceptor
     void After(MethodContext context);
     void OnException(MethodContext context, Exception ex);
     
-    ValueTask BeforeAsync(MethodContext context, CancellationToken ct);
-    ValueTask AfterAsync(MethodContext context, CancellationToken ct);
-    ValueTask OnExceptionAsync(MethodContext context, Exception ex, CancellationToken ct);
+    ValueTask BeforeAsync(MethodContext context);
+    ValueTask AfterAsync(MethodContext context);
+    ValueTask OnExceptionAsync(MethodContext context, Exception ex);
 }
 
 public abstract class MethodContext
@@ -411,9 +411,10 @@ public partial interface IFutureProofService
 - Methods with `CancellationToken` parameters
 - Methods with default parameters
 - Generic methods (with constraints)
+- Methods with `ref` / `in` parameters (forwarded to inner, but not captured in MethodContext before execution)
 
 ❌ **Not Supported (v1):**
-- `ref` / `out` / `in` parameters (generates diagnostic)
+- Methods with `out` parameters when interceptors are enabled (parameter values cannot be captured before method execution)
 - Events (generates PKPRX002)
 
 ### Properties
