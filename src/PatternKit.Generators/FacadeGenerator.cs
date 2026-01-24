@@ -28,9 +28,16 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         ).Where(static x => x is not null);
 
         // Generate facade implementation for each type
+        // Deduplicate by target type to handle multiple [GenerateFacade] attributes
         context.RegisterSourceOutput(facadeTypes.Collect(), (spc, infos) =>
         {
-            foreach (var info in infos.Where(static info => info is not null))
+            var uniqueInfos = infos
+                .Where(static info => info is not null)
+                .GroupBy(static info => info!.TargetType, SymbolEqualityComparer.Default)
+                .Select(static g => g.First())
+                .ToList();
+            
+            foreach (var info in uniqueInfos)
             {
                 GenerateFacade(spc, info!);
             }
@@ -221,6 +228,31 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var externalTypes = new List<INamedTypeSymbol>();
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
         
+        // Validate that auto-facade mode is only used with interfaces
+        if (contractType.TypeKind != TypeKind.Interface)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.AutoFacadeOnlyForInterfaces,
+                contractType.Locations.FirstOrDefault(),
+                contractType.Name));
+            
+            return new FacadeInfo(
+                TargetType: contractType,
+                Namespace: contractType.ContainingNamespace.IsGlobalNamespace 
+                    ? null 
+                    : contractType.ContainingNamespace.ToDisplayString(),
+                FacadeTypeName: $"{contractType.Name}Impl",
+                GenerateAsync: true,
+                ForceAsync: false,
+                MissingMapPolicy: 0,
+                IsHostFirst: false,
+                Methods: ImmutableArray<MethodInfo>.Empty,
+                IsAutoFacade: true,
+                ExternalTypes: ImmutableArray<INamedTypeSymbol>.Empty,
+                Diagnostics: diagnostics.ToImmutable()
+            );
+        }
+        
         int fieldIndex = 0;
         foreach (var attr in autoFacadeAttrs)
         {
@@ -323,16 +355,14 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             allMethods = allMethods.Where(m => includeSet.Contains(m.Name)).ToList();
             
             // Report if specified member not found
-            foreach (var name in include)
+            var foundMembers = new HashSet<string>(allMethods.Select(m => m.Name));
+            foreach (var name in include.Where(name => !foundMembers.Contains(name)))
             {
-                if (!allMethods.Any(m => m.Name == name))
-                {
-                    diagnostics.Add(Diagnostic.Create(
-                        Diagnostics.MemberNotFound,
-                        location,
-                        name,
-                        externalType.Name));
-                }
+                diagnostics.Add(Diagnostic.Create(
+                    Diagnostics.MemberNotFound,
+                    location,
+                    name,
+                    externalType.Name));
             }
         }
         
@@ -972,7 +1002,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var ctorParams = groupedByField.Select(g =>
         {
             var fieldName = g.Key;
-            var paramName = fieldName.TrimStart('_');
+            var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
             var externalType = g.First().MappingMethod!.ContainingType;
             var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             return $"{typeFullName} {paramName}";
@@ -984,7 +1014,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         foreach (var group in groupedByField)
         {
             var fieldName = group.Key;
-            var paramName = fieldName.TrimStart('_');
+            var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
             sb.AppendLine($"        {fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }
         
@@ -1057,7 +1087,15 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var constraints = new List<string>();
         
         if (tp.HasReferenceTypeConstraint)
-            constraints.Add("class");
+        {
+            // Handle nullable reference type constraint (class?)
+            var constraint = "class";
+            if (tp.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated)
+            {
+                constraint = "class?";
+            }
+            constraints.Add(constraint);
+        }
         if (tp.HasValueTypeConstraint)
             constraints.Add("struct");
         if (tp.HasUnmanagedTypeConstraint)
@@ -1386,6 +1424,17 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             "Member '{0}' not found in type '{1}'.",
             Category,
             DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// PKFAC005: Auto-facade mode only works with interfaces.
+        /// </summary>
+        public static readonly DiagnosticDescriptor AutoFacadeOnlyForInterfaces = new(
+            "PKFAC005",
+            "Auto-facade mode only works with interfaces",
+            "Auto-facade mode (TargetTypeName) can only be used with partial interfaces. Type '{0}' is not an interface.",
+            Category,
+            DiagnosticSeverity.Error,
             isEnabledByDefault: true);
     }
 }
