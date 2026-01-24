@@ -312,8 +312,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             : contractType.ContainingNamespace.ToDisplayString();
         
         var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface 
-            ? $"{contractType.Name.TrimStart('I')}Impl"
-            : $"{contractType.Name}Impl";
+            ? (contractType.Name.StartsWith("I") ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
+            : contractType.Name + "Impl";
         
         return new FacadeInfo(
             TargetType: contractType,
@@ -1013,10 +1013,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine($"    public {info.FacadeTypeName}({string.Join(", ", ctorParams)})");
         sb.AppendLine("    {");
         
-        foreach (var group in groupedByField)
+        foreach (var (fieldName, paramName) in groupedByField.Select(g => 
+            (g.Key, g.Key.StartsWith("_") ? g.Key.Substring(1) : g.Key)))
         {
-            var fieldName = group.Key;
-            var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
             sb.AppendLine($"        {fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }
         

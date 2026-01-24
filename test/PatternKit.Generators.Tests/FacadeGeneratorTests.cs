@@ -1654,5 +1654,37 @@ public class FacadeGeneratorTests
         Assert.Contains(diagnostics, d => d.Id == "PKFAC005");
     }
 
+    [Fact]
+    public void AutoFacade_InterfaceWithMultipleLeadingI_OnlyRemovesFirstI()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IIExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IIExternal")]
+            public partial interface IIMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_InterfaceWithMultipleLeadingI_OnlyRemovesFirstI),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        // Should generate IIMyFacadeImpl (only first I removed from IIMyFacade)
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
+    }
+
     #endregion
 }
