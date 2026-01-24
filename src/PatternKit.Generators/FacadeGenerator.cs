@@ -269,7 +269,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             fieldIndex++;
         }
         
-        if (allMethods.Count == 0)
+        // If we have diagnostics but no methods, still return FacadeInfo to report the diagnostics
+        if (allMethods.Count == 0 && diagnostics.Count == 0)
         {
             return null;
         }
@@ -478,6 +479,12 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             foreach (var diagnostic in info.Diagnostics.Value)
             {
                 context.ReportDiagnostic(diagnostic);
+            }
+            
+            // If there are error diagnostics, don't generate code
+            if (info.Diagnostics.Value.Any(d => d.Severity == DiagnosticSeverity.Error))
+            {
+                return;
             }
         }
         
