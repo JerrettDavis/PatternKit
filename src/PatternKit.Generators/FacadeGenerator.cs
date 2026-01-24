@@ -1004,6 +1004,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var ctorParams = groupedByField.Select(g =>
         {
             var fieldName = g.Key;
+            // Generate parameter name: if field starts with underscore, remove it; otherwise, use field name as-is
+            // The parameter will be different from field if no underscore, which is the standard convention
             var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
             var externalType = g.First().MappingMethod!.ContainingType;
             var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
@@ -1013,10 +1015,12 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine($"    public {info.FacadeTypeName}({string.Join(", ", ctorParams)})");
         sb.AppendLine("    {");
         
+        // Generate constructor body with null checks
+        // For fields without underscore, the parameter name matches the field name which is valid C#
         foreach (var (fieldName, paramName) in groupedByField.Select(g => 
             (g.Key, g.Key.StartsWith("_") ? g.Key.Substring(1) : g.Key)))
         {
-            sb.AppendLine($"        {fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
+            sb.AppendLine($"        this.{fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }
         
         sb.AppendLine("    }");

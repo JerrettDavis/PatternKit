@@ -1363,6 +1363,8 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void Method1()", generatedSource);
         Assert.Contains("void Method3()", generatedSource);
@@ -1396,6 +1398,8 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void Method1()", generatedSource);
         Assert.Contains("void Method3()", generatedSource);
@@ -1427,6 +1431,8 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void ExternalLog(string message)", generatedSource);
         Assert.DoesNotContain("void Log(string message)", generatedSource);
@@ -1684,6 +1690,40 @@ public class FacadeGeneratorTests
         // Should generate IIMyFacadeImpl (only first I removed from IIMyFacade)
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
+    }
+
+    [Fact]
+    public void AutoFacade_FieldNameWithoutUnderscore_UsesThisQualifier()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void Method1();
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal", FieldName = "myTarget")]
+            public partial interface IMyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_FieldNameWithoutUnderscore_UsesThisQualifier),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        
+        var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
+        // Field name is "myTarget", parameter name is also "myTarget", so should use "this." qualifier
+        Assert.Contains("private readonly global::TestNs.IExternal myTarget;", generatedSource);
+        Assert.Contains("public MyFacadeImpl(global::TestNs.IExternal myTarget)", generatedSource);
+        Assert.Contains("this.myTarget = myTarget ?? throw new System.ArgumentNullException(nameof(myTarget));", generatedSource);
     }
 
     #endregion
