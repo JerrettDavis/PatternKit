@@ -1038,7 +1038,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         
         // Forward call
         var args = string.Join(", ", sym.Parameters.Select(p =>
-            $"{GetArgumentRefKind(p.RefKind)}{p.Name}"
+            $"{GetRefKind(p.RefKind)}{p.Name}"
         ));
         
         var call = $"{fieldName}.{sym.Name}{typeParams}({args})";
@@ -1074,17 +1074,6 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             constraints.Add("new()");
         
         return string.Join(", ", constraints);
-    }
-
-    private static string GetArgumentRefKind(RefKind refKind)
-    {
-        return refKind switch
-        {
-            RefKind.Ref => "ref ",
-            RefKind.Out => "out ",
-            RefKind.In => "in ",
-            _ => ""
-        };
     }
 
     private static void GenerateHostMethod(
