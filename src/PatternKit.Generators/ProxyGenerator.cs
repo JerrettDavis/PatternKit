@@ -96,18 +96,12 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         AttributeData attribute,
         SyntaxNode node)
     {
-        // Check if type is interface or abstract class
-        if (contractSymbol.TypeKind == TypeKind.Interface)
+        // Validate type kind: must be interface or abstract class
+        var isInterface = contractSymbol.TypeKind == TypeKind.Interface;
+        var isAbstractClass = contractSymbol.TypeKind == TypeKind.Class && contractSymbol.IsAbstract;
+        
+        if (!isInterface && !isAbstractClass)
         {
-            // Interfaces are supported
-        }
-        else if (contractSymbol.TypeKind == TypeKind.Class && contractSymbol.IsAbstract)
-        {
-            // Abstract classes are supported
-        }
-        else
-        {
-            // Not an interface or abstract class - unsupported target type
             context.ReportDiagnostic(Diagnostic.Create(
                 UnsupportedMemberDescriptor,
                 node.GetLocation(),
@@ -1213,11 +1207,9 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         {
             // For async methods, check if it's Task<T>/ValueTask<T> (has a generic parameter)
             // vs Task/ValueTask (no generic parameter)
-            if (member.IsAsync && !member.IsGenericAsyncReturnType)
-            {
-                // Task or ValueTask with no result value - don't return anything
-            }
-            else
+            // For non-void async methods with generic return (Task<T>, ValueTask<T>), return the result
+            // For Task/ValueTask (non-generic), the result is the task itself, which is already awaited
+            if (!member.IsAsync || member.IsGenericAsyncReturnType)
             {
                 sb.AppendLine("            return __result;");
             }
@@ -1485,6 +1477,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         Property
     }
 
+    // Local enum copies for use within the generator (generators cannot reference Abstractions types at runtime)
     private enum ProxyInterceptorMode
     {
         None = 0,
