@@ -610,10 +610,18 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             
         if (!namedType.IsGenericType)
             return false;
-            
+        
+        // Check if it's Task<T> or ValueTask<T> by checking if the base type is Task or ValueTask
+        // and if it has type arguments
         var fullName = namedType.ConstructedFrom.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return fullName == "global::System.Threading.Tasks.Task<T>" ||
-               fullName == "global::System.Threading.Tasks.ValueTask<T>";
+        
+        // Also check the original type to see if it has generic arguments
+        var originalTypeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        
+        return (fullName == "global::System.Threading.Tasks.Task<T>" ||
+                fullName == "global::System.Threading.Tasks.ValueTask<T>") ||
+               (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<") ||
+                originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<")));
     }
 
     private static bool IsCancellationToken(ITypeSymbol type)
@@ -959,7 +967,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         else
         {
             var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
-            sb.Append($"            return {refModifier}_inner.{member.Name}(");
+            var awaitModifier = member.IsAsync ? "await " : "";
+            sb.Append($"            return {awaitModifier}{refModifier}_inner.{member.Name}(");
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -1158,6 +1167,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
             if (member.IsGenericAsyncReturnType)
             {
+                // Await and store result for later return
                 sb.AppendLine("            var __result = await __task.ConfigureAwait(false);");
             }
             else

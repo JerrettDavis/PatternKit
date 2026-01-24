@@ -10,6 +10,9 @@
 - name: Builder
   href: builder.md
 
+- name: Proxy
+  href: proxy.md
+
 - name: Examples
   href: examples.md
 
