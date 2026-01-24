@@ -35,10 +35,11 @@ public static partial class BillingFacadeHost
     public static Receipt ProcessPayment(
         IPaymentGateway gateway, 
         ITaxService tax,
-        PaymentRequest request)
+        string customerId,
+        decimal amount)
     {
-        var taxAmount = tax.CalculateTax(request.Amount);
-        return gateway.Charge(request.Amount + taxAmount);
+        var taxAmount = tax.CalculateTax(amount);
+        return gateway.Charge(customerId, amount + taxAmount);
     }
 }
 ```
@@ -56,9 +57,9 @@ public sealed class BillingFacade
         _tax = tax;
     }
 
-    public Receipt ProcessPayment(PaymentRequest request)
+    public Receipt ProcessPayment(string customerId, decimal amount)
     {
-        return BillingFacadeHost.ProcessPayment(_gateway, _tax, request);
+        return BillingFacadeHost.ProcessPayment(_gateway, _tax, customerId, amount);
     }
 }
 ```
@@ -77,10 +78,11 @@ public static partial class ShippingHost
     public static decimal GetShippingCost(
         IRateCalculator calculator,
         IShippingValidator validator,
-        ShipmentDetails details)
+        decimal weight,
+        string destinationPostalCode)
     {
-        validator.Validate(details);
-        return calculator.Calculate(details);
+        validator.Validate(weight, destinationPostalCode);
+        return calculator.Calculate(weight, destinationPostalCode);
     }
 
     [FacadeExpose]

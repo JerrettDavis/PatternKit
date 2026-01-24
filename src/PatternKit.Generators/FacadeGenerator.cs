@@ -270,6 +270,15 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             p.Type.ToDisplayString() == "System.Threading.CancellationToken");
     }
 
+    private static string GetAsyncReturnType(IMethodSymbol method)
+    {
+        if (method.ReturnType is INamedTypeSymbol namedType && namedType.IsGenericType && namedType.TypeArguments.Length > 0)
+        {
+            return namedType.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        }
+        return "object";
+    }
+
     private static T? GetAttributeProperty<T>(AttributeData attr, string propertyName)
     {
         var prop = attr.NamedArguments.FirstOrDefault(x => x.Key == propertyName);
@@ -436,7 +445,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             
             foreach (var dep in dependencies)
             {
-                sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName} ?? throw new System.ArgumentNullException(nameof({dep.ParameterName}));");
+                sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName};");
             }
             
             sb.AppendLine("    }");
@@ -492,9 +501,37 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             {
                 sb.AppendLine($"        throw new System.NotImplementedException(\"Method {method.ContractName} is not yet implemented.\");");
             }
-            else if (info.MissingMapPolicy == 2 && returnType != "void" && !isAsync) // Ignore
+            else if (info.MissingMapPolicy == 2) // Ignore
             {
-                sb.AppendLine($"        return default!;");
+                if (isAsync)
+                {
+                    // Handle async return types
+                    var returnTypeStr = methodSymbol.ReturnType.ToDisplayString();
+                    if (returnTypeStr.StartsWith("System.Threading.Tasks.ValueTask<"))
+                    {
+                        sb.AppendLine($"        return System.Threading.Tasks.ValueTask.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
+                    }
+                    else if (returnTypeStr.StartsWith("System.Threading.Tasks.Task<"))
+                    {
+                        sb.AppendLine($"        return System.Threading.Tasks.Task.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
+                    }
+                    else if (returnTypeStr == "System.Threading.Tasks.ValueTask")
+                    {
+                        sb.AppendLine($"        return System.Threading.Tasks.ValueTask.CompletedTask;");
+                    }
+                    else if (returnTypeStr == "System.Threading.Tasks.Task")
+                    {
+                        sb.AppendLine($"        return System.Threading.Tasks.Task.CompletedTask;");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"        return default!;");
+                    }
+                }
+                else if (returnType != "void")
+                {
+                    sb.AppendLine($"        return default!;");
+                }
             }
         }
         else
@@ -568,6 +605,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     private static ImmutableArray<DependencyInfo> CollectDependencies(FacadeInfo info)
     {
         var dependencies = new Dictionary<string, DependencyInfo>();
+        var usedFieldNames = new HashSet<string>();
         
         foreach (var method in info.Methods)
         {
@@ -586,8 +624,20 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 
                 if (!dependencies.ContainsKey(typeStr))
                 {
-                    var fieldName = $"_{ToCamelCase(param.Type.Name)}";
-                    var paramName = ToCamelCase(param.Type.Name);
+                    var baseName = ToCamelCase(param.Type.Name);
+                    var fieldName = $"_{baseName}";
+                    var paramName = baseName;
+                    
+                    // Handle name collisions by appending numbers
+                    var counter = 1;
+                    while (usedFieldNames.Contains(fieldName))
+                    {
+                        fieldName = $"_{baseName}{counter}";
+                        paramName = $"{baseName}{counter}";
+                        counter++;
+                    }
+                    
+                    usedFieldNames.Add(fieldName);
                     
                     dependencies[typeStr] = new DependencyInfo(
                         Type: typeStr,
@@ -646,7 +696,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             
             foreach (var dep in dependencies)
             {
-                sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName} ?? throw new System.ArgumentNullException(nameof({dep.ParameterName}));");
+                sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName};");
             }
             
             sb.AppendLine("    }");
@@ -743,6 +793,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     private static ImmutableArray<DependencyInfo> CollectHostDependencies(FacadeInfo info)
     {
         var dependencies = new Dictionary<string, DependencyInfo>();
+        var usedFieldNames = new HashSet<string>();
         
         foreach (var method in info.Methods)
         {
@@ -761,8 +812,20 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 
                 if (!dependencies.ContainsKey(typeStr))
                 {
-                    var fieldName = $"_{ToCamelCase(param.Type.Name)}";
-                    var paramName = ToCamelCase(param.Type.Name);
+                    var baseName = ToCamelCase(param.Type.Name);
+                    var fieldName = $"_{baseName}";
+                    var paramName = baseName;
+                    
+                    // Handle name collisions by appending numbers
+                    var counter = 1;
+                    while (usedFieldNames.Contains(fieldName))
+                    {
+                        fieldName = $"_{baseName}{counter}";
+                        paramName = $"{baseName}{counter}";
+                        counter++;
+                    }
+                    
+                    usedFieldNames.Add(fieldName);
                     
                     dependencies[typeStr] = new DependencyInfo(
                         Type: typeStr,
