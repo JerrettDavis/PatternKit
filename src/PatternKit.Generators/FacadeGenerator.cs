@@ -42,6 +42,17 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         if (context.TargetSymbol is not INamedTypeSymbol targetType)
             return null;
 
+        // Check ALL attributes for auto-facade mode
+        var autoFacadeAttrs = context.TargetSymbol.GetAttributes()
+            .Where(a => a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Facade.GenerateFacadeAttribute")
+            .Where(a => GetAttributeProperty<string>(a, "TargetTypeName") is not null)
+            .ToList();
+        
+        if (autoFacadeAttrs.Any())
+        {
+            return GetAutoFacadeInfo(context, targetType, autoFacadeAttrs, ct);
+        }
+
         var attr = context.Attributes[0];
         
         // Read attribute properties
@@ -200,6 +211,166 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         return methods.ToImmutableArray();
     }
 
+    private static FacadeInfo? GetAutoFacadeInfo(
+        GeneratorAttributeSyntaxContext context,
+        INamedTypeSymbol contractType,
+        List<AttributeData> autoFacadeAttrs,
+        CancellationToken ct)
+    {
+        var allMethods = ImmutableArray.CreateBuilder<MethodInfo>();
+        var externalTypes = new List<INamedTypeSymbol>();
+        var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+        
+        int fieldIndex = 0;
+        foreach (var attr in autoFacadeAttrs)
+        {
+            var targetTypeName = GetAttributeProperty<string>(attr, "TargetTypeName")!;
+            var include = GetStringArrayProperty(attr, "Include");
+            var exclude = GetStringArrayProperty(attr, "Exclude");
+            var memberPrefix = GetAttributeProperty<string>(attr, "MemberPrefix") ?? "";
+            var fieldName = GetAttributeProperty<string>(attr, "FieldName") 
+                           ?? (autoFacadeAttrs.Count > 1 ? $"_target{fieldIndex}" : "_target");
+            
+            // Validate mutually exclusive filters
+            if (include?.Length > 0 && exclude?.Length > 0)
+            {
+                diagnostics.Add(Diagnostic.Create(
+                    Diagnostics.MutuallyExclusiveFilters,
+                    contractType.Locations.FirstOrDefault()));
+                continue;
+            }
+            
+            // Resolve external type
+            var externalType = context.SemanticModel.Compilation.GetTypeByMetadataName(targetTypeName);
+            
+            if (externalType is null)
+            {
+                diagnostics.Add(Diagnostic.Create(
+                    Diagnostics.TargetTypeNotFound,
+                    contractType.Locations.FirstOrDefault(),
+                    targetTypeName));
+                continue;
+            }
+            
+            externalTypes.Add(externalType);
+            
+            // Collect filtered methods
+            var (methods, methodDiagnostics) = CollectAutoFacadeMethods(
+                externalType, 
+                include, 
+                exclude,
+                memberPrefix,
+                fieldName,
+                contractType.Locations.FirstOrDefault()
+            );
+            
+            allMethods.AddRange(methods);
+            diagnostics.AddRange(methodDiagnostics);
+            fieldIndex++;
+        }
+        
+        if (allMethods.Count == 0)
+        {
+            return null;
+        }
+        
+        var ns = contractType.ContainingNamespace.IsGlobalNamespace 
+            ? null 
+            : contractType.ContainingNamespace.ToDisplayString();
+        
+        var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface 
+            ? $"{contractType.Name.TrimStart('I')}Impl"
+            : $"{contractType.Name}Impl";
+        
+        return new FacadeInfo(
+            TargetType: contractType,
+            Namespace: ns,
+            FacadeTypeName: defaultFacadeTypeName,
+            GenerateAsync: true,
+            ForceAsync: false,
+            MissingMapPolicy: 0,
+            IsHostFirst: false,
+            Methods: allMethods.ToImmutable(),
+            IsAutoFacade: true,
+            ExternalTypes: externalTypes.ToImmutableArray(),
+            Diagnostics: diagnostics.ToImmutable()
+        );
+    }
+
+    private static (ImmutableArray<MethodInfo> methods, ImmutableArray<Diagnostic> diagnostics) CollectAutoFacadeMethods(
+        INamedTypeSymbol externalType,
+        string[]? include,
+        string[]? exclude,
+        string memberPrefix,
+        string fieldName,
+        Location? location)
+    {
+        var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+        
+        var allMethods = externalType
+            .GetMembers()
+            .OfType<IMethodSymbol>()
+            .Where(m => m.MethodKind == MethodKind.Ordinary && 
+                        m.DeclaredAccessibility == Accessibility.Public &&
+                        !m.IsStatic)
+            .ToList();
+        
+        // Apply include filter
+        if (include?.Length > 0)
+        {
+            var includeSet = new HashSet<string>(include, StringComparer.Ordinal);
+            allMethods = allMethods.Where(m => includeSet.Contains(m.Name)).ToList();
+            
+            // Report if specified member not found
+            foreach (var name in include)
+            {
+                if (!allMethods.Any(m => m.Name == name))
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        Diagnostics.MemberNotFound,
+                        location,
+                        name,
+                        externalType.Name));
+                }
+            }
+        }
+        
+        // Apply exclude filter
+        if (exclude?.Length > 0)
+        {
+            var excludeSet = new HashSet<string>(exclude, StringComparer.Ordinal);
+            allMethods = allMethods.Where(m => !excludeSet.Contains(m.Name)).ToList();
+        }
+        
+        // Warn if no members found
+        if (allMethods.Count == 0)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.NoPublicMembers,
+                location,
+                externalType.Name));
+        }
+        
+        var builder = ImmutableArray.CreateBuilder<MethodInfo>();
+        
+        foreach (var method in allMethods)
+        {
+            builder.Add(new MethodInfo(
+                Symbol: method,
+                ContractName: memberPrefix + method.Name,
+                IsAsync: IsAsyncMethod(method),
+                HasCancellationToken: HasCancellationTokenParameter(method),
+                MapAttribute: null,
+                MappingMethod: method,
+                IsExposed: true,
+                HasDuplicateMapping: false,
+                ExternalFieldName: fieldName
+            ));
+        }
+        
+        return (builder.ToImmutable(), diagnostics.ToImmutable());
+    }
+
     private static bool SignaturesMatch(IMethodSymbol method1, IMethodSymbol method2)
     {
         // Check return type compatibility
@@ -287,16 +458,48 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         return default;
     }
 
+    private static string[]? GetStringArrayProperty(AttributeData attr, string propertyName)
+    {
+        var prop = attr.NamedArguments.FirstOrDefault(x => x.Key == propertyName);
+        if (prop.Value.IsNull || prop.Value.Kind != TypedConstantKind.Array)
+            return null;
+        
+        return prop.Value.Values
+            .Select(v => v.Value as string)
+            .Where(s => s is not null)
+            .ToArray()!;
+    }
+
     private static void GenerateFacade(SourceProductionContext context, FacadeInfo info)
     {
+        // Report any diagnostics
+        if (info.Diagnostics is not null)
+        {
+            foreach (var diagnostic in info.Diagnostics.Value)
+            {
+                context.ReportDiagnostic(diagnostic);
+            }
+        }
+        
         // Validate
         if (!ValidateFacade(context, info))
             return;
 
         // Generate code
-        var source = info.IsHostFirst 
-            ? GenerateHostFirstFacade(context, info)
-            : GenerateContractFirstFacade(context, info);
+        string source;
+        
+        if (info.IsAutoFacade)
+        {
+            source = GenerateAutoFacade(context, info);
+        }
+        else if (info.IsHostFirst)
+        {
+            source = GenerateHostFirstFacade(context, info);
+        }
+        else
+        {
+            source = GenerateContractFirstFacade(context, info);
+        }
 
         if (!string.IsNullOrEmpty(source))
         {
@@ -716,6 +919,167 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
+    private static string GenerateAutoFacade(SourceProductionContext context, FacadeInfo info)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("// <auto-generated />");
+        sb.AppendLine();
+        
+        if (info.Namespace is not null)
+        {
+            sb.AppendLine($"namespace {info.Namespace};");
+            sb.AppendLine();
+        }
+        
+        var baseType = info.TargetType.TypeKind == TypeKind.Interface
+            ? $" : {info.TargetType.Name}"
+            : "";
+        
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Auto-generated facade implementation for {info.TargetType.Name}.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public sealed class {info.FacadeTypeName}{baseType}");
+        sb.AppendLine("{");
+        
+        // Group by external type (for multiple [GenerateFacade] attributes)
+        var groupedByField = info.Methods
+            .GroupBy(m => m.ExternalFieldName ?? "_target")
+            .ToList();
+        
+        // Generate fields
+        foreach (var group in groupedByField)
+        {
+            var firstMethod = group.First();
+            var externalType = firstMethod.MappingMethod!.ContainingType;
+            var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            sb.AppendLine($"    private readonly {typeFullName} {group.Key};");
+        }
+        sb.AppendLine();
+        
+        // Generate constructor
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    /// Initializes a new instance of {info.FacadeTypeName}.");
+        sb.AppendLine("    /// </summary>");
+        
+        var ctorParams = groupedByField.Select(g =>
+        {
+            var fieldName = g.Key;
+            var paramName = fieldName.TrimStart('_');
+            var externalType = g.First().MappingMethod!.ContainingType;
+            var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return $"{typeFullName} {paramName}";
+        });
+        
+        sb.AppendLine($"    public {info.FacadeTypeName}({string.Join(", ", ctorParams)})");
+        sb.AppendLine("    {");
+        
+        foreach (var group in groupedByField)
+        {
+            var fieldName = group.Key;
+            var paramName = fieldName.TrimStart('_');
+            sb.AppendLine($"        {fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
+        }
+        
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        
+        // Generate forwarding methods
+        foreach (var method in info.Methods.OrderBy(m => m.ContractName))
+        {
+            GenerateAutoFacadeMethod(sb, method);
+        }
+        
+        sb.AppendLine("}");
+        
+        return sb.ToString();
+    }
+
+    private static void GenerateAutoFacadeMethod(StringBuilder sb, MethodInfo method)
+    {
+        var sym = method.Symbol;
+        var fieldName = method.ExternalFieldName ?? "_target";
+        
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    /// Forwards to {sym.ContainingType.Name}.{sym.Name}");
+        sb.AppendLine("    /// </summary>");
+        
+        // Build signature
+        var returnType = sym.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var typeParams = sym.TypeParameters.Length > 0
+            ? $"<{string.Join(", ", sym.TypeParameters.Select(tp => tp.Name))}>"
+            : "";
+        
+        var parameters = string.Join(", ", sym.Parameters.Select(p =>
+            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"
+        ));
+        
+        sb.AppendLine($"    public {returnType} {method.ContractName}{typeParams}({parameters})");
+        
+        // Type constraints
+        if (sym.TypeParameters.Length > 0)
+        {
+            foreach (var tp in sym.TypeParameters)
+            {
+                var constraints = BuildTypeConstraints(tp);
+                if (!string.IsNullOrEmpty(constraints))
+                    sb.AppendLine($"        where {tp.Name} : {constraints}");
+            }
+        }
+        
+        sb.AppendLine("    {");
+        
+        // Forward call
+        var args = string.Join(", ", sym.Parameters.Select(p =>
+            $"{GetArgumentRefKind(p.RefKind)}{p.Name}"
+        ));
+        
+        var call = $"{fieldName}.{sym.Name}{typeParams}({args})";
+        
+        if (sym.ReturnsVoid)
+            sb.AppendLine($"        {call};");
+        else
+            sb.AppendLine($"        return {call};");
+        
+        sb.AppendLine("    }");
+        sb.AppendLine();
+    }
+
+    private static string BuildTypeConstraints(ITypeParameterSymbol tp)
+    {
+        var constraints = new List<string>();
+        
+        if (tp.HasReferenceTypeConstraint)
+            constraints.Add("class");
+        if (tp.HasValueTypeConstraint)
+            constraints.Add("struct");
+        if (tp.HasUnmanagedTypeConstraint)
+            constraints.Add("unmanaged");
+        if (tp.HasNotNullConstraint)
+            constraints.Add("notnull");
+        
+        foreach (var constraintType in tp.ConstraintTypes)
+        {
+            constraints.Add(constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+        }
+        
+        if (tp.HasConstructorConstraint)
+            constraints.Add("new()");
+        
+        return string.Join(", ", constraints);
+    }
+
+    private static string GetArgumentRefKind(RefKind refKind)
+    {
+        return refKind switch
+        {
+            RefKind.Ref => "ref ",
+            RefKind.Out => "out ",
+            RefKind.In => "in ",
+            _ => ""
+        };
+    }
+
     private static void GenerateHostMethod(
         StringBuilder sb,
         MethodInfo method,
@@ -887,7 +1251,10 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         bool ForceAsync,
         int MissingMapPolicy,
         bool IsHostFirst,
-        ImmutableArray<MethodInfo> Methods
+        ImmutableArray<MethodInfo> Methods,
+        bool IsAutoFacade = false,
+        ImmutableArray<INamedTypeSymbol>? ExternalTypes = null,
+        ImmutableArray<Diagnostic>? Diagnostics = null
     );
 
     private record MethodInfo(
@@ -898,7 +1265,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         AttributeData? MapAttribute,
         IMethodSymbol? MappingMethod = null,
         bool IsExposed = false,
-        bool HasDuplicateMapping = false
+        bool HasDuplicateMapping = false,
+        string? ExternalFieldName = null
     );
 
     private record struct DependencyInfo(
@@ -976,6 +1344,50 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             "PKFCD006",
             "Async mapping with generation disabled",
             "Method '{0}' is async but GenerateAsync is disabled in the attribute",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// PKFAC001: Target type not found.
+        /// </summary>
+        public static readonly DiagnosticDescriptor TargetTypeNotFound = new(
+            "PKFAC001",
+            "Target type not found",
+            "Cannot resolve type '{0}'. Ensure the type exists and is referenced.",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// PKFAC002: Include and Exclude are mutually exclusive.
+        /// </summary>
+        public static readonly DiagnosticDescriptor MutuallyExclusiveFilters = new(
+            "PKFAC002",
+            "Include and Exclude are mutually exclusive",
+            "Cannot specify both Include and Exclude on [GenerateFacade].",
+            Category,
+            DiagnosticSeverity.Error,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// PKFAC003: No public members found.
+        /// </summary>
+        public static readonly DiagnosticDescriptor NoPublicMembers = new(
+            "PKFAC003",
+            "No public members found",
+            "Type '{0}' has no public members matching filter criteria.",
+            Category,
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true);
+
+        /// <summary>
+        /// PKFAC004: Specified member not found.
+        /// </summary>
+        public static readonly DiagnosticDescriptor MemberNotFound = new(
+            "PKFAC004",
+            "Specified member not found",
+            "Member '{0}' not found in type '{1}'.",
             Category,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
