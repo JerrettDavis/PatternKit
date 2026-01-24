@@ -352,11 +352,10 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         if (include?.Length > 0)
         {
             var includeSet = new HashSet<string>(include, StringComparer.Ordinal);
-            allMethods = allMethods.Where(m => includeSet.Contains(m.Name)).ToList();
             
-            // Report if specified member not found
-            var foundMembers = new HashSet<string>(allMethods.Select(m => m.Name));
-            foreach (var name in include.Where(name => !foundMembers.Contains(name)))
+            // Report if specified member not found in the original list
+            var allMethodNames = new HashSet<string>(allMethods.Select(m => m.Name));
+            foreach (var name in include.Where(name => !allMethodNames.Contains(name)))
             {
                 diagnostics.Add(Diagnostic.Create(
                     Diagnostics.MemberNotFound,
@@ -364,6 +363,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     name,
                     externalType.Name));
             }
+            
+            // Filter to only included methods
+            allMethods = allMethods.Where(m => includeSet.Contains(m.Name)).ToList();
         }
         
         // Apply exclude filter
