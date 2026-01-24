@@ -40,9 +40,16 @@ PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrict
 PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
 PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
 PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation
+PKFCD001 | PatternKit.Generators.Facade | Error | Type must be partial for facade generation
+PKFCD002 | PatternKit.Generators.Facade | Error | No mapped method found for contract member
+PKFCD003 | PatternKit.Generators.Facade | Error | Multiple mappings found for contract member
+PKFCD004 | PatternKit.Generators.Facade | Error | Signature mismatch between map method and contract member
+PKFCD005 | PatternKit.Generators.Facade | Error | Facade type name conflicts with existing type
+PKFCD006 | PatternKit.Generators.Facade | Warning | Async mapping detected but generation disabled
 PKDEC001 | PatternKit.Generators.Decorator | Error | Unsupported target type for decorator generation
 PKDEC002 | PatternKit.Generators.Decorator | Error | Unsupported member kind for decorator generation
 PKDEC003 | PatternKit.Generators.Decorator | Error | Name conflict for generated decorator types
 PKDEC004 | PatternKit.Generators.Decorator | Warning | Member is not accessible for decorator generation
 PKDEC005 | PatternKit.Generators.Decorator | Error | Generic contracts are not supported for decorator generation
 PKDEC006 | PatternKit.Generators.Decorator | Error | Nested types are not supported for decorator generation
+
