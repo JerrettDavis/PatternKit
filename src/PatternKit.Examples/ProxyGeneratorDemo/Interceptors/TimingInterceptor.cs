@@ -102,14 +102,8 @@ public sealed class TimingInterceptor : IPaymentServiceInterceptor
     {
         lock (_lock)
         {
-            if (_timings.TryGetValue(methodName, out var existing))
-            {
-                _timings[methodName] = existing + milliseconds;
-            }
-            else
-            {
-                _timings[methodName] = milliseconds;
-            }
+            long existing = _timings.TryGetValue(methodName, out var current) ? current : 0;
+            _timings[methodName] = existing + milliseconds;
         }
     }
 }

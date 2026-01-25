@@ -108,15 +108,15 @@ public sealed partial class UserServiceProxy : IUserService
         var context = new GetUserAsyncMethodContext(id, ct);
         try
         {
-            await _interceptor.BeforeAsync(context, ct).ConfigureAwait(false);
+            await _interceptor.BeforeAsync(context).ConfigureAwait(false);
             var __result = await _inner.GetUserAsync(id, ct).ConfigureAwait(false);
             context.SetResult(__result);
-            await _interceptor.AfterAsync(context, ct).ConfigureAwait(false);
+            await _interceptor.AfterAsync(context).ConfigureAwait(false);
             return __result;
         }
         catch (Exception __ex)
         {
-            await _interceptor.OnExceptionAsync(context, __ex, ct).ConfigureAwait(false);
+            await _interceptor.OnExceptionAsync(context, __ex).ConfigureAwait(false);
             throw;
         }
     }
@@ -385,9 +385,9 @@ public interface IUserServiceInterceptor
     void OnException(MethodContext context, Exception ex);
 
     // Async (generated when async members detected)
-    ValueTask BeforeAsync(MethodContext context, CancellationToken ct);
-    ValueTask AfterAsync(MethodContext context, CancellationToken ct);
-    ValueTask OnExceptionAsync(MethodContext context, Exception ex, CancellationToken ct);
+    ValueTask BeforeAsync(MethodContext context);
+    ValueTask AfterAsync(MethodContext context);
+    ValueTask OnExceptionAsync(MethodContext context, Exception ex);
 }
 ```
 
@@ -414,7 +414,7 @@ public partial interface IFutureProofService
 - Methods with `ref` / `in` parameters (forwarded to inner, but not captured in MethodContext before execution)
 
 ❌ **Not Supported (v1):**
-- Methods with `out` parameters when interceptors are enabled (parameter values cannot be captured before method execution)
+- Interceptor observation of `out` parameter values: methods with `out` parameters are forwarded correctly to the inner implementation, but `out` parameter values appear as `default` in the `Before` MethodContext (since they haven't been assigned yet) and are not captured in the context after method execution
 - Events (generates PKPRX002)
 
 ### Properties
@@ -528,14 +528,19 @@ public class LoggingInterceptor : IUserServiceInterceptor
 
     public void Before(MethodContext context)
     {
-        _logger.LogInformation("Calling {Method} with args: {Args}", 
-            context.MethodName, context.Arguments);
+        // WARNING: Do not log sensitive data (passwords, tokens, PII, credit card numbers, etc.)
+        // from context.Arguments or context.Result. Log only non-sensitive metadata or masked values.
+        // Logging full arguments/results can expose secrets in application logs.
+        _logger.LogInformation("Calling {Method} with {ArgCount} argument(s)", 
+            context.MethodName, context.Arguments?.Length ?? 0);
     }
 
     public void After(MethodContext context)
     {
-        _logger.LogInformation("{Method} returned: {Result}", 
-            context.MethodName, context.Result);
+        // WARNING: Do not log sensitive data from context.Result.
+        // Prefer logging high-level status or non-sensitive identifiers.
+        _logger.LogInformation("{Method} completed successfully", 
+            context.MethodName);
     }
 
     public void OnException(MethodContext context, Exception ex)
@@ -544,19 +549,19 @@ public class LoggingInterceptor : IUserServiceInterceptor
     }
 
     // Async versions (if generated)
-    public ValueTask BeforeAsync(MethodContext context, CancellationToken ct)
+    public ValueTask BeforeAsync(MethodContext context)
     {
         Before(context);
         return default;
     }
 
-    public ValueTask AfterAsync(MethodContext context, CancellationToken ct)
+    public ValueTask AfterAsync(MethodContext context)
     {
         After(context);
         return default;
     }
 
-    public ValueTask OnExceptionAsync(MethodContext context, Exception ex, CancellationToken ct)
+    public ValueTask OnExceptionAsync(MethodContext context, Exception ex)
     {
         OnException(context, ex);
         return default;
@@ -595,19 +600,19 @@ public class TimingInterceptor : IUserServiceInterceptor
     }
 
     // Async versions...
-    public ValueTask BeforeAsync(MethodContext context, CancellationToken ct)
+    public ValueTask BeforeAsync(MethodContext context)
     {
         Before(context);
         return default;
     }
 
-    public ValueTask AfterAsync(MethodContext context, CancellationToken ct)
+    public ValueTask AfterAsync(MethodContext context)
     {
         After(context);
         return default;
     }
 
-    public ValueTask OnExceptionAsync(MethodContext context, Exception ex, CancellationToken ct)
+    public ValueTask OnExceptionAsync(MethodContext context, Exception ex)
     {
         OnException(context, ex);
         return default;
@@ -700,7 +705,7 @@ CreateOrderAsync called
 - ❌ **Generic contracts** not supported
 - ❌ **Nested types** not supported  
 - ❌ **Events** not supported
-- ❌ **ref/out/in parameters** not supported
+- ⚠️ **ref/out/in parameters** are forwarded correctly to the inner implementation, but `out` parameters appear as `default` values in the `Before` MethodContext (actual assigned values are only observable after the method completes, but are not captured in the context)
 - ❌ **Properties don't invoke interceptors** (simple forwarding only)
 
 ### Workarounds

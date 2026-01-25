@@ -1389,16 +1389,32 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         if (member.Parameters.Count > 0)
         {
             sb.Append($"    public {contextTypeName}(");
-            sb.Append(string.Join(", ", member.Parameters.Select(p => $"{p.Type} {p.Name}")));
+            sb.Append(string.Join(", ", member.Parameters.Select((p, idx) => 
+            {
+                var paramName = string.IsNullOrEmpty(p.Name) ? $"param{idx}" : p.Name;
+                return $"{p.Type} {paramName}";
+            })));
             sb.AppendLine(")");
             sb.AppendLine("    {");
+            
+            var paramIdx = 0;
             foreach (var param in member.Parameters)
             {
-                // Capitalize first letter of parameter name for property name
-                var propName = string.IsNullOrEmpty(param.Name) 
-                    ? "Parameter" 
-                    : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
-                sb.AppendLine($"        {propName} = {param.Name};");
+                var paramName = string.IsNullOrEmpty(param.Name) ? $"param{paramIdx}" : param.Name;
+                
+                // Determine property name (same logic as property generation)
+                string propName;
+                if (string.IsNullOrEmpty(param.Name))
+                {
+                    propName = $"Parameter{paramIdx}";
+                }
+                else
+                {
+                    propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                }
+                
+                sb.AppendLine($"        {propName} = {paramName};");
+                paramIdx++;
             }
             sb.AppendLine("    }");
             sb.AppendLine();
