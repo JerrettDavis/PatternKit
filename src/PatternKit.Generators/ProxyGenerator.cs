@@ -879,9 +879,12 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
         
         // Determine if this method needs async modifier (uses interceptors with async support)
+        // Note: ref-returning methods cannot be async
         bool useAsync = contractInfo.HasAsyncMembers && 
                        config.InterceptorMode != ProxyInterceptorMode.None &&
-                       (member.IsAsync || member.HasCancellationToken);
+                       (member.IsAsync || member.HasCancellationToken) &&
+                       !member.ReturnsByRef &&
+                       !member.ReturnsByRefReadonly;
         var asyncModifier = useAsync ? "async " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
@@ -1403,15 +1406,9 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 var paramName = string.IsNullOrEmpty(param.Name) ? $"param{paramIdx}" : param.Name;
                 
                 // Determine property name (same logic as property generation)
-                string propName;
-                if (string.IsNullOrEmpty(param.Name))
-                {
-                    propName = $"Parameter{paramIdx}";
-                }
-                else
-                {
-                    propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
-                }
+                var propName = string.IsNullOrEmpty(param.Name)
+                    ? $"Parameter{paramIdx}"
+                    : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
                 
                 sb.AppendLine($"        {propName} = {paramName};");
                 paramIdx++;

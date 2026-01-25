@@ -136,7 +136,6 @@ public interface IUserServiceInterceptor
 public abstract class MethodContext
 {
     public abstract string MethodName { get; }
-    public abstract object?[]? Arguments { get; }
     public object? Result { get; private set; }
     internal void SetResult(object? result) => Result = result;
 }
@@ -146,7 +145,6 @@ public sealed class GetUserMethodContext : MethodContext
     public Guid Id { get; }
     public GetUserMethodContext(Guid id) { Id = id; }
     public override string MethodName => "GetUser";
-    public override object?[]? Arguments => new object?[] { Id };
 }
 ```
 
@@ -410,10 +408,10 @@ public partial interface IFutureProofService
 - Async methods (`Task`, `ValueTask`, `Task<T>`, `ValueTask<T>`)
 - Methods with `CancellationToken` parameters
 - Methods with default parameters
-- Generic methods (with constraints)
 - Methods with `ref` / `in` parameters (forwarded to inner, but not captured in MethodContext before execution)
 
 ❌ **Not Supported (v1):**
+- Generic methods (generates PKPRX002 "Generic method")
 - Interceptor observation of `out` parameter values: methods with `out` parameters are forwarded correctly to the inner implementation, but `out` parameter values appear as `default` in the `Before` MethodContext (since they haven't been assigned yet) and are not captured in the context after method execution
 - Events (generates PKPRX002)
 
@@ -529,10 +527,10 @@ public class LoggingInterceptor : IUserServiceInterceptor
     public void Before(MethodContext context)
     {
         // WARNING: Do not log sensitive data (passwords, tokens, PII, credit card numbers, etc.)
-        // from context.Arguments or context.Result. Log only non-sensitive metadata or masked values.
+        // from method parameters or context.Result. Log only non-sensitive metadata or masked values.
         // Logging full arguments/results can expose secrets in application logs.
-        _logger.LogInformation("Calling {Method} with {ArgCount} argument(s)", 
-            context.MethodName, context.Arguments?.Length ?? 0);
+        // Access strongly-typed parameters from specific context types if needed (e.g., ((GetUserMethodContext)context).Id)
+        _logger.LogInformation("Calling {Method}", context.MethodName);
     }
 
     public void After(MethodContext context)
@@ -632,7 +630,9 @@ public class CachingInterceptor : IUserServiceInterceptor
     public void Before(MethodContext context)
     {
         // Check cache before method execution
-        var cacheKey = $"{context.MethodName}:{string.Join(",", context.Arguments ?? Array.Empty<object>())}";
+        // Note: You'd need to cast to specific context type to access parameters
+        // For example: if (context is GetUserMethodContext getUserCtx) { var userId = getUserCtx.Id; }
+        var cacheKey = $"{context.MethodName}";
         if (_cache.TryGetValue(cacheKey, out var cachedResult))
         {
             context.SetResult(cachedResult);
@@ -644,7 +644,7 @@ public class CachingInterceptor : IUserServiceInterceptor
     public void After(MethodContext context)
     {
         // Cache result after execution
-        var cacheKey = $"{context.MethodName}:{string.Join(",", context.Arguments ?? Array.Empty<object>())}";
+        var cacheKey = $"{context.MethodName}";
         _cache.Set(cacheKey, context.Result, TimeSpan.FromMinutes(5));
     }
 
