@@ -1391,6 +1391,9 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Constructor with parameters
         if (member.Parameters.Count > 0)
         {
+            // Determine property names with conflict avoidance (used in both constructor and properties)
+            var paramPropertyNames = DetermineParameterPropertyNames(member.Parameters);
+            
             sb.Append($"    public {contextTypeName}(");
             sb.Append(string.Join(", ", member.Parameters.Select((p, idx) => 
             {
@@ -1400,18 +1403,13 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine(")");
             sb.AppendLine("    {");
             
-            var paramIdx = 0;
-            foreach (var param in member.Parameters)
+            for (int i = 0; i < member.Parameters.Count; i++)
             {
-                var paramName = string.IsNullOrEmpty(param.Name) ? $"param{paramIdx}" : param.Name;
-                
-                // Determine property name (same logic as property generation)
-                var propName = string.IsNullOrEmpty(param.Name)
-                    ? $"Parameter{paramIdx}"
-                    : char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                var param = member.Parameters[i];
+                var paramName = string.IsNullOrEmpty(param.Name) ? $"param{i}" : param.Name;
+                var propName = paramPropertyNames[i];
                 
                 sb.AppendLine($"        {propName} = {paramName};");
-                paramIdx++;
             }
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -1420,36 +1418,20 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         sb.AppendLine("    /// <inheritdoc />");
         sb.AppendLine($"    public override string MethodName => \"{member.Name}\";");
 
-        // Parameter properties with conflict avoidance
-        var paramIndex = 0;
-        var usedPropNames = new System.Collections.Generic.HashSet<string> { "MethodName", "Arguments", "Result" };
-        
-        foreach (var param in member.Parameters)
+        // Parameter properties using the same names determined above
+        if (member.Parameters.Count > 0)
         {
-            // Capitalize first letter of parameter name for property name
-            string propName;
-            if (string.IsNullOrEmpty(param.Name))
+            var paramPropertyNames = DetermineParameterPropertyNames(member.Parameters);
+            
+            for (int i = 0; i < member.Parameters.Count; i++)
             {
-                propName = $"Parameter{paramIndex}";
-            }
-            else
-            {
-                propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                var param = member.Parameters[i];
+                var propName = paramPropertyNames[i];
                 
-                // Avoid conflicts with reserved property names
-                if (usedPropNames.Contains(propName))
-                {
-                    propName = $"Arg_{propName}";
-                }
+                sb.AppendLine();
+                sb.AppendLine($"    /// <summary>Gets the {param.Name ?? "parameter"} parameter.</summary>");
+                sb.AppendLine($"    public {param.Type} {propName} {{ get; }}");
             }
-            
-            usedPropNames.Add(propName);
-            
-            sb.AppendLine();
-            sb.AppendLine($"    /// <summary>Gets the {param.Name ?? "parameter"} parameter.</summary>");
-            sb.AppendLine($"    public {param.Type} {propName} {{ get; }}");
-            
-            paramIndex++;
         }
 
         // Result property if not void
@@ -1464,6 +1446,38 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
 
         sb.AppendLine("}");
+    }
+
+    private List<string> DetermineParameterPropertyNames(List<ParameterInfo> parameters)
+    {
+        var usedPropNames = new System.Collections.Generic.HashSet<string> { "MethodName", "Arguments", "Result" };
+        var propertyNames = new List<string>();
+        
+        for (int i = 0; i < parameters.Count; i++)
+        {
+            var param = parameters[i];
+            string propName;
+            
+            if (string.IsNullOrEmpty(param.Name))
+            {
+                propName = $"Parameter{i}";
+            }
+            else
+            {
+                propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                
+                // Avoid conflicts with reserved property names
+                if (usedPropNames.Contains(propName))
+                {
+                    propName = $"Arg_{propName}";
+                }
+            }
+            
+            usedPropNames.Add(propName);
+            propertyNames.Add(propName);
+        }
+        
+        return propertyNames;
     }
 
     // Configuration classes

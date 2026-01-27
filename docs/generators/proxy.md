@@ -109,8 +109,9 @@ public sealed partial class UserServiceProxy : IUserService
         try
         {
             await _interceptor.BeforeAsync(context).ConfigureAwait(false);
-            var __result = await _inner.GetUserAsync(id, ct).ConfigureAwait(false);
-            context.SetResult(__result);
+            var __task = _inner.GetUserAsync(id, ct);
+            context.SetResult(__task);
+            var __result = await __task.ConfigureAwait(false);
             await _interceptor.AfterAsync(context).ConfigureAwait(false);
             return __result;
         }
@@ -139,6 +140,13 @@ public abstract class MethodContext
     public object? Result { get; private set; }
     internal void SetResult(object? result) => Result = result;
 }
+
+// NOTE: For async methods that return Task<T> or ValueTask<T>, the Result property
+// contains the Task itself (set before awaiting), not the unwrapped value.
+// To access the actual result value in After/OnException hooks, you need to access
+// the Task's Result property (e.g., ((Task<User>)context.Result).Result).
+// Be aware that accessing Task.Result on an incomplete task can cause deadlocks;
+// in the generated proxy, the task is already completed when After is called.
 
 public sealed class GetUserMethodContext : MethodContext
 {
@@ -629,16 +637,13 @@ public class CachingInterceptor : IUserServiceInterceptor
 
     public void Before(MethodContext context)
     {
-        // Check cache before method execution
-        // Note: You'd need to cast to specific context type to access parameters
-        // For example: if (context is GetUserMethodContext getUserCtx) { var userId = getUserCtx.Id; }
+        // NOTE: The current proxy generator does not support short-circuiting method
+        // execution from interceptors. The SetResult method is internal and cannot be
+        // called from user code. You can use this hook for cache-key calculation,
+        // logging, or metrics, but the actual method will always execute.
+        // Cache population happens in After once the method has executed.
         var cacheKey = $"{context.MethodName}";
-        if (_cache.TryGetValue(cacheKey, out var cachedResult))
-        {
-            context.SetResult(cachedResult);
-            // Note: You'd need a way to short-circuit execution
-            // This is a simplified example
-        }
+        // Could check cache here and record a metric/log if it's a hit
     }
 
     public void After(MethodContext context)
