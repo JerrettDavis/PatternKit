@@ -162,14 +162,19 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             switch (named.Key)
             {
                 case "Mode":
-                    config.Mode = (PrototypeMode)(int)named.Value.Value!;
+                    if (named.Value.Value is int modeValue)
+                        config.Mode = (PrototypeMode)modeValue;
                     break;
                 case "CloneMethodName":
-                    config.CloneMethodName = (string)named.Value.Value!;
-                    config.CloneMethodNameExplicit = true;
+                    if (named.Value.Value is string methodName)
+                    {
+                        config.CloneMethodName = methodName;
+                        config.CloneMethodNameExplicit = true;
+                    }
                     break;
                 case "IncludeExplicit":
-                    config.IncludeExplicit = (bool)named.Value.Value!;
+                    if (named.Value.Value is bool includeExplicit)
+                        config.IncludeExplicit = includeExplicit;
                     break;
             }
         }
@@ -655,8 +660,6 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
     private string GenerateShallowCopyExpression(MemberInfo member)
     {
-        var typeName = member.TypeSymbol.ToDisplayString();
-        
         // For collections, create a new collection with the same elements
         if (IsCollectionWithCopyConstructor(member.TypeSymbol))
         {
