@@ -163,7 +163,13 @@ internal sealed class AsyncReplayBuffer<T>
             using var reg = ct.Register(static s => ((TaskCompletionSource<bool>)s!).TrySetCanceled(), waiter);
             var signaled = await waiter.Task.ConfigureAwait(false);
             if (!signaled)
+            {
+                lock (_sync)
+                {
+                    _waiters.Remove(waiter);
+                }
                 return false;
+            }
         }
     }
 
