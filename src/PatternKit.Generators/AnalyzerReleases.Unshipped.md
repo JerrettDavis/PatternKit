@@ -52,4 +52,10 @@ PKDEC003 | PatternKit.Generators.Decorator | Error | Name conflict for generated
 PKDEC004 | PatternKit.Generators.Decorator | Warning | Member is not accessible for decorator generation
 PKDEC005 | PatternKit.Generators.Decorator | Error | Generic contracts are not supported for decorator generation
 PKDEC006 | PatternKit.Generators.Decorator | Error | Nested types are not supported for decorator generation
+PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
+PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
+PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)
+PKPRO004 | PatternKit.Generators.Prototype | Error | Requested Clone strategy but no clone mechanism found
+PKPRO005 | PatternKit.Generators.Prototype | Error | Custom strategy requires partial clone hook, but none found
+PKPRO006 | PatternKit.Generators.Prototype | Warning | Include/Ignore attribute misuse
 
