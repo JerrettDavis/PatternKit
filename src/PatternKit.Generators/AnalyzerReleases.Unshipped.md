@@ -58,5 +58,5 @@ PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture 
 PKPRO004 | PatternKit.Generators.Prototype | Error | Requested Clone strategy but no clone mechanism found
 PKPRO005 | PatternKit.Generators.Prototype | Error | Custom strategy requires partial clone hook, but none found
 PKPRO006 | PatternKit.Generators.Prototype | Warning | Include/Ignore attribute misuse
-PKPRO999 | PatternKit.Generators.Prototype | Error | DeepCopy strategy not yet implemented
+PKPRO007 | PatternKit.Generators.Prototype | Error | DeepCopy strategy not yet implemented
 

@@ -21,7 +21,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private const string DiagIdCloneMechanismMissing = "PKPRO004";
     private const string DiagIdCustomStrategyMissing = "PKPRO005";
     private const string DiagIdAttributeMisuse = "PKPRO006";
-    private const string DiagIdDeepCopyNotImplemented = "PKPRO999";
+    private const string DiagIdDeepCopyNotImplemented = "PKPRO007";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -396,12 +396,15 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                 }
                 else if (strategy == CloneStrategy.Custom)
                 {
-                    // Check for custom partial method
+                    // Check for custom partial method with correct signature
                     var containingType = member.ContainingType;
                     var methodName = $"Clone{member.Name}";
                     var hasCustomMethod = containingType.GetMembers(methodName)
                         .OfType<IMethodSymbol>()
-                        .Any(m => m.IsStatic && m.IsPartialDefinition && m.Parameters.Length == 1);
+                        .Any(m => m.IsStatic && 
+                                  m.IsPartialDefinition && 
+                                  m.Parameters.Length == 1 &&
+                                  SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, memberType));
                     
                     if (!hasCustomMethod)
                     {
@@ -521,22 +524,25 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             i.ToDisplayString() == "System.ICloneable");
     }
 
+    private static readonly HashSet<string> CollectionsWithCopyConstructor = new HashSet<string>
+    {
+        "System.Collections.Generic.List<T>",
+        "System.Collections.Generic.HashSet<T>",
+        "System.Collections.Generic.Queue<T>",
+        "System.Collections.Generic.Stack<T>",
+        "System.Collections.Generic.LinkedList<T>",
+        "System.Collections.Generic.Dictionary<TKey, TValue>",
+        "System.Collections.Generic.SortedSet<T>",
+        "System.Collections.Generic.SortedDictionary<TKey, TValue>"
+    };
+
     private bool IsCollectionWithCopyConstructor(ITypeSymbol type)
     {
         if (type is not INamedTypeSymbol namedType)
             return false;
 
         var typeName = namedType.ConstructedFrom.ToDisplayString();
-        
-        // List<T>, HashSet<T>, Queue<T>, Stack<T>, etc.
-        return typeName == "System.Collections.Generic.List<T>" ||
-               typeName == "System.Collections.Generic.HashSet<T>" ||
-               typeName == "System.Collections.Generic.Queue<T>" ||
-               typeName == "System.Collections.Generic.Stack<T>" ||
-               typeName == "System.Collections.Generic.LinkedList<T>" ||
-               typeName == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-               typeName == "System.Collections.Generic.SortedSet<T>" ||
-               typeName == "System.Collections.Generic.SortedDictionary<TKey, TValue>";
+        return CollectionsWithCopyConstructor.Contains(typeName);
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)
@@ -716,13 +722,9 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         
         var assignments = typeInfo.Members
             .Where(m => !m.IsReadOnly) // Can't set readonly members in with-expression
-            .Select(m => $"{m.Name} = {cloneExprs[m.Name]}")
-            .ToList();
+            .Select(m => $"{m.Name} = {cloneExprs[m.Name]}");
         
-        if (assignments.Count > 0)
-        {
-            sb.Append(string.Join(", ", assignments));
-        }
+        sb.Append(string.Join(", ", assignments));
         
         sb.AppendLine(" };");
     }
