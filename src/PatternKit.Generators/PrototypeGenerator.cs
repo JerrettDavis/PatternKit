@@ -21,6 +21,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private const string DiagIdCloneMechanismMissing = "PKPRO004";
     private const string DiagIdCustomStrategyMissing = "PKPRO005";
     private const string DiagIdAttributeMisuse = "PKPRO006";
+    private const string DiagIdDeepCopyNotImplemented = "PKPRO999";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -68,6 +69,14 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         messageFormat: "{0}",
         category: "PatternKit.Generators.Prototype",
         defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor DeepCopyNotImplementedDescriptor = new(
+        id: DiagIdDeepCopyNotImplemented,
+        title: "DeepCopy strategy not yet implemented",
+        messageFormat: "DeepCopy strategy for member '{0}' is not yet implemented. Use Clone or Custom strategy instead.",
+        category: "PatternKit.Generators.Prototype",
+        defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -147,7 +156,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             switch (named.Key)
             {
                 case "Mode":
-                    config.Mode = (int)named.Value.Value!;
+                    config.Mode = (PrototypeMode)(int)named.Value.Value!;
                     break;
                 case "CloneMethodName":
                     config.CloneMethodName = (string)named.Value.Value!;
@@ -203,7 +212,17 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         // For records, prefer with-expression if all members are init/readonly
         if (typeInfo.IsRecordClass || typeInfo.IsRecordStruct)
         {
-            bool allInit = typeInfo.Members.All(m => m.IsInitOnly || m.IsReadOnly);
+            // Check if all members are init-only or readonly
+            bool allInit = true;
+            foreach (var member in typeInfo.Members)
+            {
+                if (!member.IsInitOnly && !member.IsReadOnly)
+                {
+                    allInit = false;
+                    break;
+                }
+            }
+            
             if (allInit)
                 return ConstructionStrategy.RecordWith;
             
@@ -385,15 +404,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                 else if (strategy == CloneStrategy.DeepCopy)
                 {
                     // DeepCopy is v2 - not yet supported
-                    var deepCopyNotImplementedDescriptor = new DiagnosticDescriptor(
-                        id: "PKPRO999",
-                        title: "DeepCopy strategy not yet implemented",
-                        messageFormat: "DeepCopy strategy for member '{0}' is not yet implemented. Use Clone or Custom strategy instead.",
-                        category: "PatternKit.Generators.Prototype",
-                        defaultSeverity: DiagnosticSeverity.Error,
-                        isEnabledByDefault: true);
                     context.ReportDiagnostic(Diagnostic.Create(
-                        deepCopyNotImplementedDescriptor,
+                        DeepCopyNotImplementedDescriptor,
                         member.Locations.FirstOrDefault(),
                         member.Name));
                     return null;
@@ -420,7 +432,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         // Reference types depend on mode
         switch (config.Mode)
         {
-            case 0: // ShallowWithWarnings
+            case PrototypeMode.ShallowWithWarnings:
                 // Warn about mutable reference types
                 if (!IsImmutableReferenceType(memberType))
                 {
@@ -431,10 +443,10 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                 }
                 return CloneStrategy.ByReference;
 
-            case 1: // Shallow
+            case PrototypeMode.Shallow:
                 return CloneStrategy.ByReference;
 
-            case 2: // DeepWhenPossible
+            case PrototypeMode.DeepWhenPossible:
                 if (HasCloneMechanism(memberType))
                     return CloneStrategy.Clone;
                 return CloneStrategy.ByReference;
@@ -743,9 +755,16 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     // Helper classes
     private class PrototypeConfig
     {
-        public int Mode { get; set; } // 0=ShallowWithWarnings, 1=Shallow, 2=DeepWhenPossible
+        public PrototypeMode Mode { get; set; } = PrototypeMode.ShallowWithWarnings;
         public string CloneMethodName { get; set; } = "Clone";
         public bool IncludeExplicit { get; set; }
+    }
+
+    private enum PrototypeMode
+    {
+        ShallowWithWarnings = 0,
+        Shallow = 1,
+        DeepWhenPossible = 2
     }
 
     private enum ConstructionStrategy
