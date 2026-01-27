@@ -127,6 +127,12 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (typeInfo is null)
             return;
 
+        // For records, default to "Duplicate" instead of "Clone" (which is reserved)
+        if (!config.CloneMethodNameExplicit && (typeInfo.IsRecordClass || typeInfo.IsRecordStruct))
+        {
+            config.CloneMethodName = "Duplicate";
+        }
+
         // Generate clone method
         var cloneSource = GenerateCloneMethod(typeInfo, config, context);
         if (!string.IsNullOrEmpty(cloneSource))
@@ -160,6 +166,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                     break;
                 case "CloneMethodName":
                     config.CloneMethodName = (string)named.Value.Value!;
+                    config.CloneMethodNameExplicit = true;
                     break;
                 case "IncludeExplicit":
                     config.IncludeExplicit = (bool)named.Value.Value!;
@@ -757,6 +764,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     {
         public PrototypeMode Mode { get; set; } = PrototypeMode.ShallowWithWarnings;
         public string CloneMethodName { get; set; } = "Clone";
+        public bool CloneMethodNameExplicit { get; set; }
         public bool IncludeExplicit { get; set; }
     }
 
