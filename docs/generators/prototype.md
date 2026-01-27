@@ -965,5 +965,5 @@ public partial class LargeObject
 ## See Also
 
 - [Prototype Demo Example](../examples/prototype-demo.md) - Real-world usage with game entities
-- [PatternKit.Creational.Prototype](../../src/PatternKit/Creational/Prototype/) - Runtime prototype registry
+- [PatternKit.Core.Creational.Prototype](../../src/PatternKit.Core/Creational/Prototype/) - Runtime prototype registry
 - [Builder Generator](builder.md) - For fluent object construction

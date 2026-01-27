@@ -840,5 +840,5 @@ dotnet run --project src/PatternKit.Examples --framework net9.0
 ## Further Reading
 
 - [Prototype Generator](../generators/prototype.md) - Automated clone method generation
-- [PatternKit.Creational.Prototype](../../src/PatternKit/Creational/Prototype/) - Runtime prototype API
+- [PatternKit.Core.Creational.Prototype](../../src/PatternKit.Core/Creational/Prototype/) - Runtime prototype API
 - [Gang of Four Design Patterns](https://en.wikipedia.org/wiki/Design_Patterns) - Original pattern catalog
