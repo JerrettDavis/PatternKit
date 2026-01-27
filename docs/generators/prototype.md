@@ -281,13 +281,13 @@ public partial class Person
 
 ### DeepCopy
 
-**Status:** Not yet implemented (PKPRO999)
+**Status:** Not yet implemented – selecting this strategy will emit diagnostic **PKPRO007** ("DeepCopy strategy not yet implemented").
 
 Planned for recursive deep cloning of complex object graphs.
 
 ### Custom
 
-Provide your own cloning logic via partial method:
+Provide your own cloning logic via partial method. The generator will emit a partial method declaration; you only need to provide the implementation:
 
 ```csharp
 [Prototype]
@@ -295,12 +295,10 @@ public partial class GameEntity
 {
     [PrototypeStrategy(PrototypeCloneStrategy.Custom)]
     public EntityStats Stats { get; set; } = new();
-    
-    // Partial method hook - implement in your code
-    private static partial EntityStats CloneStats(EntityStats value);
 }
 
-// In your partial class implementation:
+// The generator emits the declaration automatically.
+// You only need to provide the implementation in your partial class:
 public partial class GameEntity
 {
     private static partial EntityStats CloneStats(EntityStats value)
@@ -602,7 +600,7 @@ public partial class Config
 }
 ```
 
-### PKPRO999: DeepCopy Not Implemented
+### PKPRO007: DeepCopy Not Implemented
 
 **Severity:** Error
 
@@ -614,7 +612,7 @@ The `DeepCopy` strategy is not yet implemented.
 public partial class Container
 {
     [PrototypeStrategy(PrototypeCloneStrategy.DeepCopy)]
-    public ComplexObject Data { get; set; } = new(); // PKPRO999
+    public ComplexObject Data { get; set; } = new(); // PKPRO007
 }
 
 // ✅ Workaround: Use Clone or Custom

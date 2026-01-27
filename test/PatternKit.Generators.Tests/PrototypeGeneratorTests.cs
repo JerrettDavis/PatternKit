@@ -303,4 +303,345 @@ public class PrototypeGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKPRO003" && d.Severity == DiagnosticSeverity.Warning);
     }
+
+    [Fact]
+    public void ErrorOnCloneStrategyWithoutMechanism()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class NonCloneable
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public NonCloneable Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnCloneStrategyWithoutMechanism));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO004 error for missing clone mechanism
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void ErrorOnCustomStrategyWithoutPartialMethod()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class CustomData
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Custom)]
+                public CustomData Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnCustomStrategyWithoutPartialMethod));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO005 error for missing custom hook
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO005" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void WarnOnAttributeMisuseIncludeInIncludeAllMode()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeInclude]
+                public string Value { get; set; } = "";
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(WarnOnAttributeMisuseIncludeInIncludeAllMode));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO006 warning for attribute misuse
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
+    }
+
+    [Fact]
+    public void WarnOnAttributeMisuseIgnoreInExplicitMode()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype(IncludeExplicit = true)]
+            public partial class Container
+            {
+                [PrototypeIgnore]
+                public string Value { get; set; } = "";
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(WarnOnAttributeMisuseIgnoreInExplicitMode));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO006 warning for attribute misuse
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
+    }
+
+    [Fact]
+    public void ErrorOnDeepCopyStrategy()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class ComplexData
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.DeepCopy)]
+                public ComplexData Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnDeepCopyStrategy));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO007 error for DeepCopy not implemented
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO007" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void GenerateCloneWithShallowCopyStrategy()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            [Prototype(Mode = PrototypeMode.Shallow)]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.ShallowCopy)]
+                public List<string> Items { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateCloneWithShallowCopyStrategy));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No errors
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Check that new List<string> is created (using fully qualified name)
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
+    }
+
+    [Fact]
+    public void GenerateCloneWithCloneStrategyUsingICloneable()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+            using System;
+
+            namespace TestNamespace;
+
+            public class CloneableData : ICloneable
+            {
+                public string Value { get; set; } = "";
+                public object Clone() => new CloneableData { Value = this.Value };
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public CloneableData Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateCloneWithCloneStrategyUsingICloneable));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No errors
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Check that Clone() is called
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("Clone()", generatedSource);
+    }
+
+    [Fact]
+    public void GenerateCloneWithCloneStrategyUsingCloneMethod()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class DataWithClone
+            {
+                public string Value { get; set; } = "";
+                public DataWithClone Clone() => new DataWithClone { Value = this.Value };
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public DataWithClone Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateCloneWithCloneStrategyUsingCloneMethod));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No errors
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Check that Clone() is called
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("Clone()", generatedSource);
+    }
+
+    [Fact]
+    public void GenerateCloneWithCloneStrategyUsingCopyConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class DataWithCopyCtor
+            {
+                public string Value { get; set; } = "";
+                
+                public DataWithCopyCtor() { }
+                public DataWithCopyCtor(DataWithCopyCtor other)
+                {
+                    Value = other.Value;
+                }
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public DataWithCopyCtor Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateCloneWithCloneStrategyUsingCopyConstructor));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No errors
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Check that copy constructor is called
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("new global::TestNamespace.DataWithCopyCtor(this.Data)", generatedSource);
+    }
+
+    [Fact]
+    public void GenerateCloneWithCloneStrategyForListCollection()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public List<string> Items { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateCloneWithCloneStrategyForListCollection));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No errors
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Check that List copy constructor is used (using fully qualified name)
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
+    }
 }

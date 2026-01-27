@@ -225,15 +225,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (typeInfo.IsRecordClass || typeInfo.IsRecordStruct)
         {
             // Check if all members are init-only or readonly
-            bool allInit = true;
-            foreach (var member in typeInfo.Members)
-            {
-                if (!member.IsInitOnly && !member.IsReadOnly)
-                {
-                    allInit = false;
-                    break;
-                }
-            }
+            bool allInit = typeInfo.Members.All(member => member.IsInitOnly || member.IsReadOnly);
             
             if (allInit)
                 return ConstructionStrategy.RecordWith;
@@ -505,11 +497,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             return true;
 
         // Check for copy constructor
-        if (type is INamedTypeSymbol namedType)
-        {
-            if (HasCopyConstructor(namedType))
-                return true;
-        }
+        if (type is INamedTypeSymbol namedType && HasCopyConstructor(namedType))
+            return true;
 
         // Check for List<T> or similar collections with copy constructors
         if (IsCollectionWithCopyConstructor(type))
