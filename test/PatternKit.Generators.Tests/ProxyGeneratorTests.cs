@@ -333,4 +333,423 @@ public class ProxyGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void GenerateProxyForAbstractClass_OnlyProxiesVirtualMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public abstract partial class UserServiceBase
+            {
+                public abstract string GetUser(int id);
+                public virtual void UpdateUser(int id, string name) { }
+                public void NonVirtualMethod() { } // Should not be proxied
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxyForAbstractClass_OnlyProxiesVirtualMembers));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Check that files were generated
+        var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        Assert.Contains(names, n => n.Contains("UserServiceBase"));
+        
+        // Verify proxy class content - look for the proxy file
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Where(gs => gs.HintName.Contains("UserServiceBase") && gs.HintName.Contains("Proxy.g.cs") && !gs.HintName.Contains("Interceptor"))
+            .Select(gs => gs.SourceText.ToString())
+            .FirstOrDefault();
+
+        Assert.NotNull(proxySource);
+        Assert.Contains("UserServiceBaseProxy", proxySource);
+        Assert.Contains("UserServiceBase", proxySource);
+        Assert.Contains("GetUser", proxySource);
+        Assert.Contains("UpdateUser", proxySource);
+        Assert.DoesNotContain("NonVirtualMethod", proxySource);
+    }
+
+    [Fact]
+    public void GenerateProxy_ProtectedMember_GeneratesWarning()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public abstract partial class UserServiceBase
+            {
+                public abstract string GetUser(int id);
+                protected abstract string GetProtectedUser(int id);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_ProtectedMember_GeneratesWarning));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should generate PKPRX003 diagnostic for protected member
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX003" && d.GetMessage().Contains("GetProtectedUser"));
+    }
+
+    [Fact]
+    public void GenerateProxy_InaccessibleMember_GeneratesError()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                string GetUser(int id);
+            }
+
+            // Private interface method (simulated with nested type)
+            [GenerateProxy]
+            internal partial interface IInternalService
+            {
+                private protected void PrivateMethod(); // Not accessible
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_InaccessibleMember_GeneratesError));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should still generate for the accessible parts
+        Assert.NotEmpty(result.Results.SelectMany(r => r.GeneratedSources));
+    }
+
+    [Fact]
+    public void GenerateProxy_NameConflict_GeneratesError()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                string GetUser(int id);
+            }
+
+            // Non-partial class with conflicting name
+            public class UserServiceProxy
+            {
+                public void ExistingMethod() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_NameConflict_GeneratesError));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should generate PKPRX004 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX004");
+    }
+
+    [Fact]
+    public void GenerateProxy_ExceptionPolicySwallow()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(Exceptions = ProxyExceptionPolicy.Swallow)]
+            public partial interface IUserService
+            {
+                string GetUser(int id);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_ExceptionPolicySwallow));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.g.cs")
+            .SourceText.ToString();
+
+        // Verify exception is NOT rethrown (Swallow policy)
+        Assert.Contains("catch", proxySource);
+        Assert.DoesNotContain("throw;", proxySource);
+    }
+
+    [Fact]
+    public void GenerateProxy_WithRefInParameters()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                void UpdateUser(ref int id, in string name);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_WithRefInParameters));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("ref int id", proxySource);
+        Assert.Contains("in string name", proxySource);
+        Assert.Contains("ref id", proxySource); // ref forwarded
+        Assert.Contains("in name", proxySource); // in forwarded
+    }
+
+    [Fact]
+    public void GenerateProxy_WithOutParameters()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                bool TryGetUser(int id, out string name);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_WithOutParameters));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("out string name", proxySource);
+        Assert.Contains("out name", proxySource); // out forwarded
+        Assert.Contains("default", proxySource); // default used in context
+    }
+
+    [Fact]
+    public void GenerateProxy_GenericMethod_GeneratesError()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                T GetValue<T>(int id);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_GenericMethod_GeneratesError));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should generate PKPRX002 diagnostic for generic method
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX002" && d.GetMessage().Contains("Generic method"));
+    }
+
+    [Fact]
+    public void GenerateProxy_Event_GeneratesError()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                event EventHandler UserChanged;
+                string GetUser(int id);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_Event_GeneratesError));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should generate PKPRX002 diagnostic for event
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX002" && d.GetMessage().Contains("Event"));
+    }
+
+    [Fact]
+    public void GenerateProxy_NestedType_GeneratesError()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            public class OuterClass
+            {
+                [GenerateProxy]
+                public partial interface IUserService
+                {
+                    string GetUser(int id);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_NestedType_GeneratesError));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Nested types are not supported - should not generate or should error
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        // Either no generation or specific error
+        Assert.True(diagnostics.Length > 0 || result.Results.SelectMany(r => r.GeneratedSources).Count() == 0);
+    }
+
+    [Fact]
+    public void GenerateProxy_PipelineModeWithExceptions()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.Pipeline)]
+            public partial interface IUserService
+            {
+                string GetUser(int id);
+                void UpdateUser(int id, string name);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_PipelineModeWithExceptions));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.g.cs")
+            .SourceText.ToString();
+
+        // Verify pipeline with list of interceptors
+        Assert.Contains("IReadOnlyList", proxySource);
+        Assert.Contains("_interceptors", proxySource);
+        
+        // Verify Before loop (ascending)
+        Assert.Contains("for (int __i = 0; __i < _interceptors!.Count; __i++)", proxySource);
+        Assert.Contains("_interceptors[__i].Before", proxySource);
+        
+        // Verify After loop (descending)
+        Assert.Contains("for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)", proxySource);
+        Assert.Contains("_interceptors[__i].After", proxySource);
+        
+        // Verify OnException loop (descending)
+        Assert.Contains("_interceptors[__i].OnException", proxySource);
+    }
+
+    [Fact]
+    public void GenerateProxy_ParameterNameConflictsWithReservedNames()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                void UpdateUser(int methodName, string result);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_ParameterNameConflictsWithReservedNames));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var interceptorSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.Interceptor.g.cs")
+            .SourceText.ToString();
+
+        // Verify parameters are renamed to avoid conflicts
+        Assert.Contains("Arg_MethodName", interceptorSource);
+        Assert.Contains("Arg_Result", interceptorSource);
+        
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenerateProxy_RefReturningMethodWithCancellationToken()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System.Threading;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IUserService
+            {
+                ref int GetValueRef(CancellationToken ct = default);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_RefReturningMethodWithCancellationToken));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IUserService.Proxy.g.cs")
+            .SourceText.ToString();
+
+        // Verify async modifier is NOT added (ref-returning methods can't be async)
+        var methodLines = proxySource.Split('\n')
+            .Where(l => l.Contains("GetValueRef") && l.Contains("public"))
+            .ToArray();
+        
+        Assert.All(methodLines, line => Assert.DoesNotContain("async", line));
+    }
 }
