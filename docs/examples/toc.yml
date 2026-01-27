@@ -42,6 +42,10 @@
 
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
+
+- name: Prototype — Game Character Factory with Clone Registry
+  href: prototype-demo.md
+  
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
   
