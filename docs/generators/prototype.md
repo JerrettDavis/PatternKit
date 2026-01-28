@@ -626,6 +626,75 @@ public partial class Container
 }
 ```
 
+### PKPRO008: Generic Types Not Supported
+
+**Severity:** Error
+
+Generic types are not currently supported by the Prototype generator.
+
+```csharp
+// ❌ Error
+[Prototype]
+public partial class Container<T> // PKPRO008
+{
+    public T Value { get; set; } = default!;
+}
+
+// ✅ Workaround: Use non-generic type
+[Prototype]
+public partial class StringContainer
+{
+    public string Value { get; set; } = "";
+}
+```
+
+### PKPRO009: Nested Types Not Supported
+
+**Severity:** Error
+
+Nested types (types declared inside other types) are not currently supported.
+
+```csharp
+// ❌ Error
+public class OuterClass
+{
+    [Prototype]
+    public partial class InnerClass // PKPRO009
+    {
+        public string Value { get; set; } = "";
+    }
+}
+
+// ✅ Workaround: Move type to top level
+[Prototype]
+public partial class InnerClass
+{
+    public string Value { get; set; } = "";
+}
+```
+
+### PKPRO010: Abstract Types Not Supported
+
+**Severity:** Error
+
+Abstract non-record classes cannot be instantiated for cloning.
+
+```csharp
+// ❌ Error
+[Prototype]
+public abstract partial class AbstractBase // PKPRO010
+{
+    public string Value { get; set; } = "";
+}
+
+// ✅ Workaround: Use concrete class or record
+[Prototype]
+public partial class ConcreteClass
+{
+    public string Value { get; set; } = "";
+}
+```
+
 ## Best Practices and Tips
 
 ### 1. Start with ShallowWithWarnings Mode

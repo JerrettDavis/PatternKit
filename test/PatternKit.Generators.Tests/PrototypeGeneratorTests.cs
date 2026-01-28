@@ -899,4 +899,110 @@ public class PrototypeGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKPRO010" && d.Severity == DiagnosticSeverity.Error);
     }
+
+    [Fact]
+    public void SucceedWithCustomStrategy()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class CustomData
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Custom)]
+                public CustomData Data { get; set; } = new();
+                
+                private static partial CustomData CloneData(CustomData value);
+            }
+            
+            public partial class Container
+            {
+                private static partial CustomData CloneData(CustomData value)
+                {
+                    return new CustomData { Value = value.Value + "_cloned" };
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SucceedWithCustomStrategy));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should succeed - custom partial method is provided
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO005");
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Verify custom method is called
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("CloneData(this.Data)", generatedSource);
+    }
+
+    [Fact]
+    public void SucceedWithDeepWhenPossibleMode()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            public class CloneableData
+            {
+                public string Value { get; set; } = "";
+                public CloneableData Clone() => new CloneableData { Value = this.Value };
+            }
+
+            public class NonCloneableData
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype(Mode = PrototypeMode.DeepWhenPossible)]
+            public partial class Container
+            {
+                // Should use Clone strategy automatically
+                public CloneableData Cloneable { get; set; } = new();
+                
+                // Should fall back to by-reference (no warning in DeepWhenPossible mode)
+                public NonCloneableData NonCloneable { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SucceedWithDeepWhenPossibleMode));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should succeed - DeepWhenPossible mode clones what it can
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        // No warnings in DeepWhenPossible mode
+        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO003");
+
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Verify cloneable uses Clone() and non-cloneable uses by-reference
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Container.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("Cloneable.Clone()", generatedSource);
+        Assert.Contains("this.NonCloneable", generatedSource);
+    }
 }

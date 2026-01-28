@@ -61,7 +61,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor CustomStrategyMissingDescriptor = new(
         id: DiagIdCustomStrategyMissing,
         title: "Custom strategy requires partial clone hook, but none found",
-        messageFormat: "Member '{0}' has [PrototypeStrategy(Custom)] but no partial method 'private static partial {1} Clone{0}({1} value)' was found. Declare this method in your partial type.",
+        messageFormat: "Member '{0}' has [PrototypeStrategy(Custom)] but no static partial method '{1} Clone{0}({1} value)' was found. Declare this method in your partial type.",
         category: "PatternKit.Generators.Prototype",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
