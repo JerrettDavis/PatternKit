@@ -301,9 +301,9 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (typeSymbol.TypeKind == TypeKind.Struct)
             return true;
 
-        return typeSymbol.Constructors.Any(c => 
-            c.Parameters.Length == 0 && 
-            c.DeclaredAccessibility >= Accessibility.Internal);
+        // Any parameterless constructor is usable from the generated clone method,
+        // which is emitted into the same partial type, regardless of accessibility.
+        return typeSymbol.Constructors.Any(c => c.Parameters.Length == 0);
     }
 
     private List<MemberInfo> GetMembersForClone(
@@ -426,7 +426,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                 }
                 else if (strategy == CloneStrategy.Custom)
                 {
-                    // Check for custom partial method with correct signature
+                    // Check for custom partial method with correct signature (parameter and return type must match member type)
                     var containingType = member.ContainingType;
                     var methodName = $"Clone{member.Name}";
                     var hasCustomMethod = containingType.GetMembers(methodName)
@@ -434,7 +434,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                         .Any(m => m.IsStatic && 
                                   m.IsPartialDefinition && 
                                   m.Parameters.Length == 1 &&
-                                  SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, memberType));
+                                  SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, memberType) &&
+                                  SymbolEqualityComparer.Default.Equals(m.ReturnType, memberType));
                     
                     if (!hasCustomMethod)
                     {
@@ -784,6 +785,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         public bool IncludeExplicit { get; set; }
     }
 
+    // Internal enums that mirror the public attribute enums
+    // These must stay in sync with PatternKit.Generators.Prototype.PrototypeMode
     private enum PrototypeMode
     {
         ShallowWithWarnings = 0,
@@ -799,6 +802,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         ParameterlessConstructor
     }
 
+    // Internal enum that mirrors PatternKit.Generators.Prototype.PrototypeCloneStrategy
+    // Values must stay in sync with the public enum
     private enum CloneStrategy
     {
         ByReference = 0,

@@ -724,4 +724,74 @@ public class PrototypeGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKPRO009" && d.Severity == DiagnosticSeverity.Error);
     }
+
+    [Fact]
+    public void ErrorOnStaticCloneMethod()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class DataWithStaticClone
+            {
+                public string Value { get; set; } = "";
+                
+                // Static Clone method - should NOT be treated as valid
+                public static DataWithStaticClone Clone()
+                {
+                    return new DataWithStaticClone();
+                }
+            }
+
+            [Prototype]
+            public partial class Container
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.Clone)]
+                public DataWithStaticClone Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnStaticCloneMethod));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO004 error because static Clone() is not a valid mechanism
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void SucceedWithPrivateParameterlessConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class SecureContainer
+            {
+                public string Value { get; set; } = "";
+                
+                private SecureContainer()
+                {
+                }
+                
+                public static SecureContainer Create() => new SecureContainer();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SucceedWithPrivateParameterlessConstructor));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should succeed - private parameterless constructor is accessible from generated code
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO002");
+
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
