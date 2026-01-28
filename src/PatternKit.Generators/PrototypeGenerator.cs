@@ -22,6 +22,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private const string DiagIdCustomStrategyMissing = "PKPRO005";
     private const string DiagIdAttributeMisuse = "PKPRO006";
     private const string DiagIdDeepCopyNotImplemented = "PKPRO007";
+    private const string DiagIdGenericTypeNotSupported = "PKPRO008";
+    private const string DiagIdNestedTypeNotSupported = "PKPRO009";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -79,6 +81,22 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor GenericTypeNotSupportedDescriptor = new(
+        id: DiagIdGenericTypeNotSupported,
+        title: "Generic types not supported for Prototype pattern",
+        messageFormat: "Type '{0}' is generic, which is not currently supported by the Prototype generator. Remove the [Prototype] attribute or use a non-generic type.",
+        category: "PatternKit.Generators.Prototype",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor NestedTypeNotSupportedDescriptor = new(
+        id: DiagIdNestedTypeNotSupported,
+        title: "Nested types not supported for Prototype pattern",
+        messageFormat: "Type '{0}' is nested inside another type, which is not currently supported by the Prototype generator. Remove the [Prototype] attribute or move the type to the top level.",
+        category: "PatternKit.Generators.Prototype",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all type declarations with [Prototype] attribute
@@ -114,6 +132,26 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNotPartialDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for generic types
+        if (typeSymbol.IsGenericType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                GenericTypeNotSupportedDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for nested types
+        if (typeSymbol.ContainingType is not null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                NestedTypeNotSupportedDescriptor,
                 node.GetLocation(),
                 typeSymbol.Name));
             return;
@@ -488,10 +526,11 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (ImplementsICloneable(type))
             return true;
 
-        // Check for Clone() method returning same type
+        // Check for Clone() method returning same type (instance methods only)
         var cloneMethod = type.GetMembers("Clone")
             .OfType<IMethodSymbol>()
-            .FirstOrDefault(m => m.Parameters.Length == 0 && 
+            .FirstOrDefault(m => !m.IsStatic &&
+                                 m.Parameters.Length == 0 && 
                                  SymbolEqualityComparer.Default.Equals(m.ReturnType, type));
         if (cloneMethod is not null)
             return true;
@@ -574,29 +613,12 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         sb.AppendLine($"{typeKeyword} {typeInfo.TypeName}");
         sb.AppendLine("{");
 
-        // Generate custom clone hook declarations
-        GenerateCustomCloneHooks(sb, typeInfo);
-
         // Generate Clone method
         GenerateCloneMethodBody(sb, typeInfo, config, context);
 
         sb.AppendLine("}");
 
         return sb.ToString();
-    }
-
-    private void GenerateCustomCloneHooks(StringBuilder sb, TypeInfo typeInfo)
-    {
-        var customMembers = typeInfo.Members.Where(m => m.CloneStrategy == CloneStrategy.Custom).ToList();
-        if (customMembers.Count == 0)
-            return;
-
-        foreach (var member in customMembers)
-        {
-            sb.AppendLine($"    /// <summary>Custom clone hook for {member.Name}.</summary>");
-            sb.AppendLine($"    private static partial {member.Type} Clone{member.Name}({member.Type} value);");
-            sb.AppendLine();
-        }
     }
 
     private void GenerateCloneMethodBody(StringBuilder sb, TypeInfo typeInfo, PrototypeConfig config, SourceProductionContext context)
@@ -679,10 +701,10 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             return $"({member.Type})this.{member.Name}.Clone()";
         }
 
-        // Check for Clone() method
+        // Check for Clone() method (instance methods only)
         var cloneMethod = member.TypeSymbol.GetMembers("Clone")
             .OfType<IMethodSymbol>()
-            .FirstOrDefault(m => m.Parameters.Length == 0);
+            .FirstOrDefault(m => !m.IsStatic && m.Parameters.Length == 0);
         if (cloneMethod is not null)
         {
             return $"this.{member.Name}.Clone()";

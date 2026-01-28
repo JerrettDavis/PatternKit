@@ -287,7 +287,7 @@ Planned for recursive deep cloning of complex object graphs.
 
 ### Custom
 
-Provide your own cloning logic via partial method. The generator will emit a partial method declaration; you only need to provide the implementation:
+Provide your own cloning logic via partial method. You must declare and implement the partial method yourself:
 
 ```csharp
 [Prototype]
@@ -295,10 +295,12 @@ public partial class GameEntity
 {
     [PrototypeStrategy(PrototypeCloneStrategy.Custom)]
     public EntityStats Stats { get; set; } = new();
+    
+    // Declare the partial method
+    private static partial EntityStats CloneStats(EntityStats value);
 }
 
-// The generator emits the declaration automatically.
-// You only need to provide the implementation in your partial class:
+// Provide the implementation in your partial class:
 public partial class GameEntity
 {
     private static partial EntityStats CloneStats(EntityStats value)
@@ -319,7 +321,7 @@ public partial class GameEntity
 - Performance-critical custom implementations
 
 **Generator checks:**
-- Emits **PKPRO005** error if partial method `private static partial TMember Clone{MemberName}(TMember value)` not found
+- Emits **PKPRO005** error if partial method `private static partial TMember Clone{MemberName}(TMember value)` not declared and implemented
 
 ## Member Selection
 

@@ -644,4 +644,84 @@ public class PrototypeGeneratorTests
             .SourceText.ToString();
         Assert.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
     }
+
+    [Fact]
+    public void ErrorOnNoConstructionPath()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class Container
+            {
+                public string Value { get; }
+                
+                public Container(string value)
+                {
+                    Value = value;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnNoConstructionPath));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO002 error for no construction path
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO002" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void ErrorOnGenericType()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class GenericContainer<T>
+            {
+                public T Value { get; set; } = default!;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnGenericType));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO008 error for generic type
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO008" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void ErrorOnNestedType()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public class OuterClass
+            {
+                [Prototype]
+                public partial class InnerClass
+                {
+                    public string Value { get; set; } = "";
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnNestedType));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO009 error for nested type
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO009" && d.Severity == DiagnosticSeverity.Error);
+    }
 }
