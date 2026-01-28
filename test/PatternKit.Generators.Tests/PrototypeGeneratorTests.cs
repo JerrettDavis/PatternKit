@@ -794,4 +794,109 @@ public class PrototypeGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void SucceedWithInitOnlyPropertiesOnClass()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class ImmutableData
+            {
+                public string Name { get; init; } = "";
+                public int Value { get; init; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SucceedWithInitOnlyPropertiesOnClass));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should succeed - init-only properties can be set in object initializers
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Verify init-only properties are cloned
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "ImmutableData.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("Name = this.Name", generatedSource);
+        Assert.Contains("Value = this.Value", generatedSource);
+    }
+
+    [Fact]
+    public void SucceedWithInitOnlyPropertiesWithCopyConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial class DataWithCtor
+            {
+                public string Name { get; init; } = "";
+                public int Value { get; set; }
+                
+                public DataWithCtor() { }
+                
+                public DataWithCtor(DataWithCtor other)
+                {
+                    Name = other.Name;
+                    Value = other.Value;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SucceedWithInitOnlyPropertiesWithCopyConstructor));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should succeed - copy constructor handles init-only properties
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        // Compilation should succeed
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+
+        // Verify copy constructor is used
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "DataWithCtor.Prototype.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("new global::TestNamespace.DataWithCtor(this)", generatedSource);
+    }
+
+    [Fact]
+    public void ErrorOnAbstractClass()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public abstract partial class AbstractBase
+            {
+                public string Value { get; set; } = "";
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorOnAbstractClass));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKPRO010 error for abstract type
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRO010" && d.Severity == DiagnosticSeverity.Error);
+    }
 }

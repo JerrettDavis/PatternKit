@@ -24,6 +24,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private const string DiagIdDeepCopyNotImplemented = "PKPRO007";
     private const string DiagIdGenericTypeNotSupported = "PKPRO008";
     private const string DiagIdNestedTypeNotSupported = "PKPRO009";
+    private const string DiagIdAbstractTypeNotSupported = "PKPRO010";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -97,6 +98,14 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor AbstractTypeNotSupportedDescriptor = new(
+        id: DiagIdAbstractTypeNotSupported,
+        title: "Abstract types not supported for Prototype pattern",
+        messageFormat: "Type '{0}' is abstract, which is not supported by the Prototype generator. Abstract types cannot be instantiated for cloning.",
+        category: "PatternKit.Generators.Prototype",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all type declarations with [Prototype] attribute
@@ -152,6 +161,16 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 NestedTypeNotSupportedDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for abstract types (non-record abstract classes cannot be instantiated)
+        if (typeSymbol.IsAbstract && !typeSymbol.IsRecord)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                AbstractTypeNotSupportedDescriptor,
                 node.GetLocation(),
                 typeSymbol.Name));
             return;
@@ -758,7 +777,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     private void GenerateParameterlessConstructorConstruction(StringBuilder sb, TypeInfo typeInfo, Dictionary<string, string> cloneExprs)
     {
         // Use object initializer syntax if possible
-        var settableMembers = typeInfo.Members.Where(m => !m.IsReadOnly && !m.IsInitOnly).ToList();
+        // Init-only properties can be set in object initializers
+        var settableMembers = typeInfo.Members.Where(m => !m.IsReadOnly).ToList();
         
         if (settableMembers.Count > 0)
         {

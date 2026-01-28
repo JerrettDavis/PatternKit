@@ -61,4 +61,5 @@ PKPRO006 | PatternKit.Generators.Prototype | Warning | Include/Ignore attribute 
 PKPRO007 | PatternKit.Generators.Prototype | Error | DeepCopy strategy not yet implemented
 PKPRO008 | PatternKit.Generators.Prototype | Error | Generic types not supported for Prototype pattern
 PKPRO009 | PatternKit.Generators.Prototype | Error | Nested types not supported for Prototype pattern
+PKPRO010 | PatternKit.Generators.Prototype | Error | Abstract types not supported for Prototype pattern
 
