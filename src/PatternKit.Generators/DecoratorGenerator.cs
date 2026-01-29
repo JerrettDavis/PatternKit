@@ -661,7 +661,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         }
 
         // Use Roslyn's culture-invariant literal formatting for all other types
-        return SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false);
+        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false);
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)
