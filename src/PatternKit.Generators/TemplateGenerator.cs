@@ -82,7 +82,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor HandleAndContinuePolicyDescriptor = new(
         id: DiagIdHandleAndContinuePolicy,
         title: "HandleAndContinue policy not allowed with non-optional steps",
-        messageFormat: "ErrorPolicy=HandleAndContinue is not allowed when non-optional steps remain after step '{0}'. Make remaining steps optional or use ErrorPolicy=Rethrow.",
+        messageFormat: "ErrorPolicy=HandleAndContinue is not allowed when non-optional steps exist. Make all steps optional or use ErrorPolicy=Rethrow.",
         category: "PatternKit.Generators.Template",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -436,11 +436,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
         var nonOptionalSteps = steps.Where(s => !s.Optional).ToList();
         if (nonOptionalSteps.Count > 0)
         {
-            var firstNonOptional = nonOptionalSteps.First();
             context.ReportDiagnostic(Diagnostic.Create(
                 HandleAndContinuePolicyDescriptor,
-                firstNonOptional.Method.Locations.FirstOrDefault(),
-                firstNonOptional.Name));
+                Location.None));
             return false;
         }
 
@@ -514,6 +512,12 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     sb.AppendLine($"            {step.Method.Name}(ctx);");
                 }
 
+                // AfterAll hooks (inside try - only execute on success)
+                foreach (var hook in afterAllHooks)
+                {
+                    sb.AppendLine($"            {hook.Method.Name}(ctx);");
+                }
+
                 sb.AppendLine("        }");
                 sb.AppendLine("        catch (System.Exception ex)");
                 sb.AppendLine("        {");
@@ -538,12 +542,12 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 {
                     sb.AppendLine($"        {step.Method.Name}(ctx);");
                 }
-            }
 
-            // AfterAll hooks
-            foreach (var hook in afterAllHooks)
-            {
-                sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                // AfterAll hooks (no error handling)
+                foreach (var hook in afterAllHooks)
+                {
+                    sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                }
             }
 
             sb.AppendLine("    }");
@@ -593,6 +597,22 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                 }
 
+                // AfterAll hooks (inside try - only execute on success)
+                foreach (var hook in afterAllHooks)
+                {
+                    var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                    if (isAsync)
+                    {
+                        var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"            await {hook.Method.Name}({args}).ConfigureAwait(false);");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"            {hook.Method.Name}(ctx);");
+                    }
+                }
+
                 sb.AppendLine("        }");
                 sb.AppendLine("        catch (System.Exception ex)");
                 sb.AppendLine("        {");
@@ -637,21 +657,21 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                         sb.AppendLine($"        {step.Method.Name}(ctx);");
                     }
                 }
-            }
 
-            // AfterAll hooks
-            foreach (var hook in afterAllHooks)
-            {
-                var isAsync = hook.Method.ReturnType.Name == "ValueTask";
-                if (isAsync)
+                // AfterAll hooks (no error handling)
+                foreach (var hook in afterAllHooks)
                 {
-                    var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
-                    var args = hasCt ? "ctx, ct" : "ctx";
-                    sb.AppendLine($"        await {hook.Method.Name}({args}).ConfigureAwait(false);");
-                }
-                else
-                {
-                    sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                    var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                    if (isAsync)
+                    {
+                        var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"        await {hook.Method.Name}({args}).ConfigureAwait(false);");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                    }
                 }
             }
 
