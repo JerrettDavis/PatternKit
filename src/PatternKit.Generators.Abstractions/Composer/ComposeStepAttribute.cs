@@ -9,7 +9,10 @@ public sealed class ComposeStepAttribute : Attribute
 {
     /// <summary>
     /// Gets or sets the order of this step in the pipeline.
-    /// Steps are executed in ascending order.
+    /// Lower Order values are wrapped by higher Order values (OuterFirst, default),
+    /// or higher Order values are wrapped by lower Order values (InnerFirst).
+    /// OuterFirst: Order=0 executes first, wrapping all other steps.
+    /// InnerFirst: Order=0 executes last, closest to the terminal.
     /// </summary>
     public int Order { get; set; }
 

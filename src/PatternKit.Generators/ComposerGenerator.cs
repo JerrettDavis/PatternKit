@@ -309,7 +309,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                     name = nameVal;
             }
 
-            bool isAsync = method.ReturnType.Name == "ValueTask" || method.ReturnType.Name == "Task";
+            bool isAsync = IsAsyncMethod(method);
 
             steps.Add(new StepInfo
             {
@@ -338,7 +338,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             if (terminalAttr == null)
                 continue;
 
-            bool isAsync = method.ReturnType.Name == "ValueTask" || method.ReturnType.Name == "Task";
+            bool isAsync = IsAsyncMethod(method);
 
             terminals.Add(new TerminalInfo
             {
@@ -494,6 +494,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
         // Generate async InvokeAsync if needed
         if (generateAsync)
         {
+            // Add a blank line only if we also generated the sync version
             if (hasSyncSteps || !generateAsync)
                 sb.AppendLine();
             GenerateAsyncInvoke(sb, config, orderedSteps, terminal, inputType, outputType, isStruct);
@@ -581,16 +582,60 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         if (isStruct)
         {
-            // For structs, we need to handle async differently - we can't use lambdas
-            // For now, let's generate a warning and use a simpler approach
-            // This is a limitation that could be improved in the future
+            // For structs, we need to avoid lambdas that capture 'this'
+            // We'll create a copy of 'this' and use it in local functions, similar to sync approach
+            sb.AppendLine($"        var self = this;");
             
-            // Generate inline async calls if possible
-            // For simplicity, just call the steps inline (this may not work perfectly for all async scenarios)
-            sb.AppendLine($"        // Note: Async composition in structs has limitations");
+            // Start with terminal wrapped as a local function using the copy
+            if (terminal.IsAsync)
+            {
+                if (terminal.Method.Parameters.Length > 1 && 
+                    terminal.Method.Parameters[1].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                {
+                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(arg, cancellationToken);");
+                }
+                else
+                {
+                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(arg);");
+                }
+            }
+            else
+            {
+                sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{terminal.Method.Name}(in arg));");
+            }
             
-            // Start with a simple chain - this won't fully work for complex async scenarios
-            sb.AppendLine($"        return {terminal.Method.Name}(input, cancellationToken);");
+            sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = terminalFunc;");
+
+            // Wrap each step around the previous pipeline
+            for (int i = orderedSteps.Count - 1; i >= 0; i--)
+            {
+                var step = orderedSteps[i];
+                var funcName = $"step{i}Func";
+
+                if (step.IsAsync)
+                {
+                    // Check if step has cancellationToken parameter
+                    if (step.Method.Parameters.Length > 2 && 
+                        step.Method.Parameters[2].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                    {
+                        sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => self.{step.Method.Name}(arg, pipeline, cancellationToken);");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => self.{step.Method.Name}(arg, pipeline);");
+                    }
+                }
+                else
+                {
+                    // Wrap sync step to work with async pipeline - need to use GetAwaiter().GetResult() instead of .Result
+                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{step.Method.Name}(in arg, inp => pipeline(inp).GetAwaiter().GetResult()));");
+                }
+                
+                sb.AppendLine($"        pipeline = {funcName};");
+            }
+
+            // Invoke the final pipeline
+            sb.AppendLine($"        return pipeline(input);");
         }
         else
         {
@@ -633,10 +678,10 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    // Wrap sync step to work with async pipeline
+                    // Wrap sync step to work with async pipeline - use GetAwaiter().GetResult() instead of .Result to avoid deadlocks
                     sb.AppendLine($"        {{");
                     sb.AppendLine($"            var prevPipeline = pipeline;");
-                    sb.AppendLine($"            pipeline = (arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>({step.Method.Name}(in arg, inp => prevPipeline(inp).Result));");
+                    sb.AppendLine($"            pipeline = (arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>({step.Method.Name}(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult()));");
                     sb.AppendLine($"        }}");
                 }
             }
@@ -646,6 +691,19 @@ public sealed class ComposerGenerator : IIncrementalGenerator
         }
         
         sb.AppendLine("    }");
+    }
+
+    private bool IsAsyncMethod(IMethodSymbol method)
+    {
+        var returnType = method.ReturnType;
+        if (returnType is not INamedTypeSymbol namedType)
+            return false;
+
+        var fullName = namedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return fullName == "global::System.Threading.Tasks.Task" ||
+               fullName.StartsWith("global::System.Threading.Tasks.Task<") ||
+               fullName == "global::System.Threading.Tasks.ValueTask" ||
+               fullName.StartsWith("global::System.Threading.Tasks.ValueTask<");
     }
 
     private bool IsPartial(SyntaxNode node)
