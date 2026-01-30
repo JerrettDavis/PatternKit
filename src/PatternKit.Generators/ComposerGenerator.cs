@@ -246,11 +246,11 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             switch (namedArg.Key)
             {
                 case "InvokeMethodName":
-                    if (namedArg.Value.Value is string invokeName)
+                    if (namedArg.Value.Value is string invokeName && !string.IsNullOrWhiteSpace(invokeName))
                         config.InvokeMethodName = invokeName;
                     break;
                 case "InvokeAsyncMethodName":
-                    if (namedArg.Value.Value is string invokeAsyncName)
+                    if (namedArg.Value.Value is string invokeAsyncName && !string.IsNullOrWhiteSpace(invokeAsyncName))
                         config.InvokeAsyncMethodName = invokeAsyncName;
                     break;
                 case "GenerateAsync":
@@ -262,7 +262,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                         config.ForceAsync = forceAsync;
                     break;
                 case "WrapOrder":
-                    if (namedArg.Value.Value is int wrapOrder)
+                    if (namedArg.Value.Value is int wrapOrder && wrapOrder >= 0 && wrapOrder <= 1)
                         config.WrapOrder = (ComposerWrapOrder)wrapOrder;
                     break;
             }
@@ -486,16 +486,18 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         // Generate sync Invoke if we have sync steps or forced
         bool hasSyncSteps = !orderedSteps.Any(s => s.IsAsync) && !terminal.IsAsync;
+        bool generatedSyncVersion = false;
         if (hasSyncSteps || !generateAsync)
         {
             GenerateSyncInvoke(sb, config, orderedSteps, terminal, inputType, outputType, isStruct);
+            generatedSyncVersion = true;
         }
 
         // Generate async InvokeAsync if needed
         if (generateAsync)
         {
             // Add a blank line only if we also generated the sync version
-            if (hasSyncSteps || !generateAsync)
+            if (generatedSyncVersion)
                 sb.AppendLine();
             GenerateAsyncInvoke(sb, config, orderedSteps, terminal, inputType, outputType, isStruct);
         }

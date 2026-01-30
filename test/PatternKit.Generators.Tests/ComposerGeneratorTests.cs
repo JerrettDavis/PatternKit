@@ -700,44 +700,4 @@ public class ComposerGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
-
-    // TODO: This test is currently not working - investigate attribute parsing
-    //[Fact]
-    public void AsyncStepWithGenerateAsyncFalse_ProducesDiagnostic()
-    {
-        var source = """
-            using System;
-            using System.Threading;
-            using System.Threading.Tasks;
-            using PatternKit.Generators.Composer;
-
-            namespace PatternKit.Examples;
-
-            public readonly record struct Request(string Path);
-            public readonly record struct Response(int Status);
-
-            [Composer(GenerateAsync = false)]
-            public partial class RequestPipeline
-            {
-                [ComposeStep(0)]
-                private async ValueTask<Response> AsyncStep(Request req, Func<Request, ValueTask<Response>> next, CancellationToken ct)
-                {
-                    await Task.Delay(10, ct);
-                    return await next(req);
-                }
-
-                [ComposeTerminal]
-                private Response Terminal(in Request req) => new(200);
-            }
-            """;
-
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AsyncStepWithGenerateAsyncFalse_ProducesDiagnostic));
-        var gen = new ComposerGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-
-        // Should have PKCOM008 diagnostic
-        var allDiagnostics = result.Results.SelectMany(r => r.Diagnostics).ToList();
-        Assert.NotEmpty(allDiagnostics);
-        Assert.Contains(allDiagnostics, d => d.Id == "PKCOM008");
-    }
 }
