@@ -275,11 +275,8 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     {
         var steps = new List<StepInfo>();
 
-        foreach (var member in typeSymbol.GetMembers())
+        foreach (var method in typeSymbol.GetMembers().OfType<IMethodSymbol>())
         {
-            if (member is not IMethodSymbol method)
-                continue;
-
             var stepAttr = method.GetAttributes()
                 .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Composer.ComposeStepAttribute");
 
@@ -295,10 +292,10 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             int order = 0;
             string? name = null;
 
-            if (stepAttr.ConstructorArguments.Length > 0)
+            if (stepAttr.ConstructorArguments.Length > 0 &&
+                stepAttr.ConstructorArguments[0].Value is int orderValue)
             {
-                if (stepAttr.ConstructorArguments[0].Value is int orderValue)
-                    order = orderValue;
+                order = orderValue;
             }
 
             foreach (var namedArg in stepAttr.NamedArguments)
@@ -327,11 +324,8 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     {
         var terminals = new List<TerminalInfo>();
 
-        foreach (var member in typeSymbol.GetMembers())
+        foreach (var method in typeSymbol.GetMembers().OfType<IMethodSymbol>())
         {
-            if (member is not IMethodSymbol method)
-                continue;
-
             var terminalAttr = method.GetAttributes()
                 .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Composer.ComposeTerminalAttribute");
 
@@ -367,8 +361,18 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         // Check if second parameter is a Func delegate
         var nextParam = method.Parameters[1];
-        if (nextParam.Type is not INamedTypeSymbol nextType || 
-            !nextType.Name.StartsWith("Func"))
+        if (nextParam.Type is not INamedTypeSymbol nextType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidStepSignatureDescriptor,
+                method.Locations.FirstOrDefault(),
+                method.Name));
+            return false;
+        }
+
+        // Validate it's actually System.Func by checking namespace and name
+        var fullName = nextType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        if (!fullName.StartsWith("global::System.Func<"))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 InvalidStepSignatureDescriptor,
@@ -484,10 +488,10 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         bool isStruct = typeSymbol.TypeKind == TypeKind.Struct;
 
-        // Generate sync Invoke if we have sync steps or forced
+        // Generate sync Invoke if we have sync steps (always generate unless ForceAsync with async steps)
         bool hasSyncSteps = !orderedSteps.Any(s => s.IsAsync) && !terminal.IsAsync;
         bool generatedSyncVersion = false;
-        if (hasSyncSteps || !generateAsync)
+        if (hasSyncSteps)
         {
             GenerateSyncInvoke(sb, config, orderedSteps, terminal, inputType, outputType, isStruct);
             generatedSyncVersion = true;
@@ -629,7 +633,9 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    // Wrap sync step to work with async pipeline - need to use GetAwaiter().GetResult() instead of .Result
+                    // Wrap sync step to work with async pipeline
+                    // WARNING: GetAwaiter().GetResult() can deadlock in certain synchronization contexts (UI thread, ASP.NET pre-Core)
+                    // Avoid using mixed sync/async pipelines in contexts with custom SynchronizationContext
                     sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{step.Method.Name}(in arg, inp => pipeline(inp).GetAwaiter().GetResult()));");
                 }
                 
@@ -680,7 +686,9 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    // Wrap sync step to work with async pipeline - use GetAwaiter().GetResult() instead of .Result to avoid deadlocks
+                    // Wrap sync step to work with async pipeline
+                    // WARNING: GetAwaiter().GetResult() can deadlock in certain synchronization contexts (UI thread, ASP.NET pre-Core)
+                    // Avoid using mixed sync/async pipelines in contexts with custom SynchronizationContext
                     sb.AppendLine($"        {{");
                     sb.AppendLine($"            var prevPipeline = pipeline;");
                     sb.AppendLine($"            pipeline = (arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>({step.Method.Name}(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult()));");

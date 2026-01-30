@@ -607,7 +607,7 @@ public class ComposerGeneratorTests
     }
 
     [Fact]
-    public void MixedSyncAndAsync_GeneratesBoth()
+    public void SyncPipelineWithForceAsync_GeneratesBoth()
     {
         var source = """
             using System;
@@ -635,7 +635,7 @@ public class ComposerGeneratorTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MixedSyncAndAsync_GeneratesBoth));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(SyncPipelineWithForceAsync_GeneratesBoth));
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
@@ -695,6 +695,128 @@ public class ComposerGeneratorTests
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("InvokeAsync", generatedSource);
         Assert.Contains("ValueTask", generatedSource);
+
+        // And the updated compilation actually compiles
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void InvalidStepSignature_ProducesDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            namespace PatternKit.Examples;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Step(in Request req, int invalidNext)  // Invalid signature - not a Func
+                {
+                    return new Response(200);
+                }
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidStepSignature_ProducesDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKCOM006 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToList();
+        Assert.NotEmpty(diagnostics);
+        Assert.Contains(diagnostics, d => d.Id == "PKCOM006");
+    }
+
+    [Fact]
+    public void InvalidTerminalSignature_ProducesDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            namespace PatternKit.Examples;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Step(in Request req, System.Func<Request, Response> next) => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal()  // Invalid signature - no input parameter
+                {
+                    return new Response(200);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidTerminalSignature_ProducesDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // Should have PKCOM007 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToList();
+        Assert.NotEmpty(diagnostics);
+        Assert.Contains(diagnostics, d => d.Id == "PKCOM007");
+    }
+
+    [Fact]
+    public void TrulyMixedSyncAndAsync_GeneratesBoth()
+    {
+        var source = """
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            namespace PatternKit.Examples;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response SyncStep(in Request req, System.Func<Request, Response> next)
+                {
+                    System.Console.WriteLine("Sync step");
+                    return next(req);
+                }
+
+                [ComposeStep(1)]
+                private async ValueTask<Response> AsyncStep(Request req, Func<Request, ValueTask<Response>> next, CancellationToken ct)
+                {
+                    await Task.Delay(10, ct);
+                    return await next(req);
+                }
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(TrulyMixedSyncAndAsync_GeneratesBoth));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify the generated source contains InvokeAsync (mixed scenario only generates async)
+        var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("InvokeAsync", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
