@@ -772,7 +772,7 @@ public class ComposerGeneratorTests
     }
 
     [Fact]
-    public void TrulyMixedSyncAndAsync_GeneratesBoth()
+    public void TrulyMixedSyncAndAsync_GeneratesAsyncOnly()
     {
         var source = """
             using System;
@@ -807,7 +807,7 @@ public class ComposerGeneratorTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(TrulyMixedSyncAndAsync_GeneratesBoth));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(TrulyMixedSyncAndAsync_GeneratesAsyncOnly));
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 

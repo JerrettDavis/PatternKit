@@ -2,7 +2,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using PatternKit.Generators.Composer;
-using System.Collections.Immutable;
 using System.Text;
 
 namespace PatternKit.Generators;
