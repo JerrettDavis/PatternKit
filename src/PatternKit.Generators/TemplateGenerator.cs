@@ -490,62 +490,64 @@ public sealed class TemplateGenerator : IIncrementalGenerator
         sb.AppendLine($"partial {recordKeyword}{typeKind} {typeName}");
         sb.AppendLine("{");
 
-        // Generate synchronous Execute method
-        sb.AppendLine($"    public void {config.ExecuteMethodName}({contextType} ctx)");
-        sb.AppendLine("    {");
-
-        // BeforeAll hooks
-        foreach (var hook in beforeAllHooks)
+        // Generate synchronous Execute method only if no async methods
+        if (!needsAsync)
         {
-            sb.AppendLine($"        {hook.Method.Name}(ctx);");
-        }
+            sb.AppendLine($"    public void {config.ExecuteMethodName}({contextType} ctx)");
+            sb.AppendLine("    {");
 
-        // Error handling wrapper if OnError hooks exist
-        if (onErrorHooks.Count > 0)
-        {
-            sb.AppendLine("        try");
-            sb.AppendLine("        {");
-            
-            // Steps
-            foreach (var step in sortedSteps)
+            // BeforeAll hooks
+            foreach (var hook in beforeAllHooks)
             {
-                sb.AppendLine($"            {step.Method.Name}(ctx);");
+                sb.AppendLine($"        {hook.Method.Name}(ctx);");
             }
 
-            sb.AppendLine("        }");
-            sb.AppendLine("        catch (System.Exception ex)");
-            sb.AppendLine("        {");
-            
-            // OnError hooks
-            foreach (var hook in onErrorHooks)
+            // Error handling wrapper if OnError hooks exist
+            if (onErrorHooks.Count > 0)
             {
-                sb.AppendLine($"            {hook.Method.Name}(ctx, ex);");
+                sb.AppendLine("        try");
+                sb.AppendLine("        {");
+                
+                // Steps
+                foreach (var step in sortedSteps)
+                {
+                    sb.AppendLine($"            {step.Method.Name}(ctx);");
+                }
+
+                sb.AppendLine("        }");
+                sb.AppendLine("        catch (System.Exception ex)");
+                sb.AppendLine("        {");
+                
+                // OnError hooks
+                foreach (var hook in onErrorHooks)
+                {
+                    sb.AppendLine($"            {hook.Method.Name}(ctx, ex);");
+                }
+
+                if (config.ErrorPolicy == 0) // Rethrow
+                {
+                    sb.AppendLine("            throw;");
+                }
+                
+                sb.AppendLine("        }");
+            }
+            else
+            {
+                // Steps without try-catch
+                foreach (var step in sortedSteps)
+                {
+                    sb.AppendLine($"        {step.Method.Name}(ctx);");
+                }
             }
 
-            if (config.ErrorPolicy == 0) // Rethrow
+            // AfterAll hooks
+            foreach (var hook in afterAllHooks)
             {
-                sb.AppendLine("            throw;");
+                sb.AppendLine($"        {hook.Method.Name}(ctx);");
             }
-            
-            sb.AppendLine("        }");
-        }
-        else
-        {
-            // Steps without try-catch
-            foreach (var step in sortedSteps)
-            {
-                sb.AppendLine($"        {step.Method.Name}(ctx);");
-            }
-        }
 
-        // AfterAll hooks
-        foreach (var hook in afterAllHooks)
-        {
-            sb.AppendLine($"        {hook.Method.Name}(ctx);");
+            sb.AppendLine("    }");
         }
-
-        sb.AppendLine("    }");
-
         // Generate asynchronous ExecuteAsync method if needed
         if (needsAsync)
         {
