@@ -16,6 +16,9 @@
 - name: Proxy
   href: proxy.md
 
+- name: Template Method
+  href: template-method-generator.md
+
 - name: Examples
   href: examples.md
 
