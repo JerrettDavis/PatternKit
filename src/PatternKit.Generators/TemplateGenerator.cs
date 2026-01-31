@@ -19,7 +19,6 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     private const string DiagIdDuplicateOrder = "PKTMP003";
     private const string DiagIdInvalidStepSignature = "PKTMP004";
     private const string DiagIdInvalidHookSignature = "PKTMP005";
-    private const string DiagIdMixedAsyncSignatures = "PKTMP006";
     private const string DiagIdMissingCancellationToken = "PKTMP007";
     private const string DiagIdHandleAndContinuePolicy = "PKTMP008";
 
@@ -61,14 +60,6 @@ public sealed class TemplateGenerator : IIncrementalGenerator
         messageFormat: "Hook method '{0}' has an invalid signature. {1}",
         category: "PatternKit.Generators.Template",
         defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
-    private static readonly DiagnosticDescriptor MixedAsyncSignaturesDescriptor = new(
-        id: DiagIdMixedAsyncSignatures,
-        title: "Mixed sync/async signatures detected",
-        messageFormat: "Type '{0}' has mixed synchronous and asynchronous steps/hooks. All steps must consistently return void or ValueTask.",
-        category: "PatternKit.Generators.Template",
-        defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     private static readonly DiagnosticDescriptor MissingCancellationTokenDescriptor = new(
@@ -211,11 +202,8 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     {
         var builder = ImmutableArray.CreateBuilder<StepModel>();
 
-        foreach (var member in typeSymbol.GetMembers())
+        foreach (var method in typeSymbol.GetMembers().OfType<IMethodSymbol>())
         {
-            if (member is not IMethodSymbol method)
-                continue;
-
             var stepAttr = method.GetAttributes().FirstOrDefault(a =>
                 a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Template.TemplateStepAttribute");
 
@@ -253,11 +241,8 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     {
         var builder = ImmutableArray.CreateBuilder<HookModel>();
 
-        foreach (var member in typeSymbol.GetMembers())
+        foreach (var method in typeSymbol.GetMembers().OfType<IMethodSymbol>())
         {
-            if (member is not IMethodSymbol method)
-                continue;
-
             var hookAttr = method.GetAttributes().FirstOrDefault(a =>
                 a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Template.TemplateHookAttribute");
 
@@ -323,10 +308,13 @@ public sealed class TemplateGenerator : IIncrementalGenerator
 
     private bool ValidateStepSignature(IMethodSymbol method, SourceProductionContext context)
     {
-        // Step must return void or ValueTask
+        // Step must return void or non-generic ValueTask
         var returnsVoid = method.ReturnsVoid;
-        var returnsValueTask = method.ReturnType.Name == "ValueTask" &&
-                              method.ReturnType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
+        var returnType = method.ReturnType;
+        var returnsValueTask = returnType is INamedTypeSymbol namedType &&
+                              namedType.Name == "ValueTask" &&
+                              namedType.Arity == 0 &&
+                              namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
 
         if (!returnsVoid && !returnsValueTask)
         {
@@ -361,10 +349,13 @@ public sealed class TemplateGenerator : IIncrementalGenerator
 
     private bool ValidateHookSignature(IMethodSymbol method, int hookPoint, SourceProductionContext context)
     {
-        // Hook must return void or ValueTask
+        // Hook must return void or non-generic ValueTask
         var returnsVoid = method.ReturnsVoid;
-        var returnsValueTask = method.ReturnType.Name == "ValueTask" &&
-                              method.ReturnType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
+        var returnType = method.ReturnType;
+        var returnsValueTask = returnType is INamedTypeSymbol namedType &&
+                              namedType.Name == "ValueTask" &&
+                              namedType.Arity == 0 &&
+                              namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
 
         if (!returnsVoid && !returnsValueTask)
         {
@@ -408,19 +399,29 @@ public sealed class TemplateGenerator : IIncrementalGenerator
 
     private bool DetermineIfAsync(ImmutableArray<StepModel> steps, ImmutableArray<HookModel> hooks)
     {
-        // Check if any step or hook returns ValueTask or accepts CancellationToken
+        // Check if any step or hook returns non-generic ValueTask or accepts CancellationToken
         foreach (var step in steps)
         {
-            if (step.Method.ReturnType.Name == "ValueTask")
+            var returnType = step.Method.ReturnType;
+            if (returnType is INamedTypeSymbol namedType &&
+                namedType.Name == "ValueTask" &&
+                namedType.Arity == 0 &&
+                namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
+            
             if (step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken"))
                 return true;
         }
 
         foreach (var hook in hooks)
         {
-            if (hook.Method.ReturnType.Name == "ValueTask")
+            var returnType = hook.Method.ReturnType;
+            if (returnType is INamedTypeSymbol namedType &&
+                namedType.Name == "ValueTask" &&
+                namedType.Arity == 0 &&
+                namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
+            
             if (hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken"))
                 return true;
         }
@@ -562,7 +563,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
             // BeforeAll hooks
             foreach (var hook in beforeAllHooks)
             {
-                var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                 if (isAsync)
                 {
                     var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -584,7 +585,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 // Steps
                 foreach (var step in sortedSteps)
                 {
-                    var isAsync = step.Method.ReturnType.Name == "ValueTask";
+                    var isAsync = IsNonGenericValueTask(step.Method.ReturnType);
                     if (isAsync)
                     {
                         var hasCt = step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -600,7 +601,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 // AfterAll hooks (inside try - only execute on success)
                 foreach (var hook in afterAllHooks)
                 {
-                    var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                    var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
                         var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -620,7 +621,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 // OnError hooks
                 foreach (var hook in onErrorHooks)
                 {
-                    var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                    var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
                         var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -645,7 +646,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 // Steps without try-catch
                 foreach (var step in sortedSteps)
                 {
-                    var isAsync = step.Method.ReturnType.Name == "ValueTask";
+                    var isAsync = IsNonGenericValueTask(step.Method.ReturnType);
                     if (isAsync)
                     {
                         var hasCt = step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -661,7 +662,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 // AfterAll hooks (no error handling)
                 foreach (var hook in afterAllHooks)
                 {
-                    var isAsync = hook.Method.ReturnType.Name == "ValueTask";
+                    var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
                         var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
@@ -681,6 +682,15 @@ public sealed class TemplateGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         return sb.ToString();
+    }
+
+    // Helper method to check if a return type is non-generic ValueTask
+    private static bool IsNonGenericValueTask(ITypeSymbol returnType)
+    {
+        return returnType is INamedTypeSymbol namedType &&
+               namedType.Name == "ValueTask" &&
+               namedType.Arity == 0 &&
+               namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
     }
 
     // Helper classes

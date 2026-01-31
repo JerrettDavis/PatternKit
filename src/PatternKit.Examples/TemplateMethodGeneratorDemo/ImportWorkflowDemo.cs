@@ -44,20 +44,14 @@ public partial class ImportWorkflow
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loading data...");
         
         // Simulate loading from file
-        if (File.Exists(ctx.FilePath))
-        {
-            ctx.RawData = File.ReadAllLines(ctx.FilePath);
-        }
-        else
-        {
-            // For demo purposes, create sample data
-            ctx.RawData = new[]
+        ctx.RawData = File.Exists(ctx.FilePath)
+            ? File.ReadAllLines(ctx.FilePath)
+            : new[]
             {
                 "Name:Alice;Value:100",
                 "Name:Bob;Value:200",
                 "Name:Charlie;Value:300"
             };
-        }
         
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loaded {ctx.RawData.Length} lines");
     }
@@ -94,14 +88,16 @@ public partial class ImportWorkflow
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Transforming data...");
         
-        foreach (var line in ctx.RawData)
-        {
-            var parts = line.Split(';');
-            var name = parts[0].Split(':')[1];
-            var value = parts[1].Split(':')[1];
-            
-            ctx.Records.Add(new DataRecord(name, value));
-        }
+        var records = ctx.RawData
+            .Select(line =>
+            {
+                var parts = line.Split(';');
+                var name = parts[0].Split(':')[1];
+                var value = parts[1].Split(':')[1];
+                return new DataRecord(name, value);
+            });
+        
+        ctx.Records.AddRange(records);
         
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Transformed {ctx.Records.Count} records");
     }

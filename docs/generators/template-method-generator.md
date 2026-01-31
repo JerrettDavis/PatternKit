@@ -344,7 +344,6 @@ The generator provides actionable diagnostics:
 | PKTMP003 | Duplicate step order | Ensure each step has unique Order value |
 | PKTMP004 | Invalid step signature | Step must return void/ValueTask and accept context |
 | PKTMP005 | Invalid hook signature | Hook signature doesn't match requirements |
-| PKTMP006 | Mixed sync/async signatures | Use consistent return types across steps |
 | PKTMP007 | Missing CancellationToken | Add CancellationToken parameter to async steps |
 | PKTMP008 | HandleAndContinue policy invalid | Make remaining steps optional or use Rethrow policy |
 

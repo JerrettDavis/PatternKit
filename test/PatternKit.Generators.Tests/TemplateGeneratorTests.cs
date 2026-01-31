@@ -1,6 +1,4 @@
 using Microsoft.CodeAnalysis;
-using PatternKit.Common;
-using PatternKit.Creational.Builder;
 
 namespace PatternKit.Generators.Tests;
 
@@ -700,6 +698,171 @@ public class TemplateGeneratorTests
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKTMP007");
+    }
+
+    [Fact]
+    public void Reports_Error_When_Invalid_Hook_Signature_No_Context()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            public class ImportContext { }
+
+            [Template]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void OnStart() { }  // Missing context parameter
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Reports_Error_When_Invalid_Hook_Signature_No_Context));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+    }
+
+    [Fact]
+    public void Reports_Error_When_OnError_Hook_Missing_Exception_Parameter()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            public class ImportContext { }
+
+            [Template]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.OnError)]
+                private void OnError(ImportContext ctx) { }  // Missing Exception parameter
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Reports_Error_When_OnError_Hook_Missing_Exception_Parameter));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+    }
+
+    [Fact]
+    public void Reports_Error_When_Hook_Returns_Invalid_Type()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            public class ImportContext { }
+
+            [Template]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.BeforeAll)]
+                private int OnStart(ImportContext ctx) { return 0; }  // Invalid return type
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Reports_Error_When_Hook_Returns_Invalid_Type));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+    }
+
+    [Fact]
+    public void Reports_Error_When_HandleAndContinue_With_NonOptional_Steps()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            public class ImportContext { }
+
+            [Template(ErrorPolicy = TemplateErrorPolicy.HandleAndContinue)]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx) { }  // Non-optional step
+
+                [TemplateStep(1)]
+                private void Transform(ImportContext ctx) { }  // Non-optional step
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Reports_Error_When_HandleAndContinue_With_NonOptional_Steps));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKTMP008");
+    }
+
+    [Fact]
+    public void Allows_HandleAndContinue_With_All_Optional_Steps()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            public class ImportContext { }
+
+            [Template(ErrorPolicy = TemplateErrorPolicy.HandleAndContinue)]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0, Optional = true)]
+                private void Validate(ImportContext ctx) { }
+
+                [TemplateStep(1, Optional = true)]
+                private void Transform(ImportContext ctx) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Allows_HandleAndContinue_With_All_Optional_Steps));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        // Should not have PKTMP008 diagnostic
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.DoesNotContain(diagnostics, d => d.Id == "PKTMP008");
+        
+        // Should compile successfully
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     #endregion
