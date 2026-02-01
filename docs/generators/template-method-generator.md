@@ -315,15 +315,16 @@ public partial class CustomWorkflow { }
 
 **HandleAndContinue:**
 - OnError hook is invoked
-- Execution continues with next step
-- Only allowed when remaining steps are all optional
+- Exception is suppressed (not rethrown)
+- Workflow terminates
+- Only allowed when all steps are optional
 
 ```csharp
 [Template(ErrorPolicy = TemplateErrorPolicy.HandleAndContinue)]
 public partial class ResilientWorkflow
 {
-    [TemplateStep(0)]
-    private void Step1(Context ctx) { }
+    [TemplateStep(0, Optional = true)]
+    private void Step1(Context ctx) { }  // Must be optional
 
     [TemplateStep(1, Optional = true)]
     private void Step2(Context ctx) { }  // Must be optional
@@ -345,7 +346,7 @@ The generator provides actionable diagnostics:
 | PKTMP004 | Invalid step signature | Step must return void/ValueTask and accept context |
 | PKTMP005 | Invalid hook signature | Hook signature doesn't match requirements |
 | PKTMP007 | Missing CancellationToken | Add CancellationToken parameter to async steps |
-| PKTMP008 | HandleAndContinue policy invalid | Make remaining steps optional or use Rethrow policy |
+| PKTMP008 | HandleAndContinue policy invalid | Make all steps optional or use Rethrow policy |
 
 ## Supported Type Targets
 

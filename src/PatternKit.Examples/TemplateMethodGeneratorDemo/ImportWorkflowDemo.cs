@@ -126,7 +126,7 @@ public partial class ImportWorkflow
     private void OnError(ImportContext ctx, Exception ex)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] ERROR: {ex.Message}");
-        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Import failed at validation stage");
+        ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Import failed");
     }
 
     /// <summary>

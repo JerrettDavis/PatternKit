@@ -289,19 +289,13 @@ public sealed class TemplateGenerator : IIncrementalGenerator
         INamedTypeSymbol typeSymbol,
         SourceProductionContext context)
     {
-        // Validate step signatures
-        foreach (var step in steps)
-        {
-            if (!ValidateStepSignature(step.Method, context))
-                return false;
-        }
+        // Validate step signatures - return false if any validation fails
+        if (steps.Any(step => !ValidateStepSignature(step.Method, context)))
+            return false;
 
-        // Validate hook signatures
-        foreach (var hook in hooks)
-        {
-            if (!ValidateHookSignature(hook.Method, hook.HookPoint, context))
-                return false;
-        }
+        // Validate hook signatures - return false if any validation fails
+        if (hooks.Any(hook => !ValidateHookSignature(hook.Method, hook.HookPoint, context)))
+            return false;
 
         return true;
     }
@@ -409,7 +403,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
             
-            if (step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken"))
+            if (step.Method.Parameters.Any(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken"))
                 return true;
         }
 
@@ -422,7 +416,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
             
-            if (hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken"))
+            if (hook.Method.Parameters.Any(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken"))
                 return true;
         }
 
@@ -566,7 +560,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                 if (isAsync)
                 {
-                    var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                    var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
                     var args = hasCt ? "ctx, ct" : "ctx";
                     sb.AppendLine($"        await {hook.Method.Name}({args}).ConfigureAwait(false);");
                 }
@@ -588,7 +582,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     var isAsync = IsNonGenericValueTask(step.Method.ReturnType);
                     if (isAsync)
                     {
-                        var hasCt = step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var hasCt = step.Method.Parameters.Any(IsCancellationToken);
                         var args = hasCt ? "ctx, ct" : "ctx";
                         sb.AppendLine($"            await {step.Method.Name}({args}).ConfigureAwait(false);");
                     }
@@ -604,7 +598,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
-                        var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
                         var args = hasCt ? "ctx, ct" : "ctx";
                         sb.AppendLine($"            await {hook.Method.Name}({args}).ConfigureAwait(false);");
                     }
@@ -624,7 +618,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
-                        var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
                         var args = hasCt ? "ctx, ex, ct" : "ctx, ex";
                         sb.AppendLine($"            await {hook.Method.Name}({args}).ConfigureAwait(false);");
                     }
@@ -649,7 +643,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     var isAsync = IsNonGenericValueTask(step.Method.ReturnType);
                     if (isAsync)
                     {
-                        var hasCt = step.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var hasCt = step.Method.Parameters.Any(IsCancellationToken);
                         var args = hasCt ? "ctx, ct" : "ctx";
                         sb.AppendLine($"        await {step.Method.Name}({args}).ConfigureAwait(false);");
                     }
@@ -665,7 +659,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     var isAsync = IsNonGenericValueTask(hook.Method.ReturnType);
                     if (isAsync)
                     {
-                        var hasCt = hook.Method.Parameters.Any(p => p.Type.Name == "CancellationToken");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
                         var args = hasCt ? "ctx, ct" : "ctx";
                         sb.AppendLine($"        await {hook.Method.Name}({args}).ConfigureAwait(false);");
                     }
@@ -691,6 +685,12 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                namedType.Name == "ValueTask" &&
                namedType.Arity == 0 &&
                namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks";
+    }
+
+    // Helper method to check if a parameter is a CancellationToken
+    private static bool IsCancellationToken(IParameterSymbol parameter)
+    {
+        return parameter.Type.ToDisplayString() == "System.Threading.CancellationToken";
     }
 
     // Helper classes
