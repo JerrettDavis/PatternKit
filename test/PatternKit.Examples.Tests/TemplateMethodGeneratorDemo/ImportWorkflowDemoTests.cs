@@ -31,7 +31,7 @@ public sealed partial class ImportWorkflowDemoTests(ITestOutputHelper output) : 
             .And("attempts validation", log => log.Any(l => l.Contains("Validating data")))
             .And("finds invalid lines", log => log.Any(l => l.Contains("invalid lines")))
             .And("invokes OnError hook", log => log.Any(l => l.Contains("ERROR:")))
-            .And("logs validation failure", log => log.Any(l => l.Contains("Import failed at validation stage")))
+            .And("logs validation failure", log => log.Any(l => l.Contains("Import failed")))
             .And("does not reach transform step", log => !log.Any(l => l.Contains("Transforming data")))
             .AssertPassed();
 

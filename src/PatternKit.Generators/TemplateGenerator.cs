@@ -403,7 +403,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
             
-            if (step.Method.Parameters.Any(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken"))
+            if (step.Method.Parameters.Any(IsCancellationToken))
                 return true;
         }
 
@@ -416,7 +416,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
             
-            if (hook.Method.Parameters.Any(p => p.Type.ToDisplayString() == "System.Threading.CancellationToken"))
+            if (hook.Method.Parameters.Any(IsCancellationToken))
                 return true;
         }
 

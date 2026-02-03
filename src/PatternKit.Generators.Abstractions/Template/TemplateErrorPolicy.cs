@@ -12,8 +12,8 @@ public enum TemplateErrorPolicy
     Rethrow = 0,
 
     /// <summary>
-    /// After invoking OnError hook (if present), continue execution with remaining steps.
-    /// Only allowed when all remaining steps are optional.
+    /// After invoking OnError hook (if present), suppress the exception (do not rethrow) and terminate the workflow.
+    /// Remaining steps are not executed; use this only when all remaining steps are optional.
     /// </summary>
     HandleAndContinue = 1
 }
