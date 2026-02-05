@@ -43,15 +43,19 @@ public partial class ImportWorkflow
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loading data...");
         
-        // Simulate loading from file
-        ctx.RawData = File.Exists(ctx.FilePath)
-            ? File.ReadAllLines(ctx.FilePath)
-            : new[]
-            {
-                "Name:Alice;Value:100",
-                "Name:Bob;Value:200",
-                "Name:Charlie;Value:300"
-            };
+        // Only load if RawData hasn't been pre-set (e.g., for testing)
+        if (ctx.RawData.Length == 0)
+        {
+            // Simulate loading from file
+            ctx.RawData = File.Exists(ctx.FilePath)
+                ? File.ReadAllLines(ctx.FilePath)
+                : new[]
+                {
+                    "Name:Alice;Value:100",
+                    "Name:Bob;Value:200",
+                    "Name:Charlie;Value:300"
+                };
+        }
         
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loaded {ctx.RawData.Length} lines");
     }
