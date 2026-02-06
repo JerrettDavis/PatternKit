@@ -19,6 +19,9 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private const string DiagIdMultipleFactories = "PKSNG004";
     private const string DiagIdPublicConstructor = "PKSNG005";
     private const string DiagIdNameConflict = "PKSNG006";
+    private const string DiagIdGenericType = "PKSNG007";
+    private const string DiagIdNestedType = "PKSNG008";
+    private const string DiagIdInvalidPropertyName = "PKSNG009";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -64,6 +67,30 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         id: DiagIdNameConflict,
         title: "Instance property name conflicts with existing member",
         messageFormat: "The instance property name '{0}' conflicts with an existing member in type '{1}'. Use InstancePropertyName to specify a different name.",
+        category: "PatternKit.Generators.Singleton",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor GenericTypeDescriptor = new(
+        id: DiagIdGenericType,
+        title: "Generic types are not supported",
+        messageFormat: "Type '{0}' is a generic type. Generic types are not supported for singleton generation.",
+        category: "PatternKit.Generators.Singleton",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor NestedTypeDescriptor = new(
+        id: DiagIdNestedType,
+        title: "Nested types are not supported",
+        messageFormat: "Type '{0}' is a nested type. Nested types are not supported for singleton generation.",
+        category: "PatternKit.Generators.Singleton",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor InvalidPropertyNameDescriptor = new(
+        id: DiagIdInvalidPropertyName,
+        title: "Invalid instance property name",
+        messageFormat: "The instance property name '{0}' is not a valid C# identifier.",
         category: "PatternKit.Generators.Singleton",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -118,8 +145,38 @@ public sealed class SingletonGenerator : IIncrementalGenerator
             return;
         }
 
+        // Check for unsupported generic types
+        if (typeSymbol.IsGenericType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                GenericTypeDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for unsupported nested types
+        if (typeSymbol.ContainingType != null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                NestedTypeDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
         // Parse attribute arguments
         var config = ParseSingletonConfig(attribute);
+
+        // Validate InstancePropertyName
+        if (!IsValidCSharpIdentifier(config.InstancePropertyName))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidPropertyNameDescriptor,
+                node.GetLocation(),
+                config.InstancePropertyName ?? "(null)"));
+            return;
+        }
 
         // Check for name conflicts with existing members
         if (HasNameConflict(typeSymbol, config.InstancePropertyName))
@@ -181,8 +238,11 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         var source = GenerateSingletonCode(typeInfo, config);
         if (!string.IsNullOrEmpty(source))
         {
-            var fileName = $"{typeSymbol.Name}.Singleton.g.cs";
-            context.AddSource(fileName, source);
+            // Use full type name (namespace + type) to avoid collisions when types share the same name
+            var hintName = typeSymbol.ContainingNamespace.IsGlobalNamespace
+                ? $"{typeSymbol.Name}.Singleton.g.cs"
+                : $"{typeSymbol.ContainingNamespace.ToDisplayString()}.{typeSymbol.Name}.Singleton.g.cs";
+            context.AddSource(hintName, source);
         }
     }
 
@@ -244,10 +304,32 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 
     private static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol typeSymbol)
     {
-        return typeSymbol.InstanceConstructors.Any(c =>
-            c.Parameters.Length == 0 &&
-            c.DeclaredAccessibility != Accessibility.Public || // private, protected, internal are all accessible from generated code
-            c.DeclaredAccessibility == Accessibility.Public);
+        return typeSymbol.InstanceConstructors.Any(c => c.Parameters.Length == 0);
+    }
+
+    private static bool IsValidCSharpIdentifier(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return false;
+
+        // Handle verbatim identifiers (@keyword)
+        var identifier = name.StartsWith("@") ? name.Substring(1) : name;
+
+        if (identifier.Length == 0)
+            return false;
+
+        // First character must be letter or underscore
+        if (!char.IsLetter(identifier[0]) && identifier[0] != '_')
+            return false;
+
+        // Remaining characters must be letters, digits, or underscores
+        for (int i = 1; i < identifier.Length; i++)
+        {
+            if (!char.IsLetterOrDigit(identifier[i]) && identifier[i] != '_')
+                return false;
+        }
+
+        return true;
     }
 
     private static bool HasPublicConstructor(INamedTypeSymbol typeSymbol)

@@ -29,12 +29,12 @@ public class SingletonGeneratorTests
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("AppClock.Singleton.g.cs", names);
+        Assert.Contains("TestNamespace.AppClock.Singleton.g.cs", names);
 
         // Generated code contains expected shape
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "AppClock.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.AppClock.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("private static readonly AppClock _instance = new AppClock();", generatedSource);
@@ -69,12 +69,12 @@ public class SingletonGeneratorTests
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("ConfigManager.Singleton.g.cs", names);
+        Assert.Contains("TestNamespace.ConfigManager.Singleton.g.cs", names);
 
         // Generated code contains Lazy<T> pattern
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "ConfigManager.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.ConfigManager.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("System.Lazy<ConfigManager>", generatedSource);
@@ -110,7 +110,7 @@ public class SingletonGeneratorTests
         // Generated code contains non-thread-safe pattern
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "FastCache.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.FastCache.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("_instance ??=", generatedSource);
@@ -149,7 +149,7 @@ public class SingletonGeneratorTests
         // Generated code uses factory method
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "ServiceLocator.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.ServiceLocator.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("Create()", generatedSource);
@@ -183,12 +183,12 @@ public class SingletonGeneratorTests
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("AppSettings.Singleton.g.cs", names);
+        Assert.Contains("TestNamespace.AppSettings.Singleton.g.cs", names);
 
         // Uses record class keyword
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "AppSettings.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.AppSettings.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("partial record class AppSettings", generatedSource);
@@ -223,7 +223,7 @@ public class SingletonGeneratorTests
         // Generated code uses custom property name
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
-            .First(gs => gs.HintName == "Logger.Singleton.g.cs")
+            .First(gs => gs.HintName == "TestNamespace.Logger.Singleton.g.cs")
             .SourceText.ToString();
 
         Assert.Contains("public static Logger Default =>", generatedSource);
@@ -359,7 +359,7 @@ public class SingletonGeneratorTests
 
         // Still generates code despite warning
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("PublicCtorSingleton.Singleton.g.cs", names);
+        Assert.Contains("TestNamespace.PublicCtorSingleton.Singleton.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -426,7 +426,7 @@ public class SingletonGeneratorTests
     }
 
     [Fact]
-    public void EagerSingleton_ReturnsSameInstance()
+    public void EagerSingleton_Compiles()
     {
         const string source = """
             using PatternKit.Generators.Singleton;
@@ -452,7 +452,7 @@ public class SingletonGeneratorTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(EagerSingleton_ReturnsSameInstance));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(EagerSingleton_Compiles));
         var gen = new SingletonGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
@@ -465,7 +465,7 @@ public class SingletonGeneratorTests
     }
 
     [Fact]
-    public void LazySingleton_ReturnsSameInstance()
+    public void LazySingleton_Compiles()
     {
         const string source = """
             using PatternKit.Generators.Singleton;
@@ -491,7 +491,7 @@ public class SingletonGeneratorTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(LazySingleton_ReturnsSameInstance));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(LazySingleton_Compiles));
         var gen = new SingletonGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 

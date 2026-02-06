@@ -185,7 +185,8 @@ public class SingletonGeneratorDemoTests
         // Assert - all should get the same instance
         var first = results[0];
         Assert.All(results, r => Assert.Same(first, r));
-        // Note: ConcurrentDictionary may call factory multiple times but TryAdd ensures one wins
+        // Factory is invoked exactly once due to Lazy<T> ensuring single execution
+        Assert.Equal(1, creationCount);
     }
 
     // Test service interface
