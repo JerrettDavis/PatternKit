@@ -282,8 +282,20 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 
     private static bool HasNameConflict(INamedTypeSymbol typeSymbol, string propertyName)
     {
-        // Check for existing members with the same name (including inherited)
-        return typeSymbol.GetMembers(propertyName).Length > 0;
+        // Check for existing members with the same name in declared members
+        if (typeSymbol.GetMembers(propertyName).Length > 0)
+            return true;
+
+        // Also check inherited members by walking base types
+        var baseType = typeSymbol.BaseType;
+        while (baseType != null && baseType.SpecialType != SpecialType.System_Object)
+        {
+            if (baseType.GetMembers(propertyName).Any(m => m.DeclaredAccessibility != Accessibility.Private))
+                return true;
+            baseType = baseType.BaseType;
+        }
+
+        return false;
     }
 
     private static List<IMethodSymbol> FindFactoryMethods(INamedTypeSymbol typeSymbol)
@@ -292,6 +304,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
             .OfType<IMethodSymbol>()
             .Where(m => m.IsStatic &&
                         m.Parameters.Length == 0 &&
+                        m.TypeParameters.Length == 0 && // Exclude generic methods
                         HasAttribute(m, "PatternKit.Generators.Singleton.SingletonFactoryAttribute") &&
                         SymbolEqualityComparer.Default.Equals(m.ReturnType, typeSymbol))
             .ToList();
@@ -312,8 +325,9 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         if (string.IsNullOrWhiteSpace(name))
             return false;
 
-        // Handle verbatim identifiers (@keyword)
-        var identifier = name.StartsWith("@") ? name.Substring(1) : name;
+        // Handle verbatim identifiers (@keyword) - these are allowed
+        var isVerbatim = name.StartsWith("@");
+        var identifier = isVerbatim ? name.Substring(1) : name;
 
         if (identifier.Length == 0)
             return false;
@@ -329,14 +343,37 @@ public sealed class SingletonGenerator : IIncrementalGenerator
                 return false;
         }
 
+        // Check for reserved keywords (unless verbatim identifier)
+        if (!isVerbatim)
+        {
+            var keywordKind = SyntaxFacts.GetKeywordKind(identifier);
+            if (keywordKind != SyntaxKind.None)
+                return false;
+        }
+
         return true;
     }
 
     private static bool HasPublicConstructor(INamedTypeSymbol typeSymbol)
     {
-        return typeSymbol.InstanceConstructors.Any(c =>
+        // Check for explicit public constructors
+        var hasExplicitPublicCtor = typeSymbol.InstanceConstructors.Any(c =>
             c.DeclaredAccessibility == Accessibility.Public &&
-            !c.IsImplicitlyDeclared); // Don't warn about compiler-generated constructors
+            !c.IsImplicitlyDeclared);
+
+        if (hasExplicitPublicCtor)
+            return true;
+
+        // Check for implicit public constructor (class with no declared constructors)
+        // A class with no constructors has an implicit public parameterless ctor
+        var hasOnlyImplicitCtor = typeSymbol.InstanceConstructors.All(c => c.IsImplicitlyDeclared);
+        if (hasOnlyImplicitCtor && typeSymbol.InstanceConstructors.Any(c =>
+            c.DeclaredAccessibility == Accessibility.Public))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private string GenerateSingletonCode(SingletonTypeInfo typeInfo, SingletonConfig config)

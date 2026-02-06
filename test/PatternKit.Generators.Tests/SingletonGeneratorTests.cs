@@ -45,6 +45,12 @@ public class SingletonGeneratorTests
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    /// <summary>
+    /// Validates that lazy thread-safe singletons generate the correct Lazy&lt;T&gt; pattern.
+    /// Note: Parallel access behavior is tested at runtime in the demo project tests,
+    /// which validate that multiple threads accessing Instance concurrently receive
+    /// the same instance. This test focuses on correct code generation.
+    /// </summary>
     [Fact]
     public void GenerateLazyThreadSafeSingleton()
     {
@@ -497,6 +503,210 @@ public class SingletonGeneratorTests
 
         // No generator diagnostics
         Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void ErrorWhenGenericType()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton]
+            public partial class GenericSingleton<T>
+            {
+                private GenericSingleton() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenGenericType));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKSNG007 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG007");
+    }
+
+    [Fact]
+    public void ErrorWhenNestedType()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            public class Outer
+            {
+                [Singleton]
+                public partial class NestedSingleton
+                {
+                    private NestedSingleton() { }
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenNestedType));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKSNG008 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG008");
+    }
+
+    [Fact]
+    public void ErrorWhenReservedKeywordPropertyName()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton(InstancePropertyName = "class")]
+            public partial class KeywordSingleton
+            {
+                private KeywordSingleton() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenReservedKeywordPropertyName));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKSNG009 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG009");
+    }
+
+    [Fact]
+    public void AllowVerbatimKeywordPropertyName()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton(InstancePropertyName = "@class")]
+            public partial class VerbatimSingleton
+            {
+                private VerbatimSingleton() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AllowVerbatimKeywordPropertyName));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void ErrorWhenInheritedMemberConflict()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            public class BaseClass
+            {
+                public static int Instance => 42;
+            }
+
+            [Singleton]
+            public partial class DerivedSingleton : BaseClass
+            {
+                private DerivedSingleton() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenInheritedMemberConflict));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKSNG006 diagnostic is reported for inherited member conflict
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG006");
+    }
+
+    [Fact]
+    public void IgnoreGenericFactoryMethods()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton]
+            public partial class GenericFactorySingleton
+            {
+                private GenericFactorySingleton() { }
+
+                // This generic method should NOT be picked up as a factory
+                [SingletonFactory]
+                private static T Create<T>() where T : new() => new T();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(IgnoreGenericFactoryMethods));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should still generate using the parameterless constructor
+        var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        Assert.Contains("TestNamespace.GenericFactorySingleton.Singleton.g.cs", names);
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace.GenericFactorySingleton.Singleton.g.cs")
+            .SourceText.ToString();
+
+        // Should use constructor, not factory
+        Assert.Contains("new GenericFactorySingleton()", generatedSource);
+        Assert.DoesNotContain("Create()", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void WarnWhenImplicitPublicConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton]
+            public partial class ImplicitCtorSingleton
+            {
+                // No explicit constructor - compiler generates public parameterless ctor
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(WarnWhenImplicitPublicConstructor));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // PKSNG005 diagnostic is reported (warning) for implicit public ctor
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG005" && d.Severity == DiagnosticSeverity.Warning);
+
+        // Still generates code despite warning
+        var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        Assert.Contains("TestNamespace.ImplicitCtorSingleton.Singleton.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);

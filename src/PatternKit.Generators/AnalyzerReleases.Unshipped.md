@@ -94,3 +94,6 @@ PKSNG003 | PatternKit.Generators.Singleton | Error | No usable constructor or fa
 PKSNG004 | PatternKit.Generators.Singleton | Error | Multiple [SingletonFactory] methods found
 PKSNG005 | PatternKit.Generators.Singleton | Warning | Public constructor detected
 PKSNG006 | PatternKit.Generators.Singleton | Error | Instance property name conflicts with existing member
+PKSNG007 | PatternKit.Generators.Singleton | Error | Generic types are not supported
+PKSNG008 | PatternKit.Generators.Singleton | Error | Nested types are not supported
+PKSNG009 | PatternKit.Generators.Singleton | Error | Invalid instance property name

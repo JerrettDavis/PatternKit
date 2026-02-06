@@ -227,6 +227,9 @@ The generator supports:
 | **PKSNG004** | Error | Multiple `[SingletonFactory]` methods found |
 | **PKSNG005** | Warning | Public constructor detected; singleton can be bypassed |
 | **PKSNG006** | Error | Instance property name conflicts with existing member |
+| **PKSNG007** | Error | Generic types are not supported for singleton generation |
+| **PKSNG008** | Error | Nested types are not supported for singleton generation |
+| **PKSNG009** | Error | Invalid instance property name (not a valid C# identifier) |
 
 ## Best Practices
 
