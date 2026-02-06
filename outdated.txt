@@ -1,52 +1,5 @@
 Discovering projects...
 Analyzing project(s)...
 Analyzing dependencies...
-» PatternKit.Examples.Tests
-  [net10.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net9.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net8.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-
-» PatternKit.Generators.Tests
-  [net9.0]
-  TinyBDD        0.18.1 -> 0.19.1
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net8.0]
-  TinyBDD        0.18.1 -> 0.19.1
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net10.0]
-  TinyBDD        0.18.1 -> 0.19.1
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-
-» PatternKit.Tests
-  [net8.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net10.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-  [net9.0]
-  TinyBDD.Xunit  0.18.1 -> 0.19.1
-
-Version color legend:
-<red>   : Major version update or pre-release version. Possible breaking changes.
-<yellow>: Minor version update. Backwards-compatible features added.
-<green> : Patch version update. Backwards-compatible bug fixes.
-
-Upgrading package TinyBDD.Xunit...
-Project PatternKit.Examples.Tests [net10.0] upgraded successfully
-Project PatternKit.Examples.Tests [net9.0] upgraded successfully
-Project PatternKit.Examples.Tests [net8.0] upgraded successfully
-Project PatternKit.Generators.Tests [net9.0] upgraded successfully
-Project PatternKit.Generators.Tests [net8.0] upgraded successfully
-Project PatternKit.Generators.Tests [net10.0] upgraded successfully
-Project PatternKit.Tests [net8.0] upgraded successfully
-Project PatternKit.Tests [net10.0] upgraded successfully
-Project PatternKit.Tests [net9.0] upgraded successfully
-
-Upgrading package TinyBDD...
-Project PatternKit.Generators.Tests [net9.0] upgraded successfully
-Project PatternKit.Generators.Tests [net8.0] upgraded successfully
-Project PatternKit.Generators.Tests [net10.0] upgraded successfully
-
-Elapsed: 00:00:40.5140160
+No outdated dependencies were detected
+Elapsed: 00:00:07.9790479
