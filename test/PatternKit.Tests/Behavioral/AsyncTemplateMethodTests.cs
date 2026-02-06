@@ -58,7 +58,7 @@ public sealed class AsyncTemplateMethodTests(ITestOutputHelper output) : TinyBdd
            .AssertPassed();
 
     [Scenario("Not synchronized allows concurrency")]
-    [Fact]
+    [Fact(Timeout = 30_000)]
     public Task Allows_Concurrency_When_Not_Synchronized()
         => Given("a non-synchronized template with delay", () => new SampleAsyncTemplate(delayMs: 25, sync: false))
            .When("ExecuteAsync on 1..4 in parallel", t =>

@@ -16,7 +16,7 @@ public sealed class AsyncVisitorResultConcurrencyTests(ITestOutputHelper output)
     private sealed record Neg(Node Inner) : Node;
 
     [Scenario("Async Result Visitor returns correct codes under concurrent tasks")]
-    [Fact]
+    [Fact(Timeout = 30_000)]
     public Task AsyncResultVisitor_Concurrent_Dispatch()
         => Given("an async result visitor and a mixed dataset", () =>
             {

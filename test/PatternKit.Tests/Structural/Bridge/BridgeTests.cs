@@ -86,7 +86,7 @@ public sealed class BridgeTests(ITestOutputHelper output) : TinyBddXunitBase(out
             .AssertPassed();
 
     [Scenario("Concurrency: many Execute calls increment op count exactly once each")]
-    [Fact]
+    [Fact(Timeout = 30_000)]
     public async Task Concurrency_Execute_Is_Safe()
     {
         var bridge = Bridge<Job, string, Renderer>

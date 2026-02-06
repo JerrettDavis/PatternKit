@@ -16,7 +16,7 @@ public sealed class AsyncVisitorConcurrencyTests(ITestOutputHelper output) : Tin
     private sealed record Neg(Node Inner) : Node;
 
     [Scenario("AsyncActionVisitor executes correctly under concurrent calls across tasks")]
-    [Fact]
+    [Fact(Timeout = 30_000)]
     public Task AsyncActionVisitor_Concurrent_Dispatch()
         => Given("an async action visitor and a mixed dataset", () =>
             {

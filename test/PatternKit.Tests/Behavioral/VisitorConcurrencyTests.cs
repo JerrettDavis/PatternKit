@@ -16,7 +16,7 @@ public sealed class VisitorConcurrencyTests(ITestOutputHelper output) : TinyBddX
     private sealed record Neg(Node Inner) : Node;
 
     [Scenario("ActionVisitor executes correctly under concurrent calls across threads")]
-    [Fact]
+    [Fact(Timeout = 30_000)]
     public Task ActionVisitor_Concurrent_Dispatch()
         => Given("an action visitor and a mixed dataset", () =>
             {
