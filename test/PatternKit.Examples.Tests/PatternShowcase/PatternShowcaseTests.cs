@@ -63,7 +63,7 @@ public sealed class PatternShowcaseTests(ITestOutputHelper output) : TinyBddXuni
                         OrderId: "",
                         CustomerId: "C-1",
                         PaymentKind: "card",
-                        Items: [new Showcase.OrderItemDto("S","N", 10m, 1)])))
+                        Items: [new Showcase.OrderItemDto("S", "N", 10m, 1)])))
            .When("placing the order", Place)
            .Then("ok == false", r => r.ok == false)
            .And("validation message is returned", r => r.message.Contains("OrderId required", StringComparison.Ordinal))

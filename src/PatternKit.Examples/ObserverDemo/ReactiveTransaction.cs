@@ -111,8 +111,8 @@ public sealed class ReactiveTransaction
         var tierDiscPct = Tier.Value switch
         {
             LoyaltyTier.Platinum => 0.10m,
-            LoyaltyTier.Gold     => 0.07m,
-            LoyaltyTier.Silver   => 0.04m,
+            LoyaltyTier.Gold => 0.07m,
+            LoyaltyTier.Silver => 0.04m,
             _ => 0m
         };
 
@@ -123,10 +123,10 @@ public sealed class ReactiveTransaction
         };
 
         var loyaltyDisc = Math.Round((raw - lineDisc) * tierDiscPct, 2, MidpointRounding.AwayFromZero);
-        var payDisc     = Math.Round((raw - lineDisc - loyaltyDisc) * paymentDiscPct, 2, MidpointRounding.AwayFromZero);
-        var preTax      = raw - lineDisc - loyaltyDisc - payDisc;
-        var tax         = Math.Round(taxableNet * TaxRate.Value, 2, MidpointRounding.AwayFromZero);
-        var total       = Math.Round(preTax + tax, 2, MidpointRounding.AwayFromZero);
+        var payDisc = Math.Round((raw - lineDisc - loyaltyDisc) * paymentDiscPct, 2, MidpointRounding.AwayFromZero);
+        var preTax = raw - lineDisc - loyaltyDisc - payDisc;
+        var tax = Math.Round(taxableNet * TaxRate.Value, 2, MidpointRounding.AwayFromZero);
+        var total = Math.Round(preTax + tax, 2, MidpointRounding.AwayFromZero);
 
         // Publish to reactive outputs (triggers subscribers if changed)
         Subtotal.Value = raw;
@@ -141,14 +141,14 @@ public sealed class ReactiveTransaction
         DiscountBadge.Value = (loyaltyDisc + payDisc) > 0 ? $"You saved {(loyaltyDisc + payDisc):C}" : null;
 
         // Optional name-based notifications for UIs that listen by name
-        var p1 = nameof(Subtotal);           _notify(in p1);
-        var p2 = nameof(LineItemDiscounts);  _notify(in p2);
-        var p3 = nameof(LoyaltyDiscount);    _notify(in p3);
-        var p4 = nameof(PaymentDiscount);    _notify(in p4);
-        var p5 = nameof(Tax);                _notify(in p5);
-        var p6 = nameof(Total);              _notify(in p6);
-        var p7 = nameof(CanCheckout);        _notify(in p7);
-        var p8 = nameof(DiscountBadge);      _notify(in p8);
+        var p1 = nameof(Subtotal); _notify(in p1);
+        var p2 = nameof(LineItemDiscounts); _notify(in p2);
+        var p3 = nameof(LoyaltyDiscount); _notify(in p3);
+        var p4 = nameof(PaymentDiscount); _notify(in p4);
+        var p5 = nameof(Tax); _notify(in p5);
+        var p6 = nameof(Total); _notify(in p6);
+        var p7 = nameof(CanCheckout); _notify(in p7);
+        var p8 = nameof(DiscountBadge); _notify(in p8);
     }
 
     // Convenience API
@@ -178,13 +178,13 @@ public sealed class ProfileViewModel
     public ObservableVar<string?> FirstName { get; } = new();
 
     /// <summary>Last name input.</summary>
-    public ObservableVar<string?> LastName  { get; } = new();
+    public ObservableVar<string?> LastName { get; } = new();
 
     /// <summary>Computed full name.</summary>
-    public ObservableVar<string>  FullName  { get; } = new(string.Empty);
+    public ObservableVar<string> FullName { get; } = new(string.Empty);
 
     /// <summary>Whether saving is currently allowed.</summary>
-    public ObservableVar<bool>    CanSave   { get; } = new();
+    public ObservableVar<bool> CanSave { get; } = new();
 
     /// <summary>Name-based change hub for UI bindings listening by property name.</summary>
     public PropertyChangedHub PropertyChanged { get; } = new();
@@ -209,6 +209,6 @@ public sealed class ProfileViewModel
         FullName.Value = full;
         CanSave.Value = !string.IsNullOrWhiteSpace(fn) && !string.IsNullOrWhiteSpace(ln);
         var pFull = nameof(FullName); _notify(in pFull);
-        var pSave = nameof(CanSave);  _notify(in pSave);
+        var pSave = nameof(CanSave); _notify(in pSave);
     }
 }

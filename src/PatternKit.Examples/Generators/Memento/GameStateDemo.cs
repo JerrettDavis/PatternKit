@@ -127,7 +127,7 @@ public static class GameStateDemo
             _state.Health = _history.Current.Health;
             _state.Score = _history.Current.Score;
             _state.Level = _history.Current.Level;
-            
+
             return true;
         }
 
@@ -145,7 +145,7 @@ public static class GameStateDemo
             _state.Health = _history.Current.Health;
             _state.Score = _history.Current.Score;
             _state.Level = _history.Current.Level;
-            
+
             return true;
         }
     }

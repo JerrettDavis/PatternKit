@@ -160,7 +160,7 @@ public sealed class ReplayableSequenceTests(ITestOutputHelper output) : TinyBddX
 
     [Scenario("LINQ Select over cursor does advance original cursor")]
     [Fact]
-    public Task LinqSelectDoesNotAdvanceOriginal() 
+    public Task LinqSelectDoesNotAdvanceOriginal()
         => Given("cursor at start 1..6", () => ReplayableSequence<int>.From(Enumerable.Range(1, 6)).GetCursor())
             .When("enumerating transformed projection", c =>
             {

@@ -30,7 +30,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
         title: "Type must be partial for proxy generation",
-        messageFormat: "Type '{0}' must be declared as partial to support proxy generation.",
+        messageFormat: "Type '{0}' must be declared as partial to support proxy generation",
         category: "PatternKit.Generators.Proxy",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -100,7 +100,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Validate type kind: must be interface or abstract class
         var isInterface = contractSymbol.TypeKind == TypeKind.Interface;
         var isAbstractClass = contractSymbol.TypeKind == TypeKind.Class && contractSymbol.IsAbstract;
-        
+
         if (!isInterface && !isAbstractClass)
         {
             context.ReportDiagnostic(Diagnostic.Create(
@@ -595,24 +595,24 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
                typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
     }
-    
+
     private static bool IsGenericAsyncReturnType(IMethodSymbol method)
     {
         // Check if the return type is a generic Task<T> or ValueTask<T>
         var returnType = method.ReturnType;
         if (returnType is not INamedTypeSymbol namedType)
             return false;
-            
+
         if (!namedType.IsGenericType)
             return false;
-        
+
         // Check if it's Task<T> or ValueTask<T> by checking if the base type is Task or ValueTask
         // and if it has type arguments
         var fullName = namedType.ConstructedFrom.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        
+
         // Also check the original type to see if it has generic arguments
         var originalTypeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        
+
         return (fullName == "global::System.Threading.Tasks.Task<T>" ||
                 fullName == "global::System.Threading.Tasks.ValueTask<T>") ||
                (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<") ||
@@ -750,11 +750,11 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     {
         var containingNamespace = contractSymbol.ContainingNamespace;
         var existingTypes = containingNamespace.GetTypeMembers(generatedName);
-        
+
         // No conflict if no types exist
         if (existingTypes.Length == 0)
             return false;
-            
+
         // Check if existing types are partial declarations that the user is providing
         foreach (var type in existingTypes.Where(t => t.DeclaringSyntaxReferences.Length > 0))
         {
@@ -762,7 +762,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             {
                 var syntax = syntaxRef.GetSyntax();
                 // Check if the type declaration has the 'partial' modifier
-                if (syntax is TypeDeclarationSyntax typeDecl && 
+                if (syntax is TypeDeclarationSyntax typeDecl &&
                     !typeDecl.Modifiers.Any(m => m.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.PartialKeyword)))
                 {
                     // Found a non-partial type with the same name - this is a conflict
@@ -770,7 +770,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         // All existing types are partial or have no syntax (shouldn't happen) - no conflict
         return false;
     }
@@ -877,10 +877,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     private void GenerateProxyMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
-        
+
         // Determine if this method needs async modifier (uses interceptors with async support)
         // Note: ref-returning methods cannot be async
-        bool useAsync = contractInfo.HasAsyncMembers && 
+        bool useAsync = contractInfo.HasAsyncMembers &&
                        config.InterceptorMode != ProxyInterceptorMode.None &&
                        (member.IsAsync || member.HasCancellationToken) &&
                        !member.ReturnsByRef &&
@@ -1017,7 +1017,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Create method context (handle out parameters specially - they're not yet assigned)
         var contextTypeName = $"{member.Name}MethodContext";
         sb.Append($"        var __context = new {contextTypeName}(");
-        sb.Append(string.Join(", ", member.Parameters.Select(p => 
+        sb.Append(string.Join(", ", member.Parameters.Select(p =>
             p.RefKind == RefKind.Out ? "default" : p.Name)));
         sb.AppendLine(");");
         sb.AppendLine();
@@ -1193,7 +1193,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             })));
             sb.AppendLine(");");
             sb.AppendLine("            __context.SetResult(__task);");
-            
+
             // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
             if (member.IsGenericAsyncReturnType)
             {
@@ -1393,22 +1393,22 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         {
             // Determine property names with conflict avoidance (used in both constructor and properties)
             var paramPropertyNames = DetermineParameterPropertyNames(member.Parameters);
-            
+
             sb.Append($"    public {contextTypeName}(");
-            sb.Append(string.Join(", ", member.Parameters.Select((p, idx) => 
+            sb.Append(string.Join(", ", member.Parameters.Select((p, idx) =>
             {
                 var paramName = string.IsNullOrEmpty(p.Name) ? $"param{idx}" : p.Name;
                 return $"{p.Type} {paramName}";
             })));
             sb.AppendLine(")");
             sb.AppendLine("    {");
-            
+
             for (int i = 0; i < member.Parameters.Count; i++)
             {
                 var param = member.Parameters[i];
                 var paramName = string.IsNullOrEmpty(param.Name) ? $"param{i}" : param.Name;
                 var propName = paramPropertyNames[i];
-                
+
                 sb.AppendLine($"        {propName} = {paramName};");
             }
             sb.AppendLine("    }");
@@ -1422,12 +1422,12 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         if (member.Parameters.Count > 0)
         {
             var paramPropertyNames = DetermineParameterPropertyNames(member.Parameters);
-            
+
             for (int i = 0; i < member.Parameters.Count; i++)
             {
                 var param = member.Parameters[i];
                 var propName = paramPropertyNames[i];
-                
+
                 sb.AppendLine();
                 sb.AppendLine($"    /// <summary>Gets the {param.Name ?? "parameter"} parameter.</summary>");
                 sb.AppendLine($"    public {param.Type} {propName} {{ get; }}");
@@ -1452,12 +1452,12 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     {
         var usedPropNames = new System.Collections.Generic.HashSet<string> { "MethodName", "Arguments", "Result" };
         var propertyNames = new List<string>();
-        
+
         for (int i = 0; i < parameters.Count; i++)
         {
             var param = parameters[i];
             string propName;
-            
+
             if (string.IsNullOrEmpty(param.Name))
             {
                 propName = $"Parameter{i}";
@@ -1465,18 +1465,18 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             else
             {
                 propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
-                
+
                 // Avoid conflicts with reserved property names
                 if (usedPropNames.Contains(propName))
                 {
                     propName = $"Arg_{propName}";
                 }
             }
-            
+
             usedPropNames.Add(propName);
             propertyNames.Add(propName);
         }
-        
+
         return propertyNames;
     }
 

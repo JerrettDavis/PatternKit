@@ -109,7 +109,7 @@ internal static class MediatorAssemblyScanner
             var key = (r.Interface, r.Implementation);
             if (!diPairs.Add(key))
                 continue;
-            
+
             services.AddTransient(r.Interface, r.Implementation);
             services.AddTransient(r.Implementation); // allow resolving by concrete type
         }

@@ -136,7 +136,7 @@ public sealed class Observer<TEvent>
             for (var i = 0; i < curr.Length; i++)
             {
                 if (curr[i].Id != id) continue;
-                
+
                 idx = i; break;
             }
 

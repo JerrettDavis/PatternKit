@@ -11,6 +11,20 @@ PKCF003 | PatternKit.FactoryClass | Error | Diagnostics
 PKCF004 | PatternKit.FactoryClass | Error | Diagnostics
 PKCF005 | PatternKit.FactoryClass | Error | Diagnostics
 PKCF006 | PatternKit.FactoryClass | Error | Diagnostics
+PKCOM001 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM002 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM003 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM004 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM005 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM006 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM007 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM008 | PatternKit.Generators.Composer | Error | ComposerGenerator
+PKCOM009 | PatternKit.Generators.Composer | Warning | ComposerGenerator
+PKFAC001 | PatternKit.Generators.Facade | Error | Diagnostics
+PKFAC002 | PatternKit.Generators.Facade | Error | Diagnostics
+PKFAC003 | PatternKit.Generators.Facade | Warning | Diagnostics
+PKFAC004 | PatternKit.Generators.Facade | Warning | Diagnostics
+PKFAC005 | PatternKit.Generators.Facade | Error | Diagnostics
 PKKF001 | PatternKit.FactoryMethod | Error | Diagnostics
 PKKF002 | PatternKit.FactoryMethod | Error | Diagnostics
 PKKF003 | PatternKit.FactoryMethod | Error | Diagnostics
@@ -37,6 +51,18 @@ PKMEM003 | PatternKit.Generators.Memento | Warning | Unsafe reference capture
 PKMEM004 | PatternKit.Generators.Memento | Error | Clone strategy requested but mechanism missing
 PKMEM005 | PatternKit.Generators.Memento | Error | Record restore generation failed
 PKMEM006 | PatternKit.Generators.Memento | Info | Init-only or readonly restrictions prevent in-place restore
+PKPRX001 | PatternKit.Generators.Proxy | Error | ProxyGenerator
+PKPRX002 | PatternKit.Generators.Proxy | Error | ProxyGenerator
+PKPRX003 | PatternKit.Generators.Proxy | Warning | ProxyGenerator
+PKPRX004 | PatternKit.Generators.Proxy | Error | ProxyGenerator
+PKPRX005 | PatternKit.Generators.Proxy | Warning | ProxyGenerator
+PKTMP001 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTMP002 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTMP003 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTMP004 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTMP005 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTMP007 | PatternKit.Generators.Template | Warning | TemplateGenerator
+PKTMP008 | PatternKit.Generators.Template | Error | TemplateGenerator
 PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
 PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
 PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation

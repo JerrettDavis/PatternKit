@@ -92,8 +92,8 @@ public sealed class Composer<TState, TOut>
         var state = _pipeline is null ? _seed() : _pipeline(_seed());
 
         var error = _validators?.Invoke(state);
-        return error is { Length: > 0 } 
-            ? throw new InvalidOperationException(error) 
+        return error is { Length: > 0 }
+            ? throw new InvalidOperationException(error)
             : project(state);
     }
 }

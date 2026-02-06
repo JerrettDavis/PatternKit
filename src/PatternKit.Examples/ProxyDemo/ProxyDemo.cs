@@ -377,13 +377,13 @@ public static class ProxyDemo
         {
             attemptCount++;
             writer.WriteLine($"  Attempt #{attemptCount}: Processing '{request}'");
-            
+
             if (attemptCount < 3)
             {
                 writer.WriteLine("  Failed!");
                 throw new InvalidOperationException("Service temporarily unavailable");
             }
-            
+
             writer.WriteLine("  Success!");
             return $"Processed: {request}";
         };
@@ -602,7 +602,7 @@ public static class ProxyDemo
 
         // Test the service
         writer.WriteLine("Testing email service with mock:");
-        
+
         var result1 = emailService.SendEmail("user@example.com", "Hello", "Welcome!");
         writer.WriteLine($"  Send to user@example.com: {result1}");
 

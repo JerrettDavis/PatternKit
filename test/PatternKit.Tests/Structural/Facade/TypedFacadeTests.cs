@@ -77,7 +77,7 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
                     {
                         if (!orders.Remove(orderId, out var order))
                             return new OrderResult(false);
-                        
+
                         inventory[order.ProductId] += order.Quantity;
                         return new OrderResult(true, orderId);
                     })
@@ -117,9 +117,9 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
             TypedFacade<IComplexService>.Create()
                 .Map(x => x.Operation1, (string arg) => $"Result: {arg}")
                 .Map(x => x.Operation2, (int a, int b) => a + b)
-                .Map(x => x.Operation3, (string s, int n, bool flag) => 
+                .Map(x => x.Operation3, (string s, int n, bool flag) =>
                     flag && s.Length > n)
-                .Map(x => x.Operation4, (decimal a, decimal b, decimal c, decimal d) => 
+                .Map(x => x.Operation4, (decimal a, decimal b, decimal c, decimal d) =>
                     a + b + c + d)
                 .Build())
             .When("calling methods with different signatures", service => (
@@ -144,7 +144,7 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
                     .Build()))
             .When("building", ex => ex)
             .Then("throws InvalidOperationException", ex => ex is InvalidOperationException)
-            .And("mentions missing methods", ex => 
+            .And("mentions missing methods", ex =>
                 ex!.Message.Contains("Subtract") && ex.Message.Contains("Multiply"))
             .AssertPassed();
 

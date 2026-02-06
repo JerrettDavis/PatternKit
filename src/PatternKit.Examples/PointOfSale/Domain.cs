@@ -62,7 +62,7 @@ public sealed record PaymentReceipt
     public required decimal FinalTotal { get; init; }
     public required List<string> AppliedPromotions { get; init; }
     public required List<ReceiptLineItem> LineItems { get; init; }
-    
+
     /// <summary>
     /// Audit trail showing which decorators modified the receipt.
     /// </summary>
@@ -89,16 +89,16 @@ public enum RoundingStrategy
 {
     /// <summary>Standard banker's rounding (to even).</summary>
     Bankers,
-    
+
     /// <summary>Always round up (ceiling).</summary>
     Up,
-    
+
     /// <summary>Always round down (floor).</summary>
     Down,
-    
+
     /// <summary>Round to nearest nickel (0.05).</summary>
     ToNickel,
-    
+
     /// <summary>Round to nearest dime (0.10).</summary>
     ToDime
 }
@@ -116,7 +116,7 @@ public sealed class PromotionConfig
     public decimal MinimumPurchase { get; init; }
     public DateTime? ValidFrom { get; init; }
     public DateTime? ValidUntil { get; init; }
-    
+
     public bool IsValid(DateTime date) =>
         (!ValidFrom.HasValue || date >= ValidFrom.Value) &&
         (!ValidUntil.HasValue || date <= ValidUntil.Value);

@@ -4,8 +4,8 @@ namespace PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDem
 
 
 public sealed class CorporateApp(
-    IHost host, 
-    IReadOnlyList<Func<IServiceProvider, ValueTask>> startupTasks, 
+    IHost host,
+    IReadOnlyList<Func<IServiceProvider, ValueTask>> startupTasks,
     IReadOnlyList<string> log)
 {
     public IReadOnlyList<string> Log => log;

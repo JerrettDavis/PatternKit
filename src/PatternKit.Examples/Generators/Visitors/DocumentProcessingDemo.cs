@@ -56,34 +56,34 @@ public static class DocumentProcessingDemo
         // Sample documents
         var documents = new Document[]
         {
-            new PdfDocument 
-            { 
-                Id = "DOC-001", 
-                FileName = "Annual_Report_2024.pdf", 
+            new PdfDocument
+            {
+                Id = "DOC-001",
+                FileName = "Annual_Report_2024.pdf",
                 PageCount = 42,
                 IsEncrypted = false,
                 SizeBytes = 5_242_880 // 5 MB
             },
-            new WordDocument 
-            { 
-                Id = "DOC-002", 
-                FileName = "Quarterly_Review.docx", 
+            new WordDocument
+            {
+                Id = "DOC-002",
+                FileName = "Quarterly_Review.docx",
                 WordCount = 3_500,
                 HasMacros = false,
                 SizeBytes = 102_400 // 100 KB
             },
-            new SpreadsheetDocument 
-            { 
-                Id = "DOC-003", 
-                FileName = "Financial_Data_Q4.xlsx", 
+            new SpreadsheetDocument
+            {
+                Id = "DOC-003",
+                FileName = "Financial_Data_Q4.xlsx",
                 SheetCount = 8,
                 HasFormulas = true,
                 SizeBytes = 2_097_152 // 2 MB
             },
-            new MarkdownDocument 
-            { 
-                Id = "DOC-004", 
-                FileName = "README.md", 
+            new MarkdownDocument
+            {
+                Id = "DOC-004",
+                FileName = "README.md",
                 LineCount = 250,
                 HasCodeBlocks = true,
                 SizeBytes = 15_360 // 15 KB
@@ -93,7 +93,7 @@ public static class DocumentProcessingDemo
         // 1. Document Validation (Sync Result Visitor)
         Console.WriteLine("1. Document Validation (Sync Result Visitor)");
         Console.WriteLine("   Validates documents and returns validation results\n");
-        
+
         var validator = new DocumentVisitorBuilder<ValidationResult>()
             .When<PdfDocument>(pdf => ValidatePdf(pdf))
             .When<WordDocument>(word => ValidateWord(word))
@@ -113,18 +113,18 @@ public static class DocumentProcessingDemo
         // 2. Metadata Extraction (Action Visitor)
         Console.WriteLine("2. Metadata Extraction (Action Visitor)");
         Console.WriteLine("   Extracts and logs metadata from documents\n");
-        
+
         var metadataLogger = new List<string>();
         var metadataExtractor = new DocumentActionVisitorBuilder()
-            .When<PdfDocument>(pdf => 
+            .When<PdfDocument>(pdf =>
                 metadataLogger.Add($"PDF: {pdf.FileName}, Pages: {pdf.PageCount}, Encrypted: {pdf.IsEncrypted}"))
-            .When<WordDocument>(word => 
+            .When<WordDocument>(word =>
                 metadataLogger.Add($"WORD: {word.FileName}, Words: {word.WordCount}, Macros: {word.HasMacros}"))
-            .When<SpreadsheetDocument>(sheet => 
+            .When<SpreadsheetDocument>(sheet =>
                 metadataLogger.Add($"SHEET: {sheet.FileName}, Sheets: {sheet.SheetCount}, Formulas: {sheet.HasFormulas}"))
-            .When<MarkdownDocument>(md => 
+            .When<MarkdownDocument>(md =>
                 metadataLogger.Add($"MD: {md.FileName}, Lines: {md.LineCount}, Code: {md.HasCodeBlocks}"))
-            .Default(doc => 
+            .Default(doc =>
                 metadataLogger.Add($"UNKNOWN: {doc.FileName}"))
             .Build();
 
@@ -142,7 +142,7 @@ public static class DocumentProcessingDemo
         // 3. Async Content Indexing (Async Result Visitor)
         Console.WriteLine("3. Async Content Indexing (Async Result Visitor)");
         Console.WriteLine("   Asynchronously indexes documents and returns index keys\n");
-        
+
         var indexer = new DocumentAsyncVisitorBuilder<string>()
             .WhenAsync<PdfDocument>(async (pdf, ct) => await IndexPdfAsync(pdf, ct))
             .WhenAsync<WordDocument>(async (word, ct) => await IndexWordAsync(word, ct))
@@ -165,7 +165,7 @@ public static class DocumentProcessingDemo
         // 4. Async Security Scanning (Async Action Visitor)
         Console.WriteLine("4. Async Security Scanning (Async Action Visitor)");
         Console.WriteLine("   Asynchronously scans documents for security issues\n");
-        
+
         var scanResults = new List<string>();
         var securityScanner = new DocumentAsyncActionVisitorBuilder()
             .WhenAsync<PdfDocument>(async (pdf, ct) => await ScanPdfSecurityAsync(pdf, scanResults, ct))
@@ -193,11 +193,11 @@ public static class DocumentProcessingDemo
         // 5. Complex Processing Pipeline
         Console.WriteLine("5. Complex Processing Pipeline");
         Console.WriteLine("   Combining multiple visitors for a complete workflow\n");
-        
+
         foreach (var doc in documents)
         {
             Console.WriteLine($"   Processing: {doc.FileName}");
-            
+
             // Validate
             var validationResult = doc.Accept(validator);
             if (!validationResult.IsValid)
@@ -205,11 +205,11 @@ public static class DocumentProcessingDemo
                 Console.WriteLine($"      ✗ Skipped (validation failed): {validationResult.Message}");
                 continue;
             }
-            
+
             // Index
             var key = await doc.AcceptAsync(indexer);
             Console.WriteLine($"      → Indexed with key: {key}");
-            
+
             // Security scan
             var beforeCount = scanResults.Count;
             await doc.AcceptAsync(securityScanner);
@@ -221,7 +221,7 @@ public static class DocumentProcessingDemo
                     Console.WriteLine($"      → Security: {scan}");
                 }
             }
-            
+
             Console.WriteLine();
         }
 

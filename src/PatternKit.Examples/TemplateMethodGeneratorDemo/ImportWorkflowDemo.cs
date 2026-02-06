@@ -42,7 +42,7 @@ public partial class ImportWorkflow
     private void LoadData(ImportContext ctx)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loading data...");
-        
+
         // Only load if RawData hasn't been pre-set (e.g., for testing)
         if (ctx.RawData.Length == 0)
         {
@@ -56,7 +56,7 @@ public partial class ImportWorkflow
                     "Name:Charlie;Value:300"
                 };
         }
-        
+
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Loaded {ctx.RawData.Length} lines");
     }
 
@@ -67,19 +67,19 @@ public partial class ImportWorkflow
     private void ValidateData(ImportContext ctx)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Validating data...");
-        
+
         // Simple validation: ensure each line has required format
         var invalidLines = ctx.RawData
             .Where(line => !line.Contains("Name:") || !line.Contains("Value:"))
             .ToList();
-        
+
         if (invalidLines.Any())
         {
             ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] ERROR: Found {invalidLines.Count} invalid lines");
             ctx.ValidationPassed = false;
             throw new InvalidOperationException($"Validation failed: {invalidLines.Count} invalid lines");
         }
-        
+
         ctx.ValidationPassed = true;
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Validation passed");
     }
@@ -91,7 +91,7 @@ public partial class ImportWorkflow
     private void TransformData(ImportContext ctx)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Transforming data...");
-        
+
         var records = ctx.RawData
             .Select(line =>
             {
@@ -100,9 +100,9 @@ public partial class ImportWorkflow
                 var value = parts[1].Split(':')[1];
                 return new DataRecord(name, value);
             });
-        
+
         ctx.Records.AddRange(records);
-        
+
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Transformed {ctx.Records.Count} records");
     }
 
@@ -113,13 +113,13 @@ public partial class ImportWorkflow
     private void PersistData(ImportContext ctx)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Persisting data...");
-        
+
         // Simulate persistence
         foreach (var record in ctx.Records)
         {
             ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}]   Saved: {record.Name} = {record.Value}");
         }
-        
+
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Persisted {ctx.Records.Count} records");
     }
 
@@ -155,9 +155,9 @@ public static class ImportWorkflowDemo
         {
             FilePath = filePath ?? "sample.csv"
         };
-        
+
         var workflow = new ImportWorkflow();
-        
+
         try
         {
             workflow.Execute(ctx);
@@ -166,10 +166,10 @@ public static class ImportWorkflowDemo
         {
             // Exception was logged by OnError hook
         }
-        
+
         return ctx.Log;
     }
-    
+
     public static List<string> RunWithInvalidData()
     {
         var ctx = new ImportContext
@@ -182,9 +182,9 @@ public static class ImportWorkflowDemo
                 "Name:Bob;Value:200"
             }
         };
-        
+
         var workflow = new ImportWorkflow();
-        
+
         try
         {
             workflow.Execute(ctx);
@@ -193,7 +193,7 @@ public static class ImportWorkflowDemo
         {
             // Exception was logged by OnError hook
         }
-        
+
         return ctx.Log;
     }
 }

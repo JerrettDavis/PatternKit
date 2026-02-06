@@ -121,7 +121,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             if (typeContext.TargetSymbol is not INamedTypeSymbol typeSymbol)
                 return;
 
-            var attr = typeContext.Attributes.FirstOrDefault(a => 
+            var attr = typeContext.Attributes.FirstOrDefault(a =>
                 a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Prototype.PrototypeAttribute");
             if (attr is null)
                 return;
@@ -178,7 +178,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
         // Parse attribute arguments
         var config = ParsePrototypeConfig(attribute);
-        
+
         // Analyze type and members
         var typeInfo = AnalyzeType(typeSymbol, config, context);
         if (typeInfo is null)
@@ -248,8 +248,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         {
             TypeSymbol = typeSymbol,
             TypeName = typeSymbol.Name,
-            Namespace = typeSymbol.ContainingNamespace.IsGlobalNamespace 
-                ? string.Empty 
+            Namespace = typeSymbol.ContainingNamespace.IsGlobalNamespace
+                ? string.Empty
                 : typeSymbol.ContainingNamespace.ToDisplayString(),
             IsClass = typeSymbol.TypeKind == TypeKind.Class && !typeSymbol.IsRecord,
             IsStruct = typeSymbol.TypeKind == TypeKind.Struct && !typeSymbol.IsRecord,
@@ -283,24 +283,24 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         {
             // Check if all members are init-only or readonly
             bool allInit = typeInfo.Members.All(member => member.IsInitOnly || member.IsReadOnly);
-            
+
             if (allInit)
                 return ConstructionStrategy.RecordWith;
-            
+
             // Otherwise try copy constructor or parameterless
             if (HasCopyConstructor(typeSymbol))
                 return ConstructionStrategy.CopyConstructor;
-            
+
             if (HasParameterlessConstructor(typeSymbol))
                 return ConstructionStrategy.ParameterlessConstructor;
-            
+
             return ConstructionStrategy.RecordWith; // Fall back to with-expression
         }
 
         // For classes/structs, try copy constructor first, then parameterless
         if (HasCopyConstructor(typeSymbol))
             return ConstructionStrategy.CopyConstructor;
-        
+
         if (HasParameterlessConstructor(typeSymbol))
             return ConstructionStrategy.ParameterlessConstructor;
 
@@ -309,8 +309,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
     private bool HasCopyConstructor(INamedTypeSymbol typeSymbol)
     {
-        return typeSymbol.Constructors.Any(c => 
-            c.Parameters.Length == 1 && 
+        return typeSymbol.Constructors.Any(c =>
+            c.Parameters.Length == 1 &&
             SymbolEqualityComparer.Default.Equals(c.Parameters[0].Type, typeSymbol));
     }
 
@@ -335,8 +335,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
         // Get all instance properties and fields
         var candidateMembers = typeSymbol.GetMembers()
-            .Where(m => (m is IPropertySymbol || m is IFieldSymbol) && 
-                        !m.IsStatic && 
+            .Where(m => (m is IPropertySymbol || m is IFieldSymbol) &&
+                        !m.IsStatic &&
                         m.DeclaredAccessibility == Accessibility.Public);
 
         foreach (var member in candidateMembers)
@@ -430,7 +430,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             if (ctorArg.Value is int strategyValue)
             {
                 var strategy = (CloneStrategy)strategyValue;
-                
+
                 // Validate strategy
                 if (strategy == CloneStrategy.Clone)
                 {
@@ -450,12 +450,12 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                     var methodName = $"Clone{member.Name}";
                     var hasCustomMethod = containingType.GetMembers(methodName)
                         .OfType<IMethodSymbol>()
-                        .Any(m => m.IsStatic && 
-                                  m.IsPartialDefinition && 
+                        .Any(m => m.IsStatic &&
+                                  m.IsPartialDefinition &&
                                   m.Parameters.Length == 1 &&
                                   SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, memberType) &&
                                   SymbolEqualityComparer.Default.Equals(m.ReturnType, memberType));
-                    
+
                     if (!hasCustomMethod)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
@@ -475,7 +475,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
                         member.Name));
                     return null;
                 }
-                
+
                 return strategy;
             }
         }
@@ -550,7 +550,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         var cloneMethod = type.GetMembers("Clone")
             .OfType<IMethodSymbol>()
             .FirstOrDefault(m => !m.IsStatic &&
-                                 m.Parameters.Length == 0 && 
+                                 m.Parameters.Length == 0 &&
                                  SymbolEqualityComparer.Default.Equals(m.ReturnType, type));
         if (cloneMethod is not null)
             return true;
@@ -568,7 +568,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
     private bool ImplementsICloneable(ITypeSymbol type)
     {
-        return type.AllInterfaces.Any(i => 
+        return type.AllInterfaces.Any(i =>
             i.ToDisplayString() == "System.ICloneable");
     }
 
@@ -595,13 +595,13 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)
     {
-        return symbol.GetAttributes().Any(a => 
+        return symbol.GetAttributes().Any(a =>
             a.AttributeClass?.ToDisplayString() == attributeName);
     }
 
     private static AttributeData? GetAttribute(ISymbol symbol, string attributeName)
     {
-        return symbol.GetAttributes().FirstOrDefault(a => 
+        return symbol.GetAttributes().FirstOrDefault(a =>
             a.AttributeClass?.ToDisplayString() == attributeName);
     }
 
@@ -611,7 +611,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         sb.AppendLine("#nullable enable");
         sb.AppendLine("// <auto-generated />");
         sb.AppendLine();
-        
+
         // Only add namespace declaration if not in global namespace
         if (!string.IsNullOrEmpty(typeInfo.Namespace))
         {
@@ -702,13 +702,13 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         {
             return $"new {member.Type}(this.{member.Name})";
         }
-        
+
         // For arrays
         if (member.TypeSymbol is IArrayTypeSymbol)
         {
             return $"(({member.Type})this.{member.Name}.Clone())";
         }
-        
+
         // Default: just copy reference
         return $"this.{member.Name}";
     }
@@ -750,13 +750,13 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     {
         // For records with init properties, use with-expression
         sb.Append("        return this with { ");
-        
+
         var assignments = typeInfo.Members
             .Where(m => !m.IsReadOnly) // Can't set readonly members in with-expression
             .Select(m => $"{m.Name} = {cloneExprs[m.Name]}");
-        
+
         sb.Append(string.Join(", ", assignments));
-        
+
         sb.AppendLine(" };");
     }
 
@@ -764,13 +764,13 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
     {
         // Create using copy constructor, then set members that need custom cloning
         sb.AppendLine($"        var clone = new {typeInfo.TypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}(this);");
-        
+
         // Override members that need special cloning
         foreach (var member in typeInfo.Members.Where(m => m.CloneStrategy != CloneStrategy.ByReference && !m.IsReadOnly && !m.IsInitOnly))
         {
             sb.AppendLine($"        clone.{member.Name} = {cloneExprs[member.Name]};");
         }
-        
+
         sb.AppendLine("        return clone;");
     }
 
@@ -779,7 +779,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         // Use object initializer syntax if possible
         // Init-only properties can be set in object initializers
         var settableMembers = typeInfo.Members.Where(m => !m.IsReadOnly).ToList();
-        
+
         if (settableMembers.Count > 0)
         {
             sb.AppendLine($"        return new {typeInfo.TypeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}");

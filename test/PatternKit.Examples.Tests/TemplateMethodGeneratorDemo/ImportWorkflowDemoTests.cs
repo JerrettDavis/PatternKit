@@ -24,7 +24,7 @@ public sealed partial class ImportWorkflowDemoTests(ITestOutputHelper output) : 
     [Scenario("Import validates data and logs errors")]
     [Fact]
     public Task Invalid_Data_Triggers_OnError_Hook()
-        => Given("import workflow with invalid data", 
+        => Given("import workflow with invalid data",
                 () => PatternKit.Examples.TemplateMethodGeneratorDemo.ImportWorkflowDemo.RunWithInvalidData())
             .When("executing the workflow", log => log)
             .Then("loads data", log => log.Any(l => l.Contains("Loading data")))
@@ -47,7 +47,7 @@ public sealed partial class ImportWorkflowDemoTests(ITestOutputHelper output) : 
                 var transformIdx = log.FindIndex(l => l.Contains("Transforming data"));
                 var persistIdx = log.FindIndex(l => l.Contains("Persisting data"));
                 var completeIdx = log.FindIndex(l => l.Contains("Import completed"));
-                
+
                 return new[] { startIdx, loadIdx, validateIdx, transformIdx, persistIdx, completeIdx };
             })
             .Then("steps are in ascending order", indices =>

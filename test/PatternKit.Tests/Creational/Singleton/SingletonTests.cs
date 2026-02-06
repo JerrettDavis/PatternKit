@@ -50,7 +50,7 @@ public sealed class SingletonTests(ITestOutputHelper output) : TinyBddXunitBase(
 
         await Given("32 concurrent Instance reads", () => singleton)
             .When("parallel read",
-                (Func<Singleton<Thing>, ValueTask<Singleton<Thing>>>) (async s =>
+                (Func<Singleton<Thing>, ValueTask<Singleton<Thing>>>)(async s =>
                 {
                     var tasks = Enumerable.Range(0, 32).Select(_ => Task.Run(() => s.Instance)).ToArray();
                     await Task.WhenAll(tasks);

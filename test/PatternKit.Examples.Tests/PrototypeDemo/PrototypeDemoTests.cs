@@ -10,7 +10,11 @@ public sealed class PrototypeDemoTests
     {
         var original = new CharacterStats
         {
-            Health = 100, Mana = 50, Strength = 10, Agility = 8, Intelligence = 5
+            Health = 100,
+            Mana = 50,
+            Strength = 10,
+            Agility = 8,
+            Intelligence = 5
         };
 
         var clone = original.Clone();
@@ -27,7 +31,9 @@ public sealed class PrototypeDemoTests
     {
         var original = new Equipment
         {
-            Weapon = "Sword", Armor = "Plate", Accessories = ["Ring", "Amulet"]
+            Weapon = "Sword",
+            Armor = "Plate",
+            Accessories = ["Ring", "Amulet"]
         };
 
         var clone = original.Clone();
@@ -197,7 +203,10 @@ public sealed class PrototypeDemoTests
     {
         var goblin = new GameCharacter
         {
-            Id = "goblin", Name = "Goblin", Class = "Monster", Level = 3,
+            Id = "goblin",
+            Name = "Goblin",
+            Class = "Monster",
+            Level = 3,
             Stats = new CharacterStats { Health = 30 }
         };
 
@@ -216,7 +225,10 @@ public sealed class PrototypeDemoTests
     {
         var goblin = new GameCharacter
         {
-            Id = "goblin", Name = "Goblin", Class = "Monster", Level = 3,
+            Id = "goblin",
+            Name = "Goblin",
+            Class = "Monster",
+            Level = 3,
             Stats = new CharacterStats { Health = 30 }
         };
 

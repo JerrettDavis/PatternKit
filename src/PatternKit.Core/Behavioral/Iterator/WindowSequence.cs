@@ -68,7 +68,7 @@ public static class WindowSequence
 
             if (includePartial && queue.Count > 0)
                 yield return MakeWindow(queue, queue.Count, partial: true);
-            
+
             yield break;
 
             // local factory

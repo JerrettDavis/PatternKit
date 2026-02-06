@@ -21,8 +21,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Find all types marked with [GenerateFacade]
         var facadeTypes = context.SyntaxProvider.ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: "PatternKit.Generators.Facade.GenerateFacadeAttribute",
-            predicate: static (node, _) => node is ClassDeclarationSyntax 
-                                        or InterfaceDeclarationSyntax 
+            predicate: static (node, _) => node is ClassDeclarationSyntax
+                                        or InterfaceDeclarationSyntax
                                         or StructDeclarationSyntax,
             transform: static (gasc, ct) => GetFacadeInfo(gasc, ct)
         ).Where(static x => x is not null);
@@ -36,7 +36,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 .GroupBy(static info => info!.TargetType, SymbolEqualityComparer.Default)
                 .Select(static g => g.First())
                 .ToList();
-            
+
             foreach (var info in uniqueInfos)
             {
                 GenerateFacade(spc, info!);
@@ -54,36 +54,36 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             .Where(a => a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Facade.GenerateFacadeAttribute")
             .Where(a => GetAttributeProperty<string>(a, "TargetTypeName") is not null)
             .ToList();
-        
+
         if (autoFacadeAttrs.Any())
         {
             return GetAutoFacadeInfo(context, targetType, autoFacadeAttrs, ct);
         }
 
         var attr = context.Attributes[0];
-        
+
         // Read attribute properties
         var facadeTypeName = GetAttributeProperty<string>(attr, "FacadeTypeName");
         var generateAsync = GetAttributeProperty<bool?>(attr, "GenerateAsync") ?? true;
         var forceAsync = GetAttributeProperty<bool?>(attr, "ForceAsync") ?? false;
         var missingMapPolicy = GetAttributeProperty<int?>(attr, "MissingMap") ?? 0; // FacadeMissingMapPolicy.Error
 
-        var ns = targetType.ContainingNamespace.IsGlobalNamespace 
-            ? null 
+        var ns = targetType.ContainingNamespace.IsGlobalNamespace
+            ? null
             : targetType.ContainingNamespace.ToDisplayString();
 
         // Determine facade mode (contract-first vs host-first)
         bool isHostFirst = targetType.IsStatic;
-        
+
         // Collect methods based on mode
-        var methods = isHostFirst 
+        var methods = isHostFirst
             ? CollectHostFirstMethods(targetType, context.SemanticModel.Compilation)
             : CollectContractFirstMethods(targetType, context.SemanticModel.Compilation);
 
         // Generate default facade type name
-        var defaultFacadeTypeName = isHostFirst 
+        var defaultFacadeTypeName = isHostFirst
             ? $"{targetType.Name}Facade"
-            : targetType.TypeKind == TypeKind.Interface 
+            : targetType.TypeKind == TypeKind.Interface
                 ? $"{targetType.Name.TrimStart('I')}Impl"
                 : $"{targetType.Name}Impl";
 
@@ -104,19 +104,19 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         Compilation compilation)
     {
         var methods = new List<MethodInfo>();
-        
+
         foreach (var member in hostType.GetMembers().OfType<IMethodSymbol>())
         {
             // Look for methods marked with [FacadeExpose]
             var exposeAttr = member.GetAttributes()
-                .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == 
+                .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() ==
                     "PatternKit.Generators.Facade.FacadeExposeAttribute");
-            
+
             if (exposeAttr is null)
                 continue;
 
             var methodName = GetAttributeProperty<string>(exposeAttr, "MethodName") ?? member.Name;
-            
+
             methods.Add(new MethodInfo(
                 Symbol: member,
                 ContractName: methodName,
@@ -126,7 +126,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 IsExposed: true
             ));
         }
-        
+
         return methods.ToImmutableArray();
     }
 
@@ -135,40 +135,40 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         Compilation compilation)
     {
         var methods = new List<MethodInfo>();
-        
+
         // Get all abstract/interface methods that need implementation
         var contractMethods = contractType.TypeKind == TypeKind.Interface
             ? contractType.GetMembers().OfType<IMethodSymbol>()
             : contractType.GetMembers().OfType<IMethodSymbol>()
                 .Where(m => m.IsAbstract || m.MethodKind == MethodKind.Ordinary);
-        
+
         foreach (var method in contractMethods)
         {
             // Skip methods marked with [FacadeIgnore]
-            if (method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == 
+            if (method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() ==
                 "PatternKit.Generators.Facade.FacadeIgnoreAttribute"))
                 continue;
 
             // Look for mapping methods marked with [FacadeMap]
             var candidateMappings = new List<(IMethodSymbol method, AttributeData attr)>();
-            
+
             // Search for methods with [FacadeMap] in the same compilation
             foreach (var tree in compilation.SyntaxTrees)
             {
                 var semanticModel = compilation.GetSemanticModel(tree);
                 var root = tree.GetRoot();
-                
+
                 foreach (var methodDecl in root.DescendantNodes().OfType<MethodDeclarationSyntax>())
                 {
                     var methodSymbol = semanticModel.GetDeclaredSymbol(methodDecl);
                     if (methodSymbol is null) continue;
-                    
+
                     var attr = methodSymbol.GetAttributes()
-                        .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == 
+                        .FirstOrDefault(a => a.AttributeClass?.ToDisplayString() ==
                             "PatternKit.Generators.Facade.FacadeMapAttribute");
-                    
+
                     if (attr is null) continue;
-                    
+
                     // Check if this maps to our contract method
                     var memberName = GetAttributeProperty<string>(attr, "MemberName");
                     if (!string.IsNullOrEmpty(memberName))
@@ -184,12 +184,12 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     }
                 }
             }
-            
+
             // Check for duplicate mappings (PKFCD003)
             IMethodSymbol? mappingMethod = null;
             AttributeData? mapAttr = null;
             bool hasDuplicateMapping = false;
-            
+
             if (candidateMappings.Count > 1)
             {
                 hasDuplicateMapping = true;
@@ -202,7 +202,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 mappingMethod = candidateMappings[0].method;
                 mapAttr = candidateMappings[0].attr;
             }
-            
+
             methods.Add(new MethodInfo(
                 Symbol: method,
                 ContractName: method.Name,
@@ -214,7 +214,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 HasDuplicateMapping: hasDuplicateMapping
             ));
         }
-        
+
         return methods.ToImmutableArray();
     }
 
@@ -227,7 +227,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var allMethods = ImmutableArray.CreateBuilder<MethodInfo>();
         var externalTypes = new List<INamedTypeSymbol>();
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
-        
+
         // Validate that auto-facade mode is only used with interfaces
         if (contractType.TypeKind != TypeKind.Interface)
         {
@@ -235,11 +235,11 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 Diagnostics.AutoFacadeOnlyForInterfaces,
                 contractType.Locations.FirstOrDefault(),
                 contractType.Name));
-            
+
             return new FacadeInfo(
                 TargetType: contractType,
-                Namespace: contractType.ContainingNamespace.IsGlobalNamespace 
-                    ? null 
+                Namespace: contractType.ContainingNamespace.IsGlobalNamespace
+                    ? null
                     : contractType.ContainingNamespace.ToDisplayString(),
                 FacadeTypeName: $"{contractType.Name}Impl",
                 GenerateAsync: true,
@@ -252,7 +252,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 Diagnostics: diagnostics.ToImmutable()
             );
         }
-        
+
         int fieldIndex = 0;
         foreach (var attr in autoFacadeAttrs)
         {
@@ -260,9 +260,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var include = GetStringArrayProperty(attr, "Include");
             var exclude = GetStringArrayProperty(attr, "Exclude");
             var memberPrefix = GetAttributeProperty<string>(attr, "MemberPrefix") ?? "";
-            var fieldName = GetAttributeProperty<string>(attr, "FieldName") 
+            var fieldName = GetAttributeProperty<string>(attr, "FieldName")
                            ?? (autoFacadeAttrs.Count > 1 ? $"_target{fieldIndex}" : "_target");
-            
+
             // Validate mutually exclusive filters
             if (include?.Length > 0 && exclude?.Length > 0)
             {
@@ -271,10 +271,10 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     contractType.Locations.FirstOrDefault()));
                 continue;
             }
-            
+
             // Resolve external type
             var externalType = context.SemanticModel.Compilation.GetTypeByMetadataName(targetTypeName);
-            
+
             if (externalType is null)
             {
                 diagnostics.Add(Diagnostic.Create(
@@ -283,38 +283,38 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     targetTypeName));
                 continue;
             }
-            
+
             externalTypes.Add(externalType);
-            
+
             // Collect filtered methods
             var (methods, methodDiagnostics) = CollectAutoFacadeMethods(
-                externalType, 
-                include, 
+                externalType,
+                include,
                 exclude,
                 memberPrefix,
                 fieldName,
                 contractType.Locations.FirstOrDefault()
             );
-            
+
             allMethods.AddRange(methods);
             diagnostics.AddRange(methodDiagnostics);
             fieldIndex++;
         }
-        
+
         // If we have diagnostics but no methods, still return FacadeInfo to report the diagnostics
         if (allMethods.Count == 0 && diagnostics.Count == 0)
         {
             return null;
         }
-        
-        var ns = contractType.ContainingNamespace.IsGlobalNamespace 
-            ? null 
+
+        var ns = contractType.ContainingNamespace.IsGlobalNamespace
+            ? null
             : contractType.ContainingNamespace.ToDisplayString();
-        
-        var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface 
+
+        var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface
             ? (contractType.Name.StartsWith("I") ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
             : contractType.Name + "Impl";
-        
+
         return new FacadeInfo(
             TargetType: contractType,
             Namespace: ns,
@@ -339,20 +339,20 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         Location? location)
     {
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
-        
+
         var allMethods = externalType
             .GetMembers()
             .OfType<IMethodSymbol>()
-            .Where(m => m.MethodKind == MethodKind.Ordinary && 
+            .Where(m => m.MethodKind == MethodKind.Ordinary &&
                         m.DeclaredAccessibility == Accessibility.Public &&
                         !m.IsStatic)
             .ToList();
-        
+
         // Apply include filter
         if (include?.Length > 0)
         {
             var includeSet = new HashSet<string>(include, StringComparer.Ordinal);
-            
+
             // Report if specified member not found in the original list
             var allMethodNames = new HashSet<string>(allMethods.Select(m => m.Name));
             foreach (var name in include.Where(name => !allMethodNames.Contains(name)))
@@ -363,18 +363,18 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     name,
                     externalType.Name));
             }
-            
+
             // Filter to only included methods
             allMethods = allMethods.Where(m => includeSet.Contains(m.Name)).ToList();
         }
-        
+
         // Apply exclude filter
         if (exclude?.Length > 0)
         {
             var excludeSet = new HashSet<string>(exclude, StringComparer.Ordinal);
             allMethods = allMethods.Where(m => !excludeSet.Contains(m.Name)).ToList();
         }
-        
+
         // Warn if no members found
         if (allMethods.Count == 0)
         {
@@ -383,9 +383,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 location,
                 externalType.Name));
         }
-        
+
         var builder = ImmutableArray.CreateBuilder<MethodInfo>();
-        
+
         foreach (var method in allMethods)
         {
             builder.Add(new MethodInfo(
@@ -400,7 +400,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 ExternalFieldName: fieldName
             ));
         }
-        
+
         return (builder.ToImmutable(), diagnostics.ToImmutable());
     }
 
@@ -409,23 +409,23 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Check return type compatibility
         if (!ReturnTypesCompatible(method1.ReturnType, method2.ReturnType))
             return false;
-        
+
         // Check parameter count and types
         if (method1.Parameters.Length != method2.Parameters.Length)
             return false;
-        
+
         for (int i = 0; i < method1.Parameters.Length; i++)
         {
             var p1 = method1.Parameters[i];
             var p2 = method2.Parameters[i];
-            
+
             if (!SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type))
                 return false;
-            
+
             if (p1.RefKind != p2.RefKind)
                 return false;
         }
-        
+
         return true;
     }
 
@@ -433,7 +433,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         if (SymbolEqualityComparer.Default.Equals(type1, type2))
             return true;
-        
+
         // Check async compatibility (Task<T> vs ValueTask<T>)
         if (IsTaskLike(type1) && IsTaskLike(type2))
         {
@@ -441,7 +441,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var unwrapped2 = UnwrapTaskType(type2);
             return SymbolEqualityComparer.Default.Equals(unwrapped1, unwrapped2);
         }
-        
+
         return false;
     }
 
@@ -463,14 +463,14 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         if (type is INamedTypeSymbol named && named.IsGenericType)
             return named.TypeArguments[0];
-        
+
         // Task/ValueTask without generic argument is void
         return type;
     }
 
     private static bool HasCancellationTokenParameter(IMethodSymbol method)
     {
-        return method.Parameters.Any(p => 
+        return method.Parameters.Any(p =>
             p.Type.ToDisplayString() == "System.Threading.CancellationToken");
     }
 
@@ -496,7 +496,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var prop = attr.NamedArguments.FirstOrDefault(x => x.Key == propertyName);
         if (prop.Value.IsNull || prop.Value.Kind != TypedConstantKind.Array)
             return null;
-        
+
         return prop.Value.Values
             .Select(v => v.Value as string)
             .Where(s => s is not null)
@@ -512,21 +512,21 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             {
                 context.ReportDiagnostic(diagnostic);
             }
-            
+
             // If there are error diagnostics, don't generate code
             if (info.Diagnostics.Value.Any(d => d.Severity == DiagnosticSeverity.Error))
             {
                 return;
             }
         }
-        
+
         // Validate
         if (!ValidateFacade(context, info))
             return;
 
         // Generate code
         string source;
-        
+
         if (info.IsAutoFacade)
         {
             source = GenerateAutoFacade(context, info);
@@ -564,7 +564,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Check for type name conflicts (PKFCD005)
         var facadeTypeName = info.FacadeTypeName;
         var containingNamespace = info.TargetType.ContainingNamespace;
-        
+
         // Search for existing type with same name in the same namespace
         var existingType = containingNamespace.GetTypeMembers(facadeTypeName).FirstOrDefault();
         if (existingType != null && !SymbolEqualityComparer.Default.Equals(existingType, info.TargetType))
@@ -591,7 +591,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                         methodLocation,
                         method.ContractName));
                 }
-                
+
                 if (method.MappingMethod is null)
                 {
                     if (info.MissingMapPolicy == 0) // Error
@@ -651,7 +651,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         }
 
         // Generate implementation class
-        var baseType = info.TargetType.TypeKind == TypeKind.Interface 
+        var baseType = info.TargetType.TypeKind == TypeKind.Interface
             ? $" : {info.TargetType.Name}"
             : "";
 
@@ -664,7 +664,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
         // Collect all subsystem dependencies from mapping methods
         var dependencies = CollectDependencies(info);
-        
+
         // Generate fields for dependencies
         foreach (var dep in dependencies)
         {
@@ -680,23 +680,23 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             sb.AppendLine("    /// <summary>");
             sb.AppendLine($"    /// Initializes a new instance of {info.FacadeTypeName}.");
             sb.AppendLine("    /// </summary>");
-            
+
             var ctorParams = string.Join(", ", dependencies.Select(d => $"{d.Type} {d.ParameterName}"));
             sb.AppendLine($"    public {info.FacadeTypeName}({ctorParams})");
             sb.AppendLine("    {");
-            
+
             foreach (var dep in dependencies)
             {
                 sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName};");
             }
-            
+
             sb.AppendLine("    }");
             sb.AppendLine();
         }
 
         // Generate methods in deterministic order
         var orderedMethods = info.Methods.OrderBy(m => m.ContractName).ToList();
-        
+
         foreach (var method in orderedMethods)
         {
             GenerateContractMethod(sb, method, info, dependencies);
@@ -714,7 +714,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         ImmutableArray<DependencyInfo> dependencies)
     {
         var methodSymbol = method.Symbol;
-        
+
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// {method.ContractName} facade operation.");
         sb.AppendLine("    /// </summary>");
@@ -723,14 +723,14 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var returnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var isAsync = method.IsAsync || info.ForceAsync;
         var asyncModifier = isAsync ? "async " : "";
-        
+
         // Prefer ValueTask for generated async methods
         if (isAsync && returnType == "void")
         {
             returnType = "System.Threading.Tasks.ValueTask";
         }
 
-        var parameters = string.Join(", ", methodSymbol.Parameters.Select(p => 
+        var parameters = string.Join(", ", methodSymbol.Parameters.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"));
 
         sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
@@ -783,7 +783,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var callArgs = BuildCallArguments(mapping, dependencies, methodSymbol.Parameters);
             var awaitKeyword = IsAsyncMethod(mapping) ? "await " : "";
             var returnKeyword = returnType == "void" || (isAsync && returnType == "System.Threading.Tasks.ValueTask") ? "" : "return ";
-            
+
             sb.AppendLine($"        {returnKeyword}{awaitKeyword}{mapping.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{mapping.Name}({callArgs});");
         }
 
@@ -812,7 +812,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         ImmutableArray<IParameterSymbol> contractParameters)
     {
         var args = new List<string>();
-        
+
         foreach (var param in mappingMethod.Parameters)
         {
             // Check if it's a dependency
@@ -824,9 +824,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             else
             {
                 // Match with contract parameter
-                var contractParam = contractParameters.FirstOrDefault(cp => 
+                var contractParam = contractParameters.FirstOrDefault(cp =>
                     SymbolEqualityComparer.Default.Equals(cp.Type, param.Type));
-                
+
                 if (contractParam is not null)
                 {
                     var refPrefix = GetRefKind(contractParam.RefKind).Trim();
@@ -840,7 +840,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         return string.Join(", ", args);
     }
 
@@ -848,28 +848,28 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         var dependencies = new Dictionary<string, DependencyInfo>();
         var usedFieldNames = new HashSet<string>();
-        
+
         foreach (var method in info.Methods)
         {
             if (method.MappingMethod is null)
                 continue;
-            
+
             // Look for parameters that are not in the contract
             foreach (var param in method.MappingMethod.Parameters)
             {
                 // Skip if it matches a contract parameter
-                if (method.Symbol.Parameters.Any(cp => 
+                if (method.Symbol.Parameters.Any(cp =>
                     SymbolEqualityComparer.Default.Equals(cp.Type, param.Type)))
                     continue;
-                
+
                 var typeStr = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                
+
                 if (!dependencies.ContainsKey(typeStr))
                 {
                     var baseName = ToCamelCase(param.Type.Name);
                     var fieldName = $"_{baseName}";
                     var paramName = baseName;
-                    
+
                     // Handle name collisions by appending numbers
                     var counter = 1;
                     while (usedFieldNames.Contains(fieldName))
@@ -878,9 +878,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                         paramName = $"{baseName}{counter}";
                         counter++;
                     }
-                    
+
                     usedFieldNames.Add(fieldName);
-                    
+
                     dependencies[typeStr] = new DependencyInfo(
                         Type: typeStr,
                         FieldName: fieldName,
@@ -889,7 +889,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         return dependencies.Values.OrderBy(d => d.Type).ToImmutableArray();
     }
 
@@ -915,7 +915,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
         // Collect all subsystem dependencies from host methods
         var dependencies = CollectHostDependencies(info);
-        
+
         // Generate fields for dependencies
         foreach (var dep in dependencies)
         {
@@ -931,23 +931,23 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             sb.AppendLine("    /// <summary>");
             sb.AppendLine($"    /// Initializes a new instance of {info.FacadeTypeName}.");
             sb.AppendLine("    /// </summary>");
-            
+
             var ctorParams = string.Join(", ", dependencies.Select(d => $"{d.Type} {d.ParameterName}"));
             sb.AppendLine($"    public {info.FacadeTypeName}({ctorParams})");
             sb.AppendLine("    {");
-            
+
             foreach (var dep in dependencies)
             {
                 sb.AppendLine($"        {dep.FieldName} = {dep.ParameterName};");
             }
-            
+
             sb.AppendLine("    }");
             sb.AppendLine();
         }
 
         // Generate methods in deterministic order
         var orderedMethods = info.Methods.OrderBy(m => m.ContractName).ToList();
-        
+
         foreach (var method in orderedMethods)
         {
             GenerateHostMethod(sb, method, info, dependencies);
@@ -964,28 +964,28 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine("#nullable enable");
         sb.AppendLine("// <auto-generated />");
         sb.AppendLine();
-        
+
         if (info.Namespace is not null)
         {
             sb.AppendLine($"namespace {info.Namespace};");
             sb.AppendLine();
         }
-        
+
         var baseType = info.TargetType.TypeKind == TypeKind.Interface
             ? $" : {info.TargetType.Name}"
             : "";
-        
+
         sb.AppendLine("/// <summary>");
         sb.AppendLine($"/// Auto-generated facade implementation for {info.TargetType.Name}.");
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"public sealed class {info.FacadeTypeName}{baseType}");
         sb.AppendLine("{");
-        
+
         // Group by external type (for multiple [GenerateFacade] attributes)
         var groupedByField = info.Methods
             .GroupBy(m => m.ExternalFieldName ?? "_target")
             .ToList();
-        
+
         // Generate fields
         foreach (var group in groupedByField)
         {
@@ -995,12 +995,12 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             sb.AppendLine($"    private readonly {typeFullName} {group.Key};");
         }
         sb.AppendLine();
-        
+
         // Generate constructor
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// Initializes a new instance of {info.FacadeTypeName}.");
         sb.AppendLine("    /// </summary>");
-        
+
         var ctorParams = groupedByField.Select(g =>
         {
             var fieldName = g.Key;
@@ -1011,29 +1011,29 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             return $"{typeFullName} {paramName}";
         });
-        
+
         sb.AppendLine($"    public {info.FacadeTypeName}({string.Join(", ", ctorParams)})");
         sb.AppendLine("    {");
-        
+
         // Generate constructor body with null checks
         // For fields without underscore, the parameter name matches the field name, requiring `this.` qualifier for disambiguation
-        foreach (var (fieldName, paramName) in groupedByField.Select(g => 
+        foreach (var (fieldName, paramName) in groupedByField.Select(g =>
             (g.Key, g.Key.StartsWith("_") ? g.Key.Substring(1) : g.Key)))
         {
             sb.AppendLine($"        this.{fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }
-        
+
         sb.AppendLine("    }");
         sb.AppendLine();
-        
+
         // Generate forwarding methods
         foreach (var method in info.Methods.OrderBy(m => m.ContractName))
         {
             GenerateAutoFacadeMethod(sb, method);
         }
-        
+
         sb.AppendLine("}");
-        
+
         return sb.ToString();
     }
 
@@ -1041,23 +1041,23 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         var sym = method.Symbol;
         var fieldName = method.ExternalFieldName ?? "_target";
-        
+
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// Forwards to {sym.ContainingType.Name}.{sym.Name}");
         sb.AppendLine("    /// </summary>");
-        
+
         // Build signature
         var returnType = sym.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var typeParams = sym.TypeParameters.Length > 0
             ? $"<{string.Join(", ", sym.TypeParameters.Select(tp => tp.Name))}>"
             : "";
-        
+
         var parameters = string.Join(", ", sym.Parameters.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"
         ));
-        
+
         sb.AppendLine($"    public {returnType} {method.ContractName}{typeParams}({parameters})");
-        
+
         // Type constraints
         if (sym.TypeParameters.Length > 0)
         {
@@ -1068,21 +1068,21 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     sb.AppendLine($"        where {tp.Name} : {constraints}");
             }
         }
-        
+
         sb.AppendLine("    {");
-        
+
         // Forward call
         var args = string.Join(", ", sym.Parameters.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Name}"
         ));
-        
+
         var call = $"{fieldName}.{sym.Name}{typeParams}({args})";
-        
+
         if (sym.ReturnsVoid)
             sb.AppendLine($"        {call};");
         else
             sb.AppendLine($"        return {call};");
-        
+
         sb.AppendLine("    }");
         sb.AppendLine();
     }
@@ -1090,7 +1090,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     private static string BuildTypeConstraints(ITypeParameterSymbol tp)
     {
         var constraints = new List<string>();
-        
+
         if (tp.HasReferenceTypeConstraint)
         {
             // Handle nullable reference type constraint (class?)
@@ -1107,15 +1107,15 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             constraints.Add("unmanaged");
         if (tp.HasNotNullConstraint)
             constraints.Add("notnull");
-        
+
         foreach (var constraintType in tp.ConstraintTypes)
         {
             constraints.Add(constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
-        
+
         if (tp.HasConstructorConstraint)
             constraints.Add("new()");
-        
+
         return string.Join(", ", constraints);
     }
 
@@ -1126,7 +1126,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         ImmutableArray<DependencyInfo> dependencies)
     {
         var hostMethod = method.Symbol;
-        
+
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// {method.ContractName} operation.");
         sb.AppendLine("    /// </summary>");
@@ -1141,7 +1141,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             .Where(p => !dependencies.Any(d => d.Type == p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
             .ToList();
 
-        var parameters = string.Join(", ", operationParams.Select(p => 
+        var parameters = string.Join(", ", operationParams.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"));
 
         sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
@@ -1151,7 +1151,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var callArgs = BuildHostCallArguments(hostMethod, dependencies, operationParams);
         var awaitKeyword = IsAsyncMethod(hostMethod) ? "await " : "";
         var returnKeyword = returnType == "void" ? "" : "return ";
-        
+
         sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{hostMethod.Name}({callArgs});");
 
         sb.AppendLine("    }");
@@ -1164,7 +1164,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         List<IParameterSymbol> operationParams)
     {
         var args = new List<string>();
-        
+
         foreach (var param in hostMethod.Parameters)
         {
             // Check if it's a dependency
@@ -1189,7 +1189,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         return string.Join(", ", args);
     }
 
@@ -1197,28 +1197,28 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         var dependencies = new Dictionary<string, DependencyInfo>();
         var usedFieldNames = new HashSet<string>();
-        
+
         foreach (var method in info.Methods)
         {
             // In host-first, the first N parameters that appear consistently across methods are dependencies
             // For simplicity, we'll identify parameters that are reference types and appear early
-            
+
             foreach (var param in method.Symbol.Parameters)
             {
                 // Heuristic: dependencies are typically the first parameters and are reference types
                 // We'll collect all unique parameter types and let the user define them properly
                 var typeStr = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-                
+
                 // Skip primitive types
                 if (IsPrimitiveType(param.Type))
                     continue;
-                
+
                 if (!dependencies.ContainsKey(typeStr))
                 {
                     var baseName = ToCamelCase(param.Type.Name);
                     var fieldName = $"_{baseName}";
                     var paramName = baseName;
-                    
+
                     // Handle name collisions by appending numbers
                     var counter = 1;
                     while (usedFieldNames.Contains(fieldName))
@@ -1227,9 +1227,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                         paramName = $"{baseName}{counter}";
                         counter++;
                     }
-                    
+
                     usedFieldNames.Add(fieldName);
-                    
+
                     dependencies[typeStr] = new DependencyInfo(
                         Type: typeStr,
                         FieldName: fieldName,
@@ -1238,7 +1238,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         return dependencies.Values.OrderBy(d => d.Type).ToImmutableArray();
     }
 
@@ -1271,14 +1271,14 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         if (string.IsNullOrEmpty(name))
             return name;
-        
+
         // Handle I-prefix for interfaces
         if (name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]))
             name = name.Substring(1);
-        
+
         if (name.Length == 0)
             return name;
-        
+
         return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
@@ -1404,7 +1404,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         public static readonly DiagnosticDescriptor MutuallyExclusiveFilters = new(
             "PKFAC002",
             "Include and Exclude are mutually exclusive",
-            "Cannot specify both Include and Exclude on [GenerateFacade].",
+            "Cannot specify both Include and Exclude on [GenerateFacade]",
             Category,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true);
@@ -1415,7 +1415,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         public static readonly DiagnosticDescriptor NoPublicMembers = new(
             "PKFAC003",
             "No public members found",
-            "Type '{0}' has no public members matching filter criteria.",
+            "Type '{0}' has no public members matching filter criteria",
             Category,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
@@ -1426,7 +1426,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         public static readonly DiagnosticDescriptor MemberNotFound = new(
             "PKFAC004",
             "Specified member not found",
-            "Member '{0}' not found in type '{1}'.",
+            "Member '{0}' not found in type '{1}'",
             Category,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true);

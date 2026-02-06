@@ -19,7 +19,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
                 .Where(a => a.AttributeClass?.Name == "GenerateDispatcherAttribute" &&
                            a.AttributeClass.ContainingNamespace.ToDisplayString() == "PatternKit.Generators.Messaging")
                 .FirstOrDefault();
-            
+
             return (compilation, (AttributeData?)attr);
         });
 
@@ -30,7 +30,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
 
             if (!TryReadAttribute(attr, out var config, out var error))
             {
-                ReportDiagnostic(spc, "PKD006", error ?? "Invalid GenerateDispatcher configuration", 
+                ReportDiagnostic(spc, "PKD006", error ?? "Invalid GenerateDispatcher configuration",
                     DiagnosticSeverity.Error, Location.None);
                 return;
             }
@@ -43,7 +43,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         error = null;
         var args = attr.NamedArguments.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        
+
         config = new DispatcherConfig
         {
             Namespace = GetStringValue(args, "Namespace") ?? "Generated.Messaging",
@@ -68,7 +68,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     private static void GenerateDispatcher(SourceProductionContext spc, Compilation compilation, DispatcherConfig config)
     {
         var visibility = config.Visibility == 0 ? "public" : "internal";
-        
+
         var sources = new[]
         {
             ($"{config.Name}.g.cs", GenerateMainDispatcherFile(config, visibility)),
@@ -85,56 +85,56 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     private static string GenerateMainDispatcherFile(DispatcherConfig config, string visibility)
     {
         var sb = CreateFileHeader();
-        
-        var usings = new List<string> 
-        { 
-            "System", 
-            "System.Collections.Generic", 
+
+        var usings = new List<string>
+        {
+            "System",
+            "System.Collections.Generic",
             "System.Linq",
-            "System.Threading", 
-            "System.Threading.Tasks" 
+            "System.Threading",
+            "System.Threading.Tasks"
         };
-        
+
         if (config.IncludeStreaming)
         {
             usings.Add("System.Runtime.CompilerServices");
         }
-        
+
         if (config.IncludeObjectOverloads)
         {
             usings.Add("System.Reflection");
         }
-        
+
         AppendUsings(sb, usings.ToArray());
         AppendNamespaceAndClassHeader(sb, config.Namespace, visibility, config.Name);
-        
+
         // PipelineEntry class
         GeneratePipelineEntry(sb);
-        
+
         // Internal state
         sb.AppendLine("    private readonly Dictionary<Type, Delegate> _commandHandlers = new();");
         sb.AppendLine("    private readonly Dictionary<Type, List<Delegate>> _notificationHandlers = new();");
-        
+
         if (config.IncludeStreaming)
         {
             sb.AppendLine("    private readonly Dictionary<Type, Delegate> _streamHandlers = new();");
         }
-        
+
         sb.AppendLine("    private readonly Dictionary<Type, List<PipelineEntry>> _commandPipelines = new();");
-        
+
         if (config.IncludeStreaming)
         {
             sb.AppendLine("    private readonly Dictionary<Type, List<PipelineEntry>> _streamPipelines = new();");
         }
-        
+
         sb.AppendLine();
         sb.AppendLine("    private " + config.Name + "() { }");
         sb.AppendLine();
-        
+
         // Create method
         sb.AppendLine($"    {visibility} static Builder Create() => new Builder();");
         sb.AppendLine();
-        
+
         // Send method (commands)
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Sends a command and returns a response.");
@@ -158,13 +158,13 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("        return await handler(request, ct);");
         sb.AppendLine("    }");
         sb.AppendLine();
-        
+
         // Object overload for Send
         if (config.IncludeObjectOverloads)
         {
             GenerateObjectSendMethod(sb);
         }
-        
+
         // Publish method (notifications)
         sb.AppendLine("    /// <summary>");
         sb.AppendLine("    /// Publishes a notification to all registered handlers.");
@@ -184,13 +184,13 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
-        
+
         // Object overload for Publish
         if (config.IncludeObjectOverloads)
         {
             GenerateObjectPublishMethod(sb);
         }
-        
+
         // Stream method
         if (config.IncludeStreaming)
         {
@@ -226,19 +226,19 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine();
-            
+
             // Object overload for Stream
             if (config.IncludeObjectOverloads)
             {
                 GenerateObjectStreamMethod(sb);
             }
         }
-        
+
         // Helper method for pipeline execution
         GenerateExecuteWithPipelineMethod(sb);
-        
+
         sb.AppendLine("}");
-        
+
         return sb.ToString();
     }
 
@@ -505,20 +505,20 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         var sb = CreateFileHeader();
         AppendUsings(sb, "System", "System.Collections.Generic", "System.Threading", "System.Threading.Tasks");
-        
+
         if (config.IncludeStreaming)
         {
             sb.AppendLine("using System.Runtime.CompilerServices;");
         }
-        
+
         sb.AppendLine();
         AppendNamespaceAndClassHeader(sb, config.Namespace, visibility, config.Name);
-        
+
         sb.AppendLine($"    {visibility} sealed class Builder : IDispatcherBuilder");
         sb.AppendLine("    {");
         sb.AppendLine($"        private readonly {config.Name} _dispatcher = new();");
         sb.AppendLine();
-        
+
         // Command registration
         sb.AppendLine("        public Builder Command<TRequest, TResponse>(Func<TRequest, CancellationToken, ValueTask<TResponse>> handler)");
         sb.AppendLine("        {");
@@ -531,7 +531,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Notification registration
         sb.AppendLine("        public Builder Notification<TNotification>(Func<TNotification, CancellationToken, ValueTask> handler)");
         sb.AppendLine("        {");
@@ -545,7 +545,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Stream registration
         if (config.IncludeStreaming)
         {
@@ -561,7 +561,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("        }");
             sb.AppendLine();
         }
-        
+
         // Pipeline registration - Pre
         sb.AppendLine("        public Builder Pre<TRequest>(Func<TRequest, CancellationToken, ValueTask> pre, int order = 0)");
         sb.AppendLine("        {");
@@ -575,7 +575,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Pipeline registration - Around
         sb.AppendLine("        public Builder Around<TRequest, TResponse>(Func<TRequest, CancellationToken, Func<ValueTask<TResponse>>, ValueTask<TResponse>> around, int order = 0)");
         sb.AppendLine("        {");
@@ -589,7 +589,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Pipeline registration - Post
         sb.AppendLine("        public Builder Post<TRequest, TResponse>(Func<TRequest, TResponse, CancellationToken, ValueTask> post, int order = 0)");
         sb.AppendLine("        {");
@@ -603,7 +603,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Pipeline registration - OnError
         sb.AppendLine("        public Builder OnError<TRequest, TResponse>(Func<TRequest, Exception, CancellationToken, ValueTask> onError, int order = 0)");
         sb.AppendLine("        {");
@@ -617,7 +617,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Stream pipeline registration - PreStream
         if (config.IncludeStreaming)
         {
@@ -634,7 +634,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("        }");
             sb.AppendLine();
         }
-        
+
         // Module registration
         sb.AppendLine("        public Builder AddModule(IModule module)");
         sb.AppendLine("        {");
@@ -642,11 +642,11 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("            return this;");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
         // Build method
         sb.AppendLine($"        public {config.Name} Build() => _dispatcher;");
         sb.AppendLine();
-        
+
         // IDispatcherBuilder implementation
         sb.AppendLine("        // Explicit interface implementations");
         sb.AppendLine("        IDispatcherBuilder IDispatcherBuilder.Command<TRequest, TResponse>(Func<TRequest, CancellationToken, ValueTask<TResponse>> handler)");
@@ -655,17 +655,17 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("        IDispatcherBuilder IDispatcherBuilder.Notification<TNotification>(Func<TNotification, CancellationToken, ValueTask> handler)");
         sb.AppendLine("            => Notification(handler);");
         sb.AppendLine();
-        
+
         if (config.IncludeStreaming)
         {
             sb.AppendLine("        IDispatcherBuilder IDispatcherBuilder.Stream<TRequest, TItem>(Func<TRequest, CancellationToken, IAsyncEnumerable<TItem>> handler)");
             sb.AppendLine("            => Stream(handler);");
             sb.AppendLine();
         }
-        
+
         sb.AppendLine("    }");
         sb.AppendLine("}");
-        
+
         return sb.ToString();
     }
 
@@ -673,10 +673,10 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
     {
         var sb = CreateFileHeader();
         AppendUsings(sb, "System.Collections.Generic", "System.Threading", "System.Threading.Tasks");
-        
+
         sb.AppendLine($"namespace {config.Namespace};");
         sb.AppendLine();
-        
+
         // IModule interface
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Interface for modular registration of handlers.");
@@ -686,7 +686,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("    void Register(IDispatcherBuilder builder);");
         sb.AppendLine("}");
         sb.AppendLine();
-        
+
         // IDispatcherBuilder interface
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Builder interface for registering handlers.");
@@ -695,15 +695,15 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("{");
         sb.AppendLine("    IDispatcherBuilder Command<TRequest, TResponse>(System.Func<TRequest, CancellationToken, ValueTask<TResponse>> handler);");
         sb.AppendLine("    IDispatcherBuilder Notification<TNotification>(System.Func<TNotification, CancellationToken, ValueTask> handler);");
-        
+
         if (config.IncludeStreaming)
         {
             sb.AppendLine("    IDispatcherBuilder Stream<TRequest, TItem>(System.Func<TRequest, CancellationToken, IAsyncEnumerable<TItem>> handler);");
         }
-        
+
         sb.AppendLine("}");
         sb.AppendLine();
-        
+
         // Command handler interface
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Handler for a command that returns a response.");
@@ -713,7 +713,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("    ValueTask<TResponse> Handle(TRequest request, CancellationToken ct);");
         sb.AppendLine("}");
         sb.AppendLine();
-        
+
         // Notification handler interface
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Handler for a notification.");
@@ -723,7 +723,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("    ValueTask Handle(TNotification notification, CancellationToken ct);");
         sb.AppendLine("}");
         sb.AppendLine();
-        
+
         // Stream handler interface
         if (config.IncludeStreaming)
         {
@@ -736,14 +736,14 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("}");
             sb.AppendLine();
         }
-        
+
         // Command pipeline delegates
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Delegate for invoking the next command handler in the pipeline.");
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"{visibility} delegate ValueTask<TResponse> CommandNext<TResponse>();");
         sb.AppendLine();
-        
+
         // Command pipeline interface
         sb.AppendLine("/// <summary>");
         sb.AppendLine("/// Pipeline for command handling.");
@@ -756,7 +756,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
         sb.AppendLine("    ValueTask OnError(TRequest request, System.Exception ex, CancellationToken ct);");
         sb.AppendLine("}");
         sb.AppendLine();
-        
+
         if (config.IncludeStreaming)
         {
             // Stream pipeline delegates
@@ -765,7 +765,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("/// </summary>");
             sb.AppendLine($"{visibility} delegate IAsyncEnumerable<TItem> StreamNext<TItem>();");
             sb.AppendLine();
-            
+
             // Stream pipeline interface
             sb.AppendLine("/// <summary>");
             sb.AppendLine("/// Pipeline for stream handling.");
@@ -778,7 +778,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             sb.AppendLine("    ValueTask OnError(TRequest request, System.Exception ex, CancellationToken ct);");
             sb.AppendLine("}");
         }
-        
+
         return sb.ToString();
     }
 
@@ -796,7 +796,7 @@ public sealed class DispatcherGenerator : IIncrementalGenerator
             "PatternKit.Messaging",
             severity,
             isEnabledByDefault: true);
-        
+
         spc.ReportDiagnostic(Diagnostic.Create(descriptor, location));
     }
 

@@ -12,7 +12,7 @@ public sealed partial class OrderProcessingDemoTests(ITestOutputHelper output) :
     public async Task Successful_Order_Processing()
     {
         var log = await PatternKit.Examples.TemplateMethodGeneratorDemo.OrderProcessingDemo.RunAsync();
-        
+
         Assert.True(log.Any(l => l.Contains("Starting order processing")), "Should start with BeforeAll hook");
         Assert.True(log.Any(l => l.Contains("Payment authorized")), "Should authorize payment");
         Assert.True(log.Any(l => l.Contains("Inventory reserved")), "Should reserve inventory");
@@ -27,7 +27,7 @@ public sealed partial class OrderProcessingDemoTests(ITestOutputHelper output) :
     public async Task Invalid_Payment_Triggers_OnError()
     {
         var log = await PatternKit.Examples.TemplateMethodGeneratorDemo.OrderProcessingDemo.RunWithInvalidAmountAsync();
-        
+
         Assert.True(log.Any(l => l.Contains("Authorizing payment")), "Should attempt payment authorization");
         Assert.True(log.Any(l => l.Contains("ERROR: Invalid payment amount")), "Payment authorization should fail");
         Assert.True(log.Any(l => l.Contains("Order processing failed")), "Should invoke OnError hook");
@@ -41,9 +41,9 @@ public sealed partial class OrderProcessingDemoTests(ITestOutputHelper output) :
     {
         using var cts = new CancellationTokenSource();
         cts.CancelAfter(TimeSpan.FromMilliseconds(50)); // Cancel quickly
-        
+
         var log = await PatternKit.Examples.TemplateMethodGeneratorDemo.OrderProcessingDemo.RunWithCancellationAsync(cts.Token);
-        
+
         // Either cancellation happened or workflow completed (race condition)
         var result = log.Any(l => l.Contains("cancelled")) || log.Any(l => l.Contains("completed"));
         Assert.True(result, "Should handle cancellation or complete");
@@ -54,11 +54,11 @@ public sealed partial class OrderProcessingDemoTests(ITestOutputHelper output) :
     public async Task Mixed_Sync_Async_Steps()
     {
         var log = await PatternKit.Examples.TemplateMethodGeneratorDemo.OrderProcessingDemo.RunAsync();
-        
+
         var hasAsyncSteps = log.Any(l => l.Contains("Payment authorized")) &&
                            log.Any(l => l.Contains("Notification sent"));
         var hasSyncSteps = log.Any(l => l.Contains("Order confirmed"));
-        
+
         Assert.True(hasAsyncSteps, "Should have async steps");
         Assert.True(hasSyncSteps, "Should have sync steps");
     }
@@ -68,7 +68,7 @@ public sealed partial class OrderProcessingDemoTests(ITestOutputHelper output) :
     public async Task Error_Includes_Compensation()
     {
         var log = await PatternKit.Examples.TemplateMethodGeneratorDemo.OrderProcessingDemo.RunWithInvalidAmountAsync();
-        
+
         Assert.True(log.Any(l => l.Contains("Order processing failed")), "OnError hook should be invoked");
         // In this case, inventory wasn't reserved yet, so only payment rollback would be mentioned
         var hasCompensationMention = log.Any(l => l.Contains("Rolling back")) || !log.Any(l => l.Contains("Inventory reserved"));

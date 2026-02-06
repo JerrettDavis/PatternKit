@@ -41,7 +41,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor DuplicateOrderDescriptor = new(
         id: DiagIdDuplicateOrder,
         title: "Duplicate step order detected",
-        messageFormat: "Multiple steps have Order={0} in type '{1}'. Step orders must be unique. Conflicting steps: {2}",
+        messageFormat: "Multiple steps have Order={0} in type '{1}'. Step orders must be unique. Conflicting steps: {2}.",
         category: "PatternKit.Generators.Template",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -57,7 +57,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InvalidHookSignatureDescriptor = new(
         id: DiagIdInvalidHookSignature,
         title: "Invalid hook method signature",
-        messageFormat: "Hook method '{0}' has an invalid signature. {1}",
+        messageFormat: "Hook method '{0}' has an invalid signature. {1}.",
         category: "PatternKit.Generators.Template",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -65,7 +65,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor MissingCancellationTokenDescriptor = new(
         id: DiagIdMissingCancellationToken,
         title: "CancellationToken parameter required for async step",
-        messageFormat: "Async step method '{0}' should accept a CancellationToken parameter for proper cancellation support.",
+        messageFormat: "Async step method '{0}' should accept a CancellationToken parameter for proper cancellation support",
         category: "PatternKit.Generators.Template",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -144,8 +144,8 @@ public sealed class TemplateGenerator : IIncrementalGenerator
             return;
 
         // Determine if async generation is needed
-        var needsAsync = config.ForceAsync || 
-                        config.GenerateAsync || 
+        var needsAsync = config.ForceAsync ||
+                        config.GenerateAsync ||
                         DetermineIfAsync(steps, hooks);
 
         // Validate error policy
@@ -402,7 +402,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.Arity == 0 &&
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
-            
+
             if (step.Method.Parameters.Any(IsCancellationToken))
                 return true;
         }
@@ -415,7 +415,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 namedType.Arity == 0 &&
                 namedType.ContainingNamespace.ToDisplayString() == "System.Threading.Tasks")
                 return true;
-            
+
             if (hook.Method.Parameters.Any(IsCancellationToken))
                 return true;
         }
@@ -500,7 +500,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
             {
                 sb.AppendLine("        try");
                 sb.AppendLine("        {");
-                
+
                 // Steps
                 foreach (var step in sortedSteps)
                 {
@@ -516,7 +516,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 sb.AppendLine("        }");
                 sb.AppendLine("        catch (System.Exception ex)");
                 sb.AppendLine("        {");
-                
+
                 // OnError hooks
                 foreach (var hook in onErrorHooks)
                 {
@@ -527,7 +527,7 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 {
                     sb.AppendLine("            throw;");
                 }
-                
+
                 sb.AppendLine("        }");
             }
             else

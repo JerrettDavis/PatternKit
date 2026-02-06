@@ -98,8 +98,11 @@ public static class PrototypeDemo
         Level = 1,
         Stats = new CharacterStats
         {
-            Health = 150, Mana = 30,
-            Strength = 15, Agility = 8, Intelligence = 5
+            Health = 150,
+            Mana = 30,
+            Strength = 15,
+            Agility = 8,
+            Intelligence = 5
         },
         Equipment = new Equipment
         {
@@ -119,8 +122,11 @@ public static class PrototypeDemo
         Level = 1,
         Stats = new CharacterStats
         {
-            Health = 80, Mana = 150,
-            Strength = 5, Agility = 7, Intelligence = 18
+            Health = 80,
+            Mana = 150,
+            Strength = 5,
+            Agility = 7,
+            Intelligence = 18
         },
         Equipment = new Equipment
         {
@@ -140,8 +146,11 @@ public static class PrototypeDemo
         Level = 1,
         Stats = new CharacterStats
         {
-            Health = 100, Mana = 60,
-            Strength = 10, Agility = 16, Intelligence = 10
+            Health = 100,
+            Mana = 60,
+            Strength = 10,
+            Agility = 16,
+            Intelligence = 10
         },
         Equipment = new Equipment
         {
@@ -283,7 +292,10 @@ public static class PrototypeDemo
 
         var goblinPrototype = new GameCharacter
         {
-            Id = "goblin", Name = "Goblin", Class = "Monster", Level = 3,
+            Id = "goblin",
+            Name = "Goblin",
+            Class = "Monster",
+            Level = 3,
             Stats = new CharacterStats { Health = 30, Mana = 10, Strength = 8, Agility = 12, Intelligence = 3 },
             Equipment = new Equipment { Weapon = "Rusty Dagger", Armor = "Rags" },
             Abilities = ["Scratch", "Flee"]

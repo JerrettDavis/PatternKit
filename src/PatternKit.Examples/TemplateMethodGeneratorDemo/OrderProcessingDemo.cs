@@ -40,10 +40,10 @@ public partial class OrderProcessingWorkflow
     private async ValueTask AuthorizePaymentAsync(OrderContext ctx, CancellationToken ct)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Authorizing payment...");
-        
+
         // Simulate async payment authorization
         await Task.Delay(100, ct);
-        
+
         if (ctx.Amount > 0)
         {
             ctx.PaymentAuthorized = true;
@@ -62,10 +62,10 @@ public partial class OrderProcessingWorkflow
     private async ValueTask ReserveInventoryAsync(OrderContext ctx, CancellationToken ct)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Reserving inventory...");
-        
+
         // Simulate async inventory check
         await Task.Delay(100, ct);
-        
+
         ctx.InventoryReserved = true;
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Inventory reserved");
     }
@@ -77,7 +77,7 @@ public partial class OrderProcessingWorkflow
     private void ConfirmOrder(OrderContext ctx)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Confirming order...");
-        
+
         if (ctx.PaymentAuthorized && ctx.InventoryReserved)
         {
             ctx.OrderConfirmed = true;
@@ -92,10 +92,10 @@ public partial class OrderProcessingWorkflow
     private async ValueTask SendNotificationAsync(OrderContext ctx, CancellationToken ct)
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Sending notification to {ctx.Customer}...");
-        
+
         // Simulate async email sending
         await Task.Delay(100, ct);
-        
+
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Notification sent");
     }
 
@@ -107,13 +107,13 @@ public partial class OrderProcessingWorkflow
     {
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] ERROR: {ex.Message}");
         ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Order processing failed");
-        
+
         // Compensating actions would go here (e.g., release inventory, refund payment)
         if (ctx.InventoryReserved)
         {
             ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Rolling back inventory reservation");
         }
-        
+
         if (ctx.PaymentAuthorized)
         {
             ctx.Log.Add($"[{DateTime.UtcNow:HH:mm:ss}] Rolling back payment authorization");
@@ -144,9 +144,9 @@ public static class OrderProcessingDemo
             Customer = customer,
             Amount = amount
         };
-        
+
         var workflow = new OrderProcessingWorkflow();
-        
+
         try
         {
             await workflow.ExecuteAsync(ctx);
@@ -155,10 +155,10 @@ public static class OrderProcessingDemo
         {
             // Exception was logged by OnError hook
         }
-        
+
         return ctx.Log;
     }
-    
+
     public static async Task<List<string>> RunWithInvalidAmountAsync()
     {
         var ctx = new OrderContext
@@ -167,9 +167,9 @@ public static class OrderProcessingDemo
             Customer = "Jane Smith",
             Amount = -50.00m  // Invalid amount will cause failure
         };
-        
+
         var workflow = new OrderProcessingWorkflow();
-        
+
         try
         {
             await workflow.ExecuteAsync(ctx);
@@ -178,10 +178,10 @@ public static class OrderProcessingDemo
         {
             // Exception was logged by OnError hook
         }
-        
+
         return ctx.Log;
     }
-    
+
     public static async Task<List<string>> RunWithCancellationAsync(CancellationToken ct)
     {
         var ctx = new OrderContext
@@ -190,9 +190,9 @@ public static class OrderProcessingDemo
             Customer = "Bob Johnson",
             Amount = 150.00m
         };
-        
+
         var workflow = new OrderProcessingWorkflow();
-        
+
         try
         {
             await workflow.ExecuteAsync(ctx, ct);
@@ -205,7 +205,7 @@ public static class OrderProcessingDemo
         {
             // Exception was logged by OnError hook
         }
-        
+
         return ctx.Log;
     }
 }

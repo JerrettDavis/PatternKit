@@ -13,7 +13,7 @@ public sealed class FlyweightDemoTests(ITestOutputHelper output) : TinyBddXunitB
     [Fact]
     public Task Glyph_Rendering_Reuses()
         => Given("a rendered sentence", () => RenderSentence("HELLO HELLO"))
-            .When("group by reference", layout => layout.GroupBy(e => e.glyph).Select(g => (glyph:g.Key,count:g.Count())).ToList())
+            .When("group by reference", layout => layout.GroupBy(e => e.glyph).Select(g => (glyph: g.Key, count: g.Count())).ToList())
             .Then("some glyph appears more than once", groups => groups.Any(g => g.count > 1))
             .AssertPassed();
 

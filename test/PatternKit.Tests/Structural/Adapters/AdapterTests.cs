@@ -65,7 +65,7 @@ public sealed class AdapterTests(ITestOutputHelper output) : TinyBddXunitBase(ou
             .And("error propagated", r => r.err == "name required")
             .AssertPassed();
 
-    [Scenario("SeedFrom initializes destination from input before maps")] 
+    [Scenario("SeedFrom initializes destination from input before maps")]
     [Fact]
     public Task SeedFrom_Uses_Input()
         => Given("an adapter seeded from input", () =>

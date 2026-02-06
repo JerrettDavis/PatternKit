@@ -19,9 +19,9 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         // Find all types (classes, interfaces, structs, records) marked with [GenerateVisitor]
         var visitorRoots = context.SyntaxProvider.ForAttributeWithMetadataName(
             fullyQualifiedMetadataName: "PatternKit.Generators.Visitors.GenerateVisitorAttribute",
-            predicate: static (node, _) => node is ClassDeclarationSyntax 
-                                        or InterfaceDeclarationSyntax 
-                                        or StructDeclarationSyntax 
+            predicate: static (node, _) => node is ClassDeclarationSyntax
+                                        or InterfaceDeclarationSyntax
+                                        or StructDeclarationSyntax
                                         or RecordDeclarationSyntax,
             transform: static (gasc, ct) => GetVisitorRoot(gasc, ct)
         ).Where(static x => x is not null);
@@ -43,25 +43,25 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             return null;
 
         var attr = context.Attributes[0];
-        
+
         // Read attribute properties
         var visitorInterfaceName = GetAttributeProperty<string>(attr, "VisitorInterfaceName");
         var generateAsync = GetAttributeProperty<bool?>(attr, "GenerateAsync") ?? true;
         var generateActions = GetAttributeProperty<bool?>(attr, "GenerateActions") ?? true;
         var autoDiscover = GetAttributeProperty<bool?>(attr, "AutoDiscoverDerivedTypes") ?? true;
 
-        var ns = baseType.ContainingNamespace.IsGlobalNamespace 
-            ? null 
+        var ns = baseType.ContainingNamespace.IsGlobalNamespace
+            ? null
             : baseType.ContainingNamespace.ToDisplayString();
 
         var baseName = baseType.Name;
         var baseFullName = baseType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        
+
         // Generate default visitor interface name
         var defaultVisitorName = GetDefaultVisitorInterfaceName(baseType);
 
         // Discover derived types in the same assembly
-        var derivedTypes = autoDiscover 
+        var derivedTypes = autoDiscover
             ? DiscoverDerivedTypes(baseType, context.SemanticModel.Compilation)
             : ImmutableArray<INamedTypeSymbol>.Empty;
 
@@ -76,7 +76,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             DerivedTypes: derivedTypes
         );
     }
-    
+
     /// <summary>
     /// Generates a default visitor interface name based on the base type.
     /// For interfaces with I-prefix (e.g., IShape), generates IShapeVisitor.
@@ -85,17 +85,17 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     private static string GetDefaultVisitorInterfaceName(INamedTypeSymbol baseType)
     {
         var baseName = baseType.Name;
-        
+
         // If base is an interface with I-prefix (Hungarian notation), don't add another I
-        if (baseType.TypeKind == TypeKind.Interface && 
-            baseName.StartsWith("I") && 
-            baseName.Length > 1 && 
+        if (baseType.TypeKind == TypeKind.Interface &&
+            baseName.StartsWith("I") &&
+            baseName.Length > 1 &&
             char.IsUpper(baseName[1]))
         {
             // Interface name like "IShape" -> "IShapeVisitor"
             return $"{baseName}Visitor";
         }
-        
+
         // Class name like "Shape" -> "IShapeVisitor"
         return $"I{baseName}Visitor";
     }
@@ -109,56 +109,56 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     }
 
     private static ImmutableArray<INamedTypeSymbol> DiscoverDerivedTypes(
-        INamedTypeSymbol baseType, 
+        INamedTypeSymbol baseType,
         Compilation compilation)
     {
         var derived = new List<INamedTypeSymbol>();
-        
+
         foreach (var tree in compilation.SyntaxTrees)
         {
             var semanticModel = compilation.GetSemanticModel(tree);
             var root = tree.GetRoot();
-            
+
             // Discover classes
             foreach (var classDecl in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
             {
                 var symbol = semanticModel.GetDeclaredSymbol(classDecl) as INamedTypeSymbol;
                 if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
-                
+
                 if (IsDerivedFrom(symbol, baseType))
                 {
                     derived.Add(symbol);
                 }
             }
-            
+
             // Discover structs
             foreach (var structDecl in root.DescendantNodes().OfType<StructDeclarationSyntax>())
             {
                 var symbol = semanticModel.GetDeclaredSymbol(structDecl) as INamedTypeSymbol;
                 if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
-                
+
                 if (IsDerivedFrom(symbol, baseType))
                 {
                     derived.Add(symbol);
                 }
             }
-            
+
             // Discover records
             foreach (var recordDecl in root.DescendantNodes().OfType<RecordDeclarationSyntax>())
             {
                 var symbol = semanticModel.GetDeclaredSymbol(recordDecl) as INamedTypeSymbol;
                 if (symbol is null || SymbolEqualityComparer.Default.Equals(symbol, baseType)) continue;
-                
+
                 if (IsDerivedFrom(symbol, baseType))
                 {
                     derived.Add(symbol);
                 }
             }
         }
-        
+
         return derived.ToImmutableArray();
     }
-    
+
     private static bool IsDerivedFrom(INamedTypeSymbol type, INamedTypeSymbol baseType)
     {
         // Check class inheritance
@@ -169,22 +169,22 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 return true;
             current = current.BaseType;
         }
-        
+
         // Check interface implementation
         return ImplementsInterface(type, baseType);
     }
-    
+
     private static bool ImplementsInterface(INamedTypeSymbol type, INamedTypeSymbol interfaceType)
     {
         if (interfaceType.TypeKind != TypeKind.Interface)
             return false;
-            
+
         foreach (var iface in type.AllInterfaces)
         {
             if (SymbolEqualityComparer.Default.Equals(iface, interfaceType))
                 return true;
         }
-        
+
         return false;
     }
 
@@ -199,7 +199,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 location,
                 root.BaseName));
         }
-        
+
         // Check if base type is partial (all types need to be partial for Accept method generation)
         if (!IsPartial(root.BaseType))
         {
@@ -210,7 +210,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 root.BaseName));
             return; // Can't generate if not partial
         }
-        
+
         // Check if derived types are partial
         foreach (var derivedType in root.DerivedTypes.Where(dt => !IsPartial(dt)))
         {
@@ -220,17 +220,17 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 location,
                 derivedType.Name));
         }
-        
+
         // Generate visitor interfaces
         GenerateVisitorInterfaces(context, root);
-        
+
         // Generate Accept methods for base and derived types
         GenerateAcceptMethods(context, root);
-        
+
         // Generate fluent builders
         GenerateFluentBuilders(context, root);
     }
-    
+
     private static bool IsPartial(INamedTypeSymbol type)
     {
         // Check if any of the declarations is marked as partial
@@ -329,7 +329,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     private static void GenerateAcceptMethods(SourceProductionContext context, VisitorRootInfo root)
     {
         var allTypes = GetAllVisitableTypes(root);
-        
+
         foreach (var type in allTypes)
         {
             var sb = new StringBuilder();
@@ -337,8 +337,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             sb.AppendLine("// <auto-generated />");
             sb.AppendLine();
 
-            var ns = type.ContainingNamespace.IsGlobalNamespace 
-                ? null 
+            var ns = type.ContainingNamespace.IsGlobalNamespace
+                ? null
                 : type.ContainingNamespace.ToDisplayString();
 
             if (ns is not null)
@@ -417,19 +417,19 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     private static void GenerateFluentBuilders(SourceProductionContext context, VisitorRootInfo root)
     {
         var allTypes = GetAllVisitableTypes(root);
-        
+
         // Generate sync result builder
         GenerateSyncResultBuilder(context, root, allTypes);
-        
+
         if (root.GenerateActions)
         {
             GenerateSyncActionBuilder(context, root, allTypes);
         }
-        
+
         if (root.GenerateAsync)
         {
             GenerateAsyncResultBuilder(context, root, allTypes);
-            
+
             if (root.GenerateActions)
             {
                 GenerateAsyncActionBuilder(context, root, allTypes);
@@ -438,8 +438,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     }
 
     private static void GenerateSyncResultBuilder(
-        SourceProductionContext context, 
-        VisitorRootInfo root, 
+        SourceProductionContext context,
+        VisitorRootInfo root,
         ImmutableArray<INamedTypeSymbol> visitableTypes)
     {
         var sb = new StringBuilder();
@@ -460,7 +460,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"public sealed class {builderName}<TResult>");
         sb.AppendLine("{");
-        
+
         // Store handlers in a dictionary keyed by Type
         sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, TResult>? _defaultHandler;");
@@ -500,7 +500,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, TResult>? _defaultHandler;");
         sb.AppendLine();
-        
+
         sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, TResult>> handlers, System.Func<{root.BaseName}, TResult>? defaultHandler)");
         sb.AppendLine("        {");
         sb.AppendLine($"            _handlers = handlers;");
@@ -513,7 +513,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         {
             var typeName = type.Name;
             var paramName = ToCamelCase(typeName);
-            
+
             sb.AppendLine($"        public TResult Visit({typeName} {paramName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
@@ -532,8 +532,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     }
 
     private static void GenerateSyncActionBuilder(
-        SourceProductionContext context, 
-        VisitorRootInfo root, 
+        SourceProductionContext context,
+        VisitorRootInfo root,
         ImmutableArray<INamedTypeSymbol> visitableTypes)
     {
         var sb = new StringBuilder();
@@ -554,7 +554,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"public sealed class {builderName}");
         sb.AppendLine("{");
-        
+
         sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> _handlers = new();");
         sb.AppendLine($"    private System.Action<{root.BaseName}>? _defaultHandler;");
         sb.AppendLine();
@@ -589,7 +589,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> _handlers;");
         sb.AppendLine($"        private readonly System.Action<{root.BaseName}>? _defaultHandler;");
         sb.AppendLine();
-        
+
         sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Action<{root.BaseName}>> handlers, System.Action<{root.BaseName}>? defaultHandler)");
         sb.AppendLine("        {");
         sb.AppendLine($"            _handlers = handlers;");
@@ -601,7 +601,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         {
             var typeName = type.Name;
             var paramName = ToCamelCase(typeName);
-            
+
             sb.AppendLine($"        public void Visit({typeName} {paramName})");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
@@ -621,8 +621,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     }
 
     private static void GenerateAsyncResultBuilder(
-        SourceProductionContext context, 
-        VisitorRootInfo root, 
+        SourceProductionContext context,
+        VisitorRootInfo root,
         ImmutableArray<INamedTypeSymbol> visitableTypes)
     {
         var sb = new StringBuilder();
@@ -643,7 +643,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"public sealed class {builderName}<TResult>");
         sb.AppendLine("{");
-        
+
         sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
         sb.AppendLine();
@@ -678,7 +678,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? _defaultHandler;");
         sb.AppendLine();
-        
+
         sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>> handlers, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask<TResult>>? defaultHandler)");
         sb.AppendLine("        {");
         sb.AppendLine($"            _handlers = handlers;");
@@ -690,7 +690,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         {
             var typeName = type.Name;
             var paramName = ToCamelCase(typeName);
-            
+
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
@@ -709,8 +709,8 @@ public sealed class VisitorGenerator : IIncrementalGenerator
     }
 
     private static void GenerateAsyncActionBuilder(
-        SourceProductionContext context, 
-        VisitorRootInfo root, 
+        SourceProductionContext context,
+        VisitorRootInfo root,
         ImmutableArray<INamedTypeSymbol> visitableTypes)
     {
         var sb = new StringBuilder();
@@ -731,7 +731,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine("/// </summary>");
         sb.AppendLine($"public sealed class {builderName}");
         sb.AppendLine("{");
-        
+
         sb.AppendLine($"    private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> _handlers = new();");
         sb.AppendLine($"    private System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
         sb.AppendLine();
@@ -766,7 +766,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         sb.AppendLine($"        private readonly System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> _handlers;");
         sb.AppendLine($"        private readonly System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? _defaultHandler;");
         sb.AppendLine();
-        
+
         sb.AppendLine($"        internal Implementation(System.Collections.Generic.Dictionary<System.Type, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>> handlers, System.Func<{root.BaseName}, System.Threading.CancellationToken, System.Threading.Tasks.ValueTask>? defaultHandler)");
         sb.AppendLine("        {");
         sb.AppendLine($"            _handlers = handlers;");
@@ -778,7 +778,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         {
             var typeName = type.Name;
             var paramName = ToCamelCase(typeName);
-            
+
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine($"            if (_handlers.TryGetValue(typeof({typeName}), out var handler))");
@@ -806,7 +806,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
     private static string ToCamelCase(string name)
     {
-        if (string.IsNullOrEmpty(name) || name.Length == 1) 
+        if (string.IsNullOrEmpty(name) || name.Length == 1)
             return name.ToLowerInvariant();
         return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
@@ -821,25 +821,25 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         bool GenerateActions,
         ImmutableArray<INamedTypeSymbol> DerivedTypes
     );
-    
+
     /// <summary>
     /// Diagnostic descriptors for visitor pattern generation.
     /// </summary>
     private static class Diagnostics
     {
         private const string Category = "PatternKit.Generators.Visitor";
-        
+
         /// <summary>
         /// PKVIS001: No concrete types found for a marked base type.
         /// </summary>
         public static readonly DiagnosticDescriptor NoConcretTypes = new(
             "PKVIS001",
             "No concrete types found",
-            "No concrete types implementing or deriving from '{0}' were found. Add derived types or set AutoDiscoverDerivedTypes = false",
+            "No concrete types implementing or deriving from '{0}' were found. Add derived types or set AutoDiscoverDerivedTypes = false.",
             Category,
             DiagnosticSeverity.Warning,
             isEnabledByDefault: true);
-        
+
         /// <summary>
         /// PKVIS002: Type must be partial for Accept method generation.
         /// </summary>
@@ -850,7 +850,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             Category,
             DiagnosticSeverity.Error,
             isEnabledByDefault: true);
-        
+
         /// <summary>
         /// PKVIS004: Derived type is not partial.
         /// </summary>

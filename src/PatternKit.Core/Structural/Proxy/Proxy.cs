@@ -156,7 +156,7 @@ public sealed class Proxy<TIn, TOut> where TIn : notnull
     {
         if (_cachedSubject is not null)
             return _cachedSubject(input);
-        
+
         lock (_lock)
         {
             _cachedSubject ??= _subjectFactory!();

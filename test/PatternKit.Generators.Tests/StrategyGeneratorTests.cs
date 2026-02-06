@@ -8,7 +8,7 @@ namespace PatternKit.Generators.Tests;
 public class StrategyGeneratorTests
 {
     // A small user file that triggers all 3 strategies
-    private const string Specs ="""
+    private const string Specs = """
                                  using PatternKit.Generators;
 
                                  namespace PatternKit.Examples.Generators;

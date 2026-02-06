@@ -222,7 +222,7 @@ public sealed class Command<TCtx>
                     var vt = items[i].Execute(in ctx, ct);
                     if (vt.IsCompletedSuccessfully)
                         continue;
-                    
+
                     // Not completed successfully: enter slow path (await then continue); copy ctx to avoid capturing 'in' in async state machine
                     var copy = ctx;
                     return AwaitNext(i, vt, copy, ct, items);
@@ -251,7 +251,7 @@ public sealed class Command<TCtx>
                 {
                     if (!items[i].TryUndo(in ctx, ct, out var vt) || vt.IsCompletedSuccessfully)
                         continue;
-                    
+
                     var copy = ctx;
                     return AwaitUndo(i, vt, copy, ct, items);
                 }
@@ -263,10 +263,10 @@ public sealed class Command<TCtx>
                     await pending.ConfigureAwait(false);
                     for (var j = startIndex - 1; j >= 0; j--)
                     {
-                        if (!itemsArr[j].TryUndo(in localCtx, ct2, out var t) || 
+                        if (!itemsArr[j].TryUndo(in localCtx, ct2, out var t) ||
                             t.IsCompletedSuccessfully)
                             continue;
-                        
+
                         await t.ConfigureAwait(false);
                     }
                 }

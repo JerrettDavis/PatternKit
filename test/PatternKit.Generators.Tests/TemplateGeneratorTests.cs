@@ -168,7 +168,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -228,7 +228,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -290,7 +290,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -359,7 +359,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -416,7 +416,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -467,7 +467,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
@@ -504,7 +504,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
@@ -541,7 +541,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
@@ -859,7 +859,7 @@ public class TemplateGeneratorTests
         // Should not have PKTMP008 diagnostic
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.DoesNotContain(diagnostics, d => d.Id == "PKTMP008");
-        
+
         // Should compile successfully
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
@@ -902,7 +902,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 

@@ -220,8 +220,8 @@ public sealed class Flyweight<TKey, TValue> where TKey : notnull
 
             if (_preload is not { Count: > 0 })
                 return new Flyweight<TKey, TValue>(dict, _factory);
-            
-            
+
+
             foreach (var kv in _preload)
             {
                 dict[kv.Key] = kv.Value; // last wins
