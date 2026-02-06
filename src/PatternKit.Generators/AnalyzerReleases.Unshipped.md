@@ -97,3 +97,4 @@ PKSNG006 | PatternKit.Generators.Singleton | Error | Instance property name conf
 PKSNG007 | PatternKit.Generators.Singleton | Error | Generic types are not supported
 PKSNG008 | PatternKit.Generators.Singleton | Error | Nested types are not supported
 PKSNG009 | PatternKit.Generators.Singleton | Error | Invalid instance property name
+PKSNG010 | PatternKit.Generators.Singleton | Error | Abstract types not supported for Singleton pattern

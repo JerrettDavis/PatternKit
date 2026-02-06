@@ -22,6 +22,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private const string DiagIdGenericType = "PKSNG007";
     private const string DiagIdNestedType = "PKSNG008";
     private const string DiagIdInvalidPropertyName = "PKSNG009";
+    private const string DiagIdAbstractType = "PKSNG010";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -91,6 +92,14 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         id: DiagIdInvalidPropertyName,
         title: "Invalid instance property name",
         messageFormat: "The instance property name '{0}' is not a valid C# identifier.",
+        category: "PatternKit.Generators.Singleton",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor AbstractTypeDescriptor = new(
+        id: DiagIdAbstractType,
+        title: "Abstract types not supported for Singleton pattern",
+        messageFormat: "Type '{0}' is abstract and cannot be directly instantiated. Either provide a [SingletonFactory] method or use a concrete type.",
         category: "PatternKit.Generators.Singleton",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -165,6 +174,29 @@ public sealed class SingletonGenerator : IIncrementalGenerator
             return;
         }
 
+        // Find factory method early to check if abstract types have one
+        var factoryMethods = FindFactoryMethods(typeSymbol);
+        if (factoryMethods.Count > 1)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                MultipleFactoriesDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        var factoryMethod = factoryMethods.FirstOrDefault();
+
+        // Check for unsupported abstract types (unless they have a factory method)
+        if (typeSymbol.IsAbstract && factoryMethod is null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                AbstractTypeDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
         // Parse attribute arguments
         var config = ParseSingletonConfig(attribute);
 
@@ -188,19 +220,6 @@ public sealed class SingletonGenerator : IIncrementalGenerator
                 typeSymbol.Name));
             return;
         }
-
-        // Find factory method if any
-        var factoryMethods = FindFactoryMethods(typeSymbol);
-        if (factoryMethods.Count > 1)
-        {
-            context.ReportDiagnostic(Diagnostic.Create(
-                MultipleFactoriesDescriptor,
-                node.GetLocation(),
-                typeSymbol.Name));
-            return;
-        }
-
-        var factoryMethod = factoryMethods.FirstOrDefault();
 
         // Check for usable constructor or factory
         var hasParameterlessConstructor = HasAccessibleParameterlessConstructor(typeSymbol);
@@ -257,7 +276,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         };
     }
 
-    private SingletonConfig ParseSingletonConfig(AttributeData attribute)
+    private static SingletonConfig ParseSingletonConfig(AttributeData attribute)
     {
         var config = new SingletonConfig();
 
@@ -265,13 +284,23 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         {
             switch (named.Key)
             {
-                case nameof(SingletonAttribute.Mode):
-                    config.Mode = (int)named.Value.Value!;
+                case "Mode":
+                    var modeValue = (int)named.Value.Value!;
+                    if (Enum.IsDefined(typeof(SingletonModeValue), modeValue))
+                    {
+                        config.Mode = (SingletonModeValue)modeValue;
+                    }
+                    // Invalid values default to Eager (the default)
                     break;
-                case nameof(SingletonAttribute.Threading):
-                    config.Threading = (int)named.Value.Value!;
+                case "Threading":
+                    var threadingValue = (int)named.Value.Value!;
+                    if (Enum.IsDefined(typeof(SingletonThreadingValue), threadingValue))
+                    {
+                        config.Threading = (SingletonThreadingValue)threadingValue;
+                    }
+                    // Invalid values default to ThreadSafe (the default)
                     break;
-                case nameof(SingletonAttribute.InstancePropertyName):
+                case "InstancePropertyName":
                     config.InstancePropertyName = (string)named.Value.Value!;
                     break;
             }
@@ -282,15 +311,18 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 
     private static bool HasNameConflict(INamedTypeSymbol typeSymbol, string propertyName)
     {
+        // Normalize verbatim identifiers by stripping leading @
+        var normalizedName = propertyName.StartsWith("@") ? propertyName.Substring(1) : propertyName;
+
         // Check for existing members with the same name in declared members
-        if (typeSymbol.GetMembers(propertyName).Length > 0)
+        if (typeSymbol.GetMembers(normalizedName).Length > 0)
             return true;
 
         // Also check inherited members by walking base types
         var baseType = typeSymbol.BaseType;
         while (baseType != null && baseType.SpecialType != SpecialType.System_Object)
         {
-            if (baseType.GetMembers(propertyName).Any(m => m.DeclaredAccessibility != Accessibility.Private))
+            if (baseType.GetMembers(normalizedName).Any(m => m.DeclaredAccessibility != Accessibility.Private))
                 return true;
             baseType = baseType.BaseType;
         }
@@ -325,33 +357,15 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         if (string.IsNullOrWhiteSpace(name))
             return false;
 
-        // Handle verbatim identifiers (@keyword) - these are allowed
-        var isVerbatim = name.StartsWith("@");
-        var identifier = isVerbatim ? name.Substring(1) : name;
+        // Use Roslyn's parser for accurate C# identifier validation
+        // name is guaranteed non-null here due to the check above
+        var token = SyntaxFactory.ParseToken(name!);
 
-        if (identifier.Length == 0)
-            return false;
-
-        // First character must be letter or underscore
-        if (!char.IsLetter(identifier[0]) && identifier[0] != '_')
-            return false;
-
-        // Remaining characters must be letters, digits, or underscores
-        for (int i = 1; i < identifier.Length; i++)
-        {
-            if (!char.IsLetterOrDigit(identifier[i]) && identifier[i] != '_')
-                return false;
-        }
-
-        // Check for reserved keywords (unless verbatim identifier)
-        if (!isVerbatim)
-        {
-            var keywordKind = SyntaxFacts.GetKeywordKind(identifier);
-            if (keywordKind != SyntaxKind.None)
-                return false;
-        }
-
-        return true;
+        // Must be a valid identifier token with no trailing trivia/errors
+        // and must consume the entire input
+        return token.IsKind(SyntaxKind.IdentifierToken) &&
+               token.Text == name &&
+               !token.IsMissing;
     }
 
     private static bool HasPublicConstructor(INamedTypeSymbol typeSymbol)
@@ -398,8 +412,8 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         sb.AppendLine("{");
 
         // Generate based on mode
-        var isLazy = config.Mode == 1; // SingletonMode.Lazy
-        var isThreadSafe = config.Threading == 0; // SingletonThreading.ThreadSafe
+        var isLazy = config.Mode == SingletonModeValue.Lazy;
+        var isThreadSafe = config.Threading == SingletonThreadingValue.ThreadSafe;
 
         var instanceCreation = typeInfo.FactoryMethodName != null
             ? $"{typeInfo.FactoryMethodName}()"
@@ -410,31 +424,31 @@ public sealed class SingletonGenerator : IIncrementalGenerator
             if (isThreadSafe)
             {
                 // Lazy<T> with thread-safety
-                sb.AppendLine($"    private static readonly global::System.Lazy<{typeInfo.TypeName}> _lazyInstance =");
+                sb.AppendLine($"    private static readonly global::System.Lazy<{typeInfo.TypeName}> __PatternKit_LazyInstance =");
                 sb.AppendLine($"        new global::System.Lazy<{typeInfo.TypeName}>(() => {instanceCreation});");
                 sb.AppendLine();
                 sb.AppendLine("    /// <summary>Gets the singleton instance of this type.</summary>");
-                sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => _lazyInstance.Value;");
+                sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => __PatternKit_LazyInstance.Value;");
             }
             else
             {
                 // Non-thread-safe lazy initialization
-                sb.AppendLine($"    private static {typeInfo.TypeName}? _instance;");
+                sb.AppendLine($"    private static {typeInfo.TypeName}? __PatternKit_Instance;");
                 sb.AppendLine();
                 sb.AppendLine("    /// <summary>");
                 sb.AppendLine("    /// Gets the singleton instance of this type.");
                 sb.AppendLine("    /// WARNING: This implementation is not thread-safe.");
                 sb.AppendLine("    /// </summary>");
-                sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => _instance ??= {instanceCreation};");
+                sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => __PatternKit_Instance ??= {instanceCreation};");
             }
         }
         else
         {
             // Eager initialization
-            sb.AppendLine($"    private static readonly {typeInfo.TypeName} _instance = {instanceCreation};");
+            sb.AppendLine($"    private static readonly {typeInfo.TypeName} __PatternKit_Instance = {instanceCreation};");
             sb.AppendLine();
             sb.AppendLine("    /// <summary>Gets the singleton instance of this type.</summary>");
-            sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => _instance;");
+            sb.AppendLine($"    public static {typeInfo.TypeName} {config.InstancePropertyName} => __PatternKit_Instance;");
         }
 
         sb.AppendLine("}");
@@ -442,11 +456,30 @@ public sealed class SingletonGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    // Helper classes
+    // Helper classes and enums
+
+    /// <summary>
+    /// Internal enum mirroring SingletonMode from abstractions.
+    /// </summary>
+    private enum SingletonModeValue
+    {
+        Eager = 0,
+        Lazy = 1
+    }
+
+    /// <summary>
+    /// Internal enum mirroring SingletonThreading from abstractions.
+    /// </summary>
+    private enum SingletonThreadingValue
+    {
+        ThreadSafe = 0,
+        SingleThreadedFast = 1
+    }
+
     private class SingletonConfig
     {
-        public int Mode { get; set; } // 0 = Eager, 1 = Lazy
-        public int Threading { get; set; } // 0 = ThreadSafe, 1 = SingleThreadedFast
+        public SingletonModeValue Mode { get; set; } = SingletonModeValue.Eager;
+        public SingletonThreadingValue Threading { get; set; } = SingletonThreadingValue.ThreadSafe;
         public string InstancePropertyName { get; set; } = "Instance";
     }
 

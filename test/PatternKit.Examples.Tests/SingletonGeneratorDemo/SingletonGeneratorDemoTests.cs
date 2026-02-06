@@ -30,12 +30,16 @@ public class SingletonGeneratorDemoTests
     [Fact]
     public void AppClock_ProvidesUnixTimestamp()
     {
+        // Arrange
+        var beforeTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
         // Act
         var timestamp = AppClock.Instance.UnixTimestamp;
+        var afterTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
         // Assert
         Assert.True(timestamp > 0);
-        Assert.True(timestamp > 1700000000); // After 2023
+        Assert.InRange(timestamp, beforeTimestamp, afterTimestamp);
     }
 
     [Fact]

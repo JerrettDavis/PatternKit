@@ -39,10 +39,10 @@ Generated:
 ```csharp
 public partial class AppClock
 {
-    private static readonly AppClock _instance = new AppClock();
+    private static readonly AppClock __PatternKit_Instance = new AppClock();
     
     /// <summary>Gets the singleton instance of this type.</summary>
-    public static AppClock Instance => _instance;
+    public static AppClock Instance => __PatternKit_Instance;
 }
 ```
 
@@ -72,8 +72,8 @@ public partial class Configuration
 
 Generated:
 ```csharp
-private static readonly Configuration _instance = new Configuration();
-public static Configuration Instance => _instance;
+private static readonly Configuration __PatternKit_Instance = new Configuration();
+public static Configuration Instance => __PatternKit_Instance;
 ```
 
 **Pros:**
@@ -102,10 +102,10 @@ public partial class ExpensiveService
 
 Generated (thread-safe):
 ```csharp
-private static readonly Lazy<ExpensiveService> _lazyInstance =
+private static readonly Lazy<ExpensiveService> __PatternKit_LazyInstance =
     new Lazy<ExpensiveService>(() => new ExpensiveService());
 
-public static ExpensiveService Instance => _lazyInstance.Value;
+public static ExpensiveService Instance => __PatternKit_LazyInstance.Value;
 ```
 
 **Pros:**
@@ -144,13 +144,13 @@ public partial class UiService
 
 Generated:
 ```csharp
-private static UiService? _instance;
+private static UiService? __PatternKit_Instance;
 
 /// <summary>
 /// Gets the singleton instance of this type.
 /// WARNING: This implementation is not thread-safe.
 /// </summary>
-public static UiService Instance => _instance ??= new UiService();
+public static UiService Instance => __PatternKit_Instance ??= new UiService();
 ```
 
 ⚠️ **Warning:** Only use `SingleThreadedFast` when you can guarantee single-threaded access. Multi-threaded access may result in multiple instances being created.
@@ -230,6 +230,7 @@ The generator supports:
 | **PKSNG007** | Error | Generic types are not supported for singleton generation |
 | **PKSNG008** | Error | Nested types are not supported for singleton generation |
 | **PKSNG009** | Error | Invalid instance property name (not a valid C# identifier) |
+| **PKSNG010** | Error | Abstract types not supported (unless `[SingletonFactory]` provided) |
 
 ## Best Practices
 

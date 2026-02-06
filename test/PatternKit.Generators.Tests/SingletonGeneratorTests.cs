@@ -37,8 +37,8 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.AppClock.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("private static readonly AppClock _instance = new AppClock();", generatedSource);
-        Assert.Contains("public static AppClock Instance => _instance;", generatedSource);
+        Assert.Contains("private static readonly AppClock __PatternKit_Instance = new AppClock();", generatedSource);
+        Assert.Contains("public static AppClock Instance => __PatternKit_Instance;", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -84,7 +84,7 @@ public class SingletonGeneratorTests
             .SourceText.ToString();
 
         Assert.Contains("System.Lazy<ConfigManager>", generatedSource);
-        Assert.Contains("_lazyInstance.Value", generatedSource);
+        Assert.Contains("__PatternKit_LazyInstance.Value", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -119,7 +119,7 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.FastCache.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("_instance ??=", generatedSource);
+        Assert.Contains("__PatternKit_Instance ??=", generatedSource);
         Assert.Contains("not thread-safe", generatedSource);
 
         // Compilation succeeds
@@ -558,6 +558,71 @@ public class SingletonGeneratorTests
         // PKSNG008 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKSNG008");
+    }
+
+    [Fact]
+    public void ErrorWhenAbstractType()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton]
+            public abstract partial class AbstractSingleton
+            {
+                protected AbstractSingleton() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenAbstractType));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKSNG010 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKSNG010");
+    }
+
+    [Fact]
+    public void AllowAbstractTypeWithFactory()
+    {
+        const string source = """
+            using PatternKit.Generators.Singleton;
+
+            namespace TestNamespace;
+
+            [Singleton]
+            public abstract partial class AbstractWithFactory
+            {
+                protected AbstractWithFactory() { }
+
+                [SingletonFactory]
+                private static AbstractWithFactory Create() => new ConcreteImpl();
+            }
+
+            public class ConcreteImpl : AbstractWithFactory { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AllowAbstractTypeWithFactory));
+        var gen = new SingletonGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No PKSNG010 - abstract type is allowed with factory
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.DoesNotContain(diags, d => d.Id == "PKSNG010");
+
+        // Generated code uses factory method
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace.AbstractWithFactory.Singleton.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("Create()", generatedSource);
+
+        // Compilation succeeds
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     [Fact]
