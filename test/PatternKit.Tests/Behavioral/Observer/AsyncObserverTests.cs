@@ -141,7 +141,7 @@ public sealed class AsyncObserverTests(ITestOutputHelper output) : TinyBddXunitB
             .AssertPassed();
     }
 
-    [Scenario("SwallowErrors: exceptions don't propagate; others continue (async)")] 
+    [Scenario("SwallowErrors: exceptions don't propagate; others continue (async)")]
     [Fact]
     public async Task SwallowErrors_Allows_Continuation()
     {

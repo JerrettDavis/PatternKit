@@ -8,6 +8,9 @@
   href: patterns/
   homepage: patterns/
 
+- name: Guides
+  href: guides/toc.yml
+
 - name: Generators
   href: generators/
   homepage: generators/

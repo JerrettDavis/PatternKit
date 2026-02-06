@@ -24,7 +24,7 @@ public sealed class Singleton<T>
 
         if (!eager)
             return;
-        
+
         // Eagerly create and initialize once during construction
         var v = _factory();
         _init?.Invoke(v);
@@ -42,7 +42,7 @@ public sealed class Singleton<T>
         {
             if (_created)
                 return _value;
-            
+
             var v = _factory();
             _init?.Invoke(v);
             _value = v;

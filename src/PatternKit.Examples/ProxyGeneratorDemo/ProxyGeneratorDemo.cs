@@ -118,7 +118,7 @@ public static class ProxyGeneratorDemo
         PrintSection("4. Interceptor Ordering");
 
         var service = new RealPaymentService();
-        
+
         Console.WriteLine("Order: Auth → Timing → Logging");
         var interceptors1 = new IPaymentServiceInterceptor[]
         {

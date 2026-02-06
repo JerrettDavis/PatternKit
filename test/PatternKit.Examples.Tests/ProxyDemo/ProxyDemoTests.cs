@@ -62,7 +62,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var r3 = proxy.Execute(0);
                 return (r1, r2, r3);
             })
-            .Then("returns correct results", r => 
+            .Then("returns correct results", r =>
                 r.r1 == "positive" && r.r2 == "negative" && r.r3 == "zero")
             .AssertPassed();
 
@@ -74,11 +74,11 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<int, int>();
                 mock.Returns(42);
                 var proxy = mock.Build();
-                
+
                 proxy.Execute(1);
                 proxy.Execute(2);
                 proxy.Execute(1);
-                
+
                 return mock;
             })
             .When("verify specific input called twice", mock =>
@@ -104,10 +104,10 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<int, int>();
                 mock.Returns(42);
                 var proxy = mock.Build();
-                
+
                 proxy.Execute(1);
                 proxy.Execute(2);
-                
+
                 return mock;
             })
             .When("verify non-existent call", mock =>
@@ -125,10 +125,10 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<string, bool>();
                 mock.Returns(true);
                 var proxy = mock.Build();
-                
+
                 proxy.Execute("test");
                 proxy.Execute("other");
-                
+
                 return mock;
             })
             .When("verify any matching call exists", mock =>
@@ -154,10 +154,10 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<string, bool>();
                 mock.Returns(true);
                 var proxy = mock.Build();
-                
+
                 proxy.Execute("hello");
                 proxy.Execute("world");
-                
+
                 return mock;
             })
             .When("verify non-matching predicate", mock =>
@@ -175,16 +175,16 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<int, int>();
                 mock.Returns(0);
                 var proxy = mock.Build();
-                
+
                 proxy.Execute(1);
                 proxy.Execute(2);
                 proxy.Execute(3);
-                
+
                 return mock;
             })
             .When("get invocations list", mock => mock.Invocations)
             .Then("contains all invocations", invocations => invocations.Count == 3)
-            .And("in correct order", invocations => 
+            .And("in correct order", invocations =>
                 invocations[0] == 1 && invocations[1] == 2 && invocations[2] == 3)
             .AssertPassed();
 
@@ -196,7 +196,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var mock = MockFramework.CreateMock<(string to, string subject, string body), bool>();
                 mock.Setup(input => input.to.Contains("@valid.com"), true)
                     .Returns(false);
-                
+
                 var proxy = mock.Build();
                 var service = new EmailServiceAdapter(proxy);
                 return service;
@@ -265,8 +265,8 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             })
             .Then("returns correct sum", r => r.result == 8)
             .And("logs input and output", r => r.logs.Count == 2)
-            .And("logs contain values", r => 
-                r.logs.Any(l => l.Contains("5") && l.Contains("3")) && 
+            .And("logs contain values", r =>
+                r.logs.Any(l => l.Contains("5") && l.Contains("3")) &&
                 r.logs.Any(l => l.Contains("8")))
             .AssertPassed();
 
@@ -277,7 +277,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             {
                 var callCount = 0;
                 var logs = new List<string>();
-                
+
                 // Inner proxy with logging
                 var innerProxy = Proxy<int, string>.Create(id =>
                 {
@@ -292,13 +292,13 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                     return result;
                 })
                 .Build();
-                
+
                 // Outer caching proxy
                 var cachedProxy = Proxy<int, string>.Create(
                     id => innerProxy.Execute(id))
                     .CachingProxy()
                     .Build();
-                    
+
                 return (proxy: cachedProxy, callCount: new Func<int>(() => callCount), logs);
             })
             .When("execute same ID multiple times", ctx =>
@@ -495,7 +495,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             })
             .Then("not initialized before first call", r => !r.initializedBefore)
             .And("initialized after first call", r => r.initializedAfter)
-            .And("both queries succeed", r => 
+            .And("both queries succeed", r =>
                 r.result1.Contains("SELECT 1") && r.result2.Contains("SELECT 2"))
             .AssertPassed();
 
@@ -525,7 +525,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
             .When("testing various access scenarios", ctx =>
             {
                 var userPublic = ctx.proxy.Execute((ctx.user, ctx.publicDoc));
-                
+
                 Exception? userAdminEx = null;
                 try { ctx.proxy.Execute((ctx.user, ctx.adminDoc)); }
                 catch (UnauthorizedAccessException ex) { userAdminEx = ex; }
@@ -737,7 +737,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 return (r1, r2, r3, calls, logCount);
             })
             .Then("cached requests return same data", r => r.r1 == r.r2)
-            .And("results are correct", r => 
+            .And("results are correct", r =>
                 r.r1 == "Remote data for ID 42" && r.r3 == "Remote data for ID 99")
             .And("only made 2 network calls", r => r.calls == 2)
             .And("logged 4 messages", r => r.logCount == 4) // 2 requests × 2 logs each
@@ -767,7 +767,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 var d = proxy.Execute("Delta");
                 return (a, b, c, d);
             })
-            .Then("returns correct values for all", r => 
+            .Then("returns correct values for all", r =>
                 r.a == 1 && r.b == 2 && r.c == 3 && r.d == 0)
             .AssertPassed();
 
@@ -990,7 +990,7 @@ public sealed class ProxyDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
                 }
             })
             .Then("executes successfully", r => r.success)
-            .And("runs all 7 demos", r => 
+            .And("runs all 7 demos", r =>
                 r.output.Contains("Virtual Proxy") &&
                 r.output.Contains("Protection Proxy") &&
                 r.output.Contains("Caching Proxy") &&

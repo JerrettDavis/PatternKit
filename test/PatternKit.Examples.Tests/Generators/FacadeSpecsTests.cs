@@ -15,7 +15,7 @@ public class FacadeSpecsTests
         var rateCalculator = new RateCalculator();
         var estimator = new DeliveryEstimator();
         var validator = new ShippingValidator();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new ShippingFacade(estimator, rateCalculator, validator);
 
@@ -33,19 +33,19 @@ public class FacadeSpecsTests
         var rateCalculator = new RateCalculator();
         var estimator = new DeliveryEstimator();
         var validator = new ShippingValidator();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new ShippingFacade(estimator, rateCalculator, validator);
 
         // Act - Valid shipment
         var isValid = facade.ValidateShipment(destination: "local", weight: 10m);
-        
+
         // Assert
         Assert.True(isValid);
-        
+
         // Act - Invalid shipment (negative weight)
         var isInvalid = facade.ValidateShipment(destination: "local", weight: -5m);
-        
+
         // Assert
         Assert.False(isInvalid);
     }
@@ -57,7 +57,7 @@ public class FacadeSpecsTests
         var rateCalculator = new RateCalculator();
         var estimator = new DeliveryEstimator();
         var validator = new ShippingValidator();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new ShippingFacade(estimator, rateCalculator, validator);
 
@@ -78,7 +78,7 @@ public class FacadeSpecsTests
         var invoice = new InvoiceService();
         var payment = new PaymentProcessor();
         var notification = new NotificationService();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new BillingFacade(invoice, notification, payment, tax);
 
@@ -106,17 +106,17 @@ public class FacadeSpecsTests
         var invoice = new InvoiceService();
         var payment = new PaymentProcessor();
         var notification = new NotificationService();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new BillingFacade(invoice, notification, payment, tax);
-        
+
         // First process a payment to create a receipt in the payment processor
         var paymentResult = facade.ProcessPayment(
             customerId: "CUST001",
             subtotal: 100m,
             jurisdiction: "US-CA",
             paymentMethod: "CreditCard");
-        
+
         Assert.True(paymentResult.Success);
         Assert.NotNull(paymentResult.ReceiptNumber);
 
@@ -140,7 +140,7 @@ public class FacadeSpecsTests
         var invoice = new InvoiceService();
         var payment = new PaymentProcessor();
         var notification = new NotificationService();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new BillingFacade(invoice, notification, payment, tax);
 
@@ -159,17 +159,17 @@ public class FacadeSpecsTests
         var invoice = new InvoiceService();
         var payment = new PaymentProcessor();
         var notification = new NotificationService();
-        
+
         // Constructor parameters are in alphabetical order by type name
         var facade = new BillingFacade(invoice, notification, payment, tax);
-        
+
         // First create an invoice by processing payment
         var result = facade.ProcessPayment(
             customerId: "CUST001",
             subtotal: 100m,
             jurisdiction: "US-CA",
             paymentMethod: "CreditCard");
-        
+
         Assert.True(result.Success);
         Assert.NotNull(result.InvoiceNumber);
 

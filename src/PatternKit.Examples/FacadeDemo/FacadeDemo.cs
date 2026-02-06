@@ -31,7 +31,7 @@ public static class FacadeDemo
         }
 
         public void Release(string reservationId) => Console.WriteLine($"Released reservation: {reservationId}");
-        
+
         public void Restock(string productId, int quantity)
         {
             if (_stock.ContainsKey(productId))
@@ -55,7 +55,7 @@ public static class FacadeDemo
         }
 
         public static void Refund(string transactionId) => Console.WriteLine($"Refunded transaction: {transactionId}");
-        
+
         public static void Void(string transactionId) => Console.WriteLine($"Voided transaction: {transactionId}");
     }
 
@@ -69,7 +69,7 @@ public static class FacadeDemo
         }
 
         public static void Cancel(string shipmentId) => Console.WriteLine($"Cancelled shipment: {shipmentId}");
-        
+
         public static string InitiateReturn(string shipmentId)
         {
             var returnId = $"RET-{shipmentId[5..]}";
@@ -80,13 +80,13 @@ public static class FacadeDemo
 
     public sealed class NotificationService
     {
-        public static void SendOrderConfirmation(string email, string orderId) 
+        public static void SendOrderConfirmation(string email, string orderId)
             => Console.WriteLine($"Sent confirmation to {email} for order {orderId}");
-        
-        public static void SendCancellation(string email, string orderId) 
+
+        public static void SendCancellation(string email, string orderId)
             => Console.WriteLine($"Sent cancellation notice to {email} for order {orderId}");
-        
-        public static void SendRefundNotice(string email, decimal amount) 
+
+        public static void SendRefundNotice(string email, decimal amount)
             => Console.WriteLine($"Sent refund notice to {email} for ${amount:F2}");
     }
 
@@ -121,7 +121,7 @@ public static class FacadeDemo
                 .Operation("place-order", PlaceOrder)
                 .Operation("cancel-order", CancelOrder)
                 .Operation("process-return", ProcessReturn)
-                .Default((in _) => 
+                .Default((in _) =>
                     new OrderResult(false, ErrorMessage: "Unknown operation"))
                 .Build();
         }
@@ -167,7 +167,7 @@ public static class FacadeDemo
         private OrderResult CancelOrder(in OrderRequest request)
         {
             Console.WriteLine($"\n=== Cancelling Order ===");
-            
+
             if (string.IsNullOrEmpty(request.ProductId) || !_orders.TryGetValue(request.ProductId, out var orderData))
             {
                 return new OrderResult(false, ErrorMessage: "Order not found");
@@ -196,7 +196,7 @@ public static class FacadeDemo
         private OrderResult ProcessReturn(in OrderRequest request)
         {
             Console.WriteLine($"\n=== Processing Return ===");
-            
+
             if (string.IsNullOrEmpty(request.ProductId) || !_orders.TryGetValue(request.ProductId, out var orderData))
             {
                 return new OrderResult(false, ErrorMessage: "Order not found");
@@ -252,7 +252,7 @@ public static class FacadeDemo
             Price: 29.99m);
 
         var result = facade.Execute("place-order", orderRequest);
-        
+
         if (result.Success)
         {
             Console.WriteLine($"✓ Order placed: {result.OrderId}");
@@ -262,7 +262,7 @@ public static class FacadeDemo
             // Example 2: Cancel the order
             var cancelRequest = orderRequest with { ProductId = result.OrderId! };
             var cancelResult = facade.Execute("cancel-order", cancelRequest);
-            
+
             if (cancelResult.Success)
             {
                 Console.WriteLine($"✓ Order cancelled: {cancelResult.OrderId}");
@@ -279,7 +279,7 @@ public static class FacadeDemo
             Price: 49.99m);
 
         var result2 = facade.Execute("place-order", order2);
-        
+
         if (result2.Success)
         {
             Console.WriteLine($"✓ Second order placed: {result2.OrderId}");
@@ -287,7 +287,7 @@ public static class FacadeDemo
             // Process return
             var returnRequest = order2 with { ProductId = result2.OrderId! };
             var returnResult = facade.Execute("process-return", returnRequest);
-            
+
             if (returnResult.Success)
             {
                 Console.WriteLine($"✓ Return processed: {returnResult.OrderId}");

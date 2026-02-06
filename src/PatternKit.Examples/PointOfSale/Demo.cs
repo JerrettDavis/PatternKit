@@ -169,7 +169,7 @@ public static class Demo
     private static void RunBirthdaySpecial()
     {
         var currentMonth = DateTime.UtcNow.Month;
-        
+
         var order = new PurchaseOrder
         {
             OrderId = "ORD-005",
@@ -346,7 +346,7 @@ public static class Demo
 
         Console.WriteLine(new string('─', 65));
         Console.WriteLine($"{"Subtotal:",-50} ${receipt.Subtotal,10:F2}");
-        
+
         if (receipt.DiscountAmount > 0)
         {
             Console.WriteLine($"{"Total Discounts:",-50} -${receipt.DiscountAmount,9:F2}");
@@ -358,10 +358,10 @@ public static class Demo
                 }
             }
         }
-        
+
         if (receipt.TaxAmount > 0)
             Console.WriteLine($"{"Tax:",-50} ${receipt.TaxAmount,10:F2}");
-        
+
         Console.WriteLine(new string('═', 65));
         Console.WriteLine($"{"TOTAL:",-50} ${receipt.FinalTotal,10:F2}");
         Console.WriteLine(new string('═', 65));

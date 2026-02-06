@@ -115,7 +115,7 @@ public sealed class Bridge<TIn, TOut, TImpl>
                 var msg = t(in input, impl, in result);
                 if (string.IsNullOrEmpty(msg))
                     continue;
-                
+
                 output = default!;
                 error = msg;
                 return false;

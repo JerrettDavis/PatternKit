@@ -31,12 +31,12 @@ public sealed class AsyncStateDemoTests(ITestOutputHelper output) : TinyBddXunit
     {
         await Given<(ConnectionStateDemo.Mode Final, List<string> Log)>(
                 "connected",
-                (Func<Task<(ConnectionStateDemo.Mode, List<string>)>>)(() => ConnectionStateDemo.RunAsync("connect","ok").AsTask())
+                (Func<Task<(ConnectionStateDemo.Mode, List<string>)>>)(() => ConnectionStateDemo.RunAsync("connect", "ok").AsTask())
             )
             .When<(ConnectionStateDemo.Mode Final, List<string> Log)>(
                 "unknown event in Connected",
                 (Func<(ConnectionStateDemo.Mode, List<string>), Task<(ConnectionStateDemo.Mode, List<string>)>>)(
-                    _ => ConnectionStateDemo.RunAsync("connect","ok","ignore").AsTask()
+                    _ => ConnectionStateDemo.RunAsync("connect", "ok", "ignore").AsTask()
                 )
             )
             .Then("still Connected and last step noop", r => r.Final == ConnectionStateDemo.Mode.Connected && r.Log.Last() == "effect:noop")

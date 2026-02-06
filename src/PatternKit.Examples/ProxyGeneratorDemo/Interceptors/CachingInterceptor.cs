@@ -18,7 +18,7 @@ public sealed class CachingInterceptor : IPaymentServiceInterceptor
         if (context is GetTransactionHistoryMethodContext historyContext)
         {
             var cacheKey = $"history:{historyContext.CustomerId}";
-            
+
             if (_cache.TryGetValue(cacheKey, out var cached) && cached.Expiry > DateTime.UtcNow)
             {
                 Console.WriteLine($"[Cache] ✓ Cache hit for customer {historyContext.CustomerId}");
@@ -39,7 +39,7 @@ public sealed class CachingInterceptor : IPaymentServiceInterceptor
         {
             var cacheKey = $"history:{historyContext.CustomerId}";
             var result = historyContext.Result;
-            
+
             if (result != null)
             {
                 _cache[cacheKey] = (result, DateTime.UtcNow.Add(_cacheDuration));

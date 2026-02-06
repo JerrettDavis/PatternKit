@@ -107,14 +107,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Echo: Hello", result);
     }
 
@@ -167,14 +167,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Email: alice|Audit: alice", result);
     }
 
@@ -219,14 +219,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<bool>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.True(result);
     }
 
@@ -281,14 +281,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Pre|Handler|Post:10", result);
     }
 
@@ -342,14 +342,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("ExpectedException", result);
     }
 
@@ -412,14 +412,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("1,2,3,4,5", result);
     }
 
@@ -446,7 +446,7 @@ public class DispatcherGeneratorTests
             .FirstOrDefault(gs => gs.HintName == "AppDispatcher.Contracts.g.cs");
 
         Assert.NotNull(contractsFile);
-        
+
         var text = contractsFile.SourceText.ToString();
         Assert.Contains("interface ICommandHandler<TRequest, TResponse>", text);
         Assert.Contains("interface INotificationHandler<TNotification>", text);
@@ -516,14 +516,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Around:Before|Handler:5|Around:After:10|Final:10", result);
     }
 
@@ -593,14 +593,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         // Order: 1 (outer) wraps 2 (inner)
         // Execution: Around1:Before -> Around2:Before -> Handler -> Around2:After -> Around1:After
         Assert.Equal("Around1:Before|Around2:Before|Handler|Around2:After|Around1:After", result);
@@ -663,14 +663,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<int>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         // Flow: 5 -> handler(5) -> inner(*2=10) -> outer(+10=20)
         Assert.Equal(20, result);
     }
@@ -736,14 +736,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         // Expected: Pre -> Around Before -> Handler -> Around After -> Post
         Assert.Equal("Pre|Around:Before|Handler|Around:After|Post", result);
     }
@@ -818,14 +818,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Handler:Throwing|OnError:TestError|Caught", result);
     }
 
@@ -889,14 +889,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         // Pre runs, handler throws, OnError runs, Post does NOT run
         Assert.Equal("Pre|OnError|Caught", result);
     }
@@ -967,14 +967,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("PreStream|Item:1|Item:2|Item:3", result);
     }
 
@@ -1035,14 +1035,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Result:50", result);
     }
 
@@ -1102,14 +1102,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Handler:Test", result);
     }
 
@@ -1185,14 +1185,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         // Should either be the expected result or an error message
         if (result.StartsWith("ERROR:"))
         {
@@ -1258,14 +1258,14 @@ public class DispatcherGeneratorTests
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success);
-        
+
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
         var demo = asm.GetType("MyApp.Demo");
         var run = demo!.GetMethod("Run");
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
-        
+
         Assert.Equal("Module:Hello", result);
     }
 

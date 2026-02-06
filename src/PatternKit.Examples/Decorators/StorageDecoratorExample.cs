@@ -136,7 +136,7 @@ public class RetryFileStorage : FileStorageDecoratorBase
     private readonly int _maxRetries;
     private readonly int _retryDelayMs;
 
-    public RetryFileStorage(IFileStorage inner, int maxRetries = 3, int retryDelayMs = 100) 
+    public RetryFileStorage(IFileStorage inner, int maxRetries = 3, int retryDelayMs = 100)
         : base(inner)
     {
         _maxRetries = maxRetries;

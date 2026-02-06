@@ -1,31 +1,47 @@
 - name: Behavioral
   items:
     - name: Chain
+      href: behavioral/chain/index.md
       items:
+        - name: Guide
+          href: behavioral/chain/guide.md
+        - name: API Reference
+          href: behavioral/chain/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/chain/real-world-examples.md
         - name: ActionChain
           href: behavioral/chain/actionchain.md
         - name: ResultChain
           href: behavioral/chain/resultchain.md
-    - name: Strategy
+    - name: Command
+      href: behavioral/command/index.md
       items:
-        - name: Strategy
-          href: behavioral/strategy/strategy.md
-        - name: TryStrategy
-          href: behavioral/strategy/trystrategy.md
-        - name: ActionStrategy
-          href: behavioral/strategy/actionstrategy.md
-        - name: AsyncStrategy
-          href: behavioral/strategy/asyncstrategy.md
-    - name: Template
+        - name: Guide
+          href: behavioral/command/guide.md
+        - name: API Reference
+          href: behavioral/command/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/command/real-world-examples.md
+        - name: Command
+          href: behavioral/command/command.md
+    - name: Interpreter
+      href: behavioral/interpreter/index.md
       items:
-        - name: TemplateMethod
-          href: behavioral/template/templatemethod.md
-        - name: Template (Fluent)
-          href: behavioral/template/template.md
-        - name: AsyncTemplate (Fluent)
-          href: behavioral/template/asynctemplate.md
+        - name: Guide
+          href: behavioral/interpreter/guide.md
+        - name: API Reference
+          href: behavioral/interpreter/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/interpreter/real-world-examples.md
     - name: Iterator
+      href: behavioral/iterator/index.md
       items:
+        - name: Guide
+          href: behavioral/iterator/guide.md
+        - name: API Reference
+          href: behavioral/iterator/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/iterator/real-world-examples.md
         - name: Flow
           href: behavioral/iterator/flow.md
         - name: AsyncFlow
@@ -35,21 +51,92 @@
         - name: WindowSequence
           href: behavioral/iterator/windowsequence.md
     - name: Mediator
-      href: behavioral/mediator/mediator.md
-    - name: Command
-      href: behavioral/command/command.md
-    - name: Observer
+      href: behavioral/mediator/index.md
       items:
+        - name: Guide
+          href: behavioral/mediator/guide.md
+        - name: API Reference
+          href: behavioral/mediator/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/mediator/real-world-examples.md
+        - name: Mediator
+          href: behavioral/mediator/mediator.md
+    - name: Memento
+      href: behavioral/memento/index.md
+      items:
+        - name: Guide
+          href: behavioral/memento/guide.md
+        - name: API Reference
+          href: behavioral/memento/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/memento/real-world-examples.md
+        - name: Memento
+          href: behavioral/memento/memento.md
+    - name: Observer
+      href: behavioral/observer/index.md
+      items:
+        - name: Guide
+          href: behavioral/observer/guide.md
+        - name: API Reference
+          href: behavioral/observer/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/observer/real-world-examples.md
         - name: Observer
           href: behavioral/observer/observer.md
         - name: AsyncObserver
           href: behavioral/observer/asyncobserver.md
     - name: State
-      href: behavioral/state/state.md
-    - name: Memento
-      href: behavioral/memento/memento.md
-    - name: Visitor
+      href: behavioral/state/index.md
       items:
+        - name: Guide
+          href: behavioral/state/guide.md
+        - name: API Reference
+          href: behavioral/state/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/state/real-world-examples.md
+        - name: State
+          href: behavioral/state/state.md
+    - name: Strategy
+      href: behavioral/strategy/index.md
+      items:
+        - name: Guide
+          href: behavioral/strategy/guide.md
+        - name: API Reference
+          href: behavioral/strategy/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/strategy/real-world-examples.md
+        - name: Strategy
+          href: behavioral/strategy/strategy.md
+        - name: TryStrategy
+          href: behavioral/strategy/trystrategy.md
+        - name: ActionStrategy
+          href: behavioral/strategy/actionstrategy.md
+        - name: AsyncStrategy
+          href: behavioral/strategy/asyncstrategy.md
+    - name: Template
+      href: behavioral/template/index.md
+      items:
+        - name: Guide
+          href: behavioral/template/guide.md
+        - name: API Reference
+          href: behavioral/template/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/template/real-world-examples.md
+        - name: TemplateMethod
+          href: behavioral/template/templatemethod.md
+        - name: Template (Fluent)
+          href: behavioral/template/template.md
+        - name: AsyncTemplate (Fluent)
+          href: behavioral/template/asynctemplate.md
+    - name: Visitor
+      href: behavioral/visitor/index.md
+      items:
+        - name: Guide
+          href: behavioral/visitor/guide.md
+        - name: API Reference
+          href: behavioral/visitor/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/visitor/real-world-examples.md
         - name: Visitor
           href: behavioral/visitor/visitor.md
         - name: ActionVisitor
@@ -64,13 +151,27 @@
           href: behavioral/visitor/faq.md
         - name: Troubleshooting
           href: behavioral/visitor/troubleshooting.md
-        - name: Enterprise Guide
-          href: behavioral/visitor/guide.md
 
 - name: Creational
   items:
-    - name: Builder
+    - name: Abstract Factory
+      href: creational/abstract-factory/index.md
       items:
+        - name: Guide
+          href: creational/abstract-factory/guide.md
+        - name: API Reference
+          href: creational/abstract-factory/api-reference.md
+        - name: Real-World Examples
+          href: creational/abstract-factory/real-world-examples.md
+    - name: Builder
+      href: creational/builder/index.md
+      items:
+        - name: Guide
+          href: creational/builder/guide.md
+        - name: API Reference
+          href: creational/builder/api-reference.md
+        - name: Real-World Examples
+          href: creational/builder/real-world-examples.md
         - name: BranchBuilder
           href: creational/builder/branchbuilder.md
         - name: ChainBuilder
@@ -80,26 +181,123 @@
         - name: MutableBuilder
           href: creational/builder/mutablebuilder.md
     - name: Factory
-      href: creational/factory/factory.md
+      href: creational/factory/index.md
+      items:
+        - name: Guide
+          href: creational/factory/guide.md
+        - name: API Reference
+          href: creational/factory/api-reference.md
+        - name: Real-World Examples
+          href: creational/factory/real-world-examples.md
+        - name: Factory
+          href: creational/factory/factory.md
     - name: Prototype
-      href: creational/prototype/prototype.md
+      href: creational/prototype/index.md
+      items:
+        - name: Guide
+          href: creational/prototype/guide.md
+        - name: API Reference
+          href: creational/prototype/api-reference.md
+        - name: Real-World Examples
+          href: creational/prototype/real-world-examples.md
+        - name: Prototype
+          href: creational/prototype/prototype.md
     - name: Singleton
-      href: creational/singleton/singleton.md
+      href: creational/singleton/index.md
+      items:
+        - name: Guide
+          href: creational/singleton/guide.md
+        - name: API Reference
+          href: creational/singleton/api-reference.md
+        - name: Real-World Examples
+          href: creational/singleton/real-world-examples.md
+        - name: Singleton
+          href: creational/singleton/singleton.md
 
 - name: Structural
   items:
     - name: Adapter
-      href: structural/adapter/fluent-adapter.md
+      href: structural/adapter/index.md
+      items:
+        - name: Guide
+          href: structural/adapter/guide.md
+        - name: API Reference
+          href: structural/adapter/api-reference.md
+        - name: Real-World Examples
+          href: structural/adapter/real-world-examples.md
+        - name: Fluent Adapter
+          href: structural/adapter/fluent-adapter.md
     - name: Bridge
-      href: structural/bridge/bridge.md
+      href: structural/bridge/index.md
+      items:
+        - name: Guide
+          href: structural/bridge/guide.md
+        - name: API Reference
+          href: structural/bridge/api-reference.md
+        - name: Real-World Examples
+          href: structural/bridge/real-world-examples.md
+        - name: Bridge
+          href: structural/bridge/bridge.md
     - name: Composite
-      href: structural/composite/composite.md
+      href: structural/composite/index.md
+      items:
+        - name: Guide
+          href: structural/composite/guide.md
+        - name: API Reference
+          href: structural/composite/api-reference.md
+        - name: Real-World Examples
+          href: structural/composite/real-world-examples.md
+        - name: Composite
+          href: structural/composite/composite.md
     - name: Decorator
-      href: structural/decorator/decorator.md
+      href: structural/decorator/index.md
+      items:
+        - name: Guide
+          href: structural/decorator/guide.md
+        - name: API Reference
+          href: structural/decorator/api-reference.md
+        - name: Real-World Examples
+          href: structural/decorator/real-world-examples.md
+        - name: Decorator
+          href: structural/decorator/decorator.md
+        - name: Examples
+          href: structural/decorator/examples.md
     - name: Facade
-      href: structural/facade/facade.md
+      href: structural/facade/index.md
+      items:
+        - name: Guide
+          href: structural/facade/guide.md
+        - name: API Reference
+          href: structural/facade/api-reference.md
+        - name: Real-World Examples
+          href: structural/facade/real-world-examples.md
     - name: Flyweight
       href: structural/flyweight/index.md
+      items:
+        - name: Guide
+          href: structural/flyweight/guide.md
+        - name: API Reference
+          href: structural/flyweight/api-reference.md
+        - name: Real-World Examples
+          href: structural/flyweight/real-world-examples.md
     - name: Proxy
       href: structural/proxy/index.md
+      items:
+        - name: Guide
+          href: structural/proxy/guide.md
+        - name: API Reference
+          href: structural/proxy/api-reference.md
+        - name: Real-World Examples
+          href: structural/proxy/real-world-examples.md
 
+- name: Additional Patterns
+  items:
+    - name: Type-Dispatcher
+      href: behavioral/type-dispatcher/index.md
+      items:
+        - name: Guide
+          href: behavioral/type-dispatcher/guide.md
+        - name: API Reference
+          href: behavioral/type-dispatcher/api-reference.md
+        - name: Real-World Examples
+          href: behavioral/type-dispatcher/real-world-examples.md

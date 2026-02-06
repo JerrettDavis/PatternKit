@@ -75,12 +75,20 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ### State
 
-- **[Behavioral.State.StateMachine](behavioral/state/state.md)**  
+- **[Behavioral.State.StateMachine](behavioral/state/state.md)**
   Fluent, generic state machine with entry/exit hooks and transition effects; immutable after `Build()`.
+
+### Interpreter
+
+- **[Behavioral.Interpreter.Interpreter](behavioral/interpreter/interpreter.md)**
+  Parse and evaluate domain-specific languages with composable expression trees.
 
 ---
 
 ## Creational (Builder)
+
+- **[Creational.AbstractFactory](creational/abstractfactory/abstractfactory.md)**
+  Family-aware factory that produces related objects with consistent themes.
 
 - **[Creational.Builder.BranchBuilder](creational/builder/branchbuilder.md)**
   Zero-`if` router: register `(predicate → step)` pairs; emits a tight first-match loop.
@@ -118,7 +126,7 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Structural.Decorator.Decorator](structural/decorator/decorator.md)**
   Fluent wrapping with before/after/around hooks and composition.
 
-- **[Structural.Facade.Facade](structural/facade/facade.md)**
+- **[Structural.Facade.Facade](structural/facade/index.md)**
   Unified subsystem interface with named operations.
 
 - **[Structural.Flyweight](structural/flyweight/index.md)**
@@ -126,6 +134,13 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 - **[Structural.Proxy](structural/proxy/index.md)**
   Virtual/protection/logging/caching/remote proxies.
+
+---
+
+## Additional Patterns
+
+- **[TypeDispatcher](additional/type-dispatcher/type-dispatcher.md)**
+  Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 
 ---
 

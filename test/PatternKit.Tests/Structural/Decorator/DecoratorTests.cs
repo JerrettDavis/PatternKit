@@ -262,7 +262,7 @@ public sealed class DecoratorTests(ITestOutputHelper output) : TinyBddXunitBase(
         // Assert
         Assert.Equal(1, callCount); // Component called only once
         Assert.Equal(25, cache[5]); // Cache contains result
-        
+
         return Task.CompletedTask;
     }
 

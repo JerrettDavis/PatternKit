@@ -67,11 +67,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Accept_Performs_Double_Dispatch_To_Visit));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -79,7 +79,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.DoubleDispatchTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Visit(Dog)|Visit(Cat)", result);
     }
 
@@ -102,11 +102,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Most_Specific_Handler_Is_Chosen_First));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -114,7 +114,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.PriorityTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("SpecificDog", result);
     }
 
@@ -136,11 +136,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Default_Handler_Used_When_No_Specific_Match));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -148,7 +148,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.DefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Default:Unknown", result);
     }
 
@@ -170,11 +170,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Throws_Exception_When_No_Handler_And_No_Default));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -183,7 +183,7 @@ public class VisitorGeneratorComprehensiveTests
         var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
             asm.GetType("Test.NoHandlerTest")!
                 .GetMethod("Run")!.Invoke(null, null));
-                
+
         Assert.Contains("No handler registered", ex.InnerException!.Message);
     }
 
@@ -216,11 +216,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Action_Visitor_Executes_Side_Effects_Without_Return));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -228,7 +228,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.ActionTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Dog:Lab|Cat:False|Animal:Generic", result);
     }
 
@@ -254,11 +254,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Action_Visitor_Default_Handler_Works));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -266,7 +266,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.ActionDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Default:Dog|Default:Cat", result);
     }
 
@@ -306,11 +306,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Async_Visitor_Supports_ValueTask_Return_Type));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -318,7 +318,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var task = asm.GetType("Test.AsyncTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
-            
+
         Assert.Equal("AsyncDog:Poodle|AsyncCat:True", task!.Result);
     }
 
@@ -353,11 +353,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Async_Action_Visitor_Performs_Async_Side_Effects));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -365,7 +365,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var task = asm.GetType("Test.AsyncActionTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
-            
+
         Assert.Equal("AsyncDog:Husky|AsyncCat:False", task!.Result);
     }
 
@@ -402,11 +402,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_CancellationToken_Propagates_Through_Async_Visitor));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -414,7 +414,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var task = asm.GetType("Test.CancellationTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
-            
+
         Assert.Equal("Cancelled", task!.Result);
     }
 
@@ -442,11 +442,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Async_Default_Handler_Works_Correctly));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -454,7 +454,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var task = asm.GetType("Test.AsyncDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
-            
+
         Assert.Equal("DefaultAsync:Dog|DefaultAsync:Cat", task!.Result);
     }
 
@@ -494,11 +494,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Deep_Hierarchy_Three_Levels_Handled_Correctly));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
         Assert.True(emitResult.Success, string.Join("\n", emitResult.Diagnostics));
@@ -507,7 +507,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.DeepTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Twig|Branch|Root", result);
     }
 
@@ -544,11 +544,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Multiple_Siblings_In_Hierarchy_All_Visitable));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -556,7 +556,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.SiblingTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Circle|Square|Triangle", result);
     }
 
@@ -582,21 +582,21 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Generic_When_Enforces_Type_Safety_At_Compile_Time));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, "Type-safe code should compile");
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.TypeSafetyTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("TypeSafe", result);
     }
 
@@ -624,11 +624,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Builder_Supports_Method_Chaining));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, "Chaining code should compile");
     }
@@ -658,11 +658,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Multiple_Handlers_Can_Be_Registered));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -670,7 +670,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.MultiHandlerTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("3", result);
     }
 
@@ -695,11 +695,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Empty_Visitor_With_Default_Only_Works));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -707,7 +707,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.EmptyWithDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("AllDefault", result);
     }
 
@@ -729,11 +729,11 @@ public class VisitorGeneratorComprehensiveTests
             }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(user, 
+        var comp = RoslynTestHelpers.CreateCompilation(user,
             assemblyName: nameof(Behavior_Same_Type_Registered_Multiple_Times_Last_Wins));
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
-        
+
         using var pe = new MemoryStream();
         updated.Emit(pe);
         pe.Position = 0;
@@ -741,7 +741,7 @@ public class VisitorGeneratorComprehensiveTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.DuplicateTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
-            
+
         Assert.Equal("Second", result);
     }
 

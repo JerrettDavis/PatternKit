@@ -12,15 +12,15 @@ public sealed class StrategyTests(ITestOutputHelper output) : TinyBddXunitBase(o
     private static bool IsPositive(in int x) => x > 0;
     private static bool IsNegative(in int x) => x < 0;
     private static bool IsNonNegative(in int x) => x >= 0;
-    private static bool IsEven(in int x)       => (x & 1) == 0;
+    private static bool IsEven(in int x) => (x & 1) == 0;
 
     private static string LabelPositive(in int x) => $"pos:{x}";
     private static string LabelNegative(in int x) => $"neg:{x}";
-    private static string LabelFirst   (in int _) => "first";
-    private static string LabelSecond  (in int _) => "second";
-    private static string LabelZero    (in int _) => "zero";
-    private static string LabelOther   (in int _) => "other";
-    private static string LabelEven    (in int _) => "even";
+    private static string LabelFirst(in int _) => "first";
+    private static string LabelSecond(in int _) => "second";
+    private static string LabelZero(in int _) => "zero";
+    private static string LabelOther(in int _) => "other";
+    private static string LabelEven(in int _) => "even";
 
     // Context keeps the strategy + last result/exception so TinyBDD type stays stable
     private sealed record Ctx(Strategy<int, string> S, string? Last = null, Exception? Ex = null);

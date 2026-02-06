@@ -47,7 +47,7 @@ public sealed class Composite<TIn, TOut>
     private readonly LeafOp? _leaf;
     private readonly Seed? _seed;
     private readonly Combine? _combine;
-    private readonly Composite<TIn, TOut>[] _children; 
+    private readonly Composite<TIn, TOut>[] _children;
 
     private Composite(bool isLeaf, LeafOp? leaf, Seed? seed, Combine? combine, Composite<TIn, TOut>[] children)
     {
@@ -162,8 +162,8 @@ public sealed class Composite<TIn, TOut>
         {
             if (_isLeaf)
             {
-                return _leaf is null 
-                    ? throw new InvalidOperationException("Leaf operation is required.") 
+                return _leaf is null
+                    ? throw new InvalidOperationException("Leaf operation is required.")
                     : new Composite<TIn, TOut>(true, _leaf, null, null, []);
             }
 

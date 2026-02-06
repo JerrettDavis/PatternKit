@@ -59,7 +59,7 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
 
                 // Handlers return expected labels
                 Assert.Equal("even", p.Handlers[0](in v2));
-                Assert.Equal("pos",  p.Handlers[1](in v1));
+                Assert.Equal("pos", p.Handlers[1](in v1));
                 return true;
             })
             .And("HasDefault=false and Default==fallback", p =>

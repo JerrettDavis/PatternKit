@@ -1,11 +1,17 @@
 - name: Examples & Demos
   href: index.md
-  
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
-  
+
+- name: Cache Manager
+  href: cache-manager.md
+
 - name: Strategy-Based Data Coercion
   href: coercer.md
+
+- name: Content Management System
+  href: content-management-system.md
   
 - name: Composed, Preference-Aware Notification Strategy (Email/SMS/Push/IM)
   href: composed-notification-strategy.md
@@ -15,13 +21,19 @@
   
 - name: Configuration-Driven Transaction Pipeline
   href: config-driven-transaction-pipeline.md
-  
+
+- name: Game AI System
+  href: game-ai-system.md
+
 - name: Minimal Web Request Router
   href: mini-router.md
   
+- name: Payment Processing
+  href: payment-processing.md
+
 - name: Payment Processor — Fluent Decorator Pattern for Point of Sale
   href: payment-processor-decorator.md
-  
+
 - name: POS App State Singleton
   href: pos-app-state-singleton.md
   
@@ -72,3 +84,6 @@
 
 - name: Template Method (Async)
   href: template-method-async-demo.md
+
+- name: Task Scheduler
+  href: task-scheduler.md

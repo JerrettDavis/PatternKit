@@ -180,8 +180,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         if (!string.IsNullOrEmpty(decoratorSource))
         {
             // Use namespace + simple name to avoid collisions while keeping it readable
-            var ns = contractSymbol.ContainingNamespace.IsGlobalNamespace 
-                ? "" 
+            var ns = contractSymbol.ContainingNamespace.IsGlobalNamespace
+                ? ""
                 : contractSymbol.ContainingNamespace.ToDisplayString().Replace(".", "_") + "_";
             var fileName = $"{ns}{contractSymbol.Name}.Decorator.g.cs";
             context.AddSource(fileName, decoratorSource);
@@ -223,7 +223,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 case nameof(GenerateDecoratorAttribute.Composition):
                     config.Composition = (int)named.Value.Value!;
                     break;
-                // GenerateAsync and ForceAsync are reserved for future use - not parsed
+                    // GenerateAsync and ForceAsync are reserved for future use - not parsed
             }
         }
 
@@ -374,7 +374,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
                 // Property may be public but have protected/private accessors
                 bool getterAccessible = property.GetMethod == null || IsAccessibleForDecorator(property.GetMethod.DeclaredAccessibility);
                 bool setterAccessible = property.SetMethod == null || IsAccessibleForDecorator(property.SetMethod.DeclaredAccessibility);
-                
+
                 if (!getterAccessible || !setterAccessible)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
@@ -478,7 +478,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.Append((int)member.MemberType); // 0 for Method, 1 for Property
         sb.Append('_');
         sb.Append(member.Name);
-        
+
         if (member.MemberType == MemberType.Method && member.Parameters.Count > 0)
         {
             sb.Append('(');
@@ -497,7 +497,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             }
             sb.Append(')');
         }
-        
+
         return sb.ToString();
     }
 
@@ -556,7 +556,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         sb.Append(symbol.Kind);
         sb.Append('_');
         sb.Append(symbol.Name);
-        
+
         if (symbol is IMethodSymbol method)
         {
             sb.Append('(');
@@ -587,7 +587,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             sb.Append(':');
             sb.Append(eventSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
         }
-        
+
         return sb.ToString();
     }
 
@@ -650,12 +650,12 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             var enumField = enumType.GetMembers()
                 .OfType<IFieldSymbol>()
                 .FirstOrDefault(f => f.HasConstantValue && Equals(f.ConstantValue, param.ExplicitDefaultValue));
-            
+
             if (enumField != null)
             {
                 return $"{enumType.ToDisplayString(TypeFormat)}.{enumField.Name}";
             }
-            
+
             // Fallback: cast the numeric value
             return $"({enumType.ToDisplayString(TypeFormat)}){param.ExplicitDefaultValue}";
         }
@@ -674,7 +674,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     {
         // Allow public/internal/protected internal
         // Pure protected can't be forwarded because Inner.Member() isn't accessible through the base type reference
-        return accessibility == Accessibility.Public || 
+        return accessibility == Accessibility.Public ||
                accessibility == Accessibility.Internal ||
                accessibility == Accessibility.ProtectedOrInternal;
     }
@@ -764,7 +764,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
     {
         // For async methods, use direct forwarding (return Inner.X()) instead of async/await
         // to avoid unnecessary state machine allocation
-        
+
         // Determine the modifier keyword
         string modifierKeyword = contractInfo.IsAbstractClass
             // For abstract class contracts, always override the contract member.
@@ -773,10 +773,10 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             ? (member.IsIgnored ? "sealed override " : "override ")
             // For non-abstract contracts (e.g., interfaces), only non-ignored members are virtual.
             : (member.IsIgnored ? "" : "virtual ");
-        
+
         // Preserve the original member's accessibility to avoid widening on overrides
         var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
-        
+
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
         sb.Append($"    {accessibilityKeyword} {modifierKeyword}{member.ReturnType} {member.Name}(");
 
@@ -847,17 +847,17 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         string modifierKeyword = contractInfo.IsAbstractClass
             ? (member.IsIgnored ? "sealed override " : "override ")
             : (member.IsIgnored ? "" : "virtual ");
-        
+
         // Preserve the original member's accessibility
         var accessibilityKeyword = GetAccessibilityKeyword(member.Accessibility);
-        
+
         sb.AppendLine($"    /// <summary>Forwards to Inner.{member.Name}.</summary>");
         sb.Append($"    {accessibilityKeyword} {modifierKeyword}{member.ReturnType} {member.Name}");
 
         // Determine accessor-level modifiers
         string getterModifier = "";
         string setterModifier = "";
-        
+
         if (contractInfo.IsAbstractClass)
         {
             // For abstract classes, apply accessor modifiers when accessibility differs from property

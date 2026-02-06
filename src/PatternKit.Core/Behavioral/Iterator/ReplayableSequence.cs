@@ -185,7 +185,7 @@ public static class ReplayableSequenceExtensions
 
     /// <summary>Filter elements from a cursor using <paramref name="predicate"/>.</summary>
     public static IEnumerable<T> Where<T>(
-        this ReplayableSequence<T>.Cursor cursor, 
+        this ReplayableSequence<T>.Cursor cursor,
         Func<T, bool> predicate)
         => cursor.AsEnumerable().Where(predicate);
 
@@ -199,7 +199,7 @@ public static class ReplayableSequenceExtensions
             batch.Add(item);
             if (batch.Count != size)
                 continue;
-            
+
             yield return batch.ToArray(); // immutable snapshot
             batch.Clear();
         }

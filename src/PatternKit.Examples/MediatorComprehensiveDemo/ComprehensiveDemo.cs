@@ -45,8 +45,8 @@ public interface IPipelineBehavior<TRequest, TResponse>
     where TRequest : ICommand<TResponse>
 {
     ValueTask<TResponse> Handle(
-        TRequest request, 
-        CancellationToken ct, 
+        TRequest request,
+        CancellationToken ct,
         RequestHandlerDelegate<TResponse> next);
 }
 
@@ -108,12 +108,12 @@ public class CreateCustomerHandler : global::PatternKit.Examples.Messaging.Sourc
 {
     private static int _nextId = 0;
     private readonly ILogger _logger;
-    
+
     public CreateCustomerHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask<Customer> Handle(CreateCustomerCommand request, CancellationToken ct)
     {
         _logger.Log($"Creating customer: {request.Name}");
@@ -127,12 +127,12 @@ public class PlaceOrderHandler : global::PatternKit.Examples.Messaging.SourceGen
 {
     private static int _nextOrderId = 999;
     private readonly ILogger _logger;
-    
+
     public PlaceOrderHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask<Order> Handle(PlaceOrderCommand request, CancellationToken ct)
     {
         _logger.Log($"Placing order for customer {request.CustomerId}");
@@ -146,12 +146,12 @@ public class PlaceOrderHandler : global::PatternKit.Examples.Messaging.SourceGen
 public class ProcessPaymentHandler : global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<ProcessPaymentCommand, bool>
 {
     private readonly ILogger _logger;
-    
+
     public ProcessPaymentHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public async ValueTask<bool> Handle(ProcessPaymentCommand request, CancellationToken ct)
     {
         _logger.Log($"Processing payment for order {request.OrderId}: ${request.Amount}");
@@ -167,12 +167,12 @@ public class ProcessPaymentHandler : global::PatternKit.Examples.Messaging.Sourc
 public class GetCustomerHandler : global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<GetCustomerQuery, Customer?>
 {
     private readonly ICustomerRepository _repository;
-    
+
     public GetCustomerHandler(ICustomerRepository repository)
     {
         _repository = repository;
     }
-    
+
     public ValueTask<Customer?> Handle(GetCustomerQuery request, CancellationToken ct)
     {
         var customer = _repository.GetById(request.CustomerId);
@@ -183,12 +183,12 @@ public class GetCustomerHandler : global::PatternKit.Examples.Messaging.SourceGe
 public class GetOrdersByCustomerHandler : global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<GetOrdersByCustomerQuery, List<Order>>
 {
     private readonly IOrderRepository _repository;
-    
+
     public GetOrdersByCustomerHandler(IOrderRepository repository)
     {
         _repository = repository;
     }
-    
+
     public ValueTask<List<Order>> Handle(GetOrdersByCustomerQuery request, CancellationToken ct)
     {
         var orders = _repository.GetByCustomerId(request.CustomerId);
@@ -203,24 +203,24 @@ public class GetOrdersByCustomerHandler : global::PatternKit.Examples.Messaging.
 public class SearchProductsHandler : global::PatternKit.Examples.Messaging.SourceGenerated.IStreamHandler<SearchProductsQuery, ProductSearchResult>
 {
     private readonly IProductRepository _repository;
-    
+
     public SearchProductsHandler(IProductRepository repository)
     {
         _repository = repository;
     }
-    
+
     public async IAsyncEnumerable<ProductSearchResult> Handle(
-        SearchProductsQuery request, 
+        SearchProductsQuery request,
         [EnumeratorCancellation] CancellationToken ct)
     {
         var products = _repository.Search(request.SearchTerm);
         var count = 0;
-        
+
         foreach (var product in products)
         {
             if (count >= request.MaxResults)
                 yield break;
-                
+
             await Task.Delay(10, ct); // Simulate async processing
             yield return product;
             count++;
@@ -235,12 +235,12 @@ public class SearchProductsHandler : global::PatternKit.Examples.Messaging.Sourc
 public class SendWelcomeEmailHandler : global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<CustomerCreatedEvent>
 {
     private readonly ILogger _logger;
-    
+
     public SendWelcomeEmailHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask Handle(CustomerCreatedEvent notification, CancellationToken ct)
     {
         _logger.Log($"Sending welcome email to {notification.Email}");
@@ -251,12 +251,12 @@ public class SendWelcomeEmailHandler : global::PatternKit.Examples.Messaging.Sou
 public class UpdateCustomerStatsHandler : global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<CustomerCreatedEvent>
 {
     private readonly ILogger _logger;
-    
+
     public UpdateCustomerStatsHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask Handle(CustomerCreatedEvent notification, CancellationToken ct)
     {
         _logger.Log($"Updating customer statistics for {notification.CustomerId}");
@@ -267,12 +267,12 @@ public class UpdateCustomerStatsHandler : global::PatternKit.Examples.Messaging.
 public class NotifyInventoryHandler : global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<OrderPlacedEvent>
 {
     private readonly ILogger _logger;
-    
+
     public NotifyInventoryHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask Handle(OrderPlacedEvent notification, CancellationToken ct)
     {
         _logger.Log($"Notifying inventory system of order {notification.OrderId}");
@@ -283,12 +283,12 @@ public class NotifyInventoryHandler : global::PatternKit.Examples.Messaging.Sour
 public class SendOrderConfirmationHandler : global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<OrderPlacedEvent>
 {
     private readonly ILogger _logger;
-    
+
     public SendOrderConfirmationHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask Handle(OrderPlacedEvent notification, CancellationToken ct)
     {
         _logger.Log($"Sending order confirmation for order {notification.OrderId}");
@@ -299,12 +299,12 @@ public class SendOrderConfirmationHandler : global::PatternKit.Examples.Messagin
 public class RecordPaymentAuditHandler : global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<PaymentProcessedEvent>
 {
     private readonly ILogger _logger;
-    
+
     public RecordPaymentAuditHandler(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public ValueTask Handle(PaymentProcessedEvent notification, CancellationToken ct)
     {
         _logger.Log($"Recording payment audit: Order={notification.OrderId}, Amount=${notification.Amount}, Success={notification.Success}");
@@ -323,22 +323,22 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     where TRequest : ICommand<TResponse>
 {
     private readonly ILogger _logger;
-    
+
     public LoggingBehavior(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public async ValueTask<TResponse> Handle(
-        TRequest request, 
-        CancellationToken ct, 
+        TRequest request,
+        CancellationToken ct,
         RequestHandlerDelegate<TResponse> next)
     {
         var requestName = typeof(TRequest).Name;
         _logger.Log($"[Logging] Handling {requestName}");
-        
+
         var response = await next();
-        
+
         _logger.Log($"[Logging] Handled {requestName}");
         return response;
     }
@@ -351,23 +351,23 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
     where TRequest : ICommand<TResponse>
 {
     private readonly ILogger _logger;
-    
+
     public ValidationBehavior(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public async ValueTask<TResponse> Handle(
-        TRequest request, 
-        CancellationToken ct, 
+        TRequest request,
+        CancellationToken ct,
         RequestHandlerDelegate<TResponse> next)
     {
         _logger.Log($"[Validation] Validating {typeof(TRequest).Name}");
-        
+
         // Validation logic here
         if (request == null)
             throw new System.ArgumentNullException(nameof(request));
-        
+
         return await next();
     }
 }
@@ -379,24 +379,24 @@ public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     where TRequest : ICommand<TResponse>
 {
     private readonly ILogger _logger;
-    
+
     public PerformanceBehavior(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public async ValueTask<TResponse> Handle(
-        TRequest request, 
-        CancellationToken ct, 
+        TRequest request,
+        CancellationToken ct,
         RequestHandlerDelegate<TResponse> next)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        
+
         var response = await next();
-        
+
         sw.Stop();
         _logger.Log($"[Performance] {typeof(TRequest).Name} executed in {sw.ElapsedMilliseconds}ms");
-        
+
         return response;
     }
 }
@@ -408,23 +408,23 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     where TRequest : ICommand<TResponse>
 {
     private readonly ILogger _logger;
-    
+
     public TransactionBehavior(ILogger logger)
     {
         _logger = logger;
     }
-    
+
     public async ValueTask<TResponse> Handle(
-        TRequest request, 
-        CancellationToken ct, 
+        TRequest request,
+        CancellationToken ct,
         RequestHandlerDelegate<TResponse> next)
     {
         // Skip transaction for queries
         if (request is IQuery<TResponse>)
             return await next();
-        
+
         _logger.Log("[Transaction] Beginning transaction");
-        
+
         try
         {
             var response = await next();
@@ -455,13 +455,13 @@ public interface ILogger
 public class InMemoryLogger : ILogger
 {
     private readonly List<string> _logs = new();
-    
+
     public void Log(string message)
     {
         _logs.Add(message);
         System.Console.WriteLine($"  {message}");
     }
-    
+
     public List<string> GetLogs() => _logs;
 }
 
@@ -489,7 +489,7 @@ public interface IProductRepository
 public class InMemoryCustomerRepository : ICustomerRepository
 {
     private readonly Dictionary<int, Customer> _customers = new();
-    
+
     public Customer? GetById(int id) => _customers.GetValueOrDefault(id);
     public void Add(Customer customer) => _customers[customer.Id] = customer;
 }
@@ -497,10 +497,10 @@ public class InMemoryCustomerRepository : ICustomerRepository
 public class InMemoryOrderRepository : IOrderRepository
 {
     private readonly List<Order> _orders = new();
-    
-    public List<Order> GetByCustomerId(int customerId) => 
+
+    public List<Order> GetByCustomerId(int customerId) =>
         _orders.Where(o => o.CustomerId == customerId).ToList();
-        
+
     public void Add(Order order) => _orders.Add(order);
 }
 
@@ -514,7 +514,7 @@ public class InMemoryProductRepository : IProductRepository
         new(4, "Monitor", 299.99m, 75),
         new(5, "Headphones", 149.99m, 100),
     };
-    
+
     public IEnumerable<ProductSearchResult> Search(string term) =>
         _products.Where(p => p.Name.Contains(term, System.StringComparison.OrdinalIgnoreCase));
 }
@@ -538,73 +538,73 @@ public static class MediatorServiceCollectionExtensions
         services.AddSingleton(sp =>
         {
             var builder = ProductionDispatcher.Create();
-            
+
             // Register commands
             builder.Command<CreateCustomerCommand, Customer>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<CreateCustomerCommand, Customer>>()
                     .Handle(req, ct));
-                    
+
             builder.Command<PlaceOrderCommand, Order>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<PlaceOrderCommand, Order>>()
                     .Handle(req, ct));
-                    
+
             builder.Command<ProcessPaymentCommand, bool>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<ProcessPaymentCommand, bool>>()
                     .Handle(req, ct));
-            
+
             // Register queries
             builder.Command<GetCustomerQuery, Customer?>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<GetCustomerQuery, Customer?>>()
                     .Handle(req, ct));
-                    
+
             builder.Command<GetOrdersByCustomerQuery, List<Order>>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<GetOrdersByCustomerQuery, List<Order>>>()
                     .Handle(req, ct));
-            
+
             // Register streams
             builder.Stream<SearchProductsQuery, ProductSearchResult>((req, ct) =>
                 sp.GetRequiredService<global::PatternKit.Examples.Messaging.SourceGenerated.IStreamHandler<SearchProductsQuery, ProductSearchResult>>()
                     .Handle(req, ct));
-            
+
             // Register notifications
             builder.Notification<CustomerCreatedEvent>((evt, ct) =>
             {
                 var handlers = sp.GetServices<global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<CustomerCreatedEvent>>();
                 return FanoutAsync(handlers, evt, ct);
             });
-            
+
             builder.Notification<OrderPlacedEvent>((evt, ct) =>
             {
                 var handlers = sp.GetServices<global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<OrderPlacedEvent>>();
                 return FanoutAsync(handlers, evt, ct);
             });
-            
+
             builder.Notification<PaymentProcessedEvent>((evt, ct) =>
             {
                 var handlers = sp.GetServices<global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<PaymentProcessedEvent>>();
                 return FanoutAsync(handlers, evt, ct);
             });
-            
+
             return builder.Build();
         });
-        
+
         return services;
-        
+
         static async ValueTask FanoutAsync<T>(
-            IEnumerable<global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<T>> handlers, 
-            T notification, 
+            IEnumerable<global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<T>> handlers,
+            T notification,
             CancellationToken ct) where T : INotification
         {
             foreach (var handler in handlers)
                 await handler.Handle(notification, ct);
         }
     }
-    
+
     /// <summary>
     /// Adds command handlers from the specified assemblies.
     /// </summary>
     public static IServiceCollection AddHandlersFromAssembly(
-        this IServiceCollection services, 
+        this IServiceCollection services,
         Assembly assembly)
     {
         var handlerTypes = assembly.GetTypes()
@@ -617,35 +617,35 @@ public static class MediatorServiceCollectionExtensions
             .SelectMany(x => x.Interfaces.Select(i => new { HandlerType = x.Type, Interface = i }))
             .Where(x => x.Interface.IsGenericType)
             .ToList();
-        
+
         var commandHandlerType = typeof(global::PatternKit.Examples.Messaging.SourceGenerated.ICommandHandler<,>);
         var notificationHandlerType = typeof(global::PatternKit.Examples.Messaging.SourceGenerated.INotificationHandler<>);
         var streamHandlerType = typeof(global::PatternKit.Examples.Messaging.SourceGenerated.IStreamHandler<,>);
-        
+
         // Register command handlers
         foreach (var handler in handlerTypes.Where(x =>
             x.Interface.IsGenericType && x.Interface.GetGenericTypeDefinition() == commandHandlerType))
         {
             services.AddTransient(handler.Interface, handler.HandlerType);
         }
-        
+
         // Register notification handlers
         foreach (var handler in handlerTypes.Where(x =>
             x.Interface.IsGenericType && x.Interface.GetGenericTypeDefinition() == notificationHandlerType))
         {
             services.AddTransient(handler.Interface, handler.HandlerType);
         }
-        
+
         // Register stream handlers
         foreach (var handler in handlerTypes.Where(x =>
             x.Interface.IsGenericType && x.Interface.GetGenericTypeDefinition() == streamHandlerType))
         {
             services.AddTransient(handler.Interface, handler.HandlerType);
         }
-        
+
         return services;
     }
-    
+
     /// <summary>
     /// Adds a specific pipeline behavior.
     /// </summary>
@@ -656,7 +656,7 @@ public static class MediatorServiceCollectionExtensions
         services.AddTransient(behaviorType);
         return services;
     }
-    
+
     /// <summary>
     /// Adds a specific pipeline behavior with generic type parameters.
     /// </summary>
@@ -682,51 +682,51 @@ public static class ComprehensiveMediatorDemo
     public static async Task RunAsync()
     {
         System.Console.WriteLine("=== Source-Generated Mediator - Comprehensive Production Demo ===\n");
-        
+
         // Setup DI container
         var services = new ServiceCollection();
-        
+
         // Register infrastructure
         services.AddSingleton<ILogger, InMemoryLogger>();
         services.AddSingleton<ICustomerRepository, InMemoryCustomerRepository>();
         services.AddSingleton<IOrderRepository, InMemoryOrderRepository>();
         services.AddSingleton<IProductRepository, InMemoryProductRepository>();
-        
+
         // Register mediator and handlers
         services.AddSourceGeneratedMediator();
         services.AddHandlersFromAssembly(Assembly.GetExecutingAssembly());
-        
+
         // Register behaviors
         services.AddTransient(typeof(LoggingBehavior<,>));
         services.AddTransient(typeof(ValidationBehavior<,>));
         services.AddTransient(typeof(PerformanceBehavior<,>));
         services.AddTransient(typeof(TransactionBehavior<,>));
-        
+
         var provider = services.BuildServiceProvider();
         var dispatcher = provider.GetRequiredService<ProductionDispatcher>();
         var logger = provider.GetRequiredService<ILogger>();
         var customerRepo = provider.GetRequiredService<ICustomerRepository>();
         var orderRepo = provider.GetRequiredService<IOrderRepository>();
-        
+
         // Demo 1: Create Customer (Command with Event)
         System.Console.WriteLine("\n--- Demo 1: Create Customer ---");
         var customer = await dispatcher.Send<CreateCustomerCommand, Customer>(
-            new CreateCustomerCommand("John Doe", "john@example.com", 5000m), 
+            new CreateCustomerCommand("John Doe", "john@example.com", 5000m),
             default);
-        
+
         customerRepo.Add(customer);
-        
+
         await dispatcher.Publish(
-            new CustomerCreatedEvent(customer.Id, customer.Name, customer.Email), 
+            new CustomerCreatedEvent(customer.Id, customer.Name, customer.Email),
             default);
-        
+
         // Demo 2: Query Customer
         System.Console.WriteLine("\n--- Demo 2: Query Customer ---");
         var queriedCustomer = await dispatcher.Send<GetCustomerQuery, Customer?>(
-            new GetCustomerQuery(customer.Id), 
+            new GetCustomerQuery(customer.Id),
             default);
         System.Console.WriteLine($"Found customer: {queriedCustomer?.Name}");
-        
+
         // Demo 3: Place Order (Command with multiple events)
         System.Console.WriteLine("\n--- Demo 3: Place Order ---");
         var order = await dispatcher.Send<PlaceOrderCommand, Order>(
@@ -734,41 +734,41 @@ public static class ComprehensiveMediatorDemo
             {
                 new(1, "Laptop", 1, 999.99m),
                 new(2, "Mouse", 2, 29.99m)
-            }), 
+            }),
             default);
-        
+
         orderRepo.Add(order);
-        
+
         await dispatcher.Publish(
-            new OrderPlacedEvent(order.Id, order.CustomerId, order.Total), 
+            new OrderPlacedEvent(order.Id, order.CustomerId, order.Total),
             default);
-        
+
         // Demo 4: Process Payment
         System.Console.WriteLine("\n--- Demo 4: Process Payment ---");
         var paymentSuccess = await dispatcher.Send<ProcessPaymentCommand, bool>(
-            new ProcessPaymentCommand(order.Id, order.Total), 
+            new ProcessPaymentCommand(order.Id, order.Total),
             default);
-        
+
         await dispatcher.Publish(
-            new PaymentProcessedEvent(order.Id, order.Total, paymentSuccess), 
+            new PaymentProcessedEvent(order.Id, order.Total, paymentSuccess),
             default);
-        
+
         // Demo 5: Stream Search Results
         System.Console.WriteLine("\n--- Demo 5: Stream Product Search ---");
         await foreach (var product in dispatcher.Stream<SearchProductsQuery, ProductSearchResult>(
-            new SearchProductsQuery("o", 3), 
+            new SearchProductsQuery("o", 3),
             default))
         {
             System.Console.WriteLine($"  Product: {product.Name} - ${product.Price}");
         }
-        
+
         // Demo 6: Query Orders
         System.Console.WriteLine("\n--- Demo 6: Query Customer Orders ---");
         var orders = await dispatcher.Send<GetOrdersByCustomerQuery, List<Order>>(
-            new GetOrdersByCustomerQuery(customer.Id), 
+            new GetOrdersByCustomerQuery(customer.Id),
             default);
         System.Console.WriteLine($"Customer has {orders.Count} order(s)");
-        
+
         System.Console.WriteLine("\n=== Demo Complete ===");
         System.Console.WriteLine($"\nTotal operations logged: {logger.GetLogs().Count}");
     }

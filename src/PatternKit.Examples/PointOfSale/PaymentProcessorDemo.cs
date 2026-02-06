@@ -16,7 +16,7 @@ public static class PaymentProcessorDemo
     private static PaymentReceipt ProcessBasicPayment(PurchaseOrder order)
     {
         var subtotal = order.Items.Sum(item => item.UnitPrice * item.Quantity);
-        
+
         var lineItems = order.Items.Select(item => new ReceiptLineItem
         {
             ProductName = item.ProductName,
@@ -154,7 +154,7 @@ public static class PaymentProcessorDemo
     {
         // Calculate the tax base: subtotal minus any order-level discounts
         var taxableSubtotal = receipt.Subtotal - receipt.DiscountAmount;
-        
+
         // Calculate tax proportionally on taxable items only
         var totalTax = 0m;
         var taxableItemsTotal = 0m;
@@ -165,7 +165,7 @@ public static class PaymentProcessorDemo
         {
             var item = order.Items[i];
             var lineItem = receipt.LineItems[i];
-            
+
             if (!item.IsTaxExempt)
             {
                 taxableItemsTotal += lineItem.LineTotal - lineItem.Discount;
@@ -183,10 +183,10 @@ public static class PaymentProcessorDemo
                 // Calculate this item's proportion of the total taxable amount
                 var itemTaxableAmount = lineItem.LineTotal - lineItem.Discount;
                 var itemProportion = itemTaxableAmount / taxableItemsTotal;
-                
+
                 // Apply order-level discounts proportionally
                 var itemDiscountedAmount = taxableSubtotal * itemProportion;
-                
+
                 var stateTax = itemDiscountedAmount * order.Store.StateTaxRate;
                 var localTax = itemDiscountedAmount * order.Store.LocalTaxRate;
                 var itemTax = stateTax + localTax;
@@ -397,11 +397,11 @@ public static class PaymentProcessorDemo
     /// <summary>
     /// Adds audit logging around the entire payment processing (Around decorator).
     /// </summary>
-    private static PaymentReceipt AddAuditLogging(PurchaseOrder order, 
+    private static PaymentReceipt AddAuditLogging(PurchaseOrder order,
         Decorator<PurchaseOrder, PaymentReceipt>.Component next)
     {
         var startTime = DateTime.UtcNow;
-        
+
         Console.WriteLine($"[AUDIT] Starting payment processing for order {order.OrderId}");
         Console.WriteLine($"[AUDIT] Customer: {order.Customer.CustomerId} (Tier: {order.Customer.LoyaltyTier ?? "None"})");
         Console.WriteLine($"[AUDIT] Items: {order.Items.Count}, Store: {order.Store.StoreId}");
@@ -413,7 +413,7 @@ public static class PaymentProcessorDemo
 
             Console.WriteLine($"[AUDIT] Payment processed successfully in {elapsed.TotalMilliseconds:F2}ms");
             Console.WriteLine($"[AUDIT] Final total: ${receipt.FinalTotal:F2}");
-            
+
             receipt.ProcessingLog.Insert(0, $"Payment processing started at {startTime:yyyy-MM-dd HH:mm:ss} UTC");
             receipt.ProcessingLog.Add($"Payment processing completed in {elapsed.TotalMilliseconds:F0}ms");
 
@@ -433,13 +433,13 @@ public static class PaymentProcessorDemo
         Decorator<PurchaseOrder, PaymentReceipt>.Component next)
     {
         var transactionId = Guid.NewGuid().ToString("N")[..8];
-        
+
         var receipt = next(order);
-        
+
         receipt.ProcessingLog.Add($"Transaction ID: {transactionId}");
         receipt.ProcessingLog.Add($"Register: {order.Store.StoreId}");
         receipt.ProcessingLog.Add($"Transaction completed: {transactionId}");
-        
+
         return receipt;
     }
 

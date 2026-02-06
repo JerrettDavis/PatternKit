@@ -167,7 +167,7 @@ public sealed class PrototypeTests(ITestOutputHelper output) : TinyBddXunitBase(
             .Then("uses last Map with no mutation", t => t is { Name: "A2", Value: 2 })
             .AssertPassed();
 
-    [Scenario("Registry: multiple Mutate for same key preserve order")] 
+    [Scenario("Registry: multiple Mutate for same key preserve order")]
     [Fact]
     public Task Registry_Multiple_Mutate_Order()
         => Given("Map(A) then Mutate twice (+1 then *3)", () =>
@@ -197,7 +197,7 @@ public sealed class PrototypeTests(ITestOutputHelper output) : TinyBddXunitBase(
     public Task Registry_Mutate_Before_Map_Throws()
         => Given("a builder where Mutate is called before Map", () =>
                 Prototype<string, Thing>.Create()
-                    .Mutate("x", t => t.Value++) )
+                    .Mutate("x", t => t.Value++))
             .When("building (should throw)", b => Record.Exception(() => b.Build()))
             .Then("InvalidOperationException", ex => ex is InvalidOperationException)
             .AssertPassed();

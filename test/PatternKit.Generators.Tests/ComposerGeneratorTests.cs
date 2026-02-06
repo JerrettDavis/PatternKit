@@ -448,7 +448,7 @@ public class ComposerGeneratorTests
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        
+
         // The pipeline should be built from terminal and wrapped by steps
         Assert.Contains("pipeline", generatedSource);
         Assert.Contains("First", generatedSource);
@@ -510,7 +510,7 @@ public class ComposerGeneratorTests
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        
+
         // The pipeline should be built from terminal and wrapped by steps
         Assert.Contains("pipeline", generatedSource);
         Assert.Contains("First", generatedSource);
@@ -557,7 +557,7 @@ public class ComposerGeneratorTests
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        
+
         // Should only have pipeline using Step1, not Step2
         Assert.Contains("Step1", generatedSource);
         Assert.DoesNotContain("Step2", generatedSource);

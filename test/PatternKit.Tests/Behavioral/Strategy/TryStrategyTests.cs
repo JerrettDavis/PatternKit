@@ -15,7 +15,7 @@ public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
     private static bool IsDiv3(in int x) => x % 3 == 0;
     private static bool IsNegative(in int x) => x < 0;
     private static bool IsNull<T>(in T? x) => x is null;
-    
+
     private static string HandleNull(in object? _) => "NULL";
 
     private static bool EvenHandler(in int x, out string? label)
@@ -126,7 +126,7 @@ public class TryStrategyTests(ITestOutputHelper output) : TinyBddXunitBase(outpu
         static TryResult<string> Execute(TryStrategy<int, string> s, int x)
             => s.Execute(in x, out var label) ? new(true, label) : new(false, null);
     }
-    
+
     [Scenario("No handler matched and no default -> throws")]
     [Fact]
     public Task NoHandlerMatchesNoDefault_Throws()

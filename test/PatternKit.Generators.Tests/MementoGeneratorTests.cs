@@ -196,11 +196,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MemberExclusionWithIgnore));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
-        
+
         Assert.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
@@ -230,11 +230,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ExplicitInclusionMode));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
-        
+
         Assert.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
@@ -284,11 +284,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GeneratedMementoHasCaptureAndRestore));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
-        
+
         Assert.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
@@ -312,11 +312,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GeneratedCaretakerHasUndoRedo));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var caretakerSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
-        
+
         Assert.NotEqual(default, caretakerSourceResult);
         var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
@@ -346,11 +346,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GeneratedMementoIncludesVersion));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var mementoSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
-        
+
         Assert.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
@@ -373,11 +373,11 @@ public class MementoGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(CaretakerRespectsCapacity));
         var gen = new MementoGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        
+
         var caretakerSourceResult = result.Results
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
-        
+
         Assert.NotEqual(default, caretakerSourceResult);
         var caretakerSource = caretakerSourceResult.SourceText.ToString();
 

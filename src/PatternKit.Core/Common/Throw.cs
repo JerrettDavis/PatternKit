@@ -86,10 +86,10 @@ public static class Throw
     public static void IfNegative(int value, [CallerMemberName] string? name = null)
     {
         if (value < 0)
-            throw new ArgumentOutOfRangeException(name, value, "Value must be non-negative.");   
+            throw new ArgumentOutOfRangeException(name, value, "Value must be non-negative.");
     }
-    
-    
+
+
     /// <summary>
     /// Throws an <see cref="ArgumentOutOfRangeException"/> if <paramref name="value"/> is zero or negative.
     /// </summary>
@@ -99,10 +99,10 @@ public static class Throw
     public static void IfNegativeOrZero(int value, [CallerMemberName] string? name = null)
     {
         if (value <= 0)
-            throw new ArgumentOutOfRangeException(name, value, "Value must be positive.");   
+            throw new ArgumentOutOfRangeException(name, value, "Value must be positive.");
     }
-        
-    
+
+
     public static void ArgumentNullWhenNull([CallerMemberName] object? arg = null)
     {
         if (arg is null) throw new ArgumentNullException(nameof(arg));

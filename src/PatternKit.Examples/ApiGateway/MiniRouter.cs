@@ -87,7 +87,7 @@ public sealed class MiniRouter
 
         // simple content negotiation: pick content-type if handler left it blank
         if (string.IsNullOrWhiteSpace(res.ContentType)
-            && _negotiate.Execute(in req, out var ct) 
+            && _negotiate.Execute(in req, out var ct)
             && ct is { Length: > 0 })
             return res with { ContentType = ct };
 

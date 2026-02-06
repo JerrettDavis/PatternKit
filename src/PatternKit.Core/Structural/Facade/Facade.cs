@@ -82,8 +82,8 @@ public sealed class Facade<TIn, TOut>
         if (_operationIndices.TryGetValue(operationName, out var index))
             return _operations[index](in input);
 
-        return _default is not null 
-            ? _default(in input) 
+        return _default is not null
+            ? _default(in input)
             : throw new InvalidOperationException($"Operation '{operationName}' not found and no default configured.");
     }
 
@@ -147,8 +147,8 @@ public sealed class Facade<TIn, TOut>
         private Operation? _default;
         private StringComparer _comparer = StringComparer.Ordinal;
 
-        internal Builder() 
-        { 
+        internal Builder()
+        {
             _operationIndices = new Dictionary<string, int>(StringComparer.Ordinal);
         }
 

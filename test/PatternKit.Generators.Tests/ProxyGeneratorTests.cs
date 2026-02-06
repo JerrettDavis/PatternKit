@@ -361,7 +361,7 @@ public class ProxyGeneratorTests
         // Check that files were generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
         Assert.Contains(names, n => n.Contains("UserServiceBase"));
-        
+
         // Verify proxy class content - look for the proxy file
         var proxySource = result.Results
             .SelectMany(r => r.GeneratedSources)
@@ -668,15 +668,15 @@ public class ProxyGeneratorTests
         // Verify pipeline with list of interceptors
         Assert.Contains("IReadOnlyList", proxySource);
         Assert.Contains("_interceptors", proxySource);
-        
+
         // Verify Before loop (ascending)
         Assert.Contains("for (int __i = 0; __i < _interceptors!.Count; __i++)", proxySource);
         Assert.Contains("_interceptors[__i].Before", proxySource);
-        
+
         // Verify After loop (descending)
         Assert.Contains("for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)", proxySource);
         Assert.Contains("_interceptors[__i].After", proxySource);
-        
+
         // Verify OnException loop (descending)
         Assert.Contains("_interceptors[__i].OnException", proxySource);
     }
@@ -711,7 +711,7 @@ public class ProxyGeneratorTests
         // Verify parameters are renamed to avoid conflicts
         Assert.Contains("Arg_MethodName", interceptorSource);
         Assert.Contains("Arg_Result", interceptorSource);
-        
+
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
@@ -749,7 +749,7 @@ public class ProxyGeneratorTests
         var methodLines = proxySource.Split('\n')
             .Where(l => l.Contains("GetValueRef") && l.Contains("public"))
             .ToArray();
-        
+
         Assert.All(methodLines, line => Assert.DoesNotContain("async", line));
     }
 

@@ -52,17 +52,17 @@ public class VisitorGeneratorTests
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Interfaces
         Assert.Contains("IAstNodeVisitor.Interfaces.g.cs", names);
-        
+
         // Accept methods for each type
         Assert.Contains("AstNode.Accept.g.cs", names);
         Assert.Contains("Expression.Accept.g.cs", names);
         Assert.Contains("Statement.Accept.g.cs", names);
         Assert.Contains("NumberExpression.Accept.g.cs", names);
         Assert.Contains("AddExpression.Accept.g.cs", names);
-        
+
         // Builders
         Assert.Contains("AstNodeVisitorBuilder.g.cs", names);
         Assert.Contains("AstNodeActionVisitorBuilder.g.cs", names);
@@ -374,7 +374,7 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
         Assert.Contains("INodeProcessor.Interfaces.g.cs", names);
         Assert.Contains("NodeVisitorBuilder.g.cs", names);
@@ -410,13 +410,13 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Should have sync builders
         Assert.Contains("SyncNodeVisitorBuilder.g.cs", names);
         Assert.Contains("SyncNodeActionVisitorBuilder.g.cs", names);
-        
+
         // Should NOT have async builders
         Assert.DoesNotContain("SyncNodeAsyncVisitorBuilder.g.cs", names);
         Assert.DoesNotContain("SyncNodeAsyncActionVisitorBuilder.g.cs", names);
@@ -452,13 +452,13 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Should have result builders
         Assert.Contains("ResultNodeVisitorBuilder.g.cs", names);
         Assert.Contains("ResultNodeAsyncVisitorBuilder.g.cs", names);
-        
+
         // Should NOT have action builders
         Assert.DoesNotContain("ResultNodeActionVisitorBuilder.g.cs", names);
         Assert.DoesNotContain("ResultNodeAsyncActionVisitorBuilder.g.cs", names);
@@ -508,16 +508,16 @@ public class VisitorGeneratorTests
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Interfaces
         Assert.Contains("IShapeVisitor.Interfaces.g.cs", names);
-        
+
         // Accept methods for each type (interface + concrete classes)
         Assert.Contains("IShape.Accept.g.cs", names);
         Assert.Contains("Circle.Accept.g.cs", names);
         Assert.Contains("Rectangle.Accept.g.cs", names);
         Assert.Contains("Triangle.Accept.g.cs", names);
-        
+
         // Builders
         Assert.Contains("IShapeVisitorBuilder.g.cs", names);
 
@@ -635,10 +635,10 @@ public class VisitorGeneratorTests
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Interfaces
         Assert.Contains("IValueVisitor.Interfaces.g.cs", names);
-        
+
         // Accept methods for interface and structs
         Assert.Contains("IValue.Accept.g.cs", names);
         Assert.Contains("IntValue.Accept.g.cs", names);
@@ -738,7 +738,7 @@ public class VisitorGeneratorTests
         // Should have PKVIS001 warning
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKVIS001");
-        
+
         var pkvis001 = diagnostics.First(d => d.Id == "PKVIS001");
         Assert.Contains("IEmptyHierarchy", pkvis001.GetMessage());
     }
@@ -767,7 +767,7 @@ public class VisitorGeneratorTests
         // Should have PKVIS002 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
-        
+
         var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
         Assert.Contains("NonPartialBase", pkvis002.GetMessage());
     }
@@ -796,7 +796,7 @@ public class VisitorGeneratorTests
         // Should have PKVIS004 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKVIS004");
-        
+
         var pkvis004 = diagnostics.First(d => d.Id == "PKVIS004");
         Assert.Contains("NonPartialDerived", pkvis004.GetMessage());
     }
@@ -859,16 +859,16 @@ public class VisitorGeneratorTests
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        
+
         // Interfaces
         Assert.Contains("IMessageVisitor.Interfaces.g.cs", names);
-        
+
         // Accept methods for each record type
         Assert.Contains("Message.Accept.g.cs", names);
         Assert.Contains("TextMessage.Accept.g.cs", names);
         Assert.Contains("ImageMessage.Accept.g.cs", names);
         Assert.Contains("AudioMessage.Accept.g.cs", names);
-        
+
         // Builders
         Assert.Contains("MessageVisitorBuilder.g.cs", names);
 
@@ -961,7 +961,7 @@ public class VisitorGeneratorTests
         // Should have PKVIS002 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
-        
+
         var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
         Assert.Contains("INotPartial", pkvis002.GetMessage());
     }

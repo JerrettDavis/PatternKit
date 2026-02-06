@@ -52,7 +52,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName), 
+        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("BillingFacadeImpl"));
 
         var emit = updated.Emit(Stream.Null);
@@ -235,7 +235,7 @@ public class FacadeGeneratorTests
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
         Assert.False(hasFatalErrors);
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -352,7 +352,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName), 
+        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("ShippingFacade"));
 
         var emit = updated.Emit(Stream.Null);
@@ -387,9 +387,9 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         // Default name should be ProductCatalogFacade
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName), 
+        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("ProductCatalogFacade"));
 
         var emit = updated.Emit(Stream.Null);
@@ -710,7 +710,7 @@ public class FacadeGeneratorTests
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
         Assert.False(hasFatalErrors);
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -724,7 +724,7 @@ public class FacadeGeneratorTests
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var facadeType = asm.GetType("PatternKit.Examples.Billing.BillingFacadeImpl");
         Assert.NotNull(facadeType);
-        
+
         // Verify it has a constructor with the three dependencies
         var ctor = facadeType!.GetConstructors()[0];
         Assert.Equal(3, ctor.GetParameters().Length);
@@ -854,10 +854,10 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSources = run.Results.SelectMany(r => r.GeneratedSources).ToList();
         Assert.NotEmpty(generatedSources);
-        
+
         var generatedSource = generatedSources.First().SourceText.ToString();
 
         // Methods should appear in alphabetical order: Alpha, Charlie, Mike, Zebra
@@ -938,7 +938,7 @@ public class FacadeGeneratorTests
         // Should not report missing mapping for IgnoredMethod (using Ignore policy)
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.DoesNotContain(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("IgnoredMethod"));
-        
+
         // Note: Interface will fail compilation since method isn't implemented
         // This is expected behavior - FacadeIgnore skips generation but doesn't affect the interface contract
     }
@@ -1154,13 +1154,13 @@ public class FacadeGeneratorTests
         // Note: Signature auto-matching may have issues in the generator
         // Just verify it compiles without errors in generator diagnostics
         Assert.All(run.Results, r => Assert.True(
-            r.Diagnostics.Length == 0 || 
+            r.Diagnostics.Length == 0 ||
             r.Diagnostics.All(d => d.Id != "PKFCD002"))); // No missing mapping error if it matched
-        
+
         // If code compiles, signature matching worked
         var emit = updated.Emit(Stream.Null);
         var hasCompileErrors = emit.Diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error);
-        
+
         // Test passes if either: no generator diagnostics (matched) or compile succeeds
         Assert.True(run.Results.All(r => r.Diagnostics.Length == 0) || !hasCompileErrors);
     }
@@ -1209,7 +1209,7 @@ public class FacadeGeneratorTests
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
         Assert.False(hasFatalErrors);
-        
+
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
@@ -1328,7 +1328,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void Method1()", generatedSource);
         Assert.Contains("int Method2(string arg)", generatedSource);
@@ -1364,7 +1364,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void Method1()", generatedSource);
         Assert.Contains("void Method3()", generatedSource);
@@ -1399,7 +1399,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void Method1()", generatedSource);
         Assert.Contains("void Method3()", generatedSource);
@@ -1432,7 +1432,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void ExternalLog(string message)", generatedSource);
         Assert.DoesNotContain("void Log(string message)", generatedSource);
@@ -1621,7 +1621,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("void MethodWithRef(ref int value)", generatedSource);
         Assert.Contains("void MethodWithOut(out string result)", generatedSource);
@@ -1686,7 +1686,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         // Should generate IIMyFacadeImpl (only first I removed from IIMyFacade)
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         Assert.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
@@ -1718,7 +1718,7 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        
+
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         // Field name is "myTarget", parameter name is also "myTarget", so should use "this." qualifier
         Assert.Contains("private readonly global::TestNs.IExternal myTarget;", generatedSource);

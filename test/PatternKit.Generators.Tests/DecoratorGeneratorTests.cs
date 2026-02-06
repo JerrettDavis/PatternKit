@@ -172,7 +172,7 @@ public class DecoratorGeneratorTests
         Assert.Contains("void Save", generatedSource);
         Assert.Contains("virtual", generatedSource); // Save should be virtual
         Assert.Contains("InternalMethod", generatedSource); // Still present, forwarded to Inner
-        
+
         // InternalMethod should be present and non-virtual (i.e., not declared as virtual)
         // We can't easily check "public void InternalMethod" vs "public virtual void InternalMethod"
         // so we'll just verify it compiles and InternalMethod exists
@@ -623,7 +623,7 @@ public class DecoratorGeneratorTests
         // Should have PKDEC002 diagnostic for the event
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
-        
+
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
         Assert.Empty(generatedSources);
@@ -709,7 +709,7 @@ public class DecoratorGeneratorTests
         // Should have PKDEC002 diagnostic for the indexer
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
-        
+
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
         Assert.Empty(generatedSources);
@@ -763,7 +763,7 @@ public class DecoratorGeneratorTests
         // Init setters are incompatible with the decorator pattern
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Name"));
-        
+
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
         Assert.Empty(generatedSources);
@@ -830,7 +830,7 @@ public class DecoratorGeneratorTests
         // Should have PKDEC002 diagnostic for the generic method
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Generic method"));
-        
+
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
         Assert.Empty(generatedSources);

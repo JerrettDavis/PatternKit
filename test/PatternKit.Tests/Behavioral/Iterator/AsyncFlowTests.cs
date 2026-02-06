@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace PatternKit.Tests.Behavioral.Iterator;
 
-[Feature("AsyncFlow<T>: async functional pipeline with share/fork/branch")] 
+[Feature("AsyncFlow<T>: async functional pipeline with share/fork/branch")]
 public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     private static async IAsyncEnumerable<int> RangeAsync(int count, int delayMs = 0)
@@ -64,7 +64,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
         return (some, none);
     }
 
-    [Scenario("Async Map/Filter/FlatMap/Tee composition")] 
+    [Scenario("Async Map/Filter/FlatMap/Tee composition")]
     [Fact]
     public Task Composition()
         => Given("async flow 1..5", () => AsyncFlow<int>.From(RangeAsync(5)))
@@ -73,7 +73,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
             .And("tee captured same", t => string.Join(',', t.Log) == "4,5,8,9")
             .AssertPassed();
 
-    [Scenario("Share + concurrent forks enumerate source once")] 
+    [Scenario("Share + concurrent forks enumerate source once")]
     [Fact]
     public Task ShareForkSingleEnumeration()
         => Given("shared async flow over 1..6", () => AsyncFlow<int>.From(RangeAsync(6)).Share())
@@ -82,7 +82,7 @@ public sealed class AsyncFlowTests(ITestOutputHelper output) : TinyBddXunitBase(
             .And("second fork is 1,3,5", r => string.Join(',', r.Second) == "1,3,5")
             .AssertPassed();
 
-    [Scenario("Branch partitions even/odd")] 
+    [Scenario("Branch partitions even/odd")]
     [Fact]
     public Task Branching()
         => Given("shared async flow 1..7", () => AsyncFlow<int>.From(RangeAsync(7)).Share())

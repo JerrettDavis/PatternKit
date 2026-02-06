@@ -1,20 +1,29 @@
 - name: Generators Overview
   href: index.md
 
-- name: Factory Method
-  href: factory-method.md
+- name: Builder
+  href: builder.md
+
+- name: Facade
+  href: facade.md
 
 - name: Factory Class
   href: factory-class.md
 
-- name: Builder
-  href: builder.md
+- name: Factory Method
+  href: factory-method.md
 
 - name: Prototype
   href: prototype.md
 
 - name: Proxy
   href: proxy.md
+
+- name: Template Method
+  href: template-method-generator.md
+
+- name: Visitor Generator
+  href: visitor-generator.md
 
 - name: Examples
   href: examples.md

@@ -120,7 +120,7 @@ public sealed class ActionStrategy<TIn>
 
         if (!_hasDefault)
             return false;
-        
+
         _default(in input);
         return true;
 

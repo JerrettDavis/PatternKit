@@ -369,7 +369,7 @@ public static partial class BillingHost
         decimal amount)
     {
         var refundResult = paymentProcessor.RefundPayment(receiptNumber, amount);
-        
+
         if (refundResult.Success)
         {
             notificationService.SendRefundNotification(customerId, refundResult.RefundId!, amount);

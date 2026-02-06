@@ -72,7 +72,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             ? symbol.Name
             : $"{symbol.Name}Builder";
 
-        if (symbol.IsStatic && string.Equals(builderTypeName, symbol.Name, StringComparison.Ordinal) || 
+        if (symbol.IsStatic && string.Equals(builderTypeName, symbol.Name, StringComparison.Ordinal) ||
             symbol.ContainingNamespace.GetTypeMembers(builderTypeName).Any(static _ => true) &&
             !string.Equals(builderTypeName, symbol.Name, StringComparison.Ordinal))
         {
@@ -713,7 +713,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
     {
         if (type is not INamedTypeSymbol named)
             return false;
-        
+
         var constructed = named.ConstructedFrom;
         var full = constructed.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         return string.Equals(full, "global::System.Threading.Tasks.ValueTask<T>", StringComparison.Ordinal) ||

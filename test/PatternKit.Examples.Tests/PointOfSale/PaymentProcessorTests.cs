@@ -112,8 +112,8 @@ public sealed class PaymentProcessorTests(ITestOutputHelper output) : TinyBddXun
         => Given("an order and active promotions", () =>
             {
                 var order = CreateBasicOrder("ORD-PROMO");
-                order.Items[0] = order.Items[0] with 
-                { 
+                order.Items[0] = order.Items[0] with
+                {
                     UnitPrice = 100m,
                     Category = "Electronics"
                 };

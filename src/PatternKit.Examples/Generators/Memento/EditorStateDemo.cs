@@ -18,9 +18,9 @@ public static class EditorStateDemo
     public partial record class EditorState(string Text, int Cursor, int SelectionLength)
     {
         public bool HasSelection => SelectionLength > 0;
-        
+
         public int SelectionStart => Cursor;
-        
+
         public int SelectionEnd => Cursor + SelectionLength;
 
         /// <summary>
@@ -115,7 +115,7 @@ public static class EditorStateDemo
         public EditorState Current => _history.Current;
 
         public bool CanUndo => _history.CanUndo;
-        
+
         public bool CanRedo => _history.CanRedo;
 
         public int HistoryCount => _history.Count;
@@ -244,7 +244,7 @@ public static class EditorStateDemo
     public static List<string> RunManualSnapshot()
     {
         var log = new List<string>();
-        
+
         var state1 = new EditorState("Hello", 5, 0);
         log.Add($"State1: {state1}");
 

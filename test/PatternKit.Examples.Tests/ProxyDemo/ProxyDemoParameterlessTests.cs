@@ -99,7 +99,7 @@ public sealed class ProxyDemoParameterlessTests(ITestOutputHelper output) : Tiny
             .When("executing all demos", _ => CaptureConsole(() => PatternKit.Examples.ProxyDemo.ProxyDemo.RunAllDemos()))
             .Then("executes successfully", r => r.success)
             .And("includes all demo headers", r =>
-                new []
+                new[]
                 {
                     "Virtual Proxy - Lazy Initialization",
                     "Protection Proxy - Access Control",

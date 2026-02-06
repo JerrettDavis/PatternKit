@@ -43,7 +43,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor DuplicateOrderDescriptor = new(
         id: DiagIdDuplicateOrder,
         title: "Duplicate step order",
-        messageFormat: "Multiple steps have Order={0}. Each step must have a unique Order value",
+        messageFormat: "Multiple steps have Order={0}. Each step must have a unique Order value.",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -59,7 +59,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor MultipleTerminalsDescriptor = new(
         id: DiagIdMultipleTerminals,
         title: "Multiple terminal steps",
-        messageFormat: "Type '{0}' has multiple methods marked with [ComposeTerminal]. Only one terminal is allowed",
+        messageFormat: "Type '{0}' has multiple methods marked with [ComposeTerminal]. Only one terminal is allowed.",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -67,7 +67,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InvalidStepSignatureDescriptor = new(
         id: DiagIdInvalidStepSignature,
         title: "Invalid step method signature",
-        messageFormat: "Method '{0}' has an invalid signature for a pipeline step. Expected: TOut Step(in TIn, Func<TIn, TOut> next) or ValueTask<TOut> StepAsync(TIn, Func<TIn, ValueTask<TOut>> next, CancellationToken)",
+        messageFormat: "Method '{0}' has an invalid signature for a pipeline step. Expected: TOut Step(in TIn, Func<TIn, TOut> next) or ValueTask<TOut> StepAsync(TIn, Func<TIn, ValueTask<TOut>> next, CancellationToken).",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -75,7 +75,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InvalidTerminalSignatureDescriptor = new(
         id: DiagIdInvalidTerminalSignature,
         title: "Invalid terminal method signature",
-        messageFormat: "Method '{0}' has an invalid signature for a terminal. Expected: TOut Terminal(in TIn) or ValueTask<TOut> TerminalAsync(TIn, CancellationToken)",
+        messageFormat: "Method '{0}' has an invalid signature for a terminal. Expected: TOut Terminal(in TIn) or ValueTask<TOut> TerminalAsync(TIn, CancellationToken).",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -83,7 +83,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor AsyncNotEnabledDescriptor = new(
         id: DiagIdAsyncNotEnabled,
         title: "Async step detected but async generation disabled",
-        messageFormat: "Method '{0}' is async but async generation is disabled. Set GenerateAsync=true or ForceAsync=true on [Composer]",
+        messageFormat: "Method '{0}' is async but async generation is disabled. Set GenerateAsync=true or ForceAsync=true on [Composer].",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -91,7 +91,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor MissingCancellationTokenDescriptor = new(
         id: DiagIdMissingCancellationToken,
         title: "CancellationToken parameter required",
-        messageFormat: "Method '{0}' is async but missing CancellationToken parameter. Async methods should have a CancellationToken parameter",
+        messageFormat: "Method '{0}' is async but missing CancellationToken parameter. Async methods should have a CancellationToken parameter.",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
@@ -438,7 +438,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
         var returnType = terminal.Method.ReturnType;
 
         // If it's ValueTask<T> or Task<T>, unwrap it
-        if (returnType is INamedTypeSymbol namedType && 
+        if (returnType is INamedTypeSymbol namedType &&
             (namedType.Name == "ValueTask" || namedType.Name == "Task") &&
             namedType.TypeArguments.Length > 0)
         {
@@ -530,7 +530,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // For structs, we need to avoid lambdas that capture 'this'
             // We'll create a copy of 'this' and use it in local functions
             sb.AppendLine($"        var self = this;");
-            
+
             // Start with terminal wrapped as a local function using the copy
             sb.AppendLine($"        {outputTypeStr} terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(in arg);");
             sb.AppendLine($"        global::System.Func<{inputTypeStr}, {outputTypeStr}> pipeline = terminalFunc;");
@@ -552,7 +552,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // For classes, use the lambda approach
             // Build the pipeline from innermost (terminal) to outermost
             // We'll build a chain of Func delegates
-            
+
             // Start with terminal wrapped as a Func
             sb.AppendLine($"        global::System.Func<{inputTypeStr}, {outputTypeStr}> pipeline = (arg) => {terminal.Method.Name}(in arg);");
 
@@ -566,7 +566,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // Invoke the final pipeline
             sb.AppendLine($"        return pipeline(input);");
         }
-        
+
         sb.AppendLine("    }");
     }
 
@@ -590,11 +590,11 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // For structs, we need to avoid lambdas that capture 'this'
             // We'll create a copy of 'this' and use it in local functions, similar to sync approach
             sb.AppendLine($"        var self = this;");
-            
+
             // Start with terminal wrapped as a local function using the copy
             if (terminal.IsAsync)
             {
-                if (terminal.Method.Parameters.Length > 1 && 
+                if (terminal.Method.Parameters.Length > 1 &&
                     terminal.Method.Parameters[1].Type.ToDisplayString() == "System.Threading.CancellationToken")
                 {
                     sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(arg, cancellationToken);");
@@ -608,7 +608,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             {
                 sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{terminal.Method.Name}(in arg));");
             }
-            
+
             sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = terminalFunc;");
 
             // Wrap each step around the previous pipeline
@@ -620,7 +620,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 if (step.IsAsync)
                 {
                     // Check if step has cancellationToken parameter
-                    if (step.Method.Parameters.Length > 2 && 
+                    if (step.Method.Parameters.Length > 2 &&
                         step.Method.Parameters[2].Type.ToDisplayString() == "System.Threading.CancellationToken")
                     {
                         sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => self.{step.Method.Name}(arg, pipeline, cancellationToken);");
@@ -637,7 +637,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                     // Avoid using mixed sync/async pipelines in contexts with custom SynchronizationContext
                     sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{step.Method.Name}(in arg, inp => pipeline(inp).GetAwaiter().GetResult()));");
                 }
-                
+
                 sb.AppendLine($"        pipeline = {funcName};");
             }
 
@@ -650,7 +650,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // If terminal is async, use it directly; otherwise wrap in ValueTask.FromResult
             if (terminal.IsAsync)
             {
-                if (terminal.Method.Parameters.Length > 1 && 
+                if (terminal.Method.Parameters.Length > 1 &&
                     terminal.Method.Parameters[1].Type.ToDisplayString() == "System.Threading.CancellationToken")
                 {
                     sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = (arg) => {terminal.Method.Name}(arg, cancellationToken);");
@@ -673,7 +673,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 if (step.IsAsync)
                 {
                     // Check if step has cancellationToken parameter
-                    if (step.Method.Parameters.Length > 2 && 
+                    if (step.Method.Parameters.Length > 2 &&
                         step.Method.Parameters[2].Type.ToDisplayString() == "System.Threading.CancellationToken")
                     {
                         sb.AppendLine($"        pipeline = (arg) => {step.Method.Name}(arg, pipeline, cancellationToken);");
@@ -698,7 +698,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // Invoke the final pipeline
             sb.AppendLine($"        return pipeline(input);");
         }
-        
+
         sb.AppendLine("    }");
     }
 

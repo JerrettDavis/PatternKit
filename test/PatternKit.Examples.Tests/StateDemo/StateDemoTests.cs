@@ -44,8 +44,8 @@ public sealed class StateDemoTests(ITestOutputHelper output) : TinyBddXunitBase(
     [Fact]
     public async Task Delivered_Ignores()
     {
-        await Given("order delivered", () => OrderStateDemo.Run("pay","ship","deliver"))
-            .When("send unknown event after delivered", _ => OrderStateDemo.Run("pay","ship","deliver","x"))
+        await Given("order delivered", () => OrderStateDemo.Run("pay", "ship", "deliver"))
+            .When("send unknown event after delivered", _ => OrderStateDemo.Run("pay", "ship", "deliver", "x"))
             .Then("still Delivered and last step ignored", r => r.Final == OrderStateDemo.OrderState.Delivered && r.Log.Last() == "ignore")
             .AssertPassed();
     }
