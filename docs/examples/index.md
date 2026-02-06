@@ -52,6 +52,30 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Template Method Async Pipeline**
   End-to-end async pipeline (fetch → transform → store) with cancellation, optional synchronization, and error observation. Shows both subclassing (`AsyncTemplateMethod`) and fluent (`AsyncTemplate`) approaches. See [Template Method Async Demo](template-method-async-demo.md).
 
+## Source Generator Demos
+
+These demos showcase PatternKit's **source generators** — compile-time code generation that eliminates boilerplate for common design patterns.
+
+* **Singleton Generator Demo** — Generates thread-safe singleton access (eager or lazy) with custom property names and factory methods. See [Singleton Generator Demo](singleton-generator-demo.md).
+
+* **Adapter Generator Demo** — Generates adapter classes that bridge incompatible interfaces by mapping methods between source and target contracts. See [Adapter Generator Demo](adapter-generator-demo.md).
+
+* **Bridge Generator Demo** — Generates abstraction/implementation separation by producing bridge plumbing between refined abstractions and implementors. See [Bridge Generator Demo](bridge-generator-demo.md).
+
+* **Chain Generator Demo** — Generates Chain of Responsibility (first-match wins) and Pipeline (middleware wrapping) patterns from annotated handler methods. See [Chain Generator Demo](chain-generator-demo.md).
+
+* **Command Generator Demo** — Generates Execute/ExecuteAsync dispatch methods for command types, supporting both per-command handlers and command host groupings. See [Command Generator Demo](command-generator-demo.md).
+
+* **Composite Generator Demo** — Generates ComponentBase (leaf defaults) and CompositeBase (child management + delegation) from a component interface, with optional traversal helpers. See [Composite Generator Demo](composite-generator-demo.md).
+
+* **Flyweight Generator Demo** — Generates cache classes with Get, TryGet, and Clear methods for sharing immutable instances by key, with configurable eviction and threading policies. See [Flyweight Generator Demo](flyweight-generator-demo.md).
+
+* **Iterator Generator Demo** — Generates struct Enumerator with TryMoveNext/Current/GetEnumerator from a user-provided step function, plus DFS/BFS tree traversal generation. See [Iterator Generator Demo](iterator-generator-demo.md).
+
+* **Observer Generator Demo** — Generates Subscribe/Publish/PublishAsync with snapshot-based iteration and IDisposable subscription tokens, with configurable threading and exception policies. See [Observer Generator Demo](observer-generator-demo.md).
+
+* **State Generator Demo** — Generates state machine boilerplate (State property, Fire, FireAsync, CanFire) from annotated transitions, guards, and entry/exit hooks. See [State Generator Demo](state-generator-demo.md).
+
 ## How to run
 
 From the repo root:

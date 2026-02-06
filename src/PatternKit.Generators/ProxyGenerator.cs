@@ -13,13 +13,6 @@ namespace PatternKit.Generators;
 [Generator]
 public sealed class ProxyGenerator : IIncrementalGenerator
 {
-    // Symbol display format that preserves nullable annotations
-    private static readonly SymbolDisplayFormat TypeFormat = new(
-        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
-        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
     // Diagnostic IDs
     private const string DiagIdTypeNotPartial = "PKPRX001";
     private const string DiagIdUnsupportedMember = "PKPRX002";
@@ -135,7 +128,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         // For interface contracts, must be partial (so user can add custom logic if needed)
         // For abstract class contracts, the generated proxy inherits from it so partial is required
-        if (!IsPartialType(node))
+        if (!GeneratorUtilities.IsPartialType(node))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNotPartialDescriptor,
@@ -186,17 +179,6 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 context.AddSource(fileName, interceptorSource);
             }
         }
-    }
-
-    private static bool IsPartialType(SyntaxNode node)
-    {
-        return node switch
-        {
-            InterfaceDeclarationSyntax iface => iface.Modifiers.Any(m => m.Text == "partial"),
-            ClassDeclarationSyntax cls => cls.Modifiers.Any(m => m.Text == "partial"),
-            RecordDeclarationSyntax rec => rec.Modifiers.Any(m => m.Text == "partial"),
-            _ => false
-        };
     }
 
     private ProxyConfig ParseProxyConfig(AttributeData attribute, INamedTypeSymbol contractSymbol)
@@ -316,7 +298,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         foreach (var member in allMembers)
         {
             // Check for ignore attribute
-            var isIgnored = HasAttribute(member, "PatternKit.Generators.Proxy.ProxyIgnoreAttribute");
+            var isIgnored = GeneratorUtilities.HasAttribute(member, "PatternKit.Generators.Proxy.ProxyIgnoreAttribute");
             if (isIgnored)
                 continue;
 
@@ -357,10 +339,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                     continue;
                 }
 
-                var isAsync = IsAsyncMethod(method);
+                var isAsync = GeneratorUtilities.IsAsyncMethod(method);
                 var isGenericAsyncReturnType = isAsync && IsGenericAsyncReturnType(method);
-                var hasCancellationToken = method.Parameters.Any(p => IsCancellationToken(p.Type));
-                var baseReturnType = method.ReturnType.ToDisplayString(TypeFormat);
+                var hasCancellationToken = method.Parameters.Any(p => GeneratorUtilities.IsCancellationToken(p.Type));
+                var baseReturnType = method.ReturnType.ToDisplayString(GeneratorUtilities.TypeFormat);
                 var returnType = method.ReturnsByRef
                     ? "ref " + baseReturnType
                     : method.ReturnsByRefReadonly
@@ -383,9 +365,9 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                     Parameters = method.Parameters.Select(p => new ParameterInfo
                     {
                         Name = p.Name,
-                        Type = p.Type.ToDisplayString(TypeFormat),
+                        Type = p.Type.ToDisplayString(GeneratorUtilities.TypeFormat),
                         HasDefaultValue = p.HasExplicitDefaultValue,
-                        DefaultValue = p.HasExplicitDefaultValue ? FormatDefaultValue(p) : null,
+                        DefaultValue = p.HasExplicitDefaultValue ? GeneratorUtilities.FormatDefaultValue(p) : null,
                         RefKind = p.RefKind,
                         IsParams = p.IsParams,
                         IsThis = p.IsThis
@@ -441,7 +423,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 {
                     Name = property.Name,
                     MemberType = MemberType.Property,
-                    ReturnType = property.Type.ToDisplayString(TypeFormat),
+                    ReturnType = property.Type.ToDisplayString(GeneratorUtilities.TypeFormat),
                     HasGetter = property.GetMethod is not null,
                     HasSetter = property.SetMethod is not null,
                     IsAsync = false,
@@ -587,15 +569,6 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static bool IsAsyncMethod(IMethodSymbol method)
-    {
-        var returnType = method.ReturnType;
-        var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
-               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
-    }
-
     private static bool IsGenericAsyncReturnType(IMethodSymbol method)
     {
         // Check if the return type is a generic Task<T> or ValueTask<T>
@@ -619,131 +592,11 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<")));
     }
 
-    private static bool IsCancellationToken(ITypeSymbol type)
-    {
-        var typeName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return typeName == "global::System.Threading.CancellationToken";
-    }
-
-    private static bool CanTypeAcceptNull(ITypeSymbol type)
-    {
-        if (type is null)
-            return false;
-
-        if (type.IsReferenceType)
-            return true;
-
-        if (type.NullableAnnotation == NullableAnnotation.Annotated)
-            return true;
-
-        if (type is ITypeParameterSymbol typeParam)
-            return !typeParam.HasValueTypeConstraint;
-
-        if (type is INamedTypeSymbol named &&
-            named.IsGenericType &&
-            named.ConstructedFrom.SpecialType == SpecialType.System_Nullable_T)
-        {
-            return true;
-        }
-
-        return false;
-    }
-
-    private static string FormatDefaultValue(IParameterSymbol param)
-    {
-        if (param.ExplicitDefaultValue is null)
-        {
-            if (CanTypeAcceptNull(param.Type))
-                return "null";
-
-            if (param.Type.IsValueType)
-                return "default";
-
-            return "null";
-        }
-
-        if (param.Type.TypeKind == TypeKind.Enum && param.Type is INamedTypeSymbol enumType)
-        {
-            var enumField = enumType.GetMembers()
-                .OfType<IFieldSymbol>()
-                .FirstOrDefault(f => f.HasConstantValue && Equals(f.ConstantValue, param.ExplicitDefaultValue));
-
-            if (enumField != null)
-            {
-                return $"{enumType.ToDisplayString(TypeFormat)}.{enumField.Name}";
-            }
-
-            return $"({enumType.ToDisplayString(TypeFormat)}){param.ExplicitDefaultValue}";
-        }
-
-        // Use Roslyn's culture-invariant literal formatting for all other types
-        var value = param.ExplicitDefaultValue;
-        return value switch
-        {
-            string s => FormatStringLiteral(s),
-            char c => FormatCharLiteral(c),
-            bool b => b ? "true" : "false",
-            float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f",
-            double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture) + "d",
-            decimal m => m.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m",
-            null => "null",
-            _ => value.ToString()
-        };
-    }
-
-    private static string FormatStringLiteral(string s)
-    {
-        // Escape special characters in string literals
-        return "\"" + s
-            .Replace("\\", "\\\\")
-            .Replace("\"", "\\\"")
-            .Replace("\n", "\\n")
-            .Replace("\r", "\\r")
-            .Replace("\t", "\\t")
-            .Replace("\0", "\\0")
-            + "\"";
-    }
-
-    private static string FormatCharLiteral(char c)
-    {
-        // Escape special characters in char literals
-        return c switch
-        {
-            '\\' => "'\\\\'",
-            '\'' => "'\\''",
-            '\n' => "'\\n'",
-            '\r' => "'\\r'",
-            '\t' => "'\\t'",
-            '\0' => "'\\0'",
-            _ => $"'{c}'"
-        };
-    }
-
-    private static bool HasAttribute(ISymbol symbol, string attributeName)
-    {
-        return symbol.GetAttributes().Any(a =>
-            a.AttributeClass?.ToDisplayString() == attributeName);
-    }
-
     private static bool IsAccessibleForProxy(Accessibility accessibility)
     {
         return accessibility == Accessibility.Public ||
                accessibility == Accessibility.Internal ||
                accessibility == Accessibility.ProtectedOrInternal;
-    }
-
-    private static string GetAccessibilityKeyword(Accessibility accessibility)
-    {
-        return accessibility switch
-        {
-            Accessibility.Public => "public",
-            Accessibility.Internal => "internal",
-            Accessibility.Protected => "protected",
-            Accessibility.ProtectedOrInternal => "protected internal",
-            Accessibility.ProtectedAndInternal => "private protected",
-            Accessibility.Private => "private",
-            _ => "public"
-        };
     }
 
     private static bool HasNameConflict(INamedTypeSymbol contractSymbol, string generatedName)
@@ -790,8 +643,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
 
         // Generate proxy class
-        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(TypeFormat);
-        var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
+        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(GeneratorUtilities.TypeFormat);
+        var accessibility = GeneratorUtilities.GetAccessibility(contractInfo.ContractSymbol.DeclaredAccessibility);
 
         sb.AppendLine($"/// <summary>");
         sb.AppendLine($"/// Proxy for {contractInfo.ContractName} that delegates all calls to an inner instance.");
@@ -838,7 +691,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
     private void GenerateProxyConstructor(StringBuilder sb, ContractInfo contractInfo, ProxyConfig config)
     {
-        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(TypeFormat);
+        var contractFullName = contractInfo.ContractSymbol.ToDisplayString(GeneratorUtilities.TypeFormat);
 
         sb.AppendLine($"    /// <summary>");
         sb.AppendLine($"    /// Initializes a new instance of the {config.ProxyTypeName} class.");
@@ -876,7 +729,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
     private void GenerateProxyMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
-        var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var accessibility = GeneratorUtilities.GetAccessibility(member.Accessibility);
 
         // Determine if this method needs async modifier (uses interceptors with async support)
         // Note: ref-returning methods cannot be async
@@ -1280,7 +1133,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
     private void GenerateProxyProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
-        var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var accessibility = GeneratorUtilities.GetAccessibility(member.Accessibility);
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
         sb.Append($"    {accessibility} {member.ReturnType} {member.Name}");
@@ -1325,7 +1178,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        var accessibility = GetAccessibilityKeyword(contractInfo.ContractSymbol.DeclaredAccessibility);
+        var accessibility = GeneratorUtilities.GetAccessibility(contractInfo.ContractSymbol.DeclaredAccessibility);
 
         // Generate interceptor interface
         sb.AppendLine($"/// <summary>");

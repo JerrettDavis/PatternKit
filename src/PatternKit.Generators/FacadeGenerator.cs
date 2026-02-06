@@ -120,7 +120,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             methods.Add(new MethodInfo(
                 Symbol: member,
                 ContractName: methodName,
-                IsAsync: IsAsyncMethod(member),
+                IsAsync: GeneratorUtilities.IsAsyncMethod(member),
                 HasCancellationToken: HasCancellationTokenParameter(member),
                 MapAttribute: exposeAttr,
                 IsExposed: true
@@ -206,7 +206,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             methods.Add(new MethodInfo(
                 Symbol: method,
                 ContractName: method.Name,
-                IsAsync: IsAsyncMethod(method),
+                IsAsync: GeneratorUtilities.IsAsyncMethod(method),
                 HasCancellationToken: HasCancellationTokenParameter(method),
                 MapAttribute: mapAttr,
                 MappingMethod: mappingMethod,
@@ -391,7 +391,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             builder.Add(new MethodInfo(
                 Symbol: method,
                 ContractName: memberPrefix + method.Name,
-                IsAsync: IsAsyncMethod(method),
+                IsAsync: GeneratorUtilities.IsAsyncMethod(method),
                 HasCancellationToken: HasCancellationTokenParameter(method),
                 MapAttribute: null,
                 MappingMethod: method,
@@ -443,13 +443,6 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         }
 
         return false;
-    }
-
-    private static bool IsAsyncMethod(IMethodSymbol method)
-    {
-        var returnType = method.ReturnType.ToDisplayString();
-        return returnType.StartsWith("System.Threading.Tasks.Task") ||
-               returnType.StartsWith("System.Threading.Tasks.ValueTask");
     }
 
     private static bool IsTaskLike(ITypeSymbol type)
@@ -615,7 +608,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     }
 
                     // Check for async mapping without generation enabled
-                    if (IsAsyncMethod(method.MappingMethod) && !info.GenerateAsync)
+                    if (GeneratorUtilities.IsAsyncMethod(method.MappingMethod) && !info.GenerateAsync)
                     {
                         context.ReportDiagnostic(Diagnostic.Create(
                             Diagnostics.AsyncMappingDisabled,
@@ -781,7 +774,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             // Call mapping method
             var mapping = method.MappingMethod;
             var callArgs = BuildCallArguments(mapping, dependencies, methodSymbol.Parameters);
-            var awaitKeyword = IsAsyncMethod(mapping) ? "await " : "";
+            var awaitKeyword = GeneratorUtilities.IsAsyncMethod(mapping) ? "await " : "";
             var returnKeyword = returnType == "void" || (isAsync && returnType == "System.Threading.Tasks.ValueTask") ? "" : "return ";
 
             sb.AppendLine($"        {returnKeyword}{awaitKeyword}{mapping.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{mapping.Name}({callArgs});");
@@ -866,7 +859,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
                 if (!dependencies.ContainsKey(typeStr))
                 {
-                    var baseName = ToCamelCase(param.Type.Name);
+                    var baseName = GeneratorUtilities.ToCamelCase(param.Type.Name);
                     var fieldName = $"_{baseName}";
                     var paramName = baseName;
 
@@ -1149,7 +1142,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
         // Call host method with dependencies and operation parameters
         var callArgs = BuildHostCallArguments(hostMethod, dependencies, operationParams);
-        var awaitKeyword = IsAsyncMethod(hostMethod) ? "await " : "";
+        var awaitKeyword = GeneratorUtilities.IsAsyncMethod(hostMethod) ? "await " : "";
         var returnKeyword = returnType == "void" ? "" : "return ";
 
         sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{hostMethod.Name}({callArgs});");
@@ -1215,7 +1208,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
                 if (!dependencies.ContainsKey(typeStr))
                 {
-                    var baseName = ToCamelCase(param.Type.Name);
+                    var baseName = GeneratorUtilities.ToCamelCase(param.Type.Name);
                     var fieldName = $"_{baseName}";
                     var paramName = baseName;
 
@@ -1265,21 +1258,6 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             default:
                 return type.ToDisplayString() == "System.Threading.CancellationToken";
         }
-    }
-
-    private static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name))
-            return name;
-
-        // Handle I-prefix for interfaces
-        if (name.Length > 1 && name[0] == 'I' && char.IsUpper(name[1]))
-            name = name.Substring(1);
-
-        if (name.Length == 0)
-            return name;
-
-        return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
     private record FacadeInfo(

@@ -99,7 +99,7 @@ public sealed class MementoGenerator : IIncrementalGenerator
         SyntaxNode node)
     {
         // Check if type is partial
-        if (!IsPartialType(node))
+        if (!GeneratorUtilities.IsPartialType(node))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNotPartialDescriptor,
@@ -134,17 +134,6 @@ public sealed class MementoGenerator : IIncrementalGenerator
                 context.AddSource(fileName, caretakerSource);
             }
         }
-    }
-
-    private static bool IsPartialType(SyntaxNode node)
-    {
-        return node switch
-        {
-            ClassDeclarationSyntax classDecl => classDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            StructDeclarationSyntax structDecl => structDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            RecordDeclarationSyntax recordDecl => recordDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            _ => false
-        };
     }
 
     private MementoConfig ParseMementoConfig(AttributeData attribute)
@@ -222,8 +211,8 @@ public sealed class MementoGenerator : IIncrementalGenerator
         foreach (var member in candidateMembers)
         {
             // Check for attributes
-            var hasIgnore = HasAttribute(member, "PatternKit.Generators.MementoIgnoreAttribute");
-            var hasInclude = HasAttribute(member, "PatternKit.Generators.MementoIncludeAttribute");
+            var hasIgnore = GeneratorUtilities.HasAttribute(member, "PatternKit.Generators.MementoIgnoreAttribute");
+            var hasInclude = GeneratorUtilities.HasAttribute(member, "PatternKit.Generators.MementoIncludeAttribute");
             var strategyAttr = GetAttribute(member, "PatternKit.Generators.MementoStrategyAttribute");
 
             // Determine if this member should be included
@@ -307,12 +296,6 @@ public sealed class MementoGenerator : IIncrementalGenerator
         return 0; // ByReference (with warning)
     }
 
-    private static bool HasAttribute(ISymbol symbol, string attributeName)
-    {
-        return symbol.GetAttributes().Any(a =>
-            a.AttributeClass?.ToDisplayString() == attributeName);
-    }
-
     private static AttributeData? GetAttribute(ISymbol symbol, string attributeName)
     {
         return symbol.GetAttributes().FirstOrDefault(a =>
@@ -350,12 +333,12 @@ public sealed class MementoGenerator : IIncrementalGenerator
 
         // Constructor
         sb.Append($"    private {typeInfo.TypeName}Memento(");
-        sb.Append(string.Join(", ", typeInfo.Members.Select(m => $"{m.Type} {ToCamelCase(m.Name)}")));
+        sb.Append(string.Join(", ", typeInfo.Members.Select(m => $"{m.Type} {GeneratorUtilities.ToCamelCase(m.Name)}")));
         sb.AppendLine(")");
         sb.AppendLine("    {");
         foreach (var member in typeInfo.Members)
         {
-            sb.AppendLine($"        {member.Name} = {ToCamelCase(member.Name)};");
+            sb.AppendLine($"        {member.Name} = {GeneratorUtilities.ToCamelCase(member.Name)};");
         }
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -648,13 +631,6 @@ public sealed class MementoGenerator : IIncrementalGenerator
 
             return hash;
         }
-    }
-
-    private static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name) || name.Length == 1 || char.IsLower(name[0]))
-            return name;
-        return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
     // Helper classes

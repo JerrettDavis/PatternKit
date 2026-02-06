@@ -87,3 +87,33 @@
 
 - name: Task Scheduler
   href: task-scheduler.md
+
+- name: "Generator Demo: Singleton"
+  href: singleton-generator-demo.md
+
+- name: "Generator Demo: Adapter"
+  href: adapter-generator-demo.md
+
+- name: "Generator Demo: Bridge"
+  href: bridge-generator-demo.md
+
+- name: "Generator Demo: Chain"
+  href: chain-generator-demo.md
+
+- name: "Generator Demo: Command"
+  href: command-generator-demo.md
+
+- name: "Generator Demo: Composite"
+  href: composite-generator-demo.md
+
+- name: "Generator Demo: Flyweight"
+  href: flyweight-generator-demo.md
+
+- name: "Generator Demo: Iterator"
+  href: iterator-generator-demo.md
+
+- name: "Generator Demo: Observer"
+  href: observer-generator-demo.md
+
+- name: "Generator Demo: State"
+  href: state-generator-demo.md
