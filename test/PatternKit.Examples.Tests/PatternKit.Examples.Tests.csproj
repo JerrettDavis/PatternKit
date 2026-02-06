@@ -5,7 +5,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <NoWarn>CS1591;CS0649</NoWarn>
+        <!-- Suppress warnings:
+             CS1591: Missing XML comment (examples don't need docs)
+             CS0649: Field never assigned (used in serialization scenarios)
+             TBDD010: TinyBDD optimization hints (not errors) -->
+        <NoWarn>$(NoWarn);CS1591;CS0649;TBDD010</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -36,6 +40,10 @@
     <ItemGroup>
       <Folder Include="FlyweightDemo\" />
       <Folder Include="Strategies\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>

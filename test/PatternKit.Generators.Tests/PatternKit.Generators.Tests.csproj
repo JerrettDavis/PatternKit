@@ -5,6 +5,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
+        <!-- Suppress warnings:
+             xUnit1031: Some tests intentionally use sync-over-async for generator testing
+             xUnit2002: NotNull on value types (GeneratedSourceResult is a struct) -->
+        <NoWarn>$(NoWarn);xUnit1031;xUnit2002</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -30,6 +34,10 @@
       <ProjectReference Include="..\..\src\PatternKit.Examples\PatternKit.Examples.csproj" />
       <ProjectReference Include="..\..\src\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" />
       <ProjectReference Include="..\..\src\PatternKit.Generators\PatternKit.Generators.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
 </Project>
