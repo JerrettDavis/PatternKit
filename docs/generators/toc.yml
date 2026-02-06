@@ -25,6 +25,36 @@
 - name: Visitor Generator
   href: visitor-generator.md
 
+- name: Adapter
+  href: adapter.md
+
+- name: Bridge
+  href: bridge.md
+
+- name: Chain
+  href: chain.md
+
+- name: Command
+  href: command.md
+
+- name: Composite
+  href: composite.md
+
+- name: Flyweight
+  href: flyweight.md
+
+- name: Iterator
+  href: iterator.md
+
+- name: Observer
+  href: observer.md
+
+- name: Singleton
+  href: singleton.md
+
+- name: State
+  href: state.md
+
 - name: Examples
   href: examples.md
 

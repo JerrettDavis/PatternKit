@@ -25,6 +25,7 @@ public static class RoslynTestHelpers
             RefFromTPA("System.Linq.dll"),
             RefFromTPA("System.Memory.dll"),
             RefFromTPA("System.Runtime.Extensions.dll"),
+            RefFromTPA("System.Collections.Concurrent.dll"),
             RefFromTPA("netstandard.dll"),
             MetadataReference.CreateFromFile(typeof(PatternKit.Generators.Builders.GenerateBuilderAttribute).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(PatternKit.Generators.Builders.BuilderGenerator).Assembly.Location),

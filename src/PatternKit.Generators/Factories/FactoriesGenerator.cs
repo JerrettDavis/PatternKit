@@ -10,12 +10,6 @@ namespace PatternKit.Generators.Factories;
 [Generator]
 public sealed class FactoriesGenerator : IIncrementalGenerator
 {
-    private static readonly SymbolDisplayFormat TypeFormat = new(
-        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
-        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
     private static readonly SymbolDisplayFormat ParameterFormat = new(
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
@@ -296,7 +290,7 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
 
             if (!TryReadKey(entry.Attribute, out var keyConstant) || !IsKeyCompatible(compilation, keyType, keyConstant))
             {
-                diagnostics.Add(Diagnostic.Create(Diagnostics.KeyedInvalidKeyValue, entry.Method.Locations.FirstOrDefault() ?? location, entry.Method.Name, keyType.ToDisplayString(TypeFormat)));
+                diagnostics.Add(Diagnostic.Create(Diagnostics.KeyedInvalidKeyValue, entry.Method.Locations.FirstOrDefault() ?? location, entry.Method.Name, keyType.ToDisplayString(GeneratorUtilities.TypeFormat)));
                 continue;
             }
 
@@ -457,7 +451,7 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
         sb.Append(accessibility).Append(" static partial class ").Append(typeName).AppendLine();
         sb.AppendLine("{");
 
-        var keyTypeName = model.KeyType.ToDisplayString(TypeFormat);
+        var keyTypeName = model.KeyType.ToDisplayString(GeneratorUtilities.TypeFormat);
         var parameterList = BuildParameterList(model.Signature.Parameters);
         var argumentList = BuildArgumentList(model.Signature.Parameters);
         var resultTypeName = model.Signature.ResultTypeName;
@@ -792,8 +786,8 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
         sb.Append(accessibility).Append(" sealed partial class ").Append(model.FactoryName).AppendLine();
         sb.AppendLine("{");
 
-        var keyTypeName = model.KeyType.ToDisplayString(TypeFormat);
-        var baseTypeName = model.BaseType.ToDisplayString(TypeFormat);
+        var keyTypeName = model.KeyType.ToDisplayString(GeneratorUtilities.TypeFormat);
+        var baseTypeName = model.BaseType.ToDisplayString(GeneratorUtilities.TypeFormat);
 
         if (model.GenerateEnumKeys)
         {
@@ -1082,7 +1076,7 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
             resultType = taskType!;
         }
 
-        return new MethodSignature(resultType, resultType.ToDisplayString(TypeFormat), method.Parameters, asyncKind);
+        return new MethodSignature(resultType, resultType.ToDisplayString(GeneratorUtilities.TypeFormat), method.Parameters, asyncKind);
     }
 
     private static bool SignatureEquals(MethodSignature left, MethodSignature right)
@@ -1204,7 +1198,7 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
 
         if (constant.Kind == TypedConstantKind.Enum && constant.Type is not null && constant.Value is not null)
         {
-            var enumType = constant.Type.ToDisplayString(TypeFormat);
+            var enumType = constant.Type.ToDisplayString(GeneratorUtilities.TypeFormat);
             var field = constant.Type.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(f => f.HasConstantValue && Equals(f.ConstantValue, constant.Value));
             if (field is not null)
             {
@@ -1343,12 +1337,12 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
     {
         if (product.Constructor is not null)
         {
-            return $"new {product.Type.ToDisplayString(TypeFormat)}()";
+            return $"new {product.Type.ToDisplayString(GeneratorUtilities.TypeFormat)}()";
         }
 
         if (product.AsyncFactoryMethod is not null)
         {
-            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
+            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(GeneratorUtilities.TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
             return $"{call}.GetAwaiter().GetResult()";
         }
 
@@ -1359,7 +1353,7 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
     {
         if (product.AsyncFactoryMethod is not null)
         {
-            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
+            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(GeneratorUtilities.TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
             return product.Kind switch
             {
                 CreationKind.ValueTask => call,
@@ -1368,18 +1362,18 @@ public sealed class FactoriesGenerator : IIncrementalGenerator
             };
         }
 
-        return $"global::System.Threading.Tasks.ValueTask.FromResult<{baseTypeName}>(new {product.Type.ToDisplayString(TypeFormat)}())";
+        return $"global::System.Threading.Tasks.ValueTask.FromResult<{baseTypeName}>(new {product.Type.ToDisplayString(GeneratorUtilities.TypeFormat)}())";
     }
 
     private static string BuildCreatorAwaited(CreatorProduct product)
     {
         if (product.AsyncFactoryMethod is not null)
         {
-            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
+            var call = $"{product.AsyncFactoryMethod.ContainingType.ToDisplayString(GeneratorUtilities.TypeFormat)}.{product.AsyncFactoryMethod.Name}()";
             return $"await {call}";
         }
 
-        return $"new {product.Type.ToDisplayString(TypeFormat)}()";
+        return $"new {product.Type.ToDisplayString(GeneratorUtilities.TypeFormat)}()";
     }
 
     private static string ReadNamedArgument(AttributeData attribute, string name, string fallback)

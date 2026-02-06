@@ -137,7 +137,7 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         SyntaxNode node)
     {
         // Check if type is partial
-        if (!IsPartialType(node))
+        if (!GeneratorUtilities.IsPartialType(node))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNotPartialDescriptor,
@@ -197,17 +197,6 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
             var fileName = $"{typeSymbol.Name}.Prototype.g.cs";
             context.AddSource(fileName, cloneSource);
         }
-    }
-
-    private static bool IsPartialType(SyntaxNode node)
-    {
-        return node switch
-        {
-            ClassDeclarationSyntax classDecl => classDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            StructDeclarationSyntax structDecl => structDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            RecordDeclarationSyntax recordDecl => recordDecl.Modifiers.Any(SyntaxKind.PartialKeyword),
-            _ => false
-        };
     }
 
     private PrototypeConfig ParsePrototypeConfig(AttributeData attribute)
@@ -342,8 +331,8 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         foreach (var member in candidateMembers)
         {
             // Check for attributes
-            var hasIgnore = HasAttribute(member, "PatternKit.Generators.Prototype.PrototypeIgnoreAttribute");
-            var hasInclude = HasAttribute(member, "PatternKit.Generators.Prototype.PrototypeIncludeAttribute");
+            var hasIgnore = GeneratorUtilities.HasAttribute(member, "PatternKit.Generators.Prototype.PrototypeIgnoreAttribute");
+            var hasInclude = GeneratorUtilities.HasAttribute(member, "PatternKit.Generators.Prototype.PrototypeIncludeAttribute");
             var strategyAttr = GetAttribute(member, "PatternKit.Generators.Prototype.PrototypeStrategyAttribute");
 
             // Check for attribute misuse
@@ -591,12 +580,6 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
 
         var typeName = namedType.ConstructedFrom.ToDisplayString();
         return CollectionsWithCopyConstructor.Contains(typeName);
-    }
-
-    private static bool HasAttribute(ISymbol symbol, string attributeName)
-    {
-        return symbol.GetAttributes().Any(a =>
-            a.AttributeClass?.ToDisplayString() == attributeName);
     }
 
     private static AttributeData? GetAttribute(ISymbol symbol, string attributeName)

@@ -264,7 +264,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         foreach (var type in visitableTypes)
         {
             var typeName = type.Name;
-            var paramName = ToCamelCase(typeName);
+            var paramName = GeneratorUtilities.ToCamelCase(typeName);
             sb.AppendLine($"    TResult Visit({typeName} {paramName});");
         }
         sb.AppendLine("}");
@@ -281,7 +281,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             foreach (var type in visitableTypes)
             {
                 var typeName = type.Name;
-                var paramName = ToCamelCase(typeName);
+                var paramName = GeneratorUtilities.ToCamelCase(typeName);
                 sb.AppendLine($"    void Visit({typeName} {paramName});");
             }
             sb.AppendLine("}");
@@ -299,7 +299,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
             foreach (var type in visitableTypes)
             {
                 var typeName = type.Name;
-                var paramName = ToCamelCase(typeName);
+                var paramName = GeneratorUtilities.ToCamelCase(typeName);
                 sb.AppendLine($"    System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default);");
             }
             sb.AppendLine("}");
@@ -315,7 +315,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
                 foreach (var type in visitableTypes)
                 {
                     var typeName = type.Name;
-                    var paramName = ToCamelCase(typeName);
+                    var paramName = GeneratorUtilities.ToCamelCase(typeName);
                     sb.AppendLine($"    System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default);");
                 }
                 sb.AppendLine("}");
@@ -512,7 +512,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         foreach (var type in visitableTypes)
         {
             var typeName = type.Name;
-            var paramName = ToCamelCase(typeName);
+            var paramName = GeneratorUtilities.ToCamelCase(typeName);
 
             sb.AppendLine($"        public TResult Visit({typeName} {paramName})");
             sb.AppendLine("        {");
@@ -600,7 +600,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         foreach (var type in visitableTypes)
         {
             var typeName = type.Name;
-            var paramName = ToCamelCase(typeName);
+            var paramName = GeneratorUtilities.ToCamelCase(typeName);
 
             sb.AppendLine($"        public void Visit({typeName} {paramName})");
             sb.AppendLine("        {");
@@ -689,7 +689,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         foreach (var type in visitableTypes)
         {
             var typeName = type.Name;
-            var paramName = ToCamelCase(typeName);
+            var paramName = GeneratorUtilities.ToCamelCase(typeName);
 
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask<TResult> VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
@@ -777,7 +777,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         foreach (var type in visitableTypes)
         {
             var typeName = type.Name;
-            var paramName = ToCamelCase(typeName);
+            var paramName = GeneratorUtilities.ToCamelCase(typeName);
 
             sb.AppendLine($"        public System.Threading.Tasks.ValueTask VisitAsync({typeName} {paramName}, System.Threading.CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
@@ -802,13 +802,6 @@ public sealed class VisitorGenerator : IIncrementalGenerator
         var result = new List<INamedTypeSymbol> { root.BaseType };
         result.AddRange(root.DerivedTypes);
         return result.ToImmutableArray();
-    }
-
-    private static string ToCamelCase(string name)
-    {
-        if (string.IsNullOrEmpty(name) || name.Length == 1)
-            return name.ToLowerInvariant();
-        return char.ToLowerInvariant(name[0]) + name.Substring(1);
     }
 
     private readonly record struct VisitorRootInfo(

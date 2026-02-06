@@ -16,12 +16,6 @@ internal enum BuilderModel
 [Generator]
 public sealed class BuilderGenerator : IIncrementalGenerator
 {
-    private static readonly SymbolDisplayFormat TypeFormat = new(
-        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
-        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
-        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
-        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
-
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         var candidates = context.SyntaxProvider
@@ -100,7 +94,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
     {
         var location = target.Locations.FirstOrDefault() ?? Location.None;
         var constructors = target.Constructors.Where(static c => !c.IsStatic).ToArray();
-        var markedConstructors = constructors.Where(static c => HasAttribute(c, "PatternKit.Generators.Builders.BuilderConstructorAttribute")).ToArray();
+        var markedConstructors = constructors.Where(static c => GeneratorUtilities.HasAttribute(c, "PatternKit.Generators.Builders.BuilderConstructorAttribute")).ToArray();
 
         if (markedConstructors.Length > 1)
         {
@@ -124,9 +118,9 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             return new GenerationResult(string.Empty, string.Empty, diagnostics.ToImmutable());
         }
 
-        var productTypeName = target.ToDisplayString(TypeFormat);
+        var productTypeName = target.ToDisplayString(GeneratorUtilities.TypeFormat);
         var ns = target.ContainingNamespace.IsGlobalNamespace ? null : target.ContainingNamespace.ToDisplayString();
-        var accessibility = GetAccessibility(target.DeclaredAccessibility);
+        var accessibility = GeneratorUtilities.GetAccessibility(target.DeclaredAccessibility);
         _ = forceAsync;
         var asyncEnabled = true;
 
@@ -383,9 +377,9 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             return new GenerationResult(string.Empty, string.Empty, diagnostics.ToImmutable());
         }
 
-        var stateTypeName = seed.ReturnType.ToDisplayString(TypeFormat);
+        var stateTypeName = seed.ReturnType.ToDisplayString(GeneratorUtilities.TypeFormat);
         var projectorMethods = target.GetMembers().OfType<IMethodSymbol>()
-            .Where(static m => HasAttribute(m, "PatternKit.Generators.Builders.BuilderProjectorAttribute"))
+            .Where(static m => GeneratorUtilities.HasAttribute(m, "PatternKit.Generators.Builders.BuilderProjectorAttribute"))
             .ToArray();
 
         IMethodSymbol? defaultProjector = null;
@@ -404,10 +398,10 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         }
 
         var ns = target.ContainingNamespace.IsGlobalNamespace ? null : target.ContainingNamespace.ToDisplayString();
-        var accessibility = GetAccessibility(target.DeclaredAccessibility);
+        var accessibility = GeneratorUtilities.GetAccessibility(target.DeclaredAccessibility);
         _ = forceAsync;
         var asyncEnabled = true;
-        var targetTypeName = target.ToDisplayString(TypeFormat);
+        var targetTypeName = target.ToDisplayString(GeneratorUtilities.TypeFormat);
         var projectorName = defaultProjector?.Name ?? "Project";
 
         var sb = new StringBuilder();
@@ -480,7 +474,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
 
         if (defaultProjector is not null)
         {
-            var returnType = defaultProjector.ReturnType.ToDisplayString(TypeFormat);
+            var returnType = defaultProjector.ReturnType.ToDisplayString(GeneratorUtilities.TypeFormat);
             sb.Append("    public ").Append(returnType).Append(' ').Append(buildMethodName).AppendLine("()");
             sb.AppendLine("    {");
             sb.Append("        return ").Append(buildMethodName).Append("(static state => ").Append(targetTypeName).Append('.').Append(projectorName).AppendLine("(state));");
@@ -507,7 +501,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         {
             if (defaultProjector is not null)
             {
-                var returnType = defaultProjector.ReturnType.ToDisplayString(TypeFormat);
+                var returnType = defaultProjector.ReturnType.ToDisplayString(GeneratorUtilities.TypeFormat);
                 if (IsValueTask(defaultProjector.ReturnType))
                 {
                     sb.AppendLine();
@@ -557,7 +551,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         string? builderMethodsHint = null;
         if (generateBuilderMethods && defaultProjector is not null)
         {
-            var returnType = defaultProjector.ReturnType.ToDisplayString(TypeFormat);
+            var returnType = defaultProjector.ReturnType.ToDisplayString(GeneratorUtilities.TypeFormat);
             var mb = new StringBuilder();
             mb.AppendLine("#nullable enable");
             mb.AppendLine("// <auto-generated />");
@@ -629,7 +623,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         {
             if (member is IPropertySymbol prop)
             {
-                if (prop.IsStatic || prop.IsIndexer || HasAttribute(prop, "PatternKit.Generators.Builders.BuilderIgnoreAttribute"))
+                if (prop.IsStatic || prop.IsIndexer || GeneratorUtilities.HasAttribute(prop, "PatternKit.Generators.Builders.BuilderIgnoreAttribute"))
                 {
                     continue;
                 }
@@ -641,17 +635,17 @@ public sealed class BuilderGenerator : IIncrementalGenerator
                 }
 
                 var requiredAttr = GetRequired(prop);
-                members.Add(new MemberModel(prop.Name, ToSafeName(prop.Name), prop.Type.ToDisplayString(TypeFormat), requiredAttr.IsRequired, requiredAttr.Message, true));
+                members.Add(new MemberModel(prop.Name, ToSafeName(prop.Name), prop.Type.ToDisplayString(GeneratorUtilities.TypeFormat), requiredAttr.IsRequired, requiredAttr.Message, true));
             }
             else if (includeFields && member is IFieldSymbol field)
             {
-                if (field.IsStatic || field.IsConst || field.IsReadOnly || HasAttribute(field, "PatternKit.Generators.Builders.BuilderIgnoreAttribute"))
+                if (field.IsStatic || field.IsConst || field.IsReadOnly || GeneratorUtilities.HasAttribute(field, "PatternKit.Generators.Builders.BuilderIgnoreAttribute"))
                 {
                     continue;
                 }
 
                 var requiredAttr = GetRequired(field);
-                members.Add(new MemberModel(field.Name, ToSafeName(field.Name), field.Type.ToDisplayString(TypeFormat), requiredAttr.IsRequired, requiredAttr.Message, false));
+                members.Add(new MemberModel(field.Name, ToSafeName(field.Name), field.Type.ToDisplayString(GeneratorUtilities.TypeFormat), requiredAttr.IsRequired, requiredAttr.Message, false));
             }
         }
 
@@ -662,7 +656,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
     {
         foreach (var attr in symbol.GetAttributes())
         {
-            if (string.Equals(attr.AttributeClass?.ToDisplayString(TypeFormat), "global::PatternKit.Generators.Builders.BuilderRequiredAttribute", StringComparison.Ordinal))
+            if (string.Equals(attr.AttributeClass?.ToDisplayString(GeneratorUtilities.TypeFormat), "global::PatternKit.Generators.Builders.BuilderRequiredAttribute", StringComparison.Ordinal))
             {
                 var msg = attr.NamedArguments.FirstOrDefault(static kvp => kvp.Key == "Message").Value.Value as string;
                 return (true, msg);
@@ -671,9 +665,6 @@ public sealed class BuilderGenerator : IIncrementalGenerator
 
         return (false, null);
     }
-
-    private static bool HasAttribute(ISymbol symbol, string metadataName)
-        => symbol.GetAttributes().Any(a => string.Equals(a.AttributeClass?.ToDisplayString(TypeFormat), $"global::{metadataName}", StringComparison.Ordinal));
 
     private static string ToSafeName(string name)
         => name.Length == 0 ? "_member" : char.ToUpperInvariant(name[0]) + name.Substring(1);
@@ -691,17 +682,6 @@ public sealed class BuilderGenerator : IIncrementalGenerator
 
         return false;
     }
-
-    private static string GetAccessibility(Accessibility accessibility)
-        => accessibility switch
-        {
-            Accessibility.Private => "private",
-            Accessibility.Internal => "internal",
-            Accessibility.Protected => "protected",
-            Accessibility.ProtectedAndInternal => "protected internal",
-            Accessibility.ProtectedOrInternal => "protected internal",
-            _ => "public"
-        };
 
     private static bool IsValidProjector(IMethodSymbol method, ITypeSymbol stateType)
         => method.IsStatic &&
@@ -725,7 +705,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
     {
         if (type is INamedTypeSymbol named && named.IsGenericType && named.TypeArguments.Length == 1)
         {
-            return named.TypeArguments[0].ToDisplayString(TypeFormat);
+            return named.TypeArguments[0].ToDisplayString(GeneratorUtilities.TypeFormat);
         }
 
         return "void";
