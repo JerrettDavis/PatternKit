@@ -88,4 +88,9 @@ PKPRO007 | PatternKit.Generators.Prototype | Error | DeepCopy strategy not yet i
 PKPRO008 | PatternKit.Generators.Prototype | Error | Generic types not supported for Prototype pattern
 PKPRO009 | PatternKit.Generators.Prototype | Error | Nested types not supported for Prototype pattern
 PKPRO010 | PatternKit.Generators.Prototype | Error | Abstract types not supported for Prototype pattern
-
+PKSNG001 | PatternKit.Generators.Singleton | Error | Type marked with [Singleton] must be partial
+PKSNG002 | PatternKit.Generators.Singleton | Error | Singleton type must be a class
+PKSNG003 | PatternKit.Generators.Singleton | Error | No usable constructor or factory method found
+PKSNG004 | PatternKit.Generators.Singleton | Error | Multiple [SingletonFactory] methods found
+PKSNG005 | PatternKit.Generators.Singleton | Warning | Public constructor detected
+PKSNG006 | PatternKit.Generators.Singleton | Error | Instance property name conflicts with existing member
