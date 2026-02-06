@@ -14,6 +14,7 @@ jobs:
   pr-checks:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
@@ -49,6 +50,7 @@ jobs:
           docfx build docs/docfx.json
 
       - name: Test with coverage
+        timeout-minutes: 10
         run: |
           dotnet test PatternKit.slnx \
             --configuration Release \
@@ -104,6 +106,7 @@ jobs:
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: write
       packages: write
@@ -159,13 +162,15 @@ jobs:
           /p:PackageVersion=${{ env.PACKAGE_VERSION }}
 
       - name: Test with coverage (Release)
+        timeout-minutes: 10
         run: |
           dotnet test PatternKit.slnx \
             --configuration Release \
             --collect:"XPlat Code Coverage" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*"
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
+            -- RunConfiguration.TestSessionTimeout=300000
 
 
       - name: Pack (all packable projects)
