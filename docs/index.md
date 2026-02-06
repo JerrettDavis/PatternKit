@@ -70,7 +70,20 @@ PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral**
 
 ## 🛠️ Source Generators
 
-Prefer compile-time factories over handwritten boilerplate? See the **Generators** section for Factory Method and Factory Class generators, including async rules, enum keys, and diagnostics.
+Prefer compile-time code generation over handwritten boilerplate? See the **[Generators](generators/index.md)** section for:
+
+- **[Builder](generators/builder.md)** — Fluent object construction with validation
+- **[Factory](generators/factory-class.md)** — Keyed product creation
+- **[Decorator](generators/decorator.md)** — Base classes with forwarding
+- **[Facade](generators/facade.md)** — Simplified subsystem interfaces
+- **[Proxy](generators/proxy.md)** — Access control and interception
+- **[Composer](generators/composer.md)** — Pipeline middleware composition
+- **[Memento](generators/memento.md)** — State snapshots and undo/redo
+- **[Strategy](generators/strategy.md)** — Predicate-based dispatch
+- **[Dispatcher](generators/dispatcher.md)** — Mediator pattern (CQRS)
+- **[Visitor](generators/visitor-generator.md)** — Type-safe double dispatch
+
+All generators produce deterministic code with no runtime dependency on PatternKit.
 
 Each pattern will ship with:
 
