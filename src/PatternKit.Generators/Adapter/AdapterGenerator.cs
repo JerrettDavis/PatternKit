@@ -1,0 +1,659 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
+using System.Text;
+
+namespace PatternKit.Generators.Adapter;
+
+/// <summary>
+/// Source generator for the Adapter pattern.
+/// Generates object adapters that implement a target contract by delegating to an adaptee through mapping methods.
+/// </summary>
+[Generator]
+public sealed class AdapterGenerator : IIncrementalGenerator
+{
+    // Diagnostic IDs
+    private const string DiagIdHostNotStaticPartial = "PKADP001";
+    private const string DiagIdTargetNotInterfaceOrAbstract = "PKADP002";
+    private const string DiagIdMissingMapping = "PKADP003";
+    private const string DiagIdDuplicateMapping = "PKADP004";
+    private const string DiagIdSignatureMismatch = "PKADP005";
+    private const string DiagIdTypeNameConflict = "PKADP006";
+    private const string DiagIdInvalidAdapteType = "PKADP007";
+    private const string DiagIdMapMethodNotStatic = "PKADP008";
+
+    private static readonly DiagnosticDescriptor HostNotStaticPartialDescriptor = new(
+        id: DiagIdHostNotStaticPartial,
+        title: "Adapter host must be static partial",
+        messageFormat: "Type '{0}' is marked with [GenerateAdapter] but is not declared as 'static partial'",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor TargetNotInterfaceOrAbstractDescriptor = new(
+        id: DiagIdTargetNotInterfaceOrAbstract,
+        title: "Target must be interface or abstract class",
+        messageFormat: "Target type '{0}' must be an interface or abstract class",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor MissingMappingDescriptor = new(
+        id: DiagIdMissingMapping,
+        title: "Missing mapping for target member",
+        messageFormat: "No [AdapterMap] method found for target member '{0}.{1}'",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor DuplicateMappingDescriptor = new(
+        id: DiagIdDuplicateMapping,
+        title: "Duplicate mapping for target member",
+        messageFormat: "Multiple [AdapterMap] methods found for target member '{0}'",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor SignatureMismatchDescriptor = new(
+        id: DiagIdSignatureMismatch,
+        title: "Mapping method signature mismatch",
+        messageFormat: "Mapping method '{0}' signature does not match target member '{1}': {2}",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor TypeNameConflictDescriptor = new(
+        id: DiagIdTypeNameConflict,
+        title: "Adapter type name conflicts with existing type",
+        messageFormat: "Adapter type name '{0}' conflicts with an existing type in namespace '{1}'",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor InvalidAdapteeTypeDescriptor = new(
+        id: DiagIdInvalidAdapteType,
+        title: "Invalid adaptee type",
+        messageFormat: "Adaptee type '{0}' must be a concrete class or struct",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor MapMethodNotStaticDescriptor = new(
+        id: DiagIdMapMethodNotStatic,
+        title: "Mapping method must be static",
+        messageFormat: "Mapping method '{0}' must be declared as static",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        // Find all class declarations with [GenerateAdapter] attribute
+        var adapterHosts = context.SyntaxProvider.ForAttributeWithMetadataName(
+            fullyQualifiedMetadataName: "PatternKit.Generators.Adapter.GenerateAdapterAttribute",
+            predicate: static (node, _) => node is ClassDeclarationSyntax,
+            transform: static (ctx, _) => ctx
+        );
+
+        // Generate for each host
+        context.RegisterSourceOutput(adapterHosts, (spc, typeContext) =>
+        {
+            if (typeContext.TargetSymbol is not INamedTypeSymbol hostSymbol)
+                return;
+
+            var node = typeContext.TargetNode;
+
+            // Process each [GenerateAdapter] attribute on the host
+            foreach (var attr in typeContext.Attributes.Where(a =>
+                a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute"))
+            {
+                GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel);
+            }
+        });
+    }
+
+    private void GenerateAdapterForAttribute(
+        SourceProductionContext context,
+        INamedTypeSymbol hostSymbol,
+        AttributeData attribute,
+        SyntaxNode node,
+        SemanticModel semanticModel)
+    {
+        // Validate host is static partial
+        if (!IsStaticPartial(node))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                HostNotStaticPartialDescriptor,
+                node.GetLocation(),
+                hostSymbol.Name));
+            return;
+        }
+
+        // Parse attribute arguments
+        var config = ParseAdapterConfig(attribute);
+        if (config.TargetType is null || config.AdapteeType is null)
+            return; // Attribute error, let compiler handle
+
+        // Validate target is interface or abstract class
+        if (!IsValidTargetType(config.TargetType))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                TargetNotInterfaceOrAbstractDescriptor,
+                node.GetLocation(),
+                config.TargetType.ToDisplayString()));
+            return;
+        }
+
+        // Validate adaptee is concrete type
+        if (!IsValidAdapteeType(config.AdapteeType))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidAdapteeTypeDescriptor,
+                node.GetLocation(),
+                config.AdapteeType.ToDisplayString()));
+            return;
+        }
+
+        // Get all mapping methods from host
+        var mappingMethods = GetMappingMethods(hostSymbol, config.AdapteeType);
+
+        // Validate mapping methods are static
+        foreach (var (method, _) in mappingMethods)
+        {
+            if (!method.IsStatic)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    MapMethodNotStaticDescriptor,
+                    method.Locations.FirstOrDefault() ?? node.GetLocation(),
+                    method.Name));
+                return;
+            }
+        }
+
+        // Get target members that need mapping
+        var targetMembers = GetTargetMembers(config.TargetType);
+
+        // Build mapping dictionary and validate
+        var memberMappings = new Dictionary<ISymbol, IMethodSymbol>(SymbolEqualityComparer.Default);
+        var hasErrors = false;
+
+        foreach (var targetMember in targetMembers)
+        {
+            var memberName = targetMember.Name;
+            var matchingMaps = mappingMethods.Where(m => m.TargetMember == memberName).ToList();
+
+            if (matchingMaps.Count == 0)
+            {
+                if (config.MissingMapPolicy == AdapterMissingMapPolicyValue.Error)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        MissingMappingDescriptor,
+                        node.GetLocation(),
+                        config.TargetType.Name,
+                        memberName));
+                    hasErrors = true;
+                }
+                // For ThrowingStub, we'll generate the stub later
+            }
+            else if (matchingMaps.Count > 1)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DuplicateMappingDescriptor,
+                    matchingMaps[1].Method.Locations.FirstOrDefault() ?? node.GetLocation(),
+                    memberName));
+                hasErrors = true;
+            }
+            else
+            {
+                var mapping = matchingMaps[0];
+                var signatureError = ValidateSignature(targetMember, mapping.Method, config.AdapteeType);
+                if (signatureError is not null)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        SignatureMismatchDescriptor,
+                        mapping.Method.Locations.FirstOrDefault() ?? node.GetLocation(),
+                        mapping.Method.Name,
+                        memberName,
+                        signatureError));
+                    hasErrors = true;
+                }
+                else
+                {
+                    memberMappings[targetMember] = mapping.Method;
+                }
+            }
+        }
+
+        if (hasErrors)
+            return;
+
+        // Determine adapter type name
+        var adapterTypeName = config.AdapterTypeName
+            ?? $"{config.AdapteeType.Name}To{config.TargetType.Name}Adapter";
+
+        // Determine namespace
+        var ns = config.Namespace
+            ?? (hostSymbol.ContainingNamespace.IsGlobalNamespace
+                ? string.Empty
+                : hostSymbol.ContainingNamespace.ToDisplayString());
+
+        // Generate adapter
+        var source = GenerateAdapterCode(
+            adapterTypeName,
+            ns,
+            config.TargetType,
+            config.AdapteeType,
+            hostSymbol,
+            targetMembers,
+            memberMappings,
+            config.MissingMapPolicy,
+            config.Sealed);
+
+        var hintName = string.IsNullOrEmpty(ns)
+            ? $"{adapterTypeName}.Adapter.g.cs"
+            : $"{ns}.{adapterTypeName}.Adapter.g.cs";
+
+        context.AddSource(hintName, source);
+    }
+
+    private static bool IsStaticPartial(SyntaxNode node)
+    {
+        if (node is not ClassDeclarationSyntax classDecl)
+            return false;
+
+        var hasStatic = classDecl.Modifiers.Any(SyntaxKind.StaticKeyword);
+        var hasPartial = classDecl.Modifiers.Any(SyntaxKind.PartialKeyword);
+        return hasStatic && hasPartial;
+    }
+
+    private static bool IsValidTargetType(INamedTypeSymbol type)
+    {
+        return type.TypeKind == TypeKind.Interface ||
+               (type.TypeKind == TypeKind.Class && type.IsAbstract);
+    }
+
+    private static bool IsValidAdapteeType(INamedTypeSymbol type)
+    {
+        return (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct) &&
+               !type.IsAbstract;
+    }
+
+    private static AdapterConfig ParseAdapterConfig(AttributeData attribute)
+    {
+        var config = new AdapterConfig();
+
+        foreach (var named in attribute.NamedArguments)
+        {
+            switch (named.Key)
+            {
+                case "Target":
+                    config.TargetType = named.Value.Value as INamedTypeSymbol;
+                    break;
+                case "Adaptee":
+                    config.AdapteeType = named.Value.Value as INamedTypeSymbol;
+                    break;
+                case "AdapterTypeName":
+                    config.AdapterTypeName = named.Value.Value as string;
+                    break;
+                case "MissingMap":
+                    if (named.Value.Value is int missingMapValue)
+                        config.MissingMapPolicy = (AdapterMissingMapPolicyValue)missingMapValue;
+                    break;
+                case "Sealed":
+                    if (named.Value.Value is bool sealedValue)
+                        config.Sealed = sealedValue;
+                    break;
+                case "Namespace":
+                    config.Namespace = named.Value.Value as string;
+                    break;
+            }
+        }
+
+        return config;
+    }
+
+    private static List<(IMethodSymbol Method, string TargetMember)> GetMappingMethods(
+        INamedTypeSymbol hostSymbol,
+        INamedTypeSymbol adapteeType)
+    {
+        var mappings = new List<(IMethodSymbol, string)>();
+
+        foreach (var member in hostSymbol.GetMembers().OfType<IMethodSymbol>())
+        {
+            var mapAttr = member.GetAttributes().FirstOrDefault(a =>
+                a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.AdapterMapAttribute");
+
+            if (mapAttr is null)
+                continue;
+
+            var targetMember = mapAttr.NamedArguments
+                .FirstOrDefault(na => na.Key == "TargetMember")
+                .Value.Value as string;
+
+            if (targetMember is not null)
+            {
+                mappings.Add((member, targetMember));
+            }
+        }
+
+        return mappings;
+    }
+
+    private static List<ISymbol> GetTargetMembers(INamedTypeSymbol targetType)
+    {
+        var members = new List<ISymbol>();
+
+        // Get members from this type and all base interfaces/classes
+        var typesToProcess = new Queue<INamedTypeSymbol>();
+        typesToProcess.Enqueue(targetType);
+
+        var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
+        while (typesToProcess.Count > 0)
+        {
+            var type = typesToProcess.Dequeue();
+            if (!processed.Add(type))
+                continue;
+
+            foreach (var member in type.GetMembers())
+            {
+                // Include methods (not constructors), properties, and events
+                if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
+                {
+                    members.Add(member);
+                }
+                else if (member is IPropertySymbol prop && !prop.IsIndexer)
+                {
+                    members.Add(member);
+                }
+                else if (member is IEventSymbol)
+                {
+                    members.Add(member);
+                }
+            }
+
+            // Add base interfaces
+            foreach (var iface in type.Interfaces)
+            {
+                typesToProcess.Enqueue(iface);
+            }
+
+            // Add base class (for abstract classes)
+            if (type.BaseType is not null && type.BaseType.IsAbstract)
+            {
+                typesToProcess.Enqueue(type.BaseType);
+            }
+        }
+
+        // Sort by name for deterministic output
+        return members.OrderBy(m => m.Name).ThenBy(m => m.ToDisplayString()).ToList();
+    }
+
+    private static string? ValidateSignature(ISymbol targetMember, IMethodSymbol mapMethod, INamedTypeSymbol adapteeType)
+    {
+        // First parameter must be the adaptee type
+        if (mapMethod.Parameters.Length == 0)
+            return $"First parameter must be of type '{adapteeType.ToDisplayString()}'.";
+
+        var firstParam = mapMethod.Parameters[0];
+        if (!SymbolEqualityComparer.Default.Equals(firstParam.Type, adapteeType))
+            return $"First parameter must be of type '{adapteeType.ToDisplayString()}', but was '{firstParam.Type.ToDisplayString()}'.";
+
+        if (targetMember is IMethodSymbol targetMethod)
+        {
+            // Check return type
+            if (!SymbolEqualityComparer.Default.Equals(mapMethod.ReturnType, targetMethod.ReturnType))
+                return $"Return type must be '{targetMethod.ReturnType.ToDisplayString()}', but was '{mapMethod.ReturnType.ToDisplayString()}'.";
+
+            // Check remaining parameters (after adaptee)
+            var mapParams = mapMethod.Parameters.Skip(1).ToList();
+            var targetParams = targetMethod.Parameters.ToList();
+
+            if (mapParams.Count != targetParams.Count)
+                return $"Expected {targetParams.Count} parameters (after adaptee), but found {mapParams.Count}.";
+
+            for (int i = 0; i < targetParams.Count; i++)
+            {
+                if (!SymbolEqualityComparer.Default.Equals(mapParams[i].Type, targetParams[i].Type))
+                    return $"Parameter '{targetParams[i].Name}' type mismatch: expected '{targetParams[i].Type.ToDisplayString()}', but was '{mapParams[i].Type.ToDisplayString()}'.";
+            }
+        }
+        else if (targetMember is IPropertySymbol targetProp)
+        {
+            // For property getters, no additional parameters
+            if (mapMethod.Parameters.Length != 1)
+                return $"Property getter mapping must have exactly one parameter (the adaptee).";
+
+            // Check return type
+            if (!SymbolEqualityComparer.Default.Equals(mapMethod.ReturnType, targetProp.Type))
+                return $"Return type must be '{targetProp.Type.ToDisplayString()}', but was '{mapMethod.ReturnType.ToDisplayString()}'.";
+        }
+
+        return null; // Valid
+    }
+
+    private static string GenerateAdapterCode(
+        string adapterTypeName,
+        string ns,
+        INamedTypeSymbol targetType,
+        INamedTypeSymbol adapteeType,
+        INamedTypeSymbol hostSymbol,
+        List<ISymbol> targetMembers,
+        Dictionary<ISymbol, IMethodSymbol> memberMappings,
+        AdapterMissingMapPolicyValue missingMapPolicy,
+        bool isSealed)
+    {
+        var sb = new StringBuilder();
+
+        // File header
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine();
+
+        // Namespace
+        if (!string.IsNullOrEmpty(ns))
+        {
+            sb.AppendLine($"namespace {ns};");
+            sb.AppendLine();
+        }
+
+        // Class declaration
+        var sealedModifier = isSealed ? "sealed " : "";
+        var targetTypeName = targetType.ToDisplayString();
+        var adapteeTypeName = adapteeType.ToDisplayString();
+        var hostTypeName = hostSymbol.ToDisplayString();
+
+        sb.AppendLine("/// <summary>");
+        sb.AppendLine($"/// Adapter that implements <see cref=\"{targetTypeName}\"/> by delegating to <see cref=\"{adapteeTypeName}\"/>.");
+        sb.AppendLine("/// </summary>");
+        sb.AppendLine($"public {sealedModifier}partial class {adapterTypeName} : {targetTypeName}");
+        sb.AppendLine("{");
+
+        // Field
+        sb.AppendLine($"    private readonly {adapteeTypeName} _adaptee;");
+        sb.AppendLine();
+
+        // Constructor
+        sb.AppendLine("    /// <summary>");
+        sb.AppendLine($"    /// Initializes a new instance of the <see cref=\"{adapterTypeName}\"/> class.");
+        sb.AppendLine("    /// </summary>");
+        sb.AppendLine($"    /// <param name=\"adaptee\">The adaptee instance to delegate to.</param>");
+        sb.AppendLine($"    /// <exception cref=\"global::System.ArgumentNullException\">Thrown when <paramref name=\"adaptee\"/> is null.</exception>");
+        sb.AppendLine($"    public {adapterTypeName}({adapteeTypeName} adaptee)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        _adaptee = adaptee ?? throw new global::System.ArgumentNullException(nameof(adaptee));");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+
+        // Generate members
+        var isAbstractClassTarget = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
+        foreach (var member in targetMembers)
+        {
+            if (memberMappings.TryGetValue(member, out var mapMethod))
+            {
+                GenerateMappedMember(sb, member, mapMethod, hostTypeName, isAbstractClassTarget);
+            }
+            else if (missingMapPolicy == AdapterMissingMapPolicyValue.ThrowingStub)
+            {
+                GenerateThrowingStub(sb, member, isAbstractClassTarget);
+            }
+            // Ignore policy: don't generate anything (will cause compile error if interface)
+        }
+
+        sb.AppendLine("}");
+
+        return sb.ToString();
+    }
+
+    private static void GenerateMappedMember(StringBuilder sb, ISymbol member, IMethodSymbol mapMethod, string hostTypeName, bool isAbstractClassTarget)
+    {
+        // Determine if we need 'override' keyword (for abstract class members)
+        var overrideKeyword = isAbstractClassTarget && member.IsAbstract ? "override " : "";
+
+        if (member is IMethodSymbol targetMethod)
+        {
+            // Generate method
+            var returnType = targetMethod.ReturnType.ToDisplayString();
+            var methodName = targetMethod.Name;
+            var parameters = string.Join(", ", targetMethod.Parameters.Select(p =>
+                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString()} {p.Name}{GetDefaultValue(p)}"));
+            var parameterNames = string.Join(", ", targetMethod.Parameters.Select(p => 
+                $"{GetArgumentModifier(p)}{p.Name}"));
+
+            var isVoid = targetMethod.ReturnsVoid;
+            var callExpression = $"{hostTypeName}.{mapMethod.Name}(_adaptee{(string.IsNullOrEmpty(parameterNames) ? "" : ", " + parameterNames)})";
+
+            sb.AppendLine($"    /// <inheritdoc/>");
+            sb.AppendLine($"    public {overrideKeyword}{returnType} {methodName}({parameters})");
+            sb.AppendLine("    {");
+            if (isVoid)
+            {
+                sb.AppendLine($"        {callExpression};");
+            }
+            else
+            {
+                sb.AppendLine($"        return {callExpression};");
+            }
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        else if (member is IPropertySymbol targetProp)
+        {
+            // Generate property
+            var propType = targetProp.Type.ToDisplayString();
+            var propName = targetProp.Name;
+
+            sb.AppendLine($"    /// <inheritdoc/>");
+            sb.AppendLine($"    public {overrideKeyword}{propType} {propName}");
+            sb.AppendLine("    {");
+            if (targetProp.GetMethod is not null)
+            {
+                sb.AppendLine($"        get => {hostTypeName}.{mapMethod.Name}(_adaptee);");
+            }
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+    }
+
+    private static void GenerateThrowingStub(StringBuilder sb, ISymbol member, bool isAbstractClassTarget)
+    {
+        var overrideKeyword = isAbstractClassTarget && member.IsAbstract ? "override " : "";
+
+        if (member is IMethodSymbol targetMethod)
+        {
+            var returnType = targetMethod.ReturnType.ToDisplayString();
+            var methodName = targetMethod.Name;
+            var parameters = string.Join(", ", targetMethod.Parameters.Select(p =>
+                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString()} {p.Name}{GetDefaultValue(p)}"));
+
+            sb.AppendLine($"    /// <inheritdoc/>");
+            sb.AppendLine($"    /// <remarks>This member is not mapped and will throw <see cref=\"global::System.NotImplementedException\"/>.</remarks>");
+            sb.AppendLine($"    public {overrideKeyword}{returnType} {methodName}({parameters})");
+            sb.AppendLine("    {");
+            sb.AppendLine($"        throw new global::System.NotImplementedException(\"No [AdapterMap] provided for '{methodName}'.\");");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        else if (member is IPropertySymbol targetProp)
+        {
+            var propType = targetProp.Type.ToDisplayString();
+            var propName = targetProp.Name;
+
+            sb.AppendLine($"    /// <inheritdoc/>");
+            sb.AppendLine($"    /// <remarks>This property is not mapped and will throw <see cref=\"global::System.NotImplementedException\"/>.</remarks>");
+            sb.AppendLine($"    public {overrideKeyword}{propType} {propName}");
+            sb.AppendLine("    {");
+            if (targetProp.GetMethod is not null)
+            {
+                sb.AppendLine($"        get => throw new global::System.NotImplementedException(\"No [AdapterMap] provided for '{propName}'.\");");
+            }
+            if (targetProp.SetMethod is not null)
+            {
+                sb.AppendLine($"        set => throw new global::System.NotImplementedException(\"No [AdapterMap] provided for '{propName}'.\");");
+            }
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+    }
+
+    private static string GetParameterModifiers(IParameterSymbol param)
+    {
+        return param.RefKind switch
+        {
+            RefKind.Ref => "ref ",
+            RefKind.Out => "out ",
+            RefKind.In => "in ",
+            RefKind.RefReadOnlyParameter => "ref readonly ",
+            _ => ""
+        };
+    }
+
+    private static string GetArgumentModifier(IParameterSymbol param)
+    {
+        return param.RefKind switch
+        {
+            RefKind.Ref => "ref ",
+            RefKind.Out => "out ",
+            RefKind.In => "in ",
+            RefKind.RefReadOnlyParameter => "in ",
+            _ => ""
+        };
+    }
+
+    private static string GetDefaultValue(IParameterSymbol param)
+    {
+        if (!param.HasExplicitDefaultValue)
+            return "";
+
+        if (param.ExplicitDefaultValue is null)
+            return " = default";
+
+        if (param.ExplicitDefaultValue is string s)
+            return $" = \"{s}\"";
+
+        if (param.ExplicitDefaultValue is bool b)
+            return b ? " = true" : " = false";
+
+        return $" = {param.ExplicitDefaultValue}";
+    }
+
+    // Helper types
+
+    private enum AdapterMissingMapPolicyValue
+    {
+        Error = 0,
+        ThrowingStub = 1,
+        Ignore = 2
+    }
+
+    private class AdapterConfig
+    {
+        public INamedTypeSymbol? TargetType { get; set; }
+        public INamedTypeSymbol? AdapteeType { get; set; }
+        public string? AdapterTypeName { get; set; }
+        public AdapterMissingMapPolicyValue MissingMapPolicy { get; set; } = AdapterMissingMapPolicyValue.Error;
+        public bool Sealed { get; set; } = true;
+        public string? Namespace { get; set; }
+    }
+}
