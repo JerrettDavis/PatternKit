@@ -327,6 +327,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             if (mapAttr is null)
                 continue;
 
+            // Filter by first parameter type matching the adaptee type
+            if (member.Parameters.Length == 0)
+                continue;
+
+            var firstParamType = member.Parameters[0].Type;
+            if (!SymbolEqualityComparer.Default.Equals(firstParamType, adapteeType))
+                continue;
+
             var targetMember = mapAttr.NamedArguments
                 .FirstOrDefault(na => na.Key == "TargetMember")
                 .Value.Value as string;
@@ -343,6 +351,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private static List<ISymbol> GetTargetMembers(INamedTypeSymbol targetType)
     {
         var members = new List<ISymbol>();
+        var isAbstractClass = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
 
         // Get members from this type and all base interfaces/classes
         var typesToProcess = new Queue<INamedTypeSymbol>();
@@ -358,7 +367,11 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             foreach (var member in type.GetMembers())
             {
-                // Include methods (not constructors), properties, and events
+                // For abstract classes, only include abstract members (must be overridden)
+                if (isAbstractClass && !member.IsAbstract)
+                    continue;
+
+                // Include methods (not constructors), properties (not events - not supported)
                 if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
                 {
                     members.Add(member);
@@ -367,10 +380,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 {
                     members.Add(member);
                 }
-                else if (member is IEventSymbol)
-                {
-                    members.Add(member);
-                }
+                // Events are intentionally excluded - not supported by this generator
             }
 
             // Add base interfaces
@@ -475,14 +485,25 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         // Constructor
+        var isValueTypeAdaptee = adapteeType.IsValueType;
         sb.AppendLine("    /// <summary>");
         sb.AppendLine($"    /// Initializes a new instance of the <see cref=\"{adapterTypeName}\"/> class.");
         sb.AppendLine("    /// </summary>");
         sb.AppendLine($"    /// <param name=\"adaptee\">The adaptee instance to delegate to.</param>");
-        sb.AppendLine($"    /// <exception cref=\"global::System.ArgumentNullException\">Thrown when <paramref name=\"adaptee\"/> is null.</exception>");
+        if (!isValueTypeAdaptee)
+        {
+            sb.AppendLine($"    /// <exception cref=\"global::System.ArgumentNullException\">Thrown when <paramref name=\"adaptee\"/> is null.</exception>");
+        }
         sb.AppendLine($"    public {adapterTypeName}({adapteeTypeName} adaptee)");
         sb.AppendLine("    {");
-        sb.AppendLine("        _adaptee = adaptee ?? throw new global::System.ArgumentNullException(nameof(adaptee));");
+        if (isValueTypeAdaptee)
+        {
+            sb.AppendLine("        _adaptee = adaptee;");
+        }
+        else
+        {
+            sb.AppendLine("        _adaptee = adaptee ?? throw new global::System.ArgumentNullException(nameof(adaptee));");
+        }
         sb.AppendLine("    }");
         sb.AppendLine();
 
