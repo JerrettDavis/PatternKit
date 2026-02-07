@@ -22,6 +22,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private const string DiagIdTypeNameConflict = "PKADP006";
     private const string DiagIdInvalidAdapteType = "PKADP007";
     private const string DiagIdMapMethodNotStatic = "PKADP008";
+    private const string DiagIdEventsNotSupported = "PKADP009";
+    private const string DiagIdGenericMethodsNotSupported = "PKADP010";
+    private const string DiagIdOverloadedMethodsNotSupported = "PKADP011";
+    private const string DiagIdAbstractClassNoParameterlessCtor = "PKADP012";
 
     private static readonly DiagnosticDescriptor HostNotStaticPartialDescriptor = new(
         id: DiagIdHostNotStaticPartial,
@@ -83,6 +87,38 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         id: DiagIdMapMethodNotStatic,
         title: "Mapping method must be static",
         messageFormat: "Mapping method '{0}' must be declared as static",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor EventsNotSupportedDescriptor = new(
+        id: DiagIdEventsNotSupported,
+        title: "Events are not supported",
+        messageFormat: "Target type '{0}' contains event '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor GenericMethodsNotSupportedDescriptor = new(
+        id: DiagIdGenericMethodsNotSupported,
+        title: "Generic methods are not supported",
+        messageFormat: "Target type '{0}' contains generic method '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor OverloadedMethodsNotSupportedDescriptor = new(
+        id: DiagIdOverloadedMethodsNotSupported,
+        title: "Overloaded methods are not supported",
+        messageFormat: "Target type '{0}' contains overloaded method '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor AbstractClassNoParameterlessCtorDescriptor = new(
+        id: DiagIdAbstractClassNoParameterlessCtor,
+        title: "Abstract class target requires accessible parameterless constructor",
+        messageFormat: "Abstract class '{0}' does not have an accessible parameterless constructor",
         category: "PatternKit.Generators.Adapter",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -154,6 +190,33 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 config.AdapteeType.ToDisplayString()));
             return;
         }
+
+        // For abstract class targets, validate accessible parameterless constructor exists
+        if (config.TargetType.TypeKind == TypeKind.Class && config.TargetType.IsAbstract)
+        {
+            var hasAccessibleParameterlessCtor = config.TargetType.InstanceConstructors
+                .Any(c => c.Parameters.Length == 0 &&
+                         (c.DeclaredAccessibility == Accessibility.Public ||
+                          c.DeclaredAccessibility == Accessibility.Protected));
+
+            if (!hasAccessibleParameterlessCtor)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    AbstractClassNoParameterlessCtorDescriptor,
+                    node.GetLocation(),
+                    config.TargetType.ToDisplayString()));
+                return;
+            }
+        }
+
+        // Check for unsupported members (events, generic methods, overloads)
+        var unsupportedMemberErrors = ValidateTargetMembers(config.TargetType, node.GetLocation());
+        foreach (var diagnostic in unsupportedMemberErrors)
+        {
+            context.ReportDiagnostic(diagnostic);
+        }
+        if (unsupportedMemberErrors.Any())
+            return;
 
         // Get all mapping methods from host
         var mappingMethods = GetMappingMethods(hostSymbol, config.AdapteeType);
@@ -238,6 +301,17 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 ? string.Empty
                 : hostSymbol.ContainingNamespace.ToDisplayString());
 
+        // Check for type name conflict (PKADP006)
+        if (HasTypeNameConflict(semanticModel.Compilation, ns, adapterTypeName))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                TypeNameConflictDescriptor,
+                node.GetLocation(),
+                adapterTypeName,
+                string.IsNullOrEmpty(ns) ? "<global>" : ns));
+            return;
+        }
+
         // Generate adapter
         var source = GenerateAdapterCode(
             adapterTypeName,
@@ -277,6 +351,89 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     {
         return (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct) &&
                !type.IsAbstract;
+    }
+
+    private static bool HasTypeNameConflict(Compilation compilation, string ns, string typeName)
+    {
+        var fullName = string.IsNullOrEmpty(ns) ? typeName : $"{ns}.{typeName}";
+        return compilation.GetTypeByMetadataName(fullName) is not null;
+    }
+
+    private List<Diagnostic> ValidateTargetMembers(INamedTypeSymbol targetType, Location location)
+    {
+        var diagnostics = new List<Diagnostic>();
+        var isAbstractClass = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
+        var methodNames = new Dictionary<string, int>();
+
+        // Collect all members from the type hierarchy
+        var typesToProcess = new Queue<INamedTypeSymbol>();
+        typesToProcess.Enqueue(targetType);
+        var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
+        while (typesToProcess.Count > 0)
+        {
+            var type = typesToProcess.Dequeue();
+            if (!processed.Add(type))
+                continue;
+
+            foreach (var member in type.GetMembers())
+            {
+                // For abstract classes, only check abstract members
+                if (isAbstractClass && !member.IsAbstract)
+                    continue;
+
+                // Check for events (not supported)
+                if (member is IEventSymbol evt)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        EventsNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        evt.Name));
+                }
+
+                // Check for generic methods (not supported)
+                if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
+                {
+                    if (method.IsGenericMethod)
+                    {
+                        diagnostics.Add(Diagnostic.Create(
+                            GenericMethodsNotSupportedDescriptor,
+                            location,
+                            targetType.Name,
+                            method.Name));
+                    }
+
+                    // Track method names for overload detection
+                    if (!methodNames.TryGetValue(method.Name, out var count))
+                        count = 0;
+                    methodNames[method.Name] = count + 1;
+                }
+            }
+
+            // Add base interfaces
+            foreach (var iface in type.Interfaces)
+                typesToProcess.Enqueue(iface);
+
+            // Add base class (for abstract classes)
+            if (type.BaseType is not null && type.BaseType.IsAbstract)
+                typesToProcess.Enqueue(type.BaseType);
+        }
+
+        // Check for overloaded methods
+        foreach (var kvp in methodNames)
+        {
+            if (kvp.Value > 1)
+            {
+                diagnostics.Add(Diagnostic.Create(
+                    OverloadedMethodsNotSupportedDescriptor,
+                    location,
+                    targetType.Name,
+                    kvp.Key));
+            }
+        }
+
+        return diagnostics;
     }
 
     private static AdapterConfig ParseAdapterConfig(AttributeData attribute)

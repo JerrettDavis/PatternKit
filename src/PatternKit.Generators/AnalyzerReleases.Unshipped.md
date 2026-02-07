@@ -106,3 +106,7 @@ PKADP005 | PatternKit.Generators.Adapter | Error | Mapping method signature mism
 PKADP006 | PatternKit.Generators.Adapter | Error | Adapter type name conflicts with existing type
 PKADP007 | PatternKit.Generators.Adapter | Error | Invalid adaptee type (must be concrete)
 PKADP008 | PatternKit.Generators.Adapter | Error | Mapping method must be static
+PKADP009 | PatternKit.Generators.Adapter | Error | Events are not supported
+PKADP010 | PatternKit.Generators.Adapter | Error | Generic methods are not supported
+PKADP011 | PatternKit.Generators.Adapter | Error | Overloaded methods are not supported
+PKADP012 | PatternKit.Generators.Adapter | Error | Abstract class target requires accessible parameterless constructor

@@ -755,4 +755,204 @@ public class AdapterGeneratorTests
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind"));
     }
+
+    [Fact]
+    public void ErrorWhenTargetHasEvents()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+            using System;
+
+            namespace TestNamespace;
+
+            public interface INotifier
+            {
+                event EventHandler Changed;
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(INotifier), Adaptee = typeof(Legacy))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasEvents));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP009 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP009");
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasGenericMethods()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface ISerializer
+            {
+                T Deserialize<T>(string data);
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(ISerializer), Adaptee = typeof(Legacy))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasGenericMethods));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP010 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP010");
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasOverloadedMethods()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface ICalculator
+            {
+                int Add(int a, int b);
+                int Add(int a, int b, int c);
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(ICalculator), Adaptee = typeof(Legacy))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasOverloadedMethods));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP011 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP011");
+    }
+
+    [Fact]
+    public void ErrorWhenAbstractClassHasNoParameterlessCtor()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public abstract class ServiceBase
+            {
+                protected ServiceBase(string name) { }
+                public abstract void DoWork();
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(ServiceBase), Adaptee = typeof(Legacy))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(ServiceBase.DoWork))]
+                public static void MapDoWork(Legacy adaptee) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenAbstractClassHasNoParameterlessCtor));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP012 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP012");
+    }
+
+    [Fact]
+    public void ErrorWhenAdapterTypeNameConflicts()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock { }
+
+            // This type already exists with the same name the generator would use
+            public class LegacyClockToIClockAdapter { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public static System.DateTimeOffset MapNow(LegacyClock adaptee) => default;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenAdapterTypeNameConflicts));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP006 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP006");
+    }
+
+    [Fact]
+    public void StructAdapteeNoNullCheck()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public struct StructClock
+            {
+                public System.DateTimeOffset GetNow() => System.DateTimeOffset.UtcNow;
+            }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(StructClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public static System.DateTimeOffset MapNow(StructClock adaptee) => adaptee.GetNow();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(StructAdapteeNoNullCheck));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Generated code should NOT have null check for struct
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName.Contains("Adapter"))
+            .SourceText.ToString();
+
+        Assert.DoesNotContain("throw new global::System.ArgumentNullException", generatedSource);
+        Assert.Contains("_adaptee = adaptee;", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
