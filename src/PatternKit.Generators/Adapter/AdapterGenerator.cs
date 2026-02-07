@@ -351,6 +351,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private static List<ISymbol> GetTargetMembers(INamedTypeSymbol targetType)
     {
         var members = new List<ISymbol>();
+        var seenSignatures = new HashSet<string>();
         var isAbstractClass = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
 
         // Get members from this type and all base interfaces/classes
@@ -374,11 +375,17 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 // Include methods (not constructors), properties (not events - not supported)
                 if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
                 {
-                    members.Add(member);
+                    // De-duplicate by signature for interface diamonds
+                    var sig = GetMemberSignature(method);
+                    if (seenSignatures.Add(sig))
+                        members.Add(member);
                 }
                 else if (member is IPropertySymbol prop && !prop.IsIndexer)
                 {
-                    members.Add(member);
+                    // De-duplicate by name+type for properties
+                    var sig = $"P:{prop.Name}:{prop.Type.ToDisplayString()}";
+                    if (seenSignatures.Add(sig))
+                        members.Add(member);
                 }
                 // Events are intentionally excluded - not supported by this generator
             }
@@ -398,6 +405,13 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
         // Sort by name for deterministic output
         return members.OrderBy(m => m.Name).ThenBy(m => m.ToDisplayString()).ToList();
+    }
+
+    private static string GetMemberSignature(IMethodSymbol method)
+    {
+        var paramSig = string.Join(",", method.Parameters.Select(p =>
+            $"{p.RefKind}:{p.Type.ToDisplayString()}"));
+        return $"M:{method.Name}({paramSig}):{method.ReturnType.ToDisplayString()}";
     }
 
     private static string? ValidateSignature(ISymbol targetMember, IMethodSymbol mapMethod, INamedTypeSymbol adapteeType)
@@ -425,8 +439,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             for (int i = 0; i < targetParams.Count; i++)
             {
-                if (!SymbolEqualityComparer.Default.Equals(mapParams[i].Type, targetParams[i].Type))
-                    return $"Parameter '{targetParams[i].Name}' type mismatch: expected '{targetParams[i].Type.ToDisplayString()}', but was '{mapParams[i].Type.ToDisplayString()}'.";
+                var mapParam = mapParams[i];
+                var targetParam = targetParams[i];
+
+                if (!SymbolEqualityComparer.Default.Equals(mapParam.Type, targetParam.Type))
+                    return $"Parameter '{targetParam.Name}' type mismatch: expected '{targetParam.Type.ToDisplayString()}', but was '{mapParam.Type.ToDisplayString()}'.";
+
+                if (mapParam.RefKind != targetParam.RefKind)
+                    return $"Parameter '{targetParam.Name}' ref kind mismatch: expected '{targetParam.RefKind}', but was '{mapParam.RefKind}'.";
             }
         }
         else if (targetMember is IPropertySymbol targetProp)
@@ -572,6 +592,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             {
                 sb.AppendLine($"        get => {hostTypeName}.{mapMethod.Name}(_adaptee);");
             }
+            if (targetProp.SetMethod is not null)
+            {
+                sb.AppendLine($"        set => throw new global::System.NotSupportedException(\"Property setter mapping is not supported for '{propName}'.\");");
+            }
             sb.AppendLine("    }");
             sb.AppendLine();
         }
@@ -647,16 +671,19 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (!param.HasExplicitDefaultValue)
             return "";
 
-        if (param.ExplicitDefaultValue is null)
+        var value = param.ExplicitDefaultValue;
+
+        if (value is null)
+        {
+            // For reference types or nullable value types, emit 'null'; otherwise, use 'default'
+            if (param.Type.IsReferenceType || param.NullableAnnotation == NullableAnnotation.Annotated)
+                return " = null";
+
             return " = default";
+        }
 
-        if (param.ExplicitDefaultValue is string s)
-            return $" = \"{s}\"";
-
-        if (param.ExplicitDefaultValue is bool b)
-            return b ? " = true" : " = false";
-
-        return $" = {param.ExplicitDefaultValue}";
+        var literal = SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false);
+        return " = " + literal;
     }
 
     // Helper types

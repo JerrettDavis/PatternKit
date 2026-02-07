@@ -571,4 +571,188 @@ public class AdapterGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void ErrorWhenAdapteeIsAbstract()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public abstract class AbstractClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(AbstractClock))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenAdapteeIsAbstract));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP007 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP007");
+    }
+
+    [Fact]
+    public void ErrorWhenMappingMethodNotStatic()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public System.DateTimeOffset MapNow(LegacyClock adaptee) => default; // Missing static
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenMappingMethodNotStatic));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP008 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP008");
+    }
+
+    [Fact]
+    public void MultipleAdaptersWithOverlappingMemberNames()
+    {
+        // Both IClock and ITimer have a Name property - should not cause false duplicate errors
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock { string Name { get; } }
+            public interface ITimer { string Name { get; } }
+
+            public class LegacyClock { public string ClockName => "Clock"; }
+            public class LegacyTimer { public string TimerName => "Timer"; }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            [GenerateAdapter(Target = typeof(ITimer), Adaptee = typeof(LegacyTimer))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Name))]
+                public static string MapClockName(LegacyClock adaptee) => adaptee.ClockName;
+
+                [AdapterMap(TargetMember = nameof(ITimer.Name))]
+                public static string MapTimerName(LegacyTimer adaptee) => adaptee.TimerName;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MultipleAdaptersWithOverlappingMemberNames));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics (mappings are distinguished by adaptee type)
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Both adapters generated
+        var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
+        Assert.Contains(names, n => n.Contains("LegacyClockToIClockAdapter"));
+        Assert.Contains(names, n => n.Contains("LegacyTimerToITimerAdapter"));
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void InterfaceDiamondDeduplication()
+    {
+        // IChild inherits from both IBase1 and IBase2 which both have DoWork()
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IBase { void DoWork(); }
+            public interface IChild : IBase { void DoExtra(); }
+
+            public class Legacy
+            {
+                public void Work() { }
+                public void Extra() { }
+            }
+
+            [GenerateAdapter(Target = typeof(IChild), Adaptee = typeof(Legacy))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IChild.DoWork))]
+                public static void MapDoWork(Legacy adaptee) => adaptee.Work();
+
+                [AdapterMap(TargetMember = nameof(IChild.DoExtra))]
+                public static void MapDoExtra(Legacy adaptee) => adaptee.Extra();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InterfaceDiamondDeduplication));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Should only have one DoWork method in generated code, not duplicates
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName.Contains("Adapter"))
+            .SourceText.ToString();
+
+        var doWorkCount = generatedSource.Split("public void DoWork()").Length - 1;
+        Assert.Equal(1, doWorkCount);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void RefParameterValidation()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IProcessor
+            {
+                void Process(ref int value);
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(IProcessor), Adaptee = typeof(Legacy))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IProcessor.Process))]
+                public static void MapProcess(Legacy adaptee, int value) { } // Missing ref
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(RefParameterValidation));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP005 diagnostic is reported for ref kind mismatch
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind"));
+    }
 }

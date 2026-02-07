@@ -197,11 +197,11 @@ You can define multiple adapters in the same host class:
 [GenerateAdapter(Target = typeof(IPaymentGateway), Adaptee = typeof(PayPalClient))]
 public static partial class PaymentAdapters
 {
-    [AdapterMap(TargetMember = nameof(IPaymentGateway.Charge))]
-    public static PaymentResult MapStripeCharge(StripeClient adaptee, ...) { ... }
+    [AdapterMap(TargetMember = nameof(IPaymentGateway.ChargeAsync))]
+    public static Task<PaymentResult> MapStripeChargeAsync(StripeClient adaptee, ...) { ... }
 
-    [AdapterMap(TargetMember = nameof(IPaymentGateway.Charge))]
-    public static PaymentResult MapPayPalCharge(PayPalClient adaptee, ...) { ... }
+    [AdapterMap(TargetMember = nameof(IPaymentGateway.ChargeAsync))]
+    public static Task<PaymentResult> MapPayPalChargeAsync(PayPalClient adaptee, ...) { ... }
 }
 ```
 
