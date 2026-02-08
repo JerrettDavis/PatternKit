@@ -110,3 +110,4 @@ PKADP009 | PatternKit.Generators.Adapter | Error | Events are not supported
 PKADP010 | PatternKit.Generators.Adapter | Error | Generic methods are not supported
 PKADP011 | PatternKit.Generators.Adapter | Error | Overloaded methods are not supported
 PKADP012 | PatternKit.Generators.Adapter | Error | Abstract class target requires accessible parameterless constructor
+PKADP013 | PatternKit.Generators.Adapter | Error | Settable properties are not supported

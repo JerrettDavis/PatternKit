@@ -13,6 +13,14 @@ namespace PatternKit.Generators.Adapter;
 [Generator]
 public sealed class AdapterGenerator : IIncrementalGenerator
 {
+    // Symbol display format for generated code (fully qualified with global::, but use keywords for special types)
+    private static readonly SymbolDisplayFormat FullyQualifiedFormat = new(
+        globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
+        typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+        genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+        miscellaneousOptions: SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier |
+                              SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+
     // Diagnostic IDs
     private const string DiagIdHostNotStaticPartial = "PKADP001";
     private const string DiagIdTargetNotInterfaceOrAbstract = "PKADP002";
@@ -26,6 +34,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private const string DiagIdGenericMethodsNotSupported = "PKADP010";
     private const string DiagIdOverloadedMethodsNotSupported = "PKADP011";
     private const string DiagIdAbstractClassNoParameterlessCtor = "PKADP012";
+    private const string DiagIdSettablePropertiesNotSupported = "PKADP013";
 
     private static readonly DiagnosticDescriptor HostNotStaticPartialDescriptor = new(
         id: DiagIdHostNotStaticPartial,
@@ -123,6 +132,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor SettablePropertiesNotSupportedDescriptor = new(
+        id: DiagIdSettablePropertiesNotSupported,
+        title: "Settable properties are not supported",
+        messageFormat: "Target type '{0}' contains settable property '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all class declarations with [GenerateAdapter] attribute
@@ -197,7 +214,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             var hasAccessibleParameterlessCtor = config.TargetType.InstanceConstructors
                 .Any(c => c.Parameters.Length == 0 &&
                          (c.DeclaredAccessibility == Accessibility.Public ||
-                          c.DeclaredAccessibility == Accessibility.Protected));
+                          c.DeclaredAccessibility == Accessibility.Protected ||
+                          c.DeclaredAccessibility == Accessibility.ProtectedOrInternal ||
+                          c.DeclaredAccessibility == Accessibility.Internal));
 
             if (!hasAccessibleParameterlessCtor)
             {
@@ -363,7 +382,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     {
         var diagnostics = new List<Diagnostic>();
         var isAbstractClass = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
-        var methodNames = new Dictionary<string, int>();
+
+        // Track method signatures to detect true overloads vs diamond inheritance
+        // Key: method name, Value: set of full signatures for that name
+        var methodSignatures = new Dictionary<string, HashSet<string>>();
 
         // Collect all members from the type hierarchy
         var typesToProcess = new Queue<INamedTypeSymbol>();
@@ -392,6 +414,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         evt.Name));
                 }
 
+                // Check for settable properties (not supported)
+                if (member is IPropertySymbol prop && !prop.IsIndexer && prop.SetMethod is not null)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        SettablePropertiesNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        prop.Name));
+                }
+
                 // Check for generic methods (not supported)
                 if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
                 {
@@ -404,10 +436,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                             method.Name));
                     }
 
-                    // Track method names for overload detection
-                    if (!methodNames.TryGetValue(method.Name, out var count))
-                        count = 0;
-                    methodNames[method.Name] = count + 1;
+                    // Track full method signature for overload detection
+                    var sig = GetMemberSignature(method);
+                    if (!methodSignatures.TryGetValue(method.Name, out var sigs))
+                    {
+                        sigs = new HashSet<string>();
+                        methodSignatures[method.Name] = sigs;
+                    }
+                    sigs.Add(sig);
                 }
             }
 
@@ -420,10 +456,11 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 typesToProcess.Enqueue(type.BaseType);
         }
 
-        // Check for overloaded methods
-        foreach (var kvp in methodNames)
+        // Check for true overloaded methods (same name, different signatures)
+        // Diamond inheritance (same signature from multiple paths) is OK
+        foreach (var kvp in methodSignatures)
         {
-            if (kvp.Value > 1)
+            if (kvp.Value.Count > 1)
             {
                 diagnostics.Add(Diagnostic.Create(
                     OverloadedMethodsNotSupportedDescriptor,
@@ -647,9 +684,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
         // Class declaration
         var sealedModifier = isSealed ? "sealed " : "";
-        var targetTypeName = targetType.ToDisplayString();
-        var adapteeTypeName = adapteeType.ToDisplayString();
-        var hostTypeName = hostSymbol.ToDisplayString();
+        var targetTypeName = targetType.ToDisplayString(FullyQualifiedFormat);
+        var adapteeTypeName = adapteeType.ToDisplayString(FullyQualifiedFormat);
+        var hostTypeName = hostSymbol.ToDisplayString(FullyQualifiedFormat);
 
         sb.AppendLine("/// <summary>");
         sb.AppendLine($"/// Adapter that implements <see cref=\"{targetTypeName}\"/> by delegating to <see cref=\"{adapteeTypeName}\"/>.");
@@ -712,10 +749,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (member is IMethodSymbol targetMethod)
         {
             // Generate method
-            var returnType = targetMethod.ReturnType.ToDisplayString();
+            var returnType = targetMethod.ReturnType.ToDisplayString(FullyQualifiedFormat);
             var methodName = targetMethod.Name;
             var parameters = string.Join(", ", targetMethod.Parameters.Select(p =>
-                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString()} {p.Name}{GetDefaultValue(p)}"));
+                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}{GetDefaultValue(p)}"));
             var parameterNames = string.Join(", ", targetMethod.Parameters.Select(p => 
                 $"{GetArgumentModifier(p)}{p.Name}"));
 
@@ -739,19 +776,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         else if (member is IPropertySymbol targetProp)
         {
             // Generate property
-            var propType = targetProp.Type.ToDisplayString();
+            var propType = targetProp.Type.ToDisplayString(FullyQualifiedFormat);
             var propName = targetProp.Name;
 
             sb.AppendLine($"    /// <inheritdoc/>");
             sb.AppendLine($"    public {overrideKeyword}{propType} {propName}");
             sb.AppendLine("    {");
+            // Only read-only properties are supported (setters are caught by PKADP013)
             if (targetProp.GetMethod is not null)
             {
                 sb.AppendLine($"        get => {hostTypeName}.{mapMethod.Name}(_adaptee);");
-            }
-            if (targetProp.SetMethod is not null)
-            {
-                sb.AppendLine($"        set => throw new global::System.NotSupportedException(\"Property setter mapping is not supported for '{propName}'.\");");
             }
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -764,10 +798,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
         if (member is IMethodSymbol targetMethod)
         {
-            var returnType = targetMethod.ReturnType.ToDisplayString();
+            var returnType = targetMethod.ReturnType.ToDisplayString(FullyQualifiedFormat);
             var methodName = targetMethod.Name;
             var parameters = string.Join(", ", targetMethod.Parameters.Select(p =>
-                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString()} {p.Name}{GetDefaultValue(p)}"));
+                $"{GetParameterModifiers(p)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}{GetDefaultValue(p)}"));
 
             sb.AppendLine($"    /// <inheritdoc/>");
             sb.AppendLine($"    /// <remarks>This member is not mapped and will throw <see cref=\"global::System.NotImplementedException\"/>.</remarks>");
@@ -779,20 +813,17 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         }
         else if (member is IPropertySymbol targetProp)
         {
-            var propType = targetProp.Type.ToDisplayString();
+            var propType = targetProp.Type.ToDisplayString(FullyQualifiedFormat);
             var propName = targetProp.Name;
 
             sb.AppendLine($"    /// <inheritdoc/>");
             sb.AppendLine($"    /// <remarks>This property is not mapped and will throw <see cref=\"global::System.NotImplementedException\"/>.</remarks>");
             sb.AppendLine($"    public {overrideKeyword}{propType} {propName}");
             sb.AppendLine("    {");
+            // Only read-only properties are supported (setters are caught by PKADP013)
             if (targetProp.GetMethod is not null)
             {
                 sb.AppendLine($"        get => throw new global::System.NotImplementedException(\"No [AdapterMap] provided for '{propName}'.\");");
-            }
-            if (targetProp.SetMethod is not null)
-            {
-                sb.AppendLine($"        set => throw new global::System.NotImplementedException(\"No [AdapterMap] provided for '{propName}'.\");");
             }
             sb.AppendLine("    }");
             sb.AppendLine();

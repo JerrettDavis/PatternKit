@@ -48,9 +48,9 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.LegacyClockToIClockAdapter.Adapter.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public sealed partial class LegacyClockToIClockAdapter : TestNamespace.IClock", generatedSource);
-        Assert.Contains("private readonly TestNamespace.LegacyClock _adaptee;", generatedSource);
-        Assert.Contains("public LegacyClockToIClockAdapter(TestNamespace.LegacyClock adaptee)", generatedSource);
+        Assert.Contains("public sealed partial class LegacyClockToIClockAdapter : global::TestNamespace.IClock", generatedSource);
+        Assert.Contains("private readonly global::TestNamespace.LegacyClock _adaptee;", generatedSource);
+        Assert.Contains("public LegacyClockToIClockAdapter(global::TestNamespace.LegacyClock adaptee)", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -105,7 +105,7 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("LegacyClockToIClockAdapter"))
             .SourceText.ToString();
 
-        Assert.Contains("public System.Threading.Tasks.ValueTask DelayAsync", generatedSource);
+        Assert.Contains("public global::System.Threading.Tasks.ValueTask DelayAsync", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
@@ -396,7 +396,7 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.Contains(": TestNamespace.ClockBase", generatedSource);
+        Assert.Contains(": global::TestNamespace.ClockBase", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
@@ -678,14 +678,16 @@ public class AdapterGeneratorTests
     [Fact]
     public void InterfaceDiamondDeduplication()
     {
-        // IChild inherits from both IBase1 and IBase2 which both have DoWork()
+        // True diamond: IBase1 and IBase2 both declare DoWork(), IChild inherits from both
+        // This tests that we de-duplicate by signature and don't emit DoWork twice
         const string source = """
             using PatternKit.Generators.Adapter;
 
             namespace TestNamespace;
 
-            public interface IBase { void DoWork(); }
-            public interface IChild : IBase { void DoExtra(); }
+            public interface IBase1 { void DoWork(); }
+            public interface IBase2 { void DoWork(); }
+            public interface IChild : IBase1, IBase2 { void DoExtra(); }
 
             public class Legacy
             {
@@ -951,6 +953,71 @@ public class AdapterGeneratorTests
 
         Assert.DoesNotContain("throw new global::System.ArgumentNullException", generatedSource);
         Assert.Contains("_adaptee = adaptee;", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasSettableProperty()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface ISettings
+            {
+                string Name { get; set; }
+            }
+
+            public class Legacy { }
+
+            [GenerateAdapter(Target = typeof(ISettings), Adaptee = typeof(Legacy))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasSettableProperty));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP013 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP013");
+    }
+
+    [Fact]
+    public void ReadOnlyPropertyIsSupported()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock
+            {
+                public System.DateTimeOffset GetNow() => System.DateTimeOffset.UtcNow;
+            }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public static System.DateTimeOffset MapNow(LegacyClock adaptee) => adaptee.GetNow();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReadOnlyPropertyIsSupported));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics (read-only properties are fine)
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
