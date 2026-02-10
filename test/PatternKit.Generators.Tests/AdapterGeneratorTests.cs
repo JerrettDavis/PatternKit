@@ -184,7 +184,7 @@ public class AdapterGeneratorTests
     }
 
     [Fact]
-    public void ErrorWhenTargetNotInterface()
+    public void ErrorWhenTargetNotInterfaceOrAbstract()
     {
         const string source = """
             using PatternKit.Generators.Adapter;
@@ -202,7 +202,7 @@ public class AdapterGeneratorTests
             public static partial class Adapters { }
             """;
 
-        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetNotInterface));
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetNotInterfaceOrAbstract));
         var gen = new AdapterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
