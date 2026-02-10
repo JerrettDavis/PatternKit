@@ -239,6 +239,47 @@ public static partial class Adapters
 | **PKADP006** | Error | Adapter type name conflicts with existing type |
 | **PKADP007** | Error | Adaptee must be a concrete class or struct |
 | **PKADP008** | Error | Mapping method must be static |
+| **PKADP009** | Error | Events are not supported |
+| **PKADP010** | Error | Generic methods are not supported |
+| **PKADP011** | Error | Overloaded methods are not supported |
+| **PKADP012** | Error | Abstract class target requires accessible parameterless constructor |
+| **PKADP013** | Error | Settable properties are not supported |
+| **PKADP014** | Error | Nested or generic host not supported |
+| **PKADP015** | Error | Mapping method must be accessible (public or internal) |
+| **PKADP016** | Error | Static members are not supported |
+| **PKADP017** | Error | Ref-return members are not supported |
+
+## Limitations
+
+### Multiple Adapters with Shared Adaptee
+
+When defining multiple `[GenerateAdapter]` attributes within the same host class that share the same adaptee type, mapping ambiguity can occur. The generator matches `[AdapterMap]` methods to adapters solely by adaptee type and then by `TargetMember` name. If two target types have overlapping member names (both use `nameof(...)` resulting in the same string), mappings become ambiguous and may trigger false `PKADP004` duplicate mapping diagnostics.
+
+**Workaround:** Define separate host classes for each adapter when they share the same adaptee type:
+
+```csharp
+// ✅ Good: Separate hosts avoid ambiguity
+[GenerateAdapter(Target = typeof(IServiceA), Adaptee = typeof(LegacyService))]
+public static partial class ServiceAAdapters
+{
+    [AdapterMap(TargetMember = nameof(IServiceA.DoWork))]
+    public static void MapDoWork(LegacyService adaptee) => adaptee.Execute();
+}
+
+[GenerateAdapter(Target = typeof(IServiceB), Adaptee = typeof(LegacyService))]
+public static partial class ServiceBAdapters
+{
+    [AdapterMap(TargetMember = nameof(IServiceB.DoWork))]
+    public static void MapDoWork(LegacyService adaptee) => adaptee.Run();
+}
+
+// ⚠️ Problematic: Multiple adapters with same adaptee in one host
+public static partial class AllAdapters
+{
+    // Both IServiceA and IServiceB have DoWork() members
+    // The generator cannot distinguish which mapping is for which target
+}
+```
 
 ## Best Practices
 

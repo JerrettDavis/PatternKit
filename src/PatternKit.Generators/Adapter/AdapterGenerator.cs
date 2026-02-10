@@ -1,7 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
 using System.Text;
 
 namespace PatternKit.Generators.Adapter;
@@ -35,6 +34,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private const string DiagIdOverloadedMethodsNotSupported = "PKADP011";
     private const string DiagIdAbstractClassNoParameterlessCtor = "PKADP012";
     private const string DiagIdSettablePropertiesNotSupported = "PKADP013";
+    private const string DiagIdNestedOrGenericHost = "PKADP014";
+    private const string DiagIdMappingMethodNotAccessible = "PKADP015";
+    private const string DiagIdStaticMembersNotSupported = "PKADP016";
+    private const string DiagIdRefReturnNotSupported = "PKADP017";
 
     private static readonly DiagnosticDescriptor HostNotStaticPartialDescriptor = new(
         id: DiagIdHostNotStaticPartial,
@@ -140,6 +143,38 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor NestedOrGenericHostDescriptor = new(
+        id: DiagIdNestedOrGenericHost,
+        title: "Nested or generic host not supported",
+        messageFormat: "Adapter host '{0}' cannot be nested or generic",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor MappingMethodNotAccessibleDescriptor = new(
+        id: DiagIdMappingMethodNotAccessible,
+        title: "Mapping method must be accessible",
+        messageFormat: "Mapping method '{0}' must be public or internal to be accessible from generated adapter",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor StaticMembersNotSupportedDescriptor = new(
+        id: DiagIdStaticMembersNotSupported,
+        title: "Static members are not supported",
+        messageFormat: "Target type '{0}' contains static member '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor RefReturnNotSupportedDescriptor = new(
+        id: DiagIdRefReturnNotSupported,
+        title: "Ref-return members are not supported",
+        messageFormat: "Target type '{0}' contains ref-return member '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all class declarations with [GenerateAdapter] attribute
@@ -178,6 +213,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 HostNotStaticPartialDescriptor,
+                node.GetLocation(),
+                hostSymbol.Name));
+            return;
+        }
+
+        // Validate host is not nested or generic
+        if (hostSymbol.ContainingType is not null || hostSymbol.TypeParameters.Length > 0)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                NestedOrGenericHostDescriptor,
                 node.GetLocation(),
                 hostSymbol.Name));
             return;
@@ -240,13 +285,24 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         // Get all mapping methods from host
         var mappingMethods = GetMappingMethods(hostSymbol, config.AdapteeType);
 
-        // Validate mapping methods are static
+        // Validate mapping methods are static and accessible
         foreach (var (method, _) in mappingMethods)
         {
             if (!method.IsStatic)
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     MapMethodNotStaticDescriptor,
+                    method.Locations.FirstOrDefault() ?? node.GetLocation(),
+                    method.Name));
+                return;
+            }
+
+            // Validate method is accessible (public or internal)
+            if (method.DeclaredAccessibility != Accessibility.Public &&
+                method.DeclaredAccessibility != Accessibility.Internal)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    MappingMethodNotAccessibleDescriptor,
                     method.Locations.FirstOrDefault() ?? node.GetLocation(),
                     method.Name));
                 return;
@@ -403,6 +459,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             foreach (var member in membersToCheck)
             {
+                // Check for static members (not supported)
+                if (member.IsStatic)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        StaticMembersNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        member.Name));
+                }
+
                 // Check for events (not supported)
                 if (member is IEventSymbol evt)
                 {
@@ -423,6 +489,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         prop.Name));
                 }
 
+                // Check for ref-return properties (not supported)
+                if (member is IPropertySymbol refProp && refProp.ReturnsByRef)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        RefReturnNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        refProp.Name));
+                }
+
                 // Check for generic methods (not supported)
                 if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
                 {
@@ -430,6 +506,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                     {
                         diagnostics.Add(Diagnostic.Create(
                             GenericMethodsNotSupportedDescriptor,
+                            location,
+                            targetType.Name,
+                            method.Name));
+                    }
+
+                    // Check for ref-return methods (not supported)
+                    if (method.ReturnsByRef || method.ReturnsByRefReadonly)
+                    {
+                        diagnostics.Add(Diagnostic.Create(
+                            RefReturnNotSupportedDescriptor,
                             location,
                             targetType.Name,
                             method.Name));
@@ -557,6 +643,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 continue;
 
             var membersToProcess = type.GetMembers()
+                .Where(m => !m.IsStatic) // Exclude static members
                 .Where(m => !isAbstractClass || m.IsAbstract);
 
             foreach (var member in membersToProcess)
@@ -592,8 +679,12 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             }
         }
 
-        // Return in declaration order (members already added in traversal order)
-        return members;
+        // Ensure stable, deterministic ordering by kind+name+signature
+        // This provides a predictable output order even if member traversal is non-deterministic
+        return members.OrderBy(m => m.Kind)
+                      .ThenBy(m => m.Name)
+                      .ThenBy(m => m.ToDisplayString(FullyQualifiedFormat))
+                      .ToList();
     }
 
     private static string GetMemberSignature(IMethodSymbol method)
