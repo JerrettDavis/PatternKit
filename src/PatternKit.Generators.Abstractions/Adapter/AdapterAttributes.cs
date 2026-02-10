@@ -76,7 +76,7 @@ public sealed class GenerateAdapterAttribute : Attribute
 /// <list type="bullet">
 /// <item><description>First parameter must be the adaptee type</description></item>
 /// <item><description>Remaining parameters must match the target member's parameters</description></item>
-/// <item><description>Return type must be compatible with the target member's return type</description></item>
+/// <item><description>Return type must match the target member's return type exactly</description></item>
 /// </list>
 /// </remarks>
 /// <example>
