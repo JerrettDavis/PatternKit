@@ -78,11 +78,11 @@ public class AdapterGeneratorDemoTests
 
         // Act
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        await clock.DelayAsync(TimeSpan.FromMilliseconds(50));
+        await clock.DelayAsync(TimeSpan.FromMilliseconds(100));
         sw.Stop();
 
-        // Assert - should have delayed at least 40ms (some tolerance for timing)
-        Assert.True(sw.ElapsedMilliseconds >= 40);
+        // Assert - should have delayed at least 50ms (allowing for scheduler jitter on loaded CI)
+        Assert.True(sw.ElapsedMilliseconds >= 50);
     }
 
     [Fact]

@@ -233,6 +233,28 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (config.TargetType is null || config.AdapteeType is null)
             return; // Attribute error, let compiler handle
 
+        // Reject unbound/open generic target types (e.g., typeof(IFoo<>))
+        if (config.TargetType is INamedTypeSymbol targetNamed &&
+            (targetNamed.IsUnboundGenericType || targetNamed.TypeParameters.Length > 0))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                TargetNotInterfaceOrAbstractDescriptor,
+                node.GetLocation(),
+                config.TargetType.ToDisplayString()));
+            return;
+        }
+
+        // Reject unbound/open generic adaptee types (e.g., typeof(IFoo<>))
+        if (config.AdapteeType is INamedTypeSymbol adapteeNamed &&
+            (adapteeNamed.IsUnboundGenericType || adapteeNamed.TypeParameters.Length > 0))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidAdapteeTypeDescriptor,
+                node.GetLocation(),
+                config.AdapteeType.ToDisplayString()));
+            return;
+        }
+
         // Validate target is interface or abstract class
         if (!IsValidTargetType(config.TargetType))
         {
@@ -573,8 +595,11 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                     config.AdapterTypeName = named.Value.Value as string;
                     break;
                 case "MissingMap":
-                    if (named.Value.Value is int missingMapValue)
+                    if (named.Value.Value is int missingMapValue &&
+                        global::System.Enum.IsDefined(typeof(AdapterMissingMapPolicyValue), missingMapValue))
+                    {
                         config.MissingMapPolicy = (AdapterMissingMapPolicyValue)missingMapValue;
+                    }
                     break;
                 case "Sealed":
                     if (named.Value.Value is bool sealedValue)
@@ -704,10 +729,21 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (!SymbolEqualityComparer.Default.Equals(firstParam.Type, adapteeType))
             return $"First parameter must be of type '{adapteeType.ToDisplayString()}', but was '{firstParam.Type.ToDisplayString()}'.";
 
+        // Adaptee parameter must be passed by value (no ref/in/out) and cannot be a 'this' or 'scoped' parameter,
+        // because the generated call site always passes `_adaptee` without any modifier.
+        if (firstParam.RefKind != RefKind.None)
+            return "Adaptee parameter must not have a ref, in, or out modifier.";
+
+        if (firstParam.IsThis)
+            return "Adaptee parameter cannot be declared with the 'this' modifier.";
+
+        if (firstParam.ScopedKind != ScopedKind.None)
+            return "Adaptee parameter cannot be declared with the 'scoped' modifier.";
+
         if (targetMember is IMethodSymbol targetMethod)
         {
-            // Check return type
-            if (!SymbolEqualityComparer.Default.Equals(mapMethod.ReturnType, targetMethod.ReturnType))
+            // Check return type with nullability
+            if (!SymbolEqualityComparer.IncludeNullability.Equals(mapMethod.ReturnType, targetMethod.ReturnType))
                 return $"Return type must be '{targetMethod.ReturnType.ToDisplayString()}', but was '{mapMethod.ReturnType.ToDisplayString()}'.";
 
             // Check remaining parameters (after adaptee)
@@ -722,7 +758,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 var mapParam = mapParams[i];
                 var targetParam = targetParams[i];
 
-                if (!SymbolEqualityComparer.Default.Equals(mapParam.Type, targetParam.Type))
+                if (!SymbolEqualityComparer.IncludeNullability.Equals(mapParam.Type, targetParam.Type))
                     return $"Parameter '{targetParam.Name}' type mismatch: expected '{targetParam.Type.ToDisplayString()}', but was '{mapParam.Type.ToDisplayString()}'.";
 
                 if (mapParam.RefKind != targetParam.RefKind)
@@ -735,8 +771,8 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             if (mapMethod.Parameters.Length != 1)
                 return $"Property getter mapping must have exactly one parameter (the adaptee).";
 
-            // Check return type
-            if (!SymbolEqualityComparer.Default.Equals(mapMethod.ReturnType, targetProp.Type))
+            // Check return type with nullability
+            if (!SymbolEqualityComparer.IncludeNullability.Equals(mapMethod.ReturnType, targetProp.Type))
                 return $"Return type must be '{targetProp.Type.ToDisplayString()}', but was '{mapMethod.ReturnType.ToDisplayString()}'.";
         }
 
