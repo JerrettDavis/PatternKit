@@ -28,7 +28,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private const string DiagIdDuplicateMapping = "PKADP004";
     private const string DiagIdSignatureMismatch = "PKADP005";
     private const string DiagIdTypeNameConflict = "PKADP006";
-    private const string DiagIdInvalidAdapteType = "PKADP007";
+    private const string DiagIdInvalidAdapteeType = "PKADP007";
     private const string DiagIdMapMethodNotStatic = "PKADP008";
     private const string DiagIdEventsNotSupported = "PKADP009";
     private const string DiagIdGenericMethodsNotSupported = "PKADP010";
@@ -85,7 +85,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         isEnabledByDefault: true);
 
     private static readonly DiagnosticDescriptor InvalidAdapteeTypeDescriptor = new(
-        id: DiagIdInvalidAdapteType,
+        id: DiagIdInvalidAdapteeType,
         title: "Invalid adaptee type",
         messageFormat: "Adaptee type '{0}' must be a concrete class or struct",
         category: "PatternKit.Generators.Adapter",
@@ -398,12 +398,11 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             if (!processed.Add(type))
                 continue;
 
-            foreach (var member in type.GetMembers())
-            {
-                // For abstract classes, only check abstract members
-                if (isAbstractClass && !member.IsAbstract)
-                    continue;
+            var membersToCheck = type.GetMembers()
+                .Where(m => !isAbstractClass || m.IsAbstract);
 
+            foreach (var member in membersToCheck)
+            {
                 // Check for events (not supported)
                 if (member is IEventSymbol evt)
                 {
@@ -458,16 +457,13 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
         // Check for true overloaded methods (same name, different signatures)
         // Diamond inheritance (same signature from multiple paths) is OK
-        foreach (var kvp in methodSignatures)
+        foreach (var kvp in methodSignatures.Where(kvp => kvp.Value.Count > 1))
         {
-            if (kvp.Value.Count > 1)
-            {
-                diagnostics.Add(Diagnostic.Create(
-                    OverloadedMethodsNotSupportedDescriptor,
-                    location,
-                    targetType.Name,
-                    kvp.Key));
-            }
+            diagnostics.Add(Diagnostic.Create(
+                OverloadedMethodsNotSupportedDescriptor,
+                location,
+                targetType.Name,
+                kvp.Key));
         }
 
         return diagnostics;
@@ -560,12 +556,11 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             if (!processed.Add(type))
                 continue;
 
-            foreach (var member in type.GetMembers())
-            {
-                // For abstract classes, only include abstract members (must be overridden)
-                if (isAbstractClass && !member.IsAbstract)
-                    continue;
+            var membersToProcess = type.GetMembers()
+                .Where(m => !isAbstractClass || m.IsAbstract);
 
+            foreach (var member in membersToProcess)
+            {
                 // Include methods (not constructors), properties (not events - not supported)
                 if (member is IMethodSymbol method && method.MethodKind == MethodKind.Ordinary)
                 {
@@ -577,7 +572,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 else if (member is IPropertySymbol prop && !prop.IsIndexer)
                 {
                     // De-duplicate by name+type for properties
-                    var sig = $"P:{prop.Name}:{prop.Type.ToDisplayString()}";
+                    var sig = $"P:{prop.Name}:{prop.Type.ToDisplayString(FullyQualifiedFormat)}";
                     if (seenSignatures.Add(sig))
                         members.Add(member);
                 }
@@ -597,15 +592,15 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             }
         }
 
-        // Sort by name for deterministic output
-        return members.OrderBy(m => m.Name).ThenBy(m => m.ToDisplayString()).ToList();
+        // Return in declaration order (members already added in traversal order)
+        return members;
     }
 
     private static string GetMemberSignature(IMethodSymbol method)
     {
         var paramSig = string.Join(",", method.Parameters.Select(p =>
-            $"{p.RefKind}:{p.Type.ToDisplayString()}"));
-        return $"M:{method.Name}({paramSig}):{method.ReturnType.ToDisplayString()}";
+            $"{p.RefKind}:{p.Type.ToDisplayString(FullyQualifiedFormat)}"));
+        return $"M:{method.Name}({paramSig}):{method.ReturnType.ToDisplayString(FullyQualifiedFormat)}";
     }
 
     private static string? ValidateSignature(ISymbol targetMember, IMethodSymbol mapMethod, INamedTypeSymbol adapteeType)
