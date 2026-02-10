@@ -234,8 +234,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             return; // Attribute error, let compiler handle
 
         // Reject unbound/open generic target types (e.g., typeof(IFoo<>))
-        if (config.TargetType is INamedTypeSymbol targetNamed &&
-            (targetNamed.IsUnboundGenericType || targetNamed.TypeParameters.Length > 0))
+        if (config.TargetType is INamedTypeSymbol targetNamed && targetNamed.IsUnboundGenericType)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TargetNotInterfaceOrAbstractDescriptor,
@@ -245,8 +244,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         }
 
         // Reject unbound/open generic adaptee types (e.g., typeof(IFoo<>))
-        if (config.AdapteeType is INamedTypeSymbol adapteeNamed &&
-            (adapteeNamed.IsUnboundGenericType || adapteeNamed.TypeParameters.Length > 0))
+        if (config.AdapteeType is INamedTypeSymbol adapteeNamed && adapteeNamed.IsUnboundGenericType)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 InvalidAdapteeTypeDescriptor,
