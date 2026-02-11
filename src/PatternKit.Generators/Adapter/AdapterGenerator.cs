@@ -38,6 +38,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private const string DiagIdMappingMethodNotAccessible = "PKADP015";
     private const string DiagIdStaticMembersNotSupported = "PKADP016";
     private const string DiagIdRefReturnNotSupported = "PKADP017";
+    private const string DiagIdIndexersNotSupported = "PKADP018";
 
     private static readonly DiagnosticDescriptor HostNotStaticPartialDescriptor = new(
         id: DiagIdHostNotStaticPartial,
@@ -175,6 +176,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor IndexersNotSupportedDescriptor = new(
+        id: DiagIdIndexersNotSupported,
+        title: "Indexers are not supported",
+        messageFormat: "Target type '{0}' contains indexer '{1}' which is not supported by the adapter generator",
+        category: "PatternKit.Generators.Adapter",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all class declarations with [GenerateAdapter] attribute
@@ -192,11 +201,14 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             var node = typeContext.TargetNode;
 
+            // Track generated adapter type names to detect conflicts (namespace -> type name -> location)
+            var generatedAdapters = new Dictionary<string, Dictionary<string, Location>>();
+
             // Process each [GenerateAdapter] attribute on the host
             foreach (var attr in typeContext.Attributes.Where(a =>
                 a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute"))
             {
-                GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel);
+                GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel, generatedAdapters);
             }
         });
     }
@@ -206,7 +218,8 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         INamedTypeSymbol hostSymbol,
         AttributeData attribute,
         SyntaxNode node,
-        SemanticModel semanticModel)
+        SemanticModel semanticModel,
+        Dictionary<string, Dictionary<string, Location>> generatedAdapters)
     {
         // Validate host is static partial
         if (!IsStaticPartial(node))
@@ -281,7 +294,8 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                          (c.DeclaredAccessibility == Accessibility.Public ||
                           c.DeclaredAccessibility == Accessibility.Protected ||
                           c.DeclaredAccessibility == Accessibility.ProtectedOrInternal ||
-                          c.DeclaredAccessibility == Accessibility.Internal));
+                          (c.DeclaredAccessibility == Accessibility.Internal &&
+                           semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly))));
 
             if (!hasAccessibleParameterlessCtor)
             {
@@ -396,7 +410,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 ? string.Empty
                 : hostSymbol.ContainingNamespace.ToDisplayString());
 
-        // Check for type name conflict (PKADP006)
+        // Check for type name conflict (PKADP006) - both in existing compilation and in current generator run
         if (HasTypeNameConflict(semanticModel.Compilation, ns, adapterTypeName))
         {
             context.ReportDiagnostic(Diagnostic.Create(
@@ -406,6 +420,24 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 string.IsNullOrEmpty(ns) ? "<global>" : ns));
             return;
         }
+
+        // Check for conflict with adapters being generated in this run
+        var normalizedNs = string.IsNullOrEmpty(ns) ? "" : ns;
+        if (!generatedAdapters.ContainsKey(normalizedNs))
+            generatedAdapters[normalizedNs] = new Dictionary<string, Location>();
+
+        if (generatedAdapters[normalizedNs].TryGetValue(adapterTypeName, out var existingLocation))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                TypeNameConflictDescriptor,
+                node.GetLocation(),
+                adapterTypeName,
+                string.IsNullOrEmpty(ns) ? "<global>" : ns));
+            return;
+        }
+
+        // Track this adapter type name
+        generatedAdapters[normalizedNs][adapterTypeName] = node.GetLocation();
 
         // Generate adapter
         var source = GenerateAdapterCode(
@@ -509,8 +541,18 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         prop.Name));
                 }
 
+                // Check for indexers (not supported)
+                if (member is IPropertySymbol indexer && indexer.IsIndexer)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        IndexersNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        indexer.ToDisplayString()));
+                }
+
                 // Check for ref-return properties (not supported)
-                if (member is IPropertySymbol refProp && refProp.ReturnsByRef)
+                if (member is IPropertySymbol refProp && !refProp.IsIndexer && refProp.ReturnsByRef)
                 {
                     diagnostics.Add(Diagnostic.Create(
                         RefReturnNotSupportedDescriptor,

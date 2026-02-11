@@ -115,3 +115,4 @@ PKADP014 | PatternKit.Generators.Adapter | Error | Nested or generic host not su
 PKADP015 | PatternKit.Generators.Adapter | Error | Mapping method must be accessible
 PKADP016 | PatternKit.Generators.Adapter | Error | Static members are not supported
 PKADP017 | PatternKit.Generators.Adapter | Error | Ref-return members are not supported
+PKADP018 | PatternKit.Generators.Adapter | Error | Indexers are not supported
