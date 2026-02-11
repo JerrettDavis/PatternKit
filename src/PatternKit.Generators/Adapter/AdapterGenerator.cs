@@ -290,12 +290,23 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (config.TargetType.TypeKind == TypeKind.Class && config.TargetType.IsAbstract)
         {
             var hasAccessibleParameterlessCtor = config.TargetType.InstanceConstructors
-                .Any(c => c.Parameters.Length == 0 &&
-                         (c.DeclaredAccessibility == Accessibility.Public ||
-                          c.DeclaredAccessibility == Accessibility.Protected ||
-                          c.DeclaredAccessibility == Accessibility.ProtectedOrInternal ||
-                          (c.DeclaredAccessibility == Accessibility.Internal &&
-                           semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly))));
+                .Any(c =>
+                {
+                    if (c.Parameters.Length > 0)
+                        return false;
+
+                    var accessibility = c.DeclaredAccessibility;
+                    if (accessibility == Accessibility.Public ||
+                        accessibility == Accessibility.Protected ||
+                        accessibility == Accessibility.ProtectedOrInternal)
+                        return true;
+
+                    // Internal constructors are only accessible if in the same assembly
+                    if (accessibility == Accessibility.Internal)
+                        return semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly);
+
+                    return false;
+                });
 
             if (!hasAccessibleParameterlessCtor)
             {
@@ -531,6 +542,16 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         evt.Name));
                 }
 
+                // Check for indexers (not supported) - must be checked before other property checks
+                if (member is IPropertySymbol propertySymbol && propertySymbol.IsIndexer)
+                {
+                    diagnostics.Add(Diagnostic.Create(
+                        IndexersNotSupportedDescriptor,
+                        location,
+                        targetType.Name,
+                        propertySymbol.ToDisplayString()));
+                }
+
                 // Check for settable properties (not supported)
                 if (member is IPropertySymbol prop && !prop.IsIndexer && prop.SetMethod is not null)
                 {
@@ -541,18 +562,8 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         prop.Name));
                 }
 
-                // Check for indexers (not supported)
-                if (member is IPropertySymbol propertySymbol && propertySymbol.IsIndexer)
-                {
-                    diagnostics.Add(Diagnostic.Create(
-                        IndexersNotSupportedDescriptor,
-                        location,
-                        targetType.Name,
-                        propertySymbol.ToDisplayString()));
-                }
-
                 // Check for ref-return properties (not supported)
-                if (member is IPropertySymbol refProp && refProp.ReturnsByRef)
+                if (member is IPropertySymbol refProp && !refProp.IsIndexer && refProp.ReturnsByRef)
                 {
                     diagnostics.Add(Diagnostic.Create(
                         RefReturnNotSupportedDescriptor,
