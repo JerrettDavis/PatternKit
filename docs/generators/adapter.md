@@ -254,7 +254,7 @@ public static partial class Adapters
 
 ### Multiple Adapters with Shared Adaptee
 
-When defining multiple `[GenerateAdapter]` attributes within the same host class that share the same adaptee type, mapping ambiguity can occur. The generator matches `[AdapterMap]` methods to adapters solely by adaptee type and then by `TargetMember` name. If two target types have overlapping member names (both use `nameof(...)` resulting in the same string), mappings become ambiguous and may trigger false `PKADP004` duplicate mapping diagnostics.
+When defining multiple `[GenerateAdapter]` attributes within the same host class that share the same adaptee type, mapping ambiguity can occur. The generator matches `[AdapterMap]` methods to adapters solely by adaptee type and then by `TargetMember` name. If two target types have overlapping member names (both use `nameof(...)` resulting in the same string), mappings become inherently ambiguous, and the generator cannot reliably determine which adapter a mapping belongs to. In this case, `PKADP004` duplicate mapping diagnostics are expected given the current API design, rather than being false positives, unless mappings are split into separate hosts or the API is extended to provide additional disambiguation.
 
 **Workaround:** Define separate host classes for each adapter when they share the same adaptee type:
 

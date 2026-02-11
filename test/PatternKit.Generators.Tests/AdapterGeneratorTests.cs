@@ -1202,4 +1202,79 @@ public class AdapterGeneratorTests
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKADP017");
     }
+
+    [Fact]
+    public void ErrorWhenTargetHasIndexer()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IIndexable
+            {
+                string this[int index] { get; } // Indexer
+            }
+
+            public class LegacyService { }
+
+            [GenerateAdapter(Target = typeof(IIndexable), Adaptee = typeof(LegacyService))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasIndexer));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP018 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP018");
+    }
+
+    [Fact]
+    public void ErrorWhenTwoHostsGenerateSameAdapterTypeName()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public interface ITimer
+            {
+                long Ticks { get; }
+            }
+
+            public class LegacyClock { }
+            public class LegacyTimer { }
+
+            // First host generates LegacyClockAdapter
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock), AdapterTypeName = "SharedAdapter")]
+            public static partial class ClockAdapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public static System.DateTimeOffset MapNow(LegacyClock adaptee) => default;
+            }
+
+            // Second host attempts to generate the same adapter type name
+            [GenerateAdapter(Target = typeof(ITimer), Adaptee = typeof(LegacyTimer), AdapterTypeName = "SharedAdapter")]
+            public static partial class TimerAdapters
+            {
+                [AdapterMap(TargetMember = nameof(ITimer.Ticks))]
+                public static long MapTicks(LegacyTimer adaptee) => default;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTwoHostsGenerateSameAdapterTypeName));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP006 diagnostic is reported (at least once, possibly twice)
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP006");
+    }
 }
