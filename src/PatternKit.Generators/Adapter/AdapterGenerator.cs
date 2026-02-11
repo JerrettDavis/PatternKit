@@ -437,7 +437,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         if (!generatedAdapters.ContainsKey(normalizedNs))
             generatedAdapters[normalizedNs] = new Dictionary<string, Location>();
 
-        if (generatedAdapters[normalizedNs].TryGetValue(adapterTypeName, out var existingLocation))
+        if (generatedAdapters[normalizedNs].ContainsKey(adapterTypeName))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNameConflictDescriptor,
