@@ -1022,4 +1022,184 @@ public class AdapterGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void ErrorWhenHostIsNested()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock { }
+
+            public class OuterClass
+            {
+                [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+                public static partial class Adapters { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenHostIsNested));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP014 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP014");
+    }
+
+    [Fact]
+    public void ErrorWhenHostIsGeneric()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters<T> { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenHostIsGeneric));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP014 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP014");
+    }
+
+    [Fact]
+    public void ErrorWhenMappingMethodNotAccessible()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                private static System.DateTimeOffset MapNow(LegacyClock adaptee) => default; // Private instead of public/internal
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenMappingMethodNotAccessible));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP015 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP015");
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasStaticMembers()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                System.DateTimeOffset Now { get; }
+                static abstract void StaticMethod(); // Static abstract member (C# 11+)
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters
+            {
+                [AdapterMap(TargetMember = nameof(IClock.Now))]
+                public static System.DateTimeOffset MapNow(LegacyClock adaptee) => default;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasStaticMembers));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP016 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP016");
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasRefReturnProperty()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                ref int RefProperty { get; } // Ref-return property
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasRefReturnProperty));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP017 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP017");
+    }
+
+    [Fact]
+    public void ErrorWhenTargetHasRefReturnMethod()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IClock
+            {
+                ref int GetRefValue(); // Ref-return method
+            }
+
+            public class LegacyClock { }
+
+            [GenerateAdapter(Target = typeof(IClock), Adaptee = typeof(LegacyClock))]
+            public static partial class Adapters { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ErrorWhenTargetHasRefReturnMethod));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        // PKADP017 diagnostic is reported
+        var diags = result.Results.SelectMany(r => r.Diagnostics);
+        Assert.Contains(diags, d => d.Id == "PKADP017");
+    }
 }
