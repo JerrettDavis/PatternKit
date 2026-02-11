@@ -542,17 +542,17 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 }
 
                 // Check for indexers (not supported)
-                if (member is IPropertySymbol indexer && indexer.IsIndexer)
+                if (member is IPropertySymbol propertySymbol && propertySymbol.IsIndexer)
                 {
                     diagnostics.Add(Diagnostic.Create(
                         IndexersNotSupportedDescriptor,
                         location,
                         targetType.Name,
-                        indexer.ToDisplayString()));
+                        propertySymbol.ToDisplayString()));
                 }
 
                 // Check for ref-return properties (not supported)
-                if (member is IPropertySymbol refProp && !refProp.IsIndexer && refProp.ReturnsByRef)
+                if (member is IPropertySymbol refProp && refProp.ReturnsByRef)
                 {
                     diagnostics.Add(Diagnostic.Create(
                         RefReturnNotSupportedDescriptor,
