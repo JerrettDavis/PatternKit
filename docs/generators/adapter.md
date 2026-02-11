@@ -248,6 +248,7 @@ public static partial class Adapters
 | **PKADP015** | Error | Mapping method must be accessible (public or internal) |
 | **PKADP016** | Error | Static members are not supported |
 | **PKADP017** | Error | Ref-return members are not supported |
+| **PKADP018** | Error | Indexers are not supported |
 
 ## Limitations
 
