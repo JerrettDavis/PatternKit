@@ -210,8 +210,10 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 var node = typeContext.TargetNode;
 
                 // Process each [GenerateAdapter] attribute on the host
-                foreach (var attr in typeContext.Attributes.Where(a =>
-                    a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute"))
+                var generateAdapterAttributes = typeContext.Attributes
+                    .Where(a => a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute");
+
+                foreach (var attr in generateAdapterAttributes)
                 {
                     GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel, generatedAdapters);
                 }
@@ -307,8 +309,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         accessibility == Accessibility.ProtectedOrInternal)
                         return true;
 
-                    // Internal constructors are only accessible if in the same assembly
-                    if (accessibility == Accessibility.Internal)
+                    // Internal and private protected constructors are only accessible within the same assembly
+                    if (accessibility == Accessibility.Internal ||
+                        accessibility == Accessibility.ProtectedAndInternal)
                         return semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly);
 
                     return false;
@@ -500,7 +503,18 @@ public sealed class AdapterGenerator : IIncrementalGenerator
     private static bool HasTypeNameConflict(Compilation compilation, string ns, string typeName)
     {
         var fullName = string.IsNullOrEmpty(ns) ? typeName : $"{ns}.{typeName}";
-        return compilation.GetTypeByMetadataName(fullName) is not null;
+        var existingType = compilation.GetTypeByMetadataName(fullName);
+        if (existingType is null)
+            return false;
+
+        // If the type comes from metadata only, we can't add a partial declaration safely.
+        if (existingType.DeclaringSyntaxReferences.Length == 0)
+            return true;
+
+        // Only treat this as a conflict if any declaration is non-partial.
+        return existingType.DeclaringSyntaxReferences.Any(syntaxRef =>
+            syntaxRef.GetSyntax() is not TypeDeclarationSyntax typeDecl ||
+            !typeDecl.Modifiers.Any(SyntaxKind.PartialKeyword));
     }
 
     private List<Diagnostic> ValidateTargetMembers(INamedTypeSymbol targetType, Location fallbackLocation)
@@ -729,7 +743,15 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             var membersToProcess = type.GetMembers()
                 .Where(m => !m.IsStatic) // Exclude static members
-                .Where(m => !isAbstractClass || m.IsAbstract);
+                .Where(m =>
+                {
+                    // For abstract classes and interfaces, only include abstract members
+                    // (interfaces: exclude default implementations added in C# 8.0+)
+                    if (isAbstractClass || type.TypeKind == TypeKind.Interface)
+                        return m.IsAbstract;
+                    
+                    return true;
+                });
 
             foreach (var member in membersToProcess)
             {
@@ -768,18 +790,19 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         // This provides both readable (contract-ordered) output and deterministic ordering
         return members.OrderBy(m =>
         {
-            // Try to get syntax declaration order (file path + line number)
+            // Try to get syntax declaration order by line number
             var syntaxRef = m.DeclaringSyntaxReferences.FirstOrDefault();
             if (syntaxRef != null)
             {
                 var location = syntaxRef.GetSyntax().GetLocation();
                 var lineSpan = location.GetLineSpan();
-                // Return a tuple of (file path, line number) for natural ordering
-                return (lineSpan.Path, lineSpan.StartLinePosition.Line, 0);
+                // Use only line number for ordering, not file path (which varies across machines)
+                // Note: For types split across multiple partial files, this may not preserve
+                // perfect declaration order, but ThenBy clauses provide stable fallback ordering
+                return lineSpan.StartLinePosition.Line;
             }
             // For metadata-only symbols without source, use a fallback ordering
-            // Use the symbol's metadata token which is stable across compilations
-            return (string.Empty, int.MaxValue, m.MetadataToken);
+            return int.MaxValue;
         })
         .ThenBy(m => m.Kind)
         .ThenBy(m => m.Name)
@@ -1065,6 +1088,23 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 return " = null";
 
             return " = default";
+        }
+
+        // Handle enum parameters specially to emit proper enum syntax
+        if (param.Type.TypeKind == TypeKind.Enum && param.Type is INamedTypeSymbol enumType)
+        {
+            // Try to find the enum field matching this value
+            var enumField = enumType.GetMembers()
+                .OfType<IFieldSymbol>()
+                .FirstOrDefault(f => f.HasConstantValue && Equals(f.ConstantValue, value));
+
+            if (enumField != null)
+            {
+                return $" = {enumType.ToDisplayString(FullyQualifiedFormat)}.{enumField.Name}";
+            }
+
+            // Fallback: cast the numeric value
+            return $" = ({enumType.ToDisplayString(FullyQualifiedFormat)}){value}";
         }
 
         var literal = SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false);
