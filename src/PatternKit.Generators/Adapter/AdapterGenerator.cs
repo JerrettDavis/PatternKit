@@ -512,18 +512,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             return true;
 
         // Only treat this as a conflict if any declaration is non-partial.
-        foreach (var syntaxRef in existingType.DeclaringSyntaxReferences)
-        {
-            var syntax = syntaxRef.GetSyntax();
-            if (syntax is not TypeDeclarationSyntax typeDecl)
-                return true;
-
-            if (!typeDecl.Modifiers.Any(SyntaxKind.PartialKeyword))
-                return true;
-        }
-
-        // All declarations are partial; allow the generator to emit its own partial type.
-        return false;
+        return existingType.DeclaringSyntaxReferences.Any(syntaxRef =>
+            syntaxRef.GetSyntax() is not TypeDeclarationSyntax typeDecl ||
+            !typeDecl.Modifiers.Any(SyntaxKind.PartialKeyword));
     }
 
     private List<Diagnostic> ValidateTargetMembers(INamedTypeSymbol targetType, Location fallbackLocation)
@@ -754,13 +745,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                 .Where(m => !m.IsStatic) // Exclude static members
                 .Where(m =>
                 {
-                    // For abstract classes, only include abstract members
-                    if (isAbstractClass)
-                        return m.IsAbstract;
-                    
-                    // For interfaces, only include abstract members (exclude default implementations)
-                    // Properties/methods with implementations (C# 8.0+) are not abstract
-                    if (type.TypeKind == TypeKind.Interface)
+                    // For abstract classes and interfaces, only include abstract members
+                    // (interfaces: exclude default implementations added in C# 8.0+)
+                    if (isAbstractClass || type.TypeKind == TypeKind.Interface)
                         return m.IsAbstract;
                     
                     return true;
