@@ -309,12 +309,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                         accessibility == Accessibility.ProtectedOrInternal)
                         return true;
 
-                    // Internal constructors are only accessible if in the same assembly
-                    if (accessibility == Accessibility.Internal)
-                        return semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly);
-
-                    // Private protected constructors are accessible to derived types in the same assembly
-                    if (accessibility == Accessibility.ProtectedAndInternal)
+                    // Internal and private protected constructors are only accessible within the same assembly
+                    if (accessibility == Accessibility.Internal ||
+                        accessibility == Accessibility.ProtectedAndInternal)
                         return semanticModel.Compilation.IsSymbolAccessibleWithin(c, semanticModel.Compilation.Assembly);
 
                     return false;
@@ -806,14 +803,15 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         // This provides both readable (contract-ordered) output and deterministic ordering
         return members.OrderBy(m =>
         {
-            // Try to get syntax declaration order by line number within the containing type
+            // Try to get syntax declaration order by line number
             var syntaxRef = m.DeclaringSyntaxReferences.FirstOrDefault();
             if (syntaxRef != null)
             {
                 var location = syntaxRef.GetSyntax().GetLocation();
                 var lineSpan = location.GetLineSpan();
                 // Use only line number for ordering, not file path (which varies across machines)
-                // Within a single type declaration, line order is sufficient and deterministic
+                // Note: For types split across multiple partial files, this may not preserve
+                // perfect declaration order, but ThenBy clauses provide stable fallback ordering
                 return lineSpan.StartLinePosition.Line;
             }
             // For metadata-only symbols without source, use a fallback ordering
