@@ -2,7 +2,7 @@ namespace PatternKit.Generators.State;
 
 /// <summary>
 /// Marks a method to be invoked when exiting a specific state.
-/// Exit hooks are executed before the State property is updated to the new state.
+/// Exit hooks are executed before the transition action method and before the State property is updated.
 /// The method can be synchronous (void) or asynchronous (ValueTask).
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]

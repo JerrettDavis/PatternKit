@@ -730,7 +730,9 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                     // If guard is async and we're in sync context, we can't evaluate it
                     if (IsGenericValueTaskOfBool(guard.Method.ReturnType))
                     {
-                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => false, // Async guard cannot be evaluated in synchronous CanFire; use FireAsync if transition should be possible");
+                        // Async guard cannot be evaluated in synchronous CanFire;
+                        // use FireAsync if transition should be possible
+                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => false,");
                     }
                     else
                     {
@@ -840,12 +842,9 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                     {
                         sb.AppendLine($"                            throw new global::System.InvalidOperationException($\"Guard failed for transition from {fromState} on trigger {trigger}.\");");
                     }
-                    else // Ignore or ReturnFalse
+                    else // Ignore or ReturnFalse - both just return
                     {
-                        if (isAsync)
-                            sb.AppendLine($"                            return;");
-                        else
-                            sb.AppendLine($"                            return;");
+                        sb.AppendLine($"                            return;");
                     }
                     
                     sb.AppendLine($"                        }}");
