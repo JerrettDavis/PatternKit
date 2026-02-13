@@ -116,3 +116,11 @@ PKADP015 | PatternKit.Generators.Adapter | Error | Mapping method must be access
 PKADP016 | PatternKit.Generators.Adapter | Error | Static members are not supported
 PKADP017 | PatternKit.Generators.Adapter | Error | Ref-return members are not supported
 PKADP018 | PatternKit.Generators.Adapter | Error | Indexers are not supported
+PKST001 | PatternKit.Generators.State | Error | Type marked with [StateMachine] must be partial
+PKST002 | PatternKit.Generators.State | Error | State type must be an enum
+PKST003 | PatternKit.Generators.State | Error | Trigger type must be an enum
+PKST004 | PatternKit.Generators.State | Error | Duplicate transition detected
+PKST005 | PatternKit.Generators.State | Error | Transition method signature invalid
+PKST006 | PatternKit.Generators.State | Error | Guard method signature invalid
+PKST007 | PatternKit.Generators.State | Error | Entry/Exit hook signature invalid
+PKST008 | PatternKit.Generators.State | Warning | Async method detected but async generation disabled
