@@ -193,22 +193,28 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             transform: static (ctx, _) => ctx
         );
 
-        // Generate for each host
-        context.RegisterSourceOutput(adapterHosts, (spc, typeContext) =>
+        // Collect all hosts so we can detect conflicts across the entire compilation
+        var collectedAdapterHosts = adapterHosts.Collect();
+
+        // Generate for all hosts, tracking generated adapter type names globally
+        context.RegisterSourceOutput(collectedAdapterHosts, (spc, collectedTypeContexts) =>
         {
-            if (typeContext.TargetSymbol is not INamedTypeSymbol hostSymbol)
-                return;
-
-            var node = typeContext.TargetNode;
-
             // Track generated adapter type names to detect conflicts (namespace -> type name -> location)
             var generatedAdapters = new Dictionary<string, Dictionary<string, Location>>();
 
-            // Process each [GenerateAdapter] attribute on the host
-            foreach (var attr in typeContext.Attributes.Where(a =>
-                a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute"))
+            foreach (var typeContext in collectedTypeContexts)
             {
-                GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel, generatedAdapters);
+                if (typeContext.TargetSymbol is not INamedTypeSymbol hostSymbol)
+                    continue;
+
+                var node = typeContext.TargetNode;
+
+                // Process each [GenerateAdapter] attribute on the host
+                foreach (var attr in typeContext.Attributes.Where(a =>
+                    a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute"))
+                {
+                    GenerateAdapterForAttribute(spc, hostSymbol, attr, node, typeContext.SemanticModel, generatedAdapters);
+                }
             }
         });
     }
@@ -497,7 +503,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         return compilation.GetTypeByMetadataName(fullName) is not null;
     }
 
-    private List<Diagnostic> ValidateTargetMembers(INamedTypeSymbol targetType, Location location)
+    private List<Diagnostic> ValidateTargetMembers(INamedTypeSymbol targetType, Location fallbackLocation)
     {
         var diagnostics = new List<Diagnostic>();
         var isAbstractClass = targetType.TypeKind == TypeKind.Class && targetType.IsAbstract;
@@ -522,6 +528,9 @@ public sealed class AdapterGenerator : IIncrementalGenerator
 
             foreach (var member in membersToCheck)
             {
+                // Use member location if available, otherwise fall back to host location
+                var location = member.Locations.FirstOrDefault() ?? fallbackLocation;
+
                 // Check for static members (not supported)
                 if (member.IsStatic)
                 {
@@ -620,7 +629,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         {
             diagnostics.Add(Diagnostic.Create(
                 OverloadedMethodsNotSupportedDescriptor,
-                location,
+                fallbackLocation,
                 targetType.Name,
                 kvp.Key));
         }
@@ -755,12 +764,27 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             }
         }
 
-        // Ensure stable, deterministic ordering by kind+name+signature
-        // This provides a predictable output order even if member traversal is non-deterministic
-        return members.OrderBy(m => m.Kind)
-                      .ThenBy(m => m.Name)
-                      .ThenBy(m => m.ToDisplayString(FullyQualifiedFormat))
-                      .ToList();
+        // Order by declaration order when available, falling back to stable sort for metadata-only symbols
+        // This provides both readable (contract-ordered) output and deterministic ordering
+        return members.OrderBy(m =>
+        {
+            // Try to get syntax declaration order (file path + line number)
+            var syntaxRef = m.DeclaringSyntaxReferences.FirstOrDefault();
+            if (syntaxRef != null)
+            {
+                var location = syntaxRef.GetSyntax().GetLocation();
+                var lineSpan = location.GetLineSpan();
+                // Return a tuple of (file path, line number) for natural ordering
+                return (lineSpan.Path, lineSpan.StartLinePosition.Line, 0);
+            }
+            // For metadata-only symbols without source, use a fallback ordering
+            // Use the symbol's metadata token which is stable across compilations
+            return (string.Empty, int.MaxValue, m.MetadataToken);
+        })
+        .ThenBy(m => m.Kind)
+        .ThenBy(m => m.Name)
+        .ThenBy(m => m.ToDisplayString(FullyQualifiedFormat))
+        .ToList();
     }
 
     private static string GetMemberSignature(IMethodSymbol method)
