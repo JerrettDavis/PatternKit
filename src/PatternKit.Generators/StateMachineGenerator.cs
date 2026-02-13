@@ -730,7 +730,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                     // If guard is async and we're in sync context, we can't evaluate it
                     if (IsGenericValueTaskOfBool(guard.Method.ReturnType))
                     {
-                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => false, // Guard is async, cannot evaluate synchronously");
+                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => false, // Async guard cannot be evaluated in synchronous CanFire; use FireAsync if transition should be possible");
                     }
                     else
                     {
