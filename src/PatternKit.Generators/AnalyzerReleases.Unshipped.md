@@ -98,3 +98,21 @@ PKSNG007 | PatternKit.Generators.Singleton | Error | Generic types are not suppo
 PKSNG008 | PatternKit.Generators.Singleton | Error | Nested types are not supported
 PKSNG009 | PatternKit.Generators.Singleton | Error | Invalid instance property name
 PKSNG010 | PatternKit.Generators.Singleton | Error | Abstract types not supported for Singleton pattern
+PKADP001 | PatternKit.Generators.Adapter | Error | Adapter host must be static partial
+PKADP002 | PatternKit.Generators.Adapter | Error | Target must be interface or abstract class
+PKADP003 | PatternKit.Generators.Adapter | Error | Missing mapping for target member
+PKADP004 | PatternKit.Generators.Adapter | Error | Multiple mappings found for target member
+PKADP005 | PatternKit.Generators.Adapter | Error | Mapping method signature mismatch
+PKADP006 | PatternKit.Generators.Adapter | Error | Adapter type name conflicts with existing type
+PKADP007 | PatternKit.Generators.Adapter | Error | Invalid adaptee type (must be concrete)
+PKADP008 | PatternKit.Generators.Adapter | Error | Mapping method must be static
+PKADP009 | PatternKit.Generators.Adapter | Error | Events are not supported
+PKADP010 | PatternKit.Generators.Adapter | Error | Generic methods are not supported
+PKADP011 | PatternKit.Generators.Adapter | Error | Overloaded methods are not supported
+PKADP012 | PatternKit.Generators.Adapter | Error | Abstract class target requires accessible parameterless constructor
+PKADP013 | PatternKit.Generators.Adapter | Error | Settable properties are not supported
+PKADP014 | PatternKit.Generators.Adapter | Error | Nested or generic host not supported
+PKADP015 | PatternKit.Generators.Adapter | Error | Mapping method must be accessible
+PKADP016 | PatternKit.Generators.Adapter | Error | Static members are not supported
+PKADP017 | PatternKit.Generators.Adapter | Error | Ref-return members are not supported
+PKADP018 | PatternKit.Generators.Adapter | Error | Indexers are not supported
