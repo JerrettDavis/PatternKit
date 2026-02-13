@@ -826,8 +826,11 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 // Evaluate guard if exists
                 if (guard is not null)
                 {
+                    var guardHasCt = guard.Method.Parameters.Length > 0 && IsCancellationToken(guard.Method.Parameters[0].Type);
                     var guardCall = IsGenericValueTaskOfBool(guard.Method.ReturnType)
-                        ? (isAsync ? $"await {guard.Method.Name}(cancellationToken){configureAwait}" : $"{guard.Method.Name}(cancellationToken).GetAwaiter().GetResult()")
+                        ? (isAsync 
+                            ? (guardHasCt ? $"await {guard.Method.Name}(cancellationToken){configureAwait}" : $"await {guard.Method.Name}(){configureAwait}")
+                            : (guardHasCt ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()" : $"{guard.Method.Name}().GetAwaiter().GetResult()"))
                         : $"{guard.Method.Name}()";
 
                     sb.AppendLine($"                        if (!{guardCall})");
@@ -852,18 +855,22 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 var exitHooksForState = exitHooks.Where(h => h.State == fromState).ToList();
                 foreach (var exitHook in exitHooksForState)
                 {
+                    var hookHasCt = exitHook.Method.Parameters.Length > 0 && IsCancellationToken(exitHook.Method.Parameters[0].Type);
                     var hookCall = IsNonGenericValueTask(exitHook.Method.ReturnType)
-                        ? (isAsync ? $"await {exitHook.Method.Name}(cancellationToken){configureAwait};" : $"{exitHook.Method.Name}(cancellationToken).GetAwaiter().GetResult();")
+                        ? (isAsync 
+                            ? (hookHasCt ? $"await {exitHook.Method.Name}(cancellationToken){configureAwait};" : $"await {exitHook.Method.Name}(){configureAwait};")
+                            : (hookHasCt ? $"{exitHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{exitHook.Method.Name}().GetAwaiter().GetResult();"))
                         : $"{exitHook.Method.Name}();";
                     sb.AppendLine($"                        {hookCall}");
                 }
 
                 // Execute transition action
+                var transitionHasCt = transition.Method.Parameters.Length > 0 && IsCancellationToken(transition.Method.Parameters[0].Type);
                 if (IsNonGenericValueTask(transition.Method.ReturnType))
                 {
                     var transitionCall = isAsync 
-                        ? $"await {transition.Method.Name}(cancellationToken){configureAwait};"
-                        : $"{transition.Method.Name}(cancellationToken).GetAwaiter().GetResult();";
+                        ? (transitionHasCt ? $"await {transition.Method.Name}(cancellationToken){configureAwait};" : $"await {transition.Method.Name}(){configureAwait};")
+                        : (transitionHasCt ? $"{transition.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{transition.Method.Name}().GetAwaiter().GetResult();");
                     sb.AppendLine($"                        {transitionCall}");
                 }
                 else
@@ -878,8 +885,11 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 var entryHooksForState = entryHooks.Where(h => h.State == transition.ToState).ToList();
                 foreach (var entryHook in entryHooksForState)
                 {
+                    var entryHasCt = entryHook.Method.Parameters.Length > 0 && IsCancellationToken(entryHook.Method.Parameters[0].Type);
                     var hookCall = IsNonGenericValueTask(entryHook.Method.ReturnType)
-                        ? (isAsync ? $"await {entryHook.Method.Name}(cancellationToken){configureAwait};" : $"{entryHook.Method.Name}(cancellationToken).GetAwaiter().GetResult();")
+                        ? (isAsync 
+                            ? (entryHasCt ? $"await {entryHook.Method.Name}(cancellationToken){configureAwait};" : $"await {entryHook.Method.Name}(){configureAwait};")
+                            : (entryHasCt ? $"{entryHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{entryHook.Method.Name}().GetAwaiter().GetResult();"))
                         : $"{entryHook.Method.Name}();";
                     sb.AppendLine($"                        {hookCall}");
                 }
