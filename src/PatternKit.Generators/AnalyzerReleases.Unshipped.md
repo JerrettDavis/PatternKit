@@ -124,3 +124,5 @@ PKST005 | PatternKit.Generators.State | Error | Transition method signature inva
 PKST006 | PatternKit.Generators.State | Error | Guard method signature invalid
 PKST007 | PatternKit.Generators.State | Error | Entry/Exit hook signature invalid
 PKST008 | PatternKit.Generators.State | Warning | Async method detected but async generation disabled
+PKST009 | PatternKit.Generators.State | Error | Generic types not supported for State pattern
+PKST010 | PatternKit.Generators.State | Error | Nested types not supported for State pattern

@@ -23,6 +23,8 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
     private const string DiagIdInvalidGuardSignature = "PKST006";
     private const string DiagIdInvalidHookSignature = "PKST007";
     private const string DiagIdAsyncMethodDetected = "PKST008";
+    private const string DiagIdGenericTypeNotSupported = "PKST009";
+    private const string DiagIdNestedTypeNotSupported = "PKST010";
 
     private static readonly DiagnosticDescriptor TypeNotPartialDescriptor = new(
         id: DiagIdTypeNotPartial,
@@ -88,6 +90,22 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
+    private static readonly DiagnosticDescriptor GenericTypeNotSupportedDescriptor = new(
+        id: DiagIdGenericTypeNotSupported,
+        title: "Generic types not supported for State pattern",
+        messageFormat: "Type '{0}' is generic, which is not currently supported by the StateMachine generator. Remove the [StateMachine] attribute or use a non-generic type.",
+        category: "PatternKit.Generators.State",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    private static readonly DiagnosticDescriptor NestedTypeNotSupportedDescriptor = new(
+        id: DiagIdNestedTypeNotSupported,
+        title: "Nested types not supported for State pattern",
+        messageFormat: "Type '{0}' is nested inside another type, which is not currently supported by the StateMachine generator. Remove the [StateMachine] attribute or move the type to the top level.",
+        category: "PatternKit.Generators.State",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all type declarations with [StateMachine] attribute
@@ -123,6 +141,26 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 TypeNotPartialDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for generic types
+        if (typeSymbol.IsGenericType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                GenericTypeNotSupportedDescriptor,
+                node.GetLocation(),
+                typeSymbol.Name));
+            return;
+        }
+
+        // Check for nested types
+        if (typeSymbol.ContainingType is not null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                NestedTypeNotSupportedDescriptor,
                 node.GetLocation(),
                 typeSymbol.Name));
             return;
@@ -167,9 +205,33 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
             return;
 
         // Determine if async generation is needed
-        var needsAsync = config.ForceAsync ||
-                        (config.GenerateAsync ?? false) ||
-                        DetermineIfAsync(transitions, guards, entryHooks, exitHooks);
+        var hasAsyncMembers = DetermineIfAsync(transitions, guards, entryHooks, exitHooks);
+        bool needsAsync;
+
+        // Check if GenerateAsync was explicitly set to false and async members exist
+        var explicitlyDisabled = config.GenerateAsyncExplicitlySet && 
+                                config.GenerateAsync.HasValue && 
+                                !config.GenerateAsync.Value;
+        
+        if (explicitlyDisabled && hasAsyncMembers && !config.ForceAsync)
+        {
+            // Async members are present but async generation was explicitly disabled.
+            // Emit PKST008 and avoid generating FireAsync, while still allowing sync
+            // operations to block on async members as per the specification.
+            context.ReportDiagnostic(Diagnostic.Create(
+                AsyncMethodDetectedDescriptor,
+                node.GetLocation(),
+                "async transitions/guards/hooks"));
+            needsAsync = false;
+        }
+        else
+        {
+            // If ForceAsync is set, always generate async APIs.
+            // Otherwise, honor an explicit GenerateAsync value when present,
+            // falling back to generating async APIs only when async members exist.
+            needsAsync = config.ForceAsync ||
+                         (config.GenerateAsync ?? hasAsyncMembers);
+        }
 
         // Generate the state machine implementation
         var source = GenerateStateMachine(typeSymbol, config, stateType, triggerType, 
@@ -229,7 +291,10 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                     break;
                 case "GenerateAsync":
                     if (namedArg.Value.Value is bool ga)
+                    {
                         config.GenerateAsync = ga;
+                        config.GenerateAsyncExplicitlySet = true;
+                    }
                     break;
                 case "ForceAsync":
                     config.ForceAsync = namedArg.Value.Value is bool f && f;
@@ -420,13 +485,36 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
 
     private string? GetEnumValueName(TypedConstant constant, ITypeSymbol enumType)
     {
-        if (constant.Value is int intValue)
+        if (constant.Value is null)
+            return null;
+
+        ulong targetValue;
+        try
         {
-            // Get the enum member name from the value
-            var members = enumType.GetMembers().OfType<IFieldSymbol>()
-                .Where(f => f.IsConst && f.HasConstantValue && Equals(f.ConstantValue, intValue));
-            return members.FirstOrDefault()?.Name;
+            targetValue = Convert.ToUInt64(constant.Value);
         }
+        catch
+        {
+            return null;
+        }
+
+        foreach (var field in enumType.GetMembers().OfType<IFieldSymbol>())
+        {
+            if (!field.IsConst || !field.HasConstantValue || field.ConstantValue is null)
+                continue;
+
+            try
+            {
+                var fieldValue = Convert.ToUInt64(field.ConstantValue);
+                if (fieldValue == targetValue)
+                    return field.Name;
+            }
+            catch
+            {
+                // Skip values that cannot be converted to UInt64
+            }
+        }
+
         return null;
     }
 
@@ -435,30 +523,41 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         INamedTypeSymbol typeSymbol,
         SourceProductionContext context)
     {
-        var transitionKeys = new Dictionary<string, List<string>>();
+        var transitionKeys = new Dictionary<string, List<(string MethodName, Location Location)>>();
 
         foreach (var transition in transitions)
         {
             var key = $"{transition.FromState},{transition.Trigger}";
             if (!transitionKeys.ContainsKey(key))
-                transitionKeys[key] = new List<string>();
-            transitionKeys[key].Add(transition.Method.Name);
+                transitionKeys[key] = new List<(string MethodName, Location Location)>();
+
+            var methodLocation = transition.Method.Locations.FirstOrDefault() ?? Location.None;
+            transitionKeys[key].Add((transition.Method.Name, methodLocation));
         }
+
+        var hasDuplicates = false;
 
         foreach (var kvp in transitionKeys.Where(kvp => kvp.Value.Count > 1))
         {
             var parts = kvp.Key.Split(',');
-            var methodNames = string.Join(", ", kvp.Value);
+            var methodNames = string.Join(", ", kvp.Value.Select(v => v.MethodName));
+
+            // Prefer a concrete source location from one of the conflicting methods.
+            var location = kvp.Value
+                .Select(v => v.Location)
+                .FirstOrDefault(loc => loc != Location.None) ?? Location.None;
+
             context.ReportDiagnostic(Diagnostic.Create(
                 DuplicateTransitionDescriptor,
-                Location.None,
+                location,
                 parts[0],
                 parts[1],
                 methodNames));
-            return false;
+
+            hasDuplicates = true;
         }
 
-        return true;
+        return !hasDuplicates;
     }
 
     private bool ValidateSignatures(
@@ -710,8 +809,8 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         // Group transitions by (from, trigger)
         var transitionGroups = transitions
             .GroupBy(t => (t.FromState, t.Trigger))
-            .OrderBy(g => g.Key.FromState)
-            .ThenBy(g => g.Key.Trigger);
+            .OrderBy(g => g.Key.FromState, StringComparer.Ordinal)
+            .ThenBy(g => g.Key.Trigger, StringComparer.Ordinal);
 
         if (transitionGroups.Any())
         {
@@ -727,16 +826,22 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 
                 if (guard is not null)
                 {
-                    // If guard is async and we're in sync context, we can't evaluate it
+                    var guardHasCt = guard.Method.Parameters.Length > 0 && IsCancellationToken(guard.Method.Parameters[0].Type);
+                    
+                    // If guard is async, evaluate it synchronously using GetAwaiter().GetResult()
                     if (IsGenericValueTaskOfBool(guard.Method.ReturnType))
                     {
-                        // Async guard cannot be evaluated in synchronous CanFire;
-                        // use FireAsync if transition should be possible
-                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => false,");
+                        var guardCall = guardHasCt 
+                            ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()"
+                            : $"{guard.Method.Name}().GetAwaiter().GetResult()";
+                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => {guardCall},");
                     }
                     else
                     {
-                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => {guard.Method.Name}(),");
+                        var guardCall = guardHasCt 
+                            ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None)"
+                            : $"{guard.Method.Name}()";
+                        sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => {guardCall},");
                     }
                 }
                 else
@@ -833,7 +938,9 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                         ? (isAsync 
                             ? (guardHasCt ? $"await {guard.Method.Name}(cancellationToken){configureAwait}" : $"await {guard.Method.Name}(){configureAwait}")
                             : (guardHasCt ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()" : $"{guard.Method.Name}().GetAwaiter().GetResult()"))
-                        : $"{guard.Method.Name}()";
+                        : (guardHasCt 
+                            ? (isAsync ? $"{guard.Method.Name}(cancellationToken)" : $"{guard.Method.Name}(global::System.Threading.CancellationToken.None)")
+                            : $"{guard.Method.Name}()");
 
                     sb.AppendLine($"                        if (!{guardCall})");
                     sb.AppendLine($"                        {{");
@@ -932,7 +1039,8 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         public string FireMethodName { get; set; } = "Fire";
         public string FireAsyncMethodName { get; set; } = "FireAsync";
         public string CanFireMethodName { get; set; } = "CanFire";
-        public bool? GenerateAsync { get; set; }
+        public bool? GenerateAsync { get; set; } // Null = not set (infer), true = always generate, false = never generate
+        public bool GenerateAsyncExplicitlySet { get; set; } // Track if GenerateAsync was explicitly set
         public bool ForceAsync { get; set; }
         public int InvalidTriggerPolicy { get; set; } = 0; // 0=Throw, 1=Ignore, 2=ReturnFalse
         public int GuardFailurePolicy { get; set; } = 0; // 0=Throw, 1=Ignore, 2=ReturnFalse

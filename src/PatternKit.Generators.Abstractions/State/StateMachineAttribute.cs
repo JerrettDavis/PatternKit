@@ -45,9 +45,9 @@ public sealed class StateMachineAttribute : Attribute
 
     /// <summary>
     /// Gets or sets whether to generate async methods.
-    /// When null (default), async generation is inferred from the presence of async transitions/hooks.
+    /// When not specified, async generation is inferred from the presence of async transitions/hooks.
     /// </summary>
-    public bool? GenerateAsync { get; set; }
+    public bool GenerateAsync { get; set; }
 
     /// <summary>
     /// Gets or sets whether to force async generation even if all transitions/hooks are synchronous.

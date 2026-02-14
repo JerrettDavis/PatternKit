@@ -836,4 +836,201 @@ public class StateMachineGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void GenerateAsyncFalse_WithAsyncMethods_ReportsDiagnostic()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger), GenerateAsync = false)]
+            public partial class Machine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private async ValueTask OnTransitionAsync(CancellationToken ct)
+                {
+                    await Task.Delay(10, ct);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateAsyncFalse_WithAsyncMethods_ReportsDiagnostic));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKST008 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        
+        // Debug: print all diagnostics
+        if (diagnostics.Length == 0)
+        {
+            // Check if code was even generated
+            var hasGeneratedCode = result.Results.Any(r => r.GeneratedSources.Length > 0);
+            Assert.True(hasGeneratedCode, "No code was generated");
+            
+            // Check compilation diagnostics
+            var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST")).ToArray();
+            Assert.True(compDiags.Length > 0, $"No PKST diagnostics found. Generated code: {result.Results[0].GeneratedSources.Length} files");
+        }
+        
+        Assert.Contains(diagnostics, d => d.Id == "PKST008");
+
+        // Verify FireAsync is NOT generated
+        var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.DoesNotContain("FireAsync", generatedSource);
+        Assert.Contains("public void Fire", generatedSource);
+
+        // And the updated compilation actually compiles (sync Fire should block on async method)
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GuardWithCancellationToken_GeneratesCorrectly()
+    {
+        var source = """
+            using System.Threading;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class Machine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private bool CanTransition(CancellationToken ct) => true;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void OnTransition() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GuardWithCancellationToken_GeneratesCorrectly));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify guard is called with CancellationToken.None in CanFire
+        var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("CanTransition(global::System.Threading.CancellationToken.None)", generatedSource);
+
+        // And the updated compilation actually compiles
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void AsyncGuardInCanFire_EvaluatesSynchronously()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class Machine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private async ValueTask<bool> CanTransitionAsync(CancellationToken ct)
+                {
+                    await Task.Delay(10, ct);
+                    return true;
+                }
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void OnTransition() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AsyncGuardInCanFire_EvaluatesSynchronously));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // No generator diagnostics
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        // Verify async guard is evaluated synchronously with GetAwaiter().GetResult()
+        var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("CanTransitionAsync(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()", generatedSource);
+
+        // And the updated compilation actually compiles
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenericType_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class Machine<T>
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void OnTransition() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenericType_ReportsDiagnostic));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKST009 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKST009");
+    }
+
+    [Fact]
+    public void NestedType_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            public class Outer
+            {
+                [StateMachine(typeof(State), typeof(Trigger))]
+                public partial class Machine
+                {
+                    [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                    private void OnTransition() { }
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(NestedType_ReportsDiagnostic));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        // Should have PKST010 diagnostic
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKST010");
+    }
 }
