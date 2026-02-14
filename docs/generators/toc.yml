@@ -19,6 +19,9 @@
 - name: Proxy
   href: proxy.md
 
+- name: State Machine
+  href: state-machine.md
+
 - name: Template Method
   href: template-method-generator.md
 
