@@ -127,7 +127,5 @@ PKST008 | PatternKit.Generators.State | Warning | Async method detected but asyn
 PKST009 | PatternKit.Generators.State | Error | Generic types not supported for State pattern
 PKST010 | PatternKit.Generators.State | Error | Nested types not supported for State pattern
 PKOBS001 | PatternKit.Generators.Observer | Error | Type marked with [Observer] must be partial
-PKOBS002 | PatternKit.Generators.Observer | Error | Type marked with [ObserverHub] must be partial and static
-PKOBS003 | PatternKit.Generators.Observer | Error | Property marked with [ObservedEvent] has invalid shape
-PKOBS004 | PatternKit.Generators.Observer | Warning | Async publish requested but async handler shape unsupported
-PKOBS005 | PatternKit.Generators.Observer | Warning | Invalid configuration combination
+PKOBS002 | PatternKit.Generators.Observer | Error | Unable to extract payload type from [Observer] attribute
+PKOBS003 | PatternKit.Generators.Observer | Warning | Invalid configuration combination
