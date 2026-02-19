@@ -67,8 +67,8 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             return;
         }
 
-        var attr = occurrence.Attributes[0];
-        if (attr.ConstructorArguments.Length == 0 || attr.ConstructorArguments[0].Value is not INamedTypeSymbol payloadType)
+        var attr = occurrence.Attributes.Length > 0 ? occurrence.Attributes[0] : null;
+        if (attr == null || attr.ConstructorArguments.Length == 0 || attr.ConstructorArguments[0].Value is not INamedTypeSymbol payloadType)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 MissingPayloadRule,
@@ -380,7 +380,8 @@ public sealed class ObserverGenerator : IIncrementalGenerator
 
             case 1: // Locking
                 sb.AppendLine($"{indent}Subscription[] snapshot;");
-                sb.AppendLine($"{indent}lock (_lock ?? new object())");
+                sb.AppendLine($"{indent}var lockObj = _lock ??= new object();");
+                sb.AppendLine($"{indent}lock (lockObj)");
                 sb.AppendLine($"{indent}{{");
                 sb.AppendLine($"{indent}    snapshot = _subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
                 sb.AppendLine($"{indent}}}");
@@ -411,7 +412,8 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 break;
 
             case 1: // Locking
-                sb.AppendLine("        lock (_lock ?? new object())");
+                sb.AppendLine("        var lockObj = _lock ??= new object();");
+                sb.AppendLine("        lock (lockObj)");
                 sb.AppendLine("        {");
                 sb.AppendLine("            _subscriptions?.RemoveAll(s => s.Id == id);");
                 sb.AppendLine("        }");

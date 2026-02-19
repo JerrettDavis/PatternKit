@@ -12,7 +12,7 @@ namespace PatternKit.Generators.Observer;
 /// <para>
 /// Example:
 /// <code>
-/// [Observer]
+/// [Observer(typeof(Temperature))]
 /// public partial class TemperatureChanged { }
 /// </code>
 /// </para>
@@ -20,6 +20,20 @@ namespace PatternKit.Generators.Observer;
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public sealed class ObserverAttribute : Attribute
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObserverAttribute"/> class.
+    /// </summary>
+    /// <param name="payloadType">The type of the event payload.</param>
+    public ObserverAttribute(Type payloadType)
+    {
+        PayloadType = payloadType;
+    }
+
+    /// <summary>
+    /// Gets the type of the event payload.
+    /// </summary>
+    public Type PayloadType { get; }
+
     /// <summary>
     /// Gets or sets the threading policy for Subscribe/Unsubscribe/Publish operations.
     /// Default is <see cref="ObserverThreadingPolicy.Locking"/>.
