@@ -186,7 +186,6 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         GenerateFields(sb, config);
         GenerateSubscribeMethods(sb, payloadTypeName, config);
         GeneratePublishMethods(sb, payloadTypeName, config);
-        GenerateUnsubscribeMethod(sb, config);
         GenerateOnErrorHook(sb);
         GenerateSubscriptionClass(sb, payloadTypeName, config);
 
@@ -467,40 +466,6 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 break;
         }
-    }
-
-    private static void GenerateUnsubscribeMethod(StringBuilder sb, ObserverConfig config)
-    {
-        sb.AppendLine("    private void Unsubscribe(int id)");
-        sb.AppendLine("    {");
-
-        switch (config.Threading)
-        {
-            case 0: // SingleThreadedFast
-                sb.AppendLine("        _state.Subscriptions?.RemoveAll(s => s.Id == id);");
-                break;
-
-            case 1: // Locking
-                sb.AppendLine("        lock (_state.Lock)");
-                sb.AppendLine("        {");
-                sb.AppendLine("            _state.Subscriptions?.RemoveAll(s => s.Id == id);");
-                sb.AppendLine("        }");
-                break;
-
-            case 2: // Concurrent
-                if (config.Order == 0) // RegistrationOrder
-                {
-                    sb.AppendLine("        System.Collections.Immutable.ImmutableInterlocked.Update(ref _state.Subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, id);");
-                }
-                else // Undefined - ConcurrentBag doesn't support efficient removal
-                {
-                    sb.AppendLine("        // ConcurrentBag doesn't support removal; subscription marks itself disposed");
-                }
-                break;
-        }
-
-        sb.AppendLine("    }");
-        sb.AppendLine();
     }
 
     private static void GenerateOnErrorHook(StringBuilder sb)
