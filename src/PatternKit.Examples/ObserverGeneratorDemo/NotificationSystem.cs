@@ -331,21 +331,14 @@ public static class CancellationDemo
         var notification = new NotificationPublished();
         var processedCount = 0;
 
-        // Long-running async handler
+        // Long-running async handler  
+        // Note: Cancellation is checked between handlers, not during handler execution
         notification.Subscribe(async n =>
         {
             Console.WriteLine("  ⏳ Starting long operation...");
-            try
-            {
-                // This will be cancelled
-                await Task.Delay(5000);
-                processedCount++;
-                Console.WriteLine("  ✅ Long operation completed");
-            }
-            catch (TaskCanceledException)
-            {
-                Console.WriteLine("  🚫 Long operation cancelled");
-            }
+            await Task.Delay(100); // Shorter delay for demo
+            processedCount++;
+            Console.WriteLine("  ✅ Long operation completed");
         });
 
         // Quick handler
@@ -356,7 +349,7 @@ public static class CancellationDemo
             Console.WriteLine("  ✅ Quick operation completed");
         });
 
-        using var cts = new CancellationTokenSource(100); // Cancel after 100ms
+        using var cts = new CancellationTokenSource(50); // Cancel after 50ms - before first handler completes
 
         try
         {
@@ -370,6 +363,6 @@ public static class CancellationDemo
         }
 
         Console.WriteLine($"\n  Handlers completed: {processedCount}/2");
-        Console.WriteLine("  (Quick handler completed, long handler was cancelled)");
+        Console.WriteLine("  Note: Cancellation is checked between handler invocations, not during execution");
     }
 }

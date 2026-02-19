@@ -54,7 +54,7 @@ public sealed class ObserverAttribute : Attribute
 
     /// <summary>
     /// Gets or sets whether to generate async publish methods.
-    /// When not explicitly set, async methods are generated if any async handlers are detected.
+    /// Default is true (async methods are always generated).
     /// </summary>
     public bool GenerateAsync { get; set; } = true;
 

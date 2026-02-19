@@ -474,7 +474,7 @@ public class ObserverGeneratorTests
     }
 
     [Fact]
-    public void Supports_Struct_Type()
+    public void Struct_Types_Are_Not_Supported()
     {
         var user = """
             using PatternKit.Generators.Observer;
@@ -487,46 +487,18 @@ public class ObserverGeneratorTests
             public partial struct TemperatureChanged
             {
             }
-
-            public static class Demo
-            {
-                public static string Run()
-                {
-                    var log = new System.Collections.Generic.List<string>();
-                    var evt = new TemperatureChanged();
-                    
-                    evt.Subscribe((Temperature t) => log.Add($"T:{t.Celsius}"));
-                    evt.Publish(new Temperature(99));
-                    
-                    return string.Join("|", log);
-                }
-            }
             """;
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Supports_Struct_Type));
+            assemblyName: nameof(Struct_Types_Are_Not_Supported));
 
         var gen = new Observer.ObserverGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        using var pe = new MemoryStream();
-        updated.Emit(pe);
-        pe.Position = 0;
-
-        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
-        try
-        {
-            var asm = alc.LoadFromStream(pe);
-            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
-            var runMethod = demoType!.GetMethod("Run");
-            var result = (string)runMethod!.Invoke(null, null)!;
-            Assert.Equal("T:99", result);
-        }
-        finally
-        {
-            alc.Unload();
-        }
+        // Should report PKOBS003 diagnostic for struct types
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
     }
 
     [Fact]
@@ -571,7 +543,7 @@ public class ObserverGeneratorTests
     }
 
     [Fact]
-    public void Supports_Record_Struct()
+    public void Record_Struct_Types_Are_Not_Supported()
     {
         var user = """
             using PatternKit.Generators.Observer;
@@ -584,30 +556,81 @@ public class ObserverGeneratorTests
             public partial record struct TemperatureChanged
             {
             }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(Record_Struct_Types_Are_Not_Supported));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        // Should report PKOBS003 diagnostic for record struct types
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
+    }
+
+    [Fact]
+    public void Mixed_Sync_And_Async_Handlers_Both_Invoked()
+    {
+        var user = SimpleObserver + """
 
             public static class Demo
             {
-                public static string Run()
+                public static async System.Threading.Tasks.Task<string> Run()
                 {
                     var log = new System.Collections.Generic.List<string>();
                     var evt = new TemperatureChanged();
                     
-                    evt.Subscribe((Temperature t) => log.Add("OK"));
-                    evt.Publish(new Temperature(0));
+                    // Subscribe sync handler
+                    evt.Subscribe((Temperature t) => log.Add("Sync"));
                     
-                    return string.Join("", log);
+                    // Subscribe async handler
+                    evt.Subscribe(async (Temperature t) =>
+                    {
+                        await System.Threading.Tasks.Task.Delay(1);
+                        log.Add("Async");
+                    });
+                    
+                    // Sync Publish should invoke async handlers fire-and-forget
+                    evt.Publish(new Temperature(10));
+                    
+                    // Wait a bit for fire-and-forget to complete
+                    await System.Threading.Tasks.Task.Delay(50);
+                    
+                    return string.Join("|", log);
                 }
             }
             """;
 
         var comp = RoslynTestHelpers.CreateCompilation(
             user,
-            assemblyName: nameof(Supports_Record_Struct));
+            assemblyName: nameof(Mixed_Sync_And_Async_Handlers_Both_Invoked));
 
         var gen = new Observer.ObserverGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
-        var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        using var pe = new MemoryStream();
+        updated.Emit(pe);
+        pe.Position = 0;
+
+        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
+        try
+        {
+            var asm = alc.LoadFromStream(pe);
+            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
+            var runMethod = demoType!.GetMethod("Run");
+            var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
+            task.Wait();
+            var result = task.Result;
+            
+            // Both handlers should have been invoked
+            Assert.Contains("Sync", result);
+            Assert.Contains("Async", result);
+        }
+        finally
+        {
+            alc.Unload();
+        }
     }
 }

@@ -610,7 +610,7 @@ subscriptions.Dispose();
 |----|----------|-------------|
 | **PKOBS001** | Error | Type marked with `[Observer]` must be declared as `partial` |
 | **PKOBS002** | Error | Unable to extract payload type from `[Observer]` attribute |
-| **PKOBS003** | Error | Invalid configuration (conflicting settings) |
+| **PKOBS003** | Warning | Invalid configuration or unsupported type (generic, nested, or struct types) |
 
 ### PKOBS001: Type must be partial
 
