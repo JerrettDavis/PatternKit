@@ -67,6 +67,36 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             return;
         }
 
+        // Check for generic types
+        if (typeSymbol.IsGenericType)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidConfigRule,
+                syntax.Identifier.GetLocation(),
+                "Generic observer types are not supported"));
+            return;
+        }
+
+        // Check for nested types
+        if (typeSymbol.ContainingType != null)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidConfigRule,
+                syntax.Identifier.GetLocation(),
+                "Nested observer types are not supported"));
+            return;
+        }
+
+        // Structs have complex lifetime and capture semantics, especially with fire-and-forget async
+        if (typeSymbol.TypeKind == TypeKind.Struct)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(
+                InvalidConfigRule,
+                syntax.Identifier.GetLocation(),
+                "Struct observer types are not currently supported due to capture and boxing complexity"));
+            return;
+        }
+
         var attr = occurrence.Attributes.Length > 0 ? occurrence.Attributes[0] : null;
         if (attr == null || attr.ConstructorArguments.Length == 0 || attr.ConstructorArguments[0].Value is not INamedTypeSymbol payloadType)
         {
@@ -157,12 +187,12 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        var isStruct = typeSymbol.TypeKind == TypeKind.Struct;
+        var isStruct = false; // Structs are now rejected above
 
         sb.AppendLine($"{accessibility} partial {typeKind} {typeName}");
         sb.AppendLine("{");
 
-        GenerateFields(sb, config, isStruct);
+        GenerateFields(sb, config);
         GenerateSubscribeMethods(sb, payloadTypeName, config);
         GeneratePublishMethods(sb, payloadTypeName, config);
         GenerateUnsubscribeMethod(sb, config);
@@ -174,47 +204,54 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static void GenerateFields(StringBuilder sb, ObserverConfig config, bool isStruct)
+    private static void GenerateFields(StringBuilder sb, ObserverConfig config)
     {
-        // For all types, use nullable fields and ensure initialization in helper methods
+        // Generate a shared state object to avoid any issues with subscriptions
+        sb.AppendLine("    private sealed class ObserverState");
+        sb.AppendLine("    {");
+        
         switch (config.Threading)
         {
             case 0: // SingleThreadedFast
-                sb.AppendLine("    private System.Collections.Generic.List<Subscription>? _subscriptions;");
-                sb.AppendLine("    private int _nextId;");
+                sb.AppendLine("        public System.Collections.Generic.List<Subscription>? Subscriptions;");
+                sb.AppendLine("        public int NextId;");
                 break;
 
             case 1: // Locking
-                sb.AppendLine("    private object? _lock;");
-                sb.AppendLine("    private System.Collections.Generic.List<Subscription>? _subscriptions;");
-                sb.AppendLine("    private int _nextId;");
+                sb.AppendLine("        public readonly object Lock = new();");
+                sb.AppendLine("        public System.Collections.Generic.List<Subscription>? Subscriptions;");
+                sb.AppendLine("        public int NextId;");
                 break;
 
             case 2: // Concurrent
                 if (config.Order == 0) // RegistrationOrder
                 {
-                    sb.AppendLine("    private System.Collections.Immutable.ImmutableList<Subscription>? _subscriptions;");
-                    sb.AppendLine("    private int _nextId;");
+                    sb.AppendLine("        public System.Collections.Immutable.ImmutableList<Subscription>? Subscriptions;");
+                    sb.AppendLine("        public int NextId;");
                 }
                 else // Undefined
                 {
-                    sb.AppendLine("    private System.Collections.Concurrent.ConcurrentBag<Subscription>? _subscriptions;");
-                    sb.AppendLine("    private int _nextId;");
+                    sb.AppendLine("        public System.Collections.Concurrent.ConcurrentBag<Subscription>? Subscriptions;");
+                    sb.AppendLine("        public int NextId;");
                 }
                 break;
         }
+        
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private readonly ObserverState _state = new();");
         sb.AppendLine();
     }
 
     private static void GenerateSubscribeMethods(StringBuilder sb, string payloadType, ObserverConfig config)
-    {
+    {        
         if (!config.ForceAsync)
         {
             sb.AppendLine($"    public System.IDisposable Subscribe(System.Action<{payloadType}> handler)");
             sb.AppendLine("    {");
-            sb.AppendLine("        var id = System.Threading.Interlocked.Increment(ref _nextId);");
-            sb.AppendLine("        var sub = new Subscription(this, id, handler, false);");
-            GenerateAddSubscription(sb, config, "        ");
+            sb.AppendLine("        var id = System.Threading.Interlocked.Increment(ref _state.NextId);");
+            sb.AppendLine("        var sub = new Subscription(_state, id, handler, false);");
+            GenerateAddSubscription(sb, config, "        ", "_state");
             sb.AppendLine("        return sub;");
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -224,38 +261,38 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         {
             sb.AppendLine($"    public System.IDisposable Subscribe(System.Func<{payloadType}, System.Threading.Tasks.ValueTask> handler)");
             sb.AppendLine("    {");
-            sb.AppendLine("        var id = System.Threading.Interlocked.Increment(ref _nextId);");
-            sb.AppendLine("        var sub = new Subscription(this, id, handler, true);");
-            GenerateAddSubscription(sb, config, "        ");
+            sb.AppendLine("        var id = System.Threading.Interlocked.Increment(ref _state.NextId);");
+            sb.AppendLine("        var sub = new Subscription(_state, id, handler, true);");
+            GenerateAddSubscription(sb, config, "        ", "_state");
             sb.AppendLine("        return sub;");
             sb.AppendLine("    }");
             sb.AppendLine();
         }
     }
 
-    private static void GenerateAddSubscription(StringBuilder sb, ObserverConfig config, string indent)
+    private static void GenerateAddSubscription(StringBuilder sb, ObserverConfig config, string indent, string stateVar)
     {
         switch (config.Threading)
         {
             case 0: // SingleThreadedFast
-                sb.AppendLine($"{indent}(_subscriptions ??= new()).Add(sub);");
+                sb.AppendLine($"{indent}({stateVar}.Subscriptions ??= new()).Add(sub);");
                 break;
 
             case 1: // Locking
-                sb.AppendLine($"{indent}lock (_lock ??= new())");
+                sb.AppendLine($"{indent}lock ({stateVar}.Lock)");
                 sb.AppendLine($"{indent}{{");
-                sb.AppendLine($"{indent}    (_subscriptions ??= new()).Add(sub);");
+                sb.AppendLine($"{indent}    ({stateVar}.Subscriptions ??= new()).Add(sub);");
                 sb.AppendLine($"{indent}}}");
                 break;
 
             case 2: // Concurrent
-                if (config.Order == 0) // RegistrationOrder
+                if (config.Order == 0) // RegistrationOrder (requires ImmutableList and Linq for .ToArray())
                 {
-                    sb.AppendLine($"{indent}System.Collections.Immutable.ImmutableInterlocked.Update(ref _subscriptions, static (list, s) => (list ?? System.Collections.Immutable.ImmutableList<Subscription>.Empty).Add(s), sub);");
+                    sb.AppendLine($"{indent}System.Collections.Immutable.ImmutableInterlocked.Update(ref {stateVar}.Subscriptions, static (list, s) => (list ?? System.Collections.Immutable.ImmutableList<Subscription>.Empty).Add(s), sub);");
                 }
                 else // Undefined
                 {
-                    sb.AppendLine($"{indent}(_subscriptions ??= new()).Add(sub);");
+                    sb.AppendLine($"{indent}({stateVar}.Subscriptions ??= new()).Add(sub);");
                 }
                 break;
         }
@@ -278,7 +315,33 @@ public sealed class ObserverGenerator : IIncrementalGenerator
 
             sb.AppendLine("        foreach (var sub in snapshot)");
             sb.AppendLine("        {");
-            sb.AppendLine("            if (sub.IsAsync) continue;");
+            
+            // Handle async subscriptions in fire-and-forget mode
+            sb.AppendLine("            if (sub.IsAsync)");
+            sb.AppendLine("            {");
+            if (config.Exceptions == 0) // Continue - fire and forget with error handling
+            {
+                sb.AppendLine("                System.Threading.Tasks.Task.Run(async () =>");
+                sb.AppendLine("                {");
+                sb.AppendLine("                    try");
+                sb.AppendLine("                    {");
+                sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                    catch (System.Exception ex)");
+                sb.AppendLine("                    {");
+                sb.AppendLine("                        OnSubscriberError(ex);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                });");
+            }
+            else // Stop or Aggregate - fire and forget without error handling (exceptions logged but not propagated)
+            {
+                sb.AppendLine("                System.Threading.Tasks.Task.Run(async () =>");
+                sb.AppendLine("                {");
+                sb.AppendLine("                    await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
+                sb.AppendLine("                });");
+            }
+            sb.AppendLine("                continue;");
+            sb.AppendLine("            }");
 
             if (config.Exceptions == 1) // Stop
             {
@@ -371,30 +434,29 @@ public sealed class ObserverGenerator : IIncrementalGenerator
     }
 
     private static void GenerateSnapshot(StringBuilder sb, ObserverConfig config, string indent)
-    {
+    {        
         switch (config.Threading)
         {
             case 0: // SingleThreadedFast
-                sb.AppendLine($"{indent}var snapshot = _subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
+                sb.AppendLine($"{indent}var snapshot = _state.Subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
                 break;
 
             case 1: // Locking
                 sb.AppendLine($"{indent}Subscription[] snapshot;");
-                sb.AppendLine($"{indent}var lockObj = _lock ??= new object();");
-                sb.AppendLine($"{indent}lock (lockObj)");
+                sb.AppendLine($"{indent}lock (_state.Lock)");
                 sb.AppendLine($"{indent}{{");
-                sb.AppendLine($"{indent}    snapshot = _subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
+                sb.AppendLine($"{indent}    snapshot = _state.Subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
                 sb.AppendLine($"{indent}}}");
                 break;
 
             case 2: // Concurrent
                 if (config.Order == 0) // RegistrationOrder
                 {
-                    sb.AppendLine($"{indent}var snapshot = System.Threading.Volatile.Read(ref _subscriptions)?.ToArray() ?? System.Array.Empty<Subscription>();");
+                    sb.AppendLine($"{indent}var snapshot = System.Threading.Volatile.Read(ref _state.Subscriptions)?.ToArray() ?? System.Array.Empty<Subscription>();");
                 }
                 else // Undefined
                 {
-                    sb.AppendLine($"{indent}var snapshot = _subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
+                    sb.AppendLine($"{indent}var snapshot = _state.Subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
                 }
                 break;
         }
@@ -408,21 +470,20 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         switch (config.Threading)
         {
             case 0: // SingleThreadedFast
-                sb.AppendLine("        _subscriptions?.RemoveAll(s => s.Id == id);");
+                sb.AppendLine("        _state.Subscriptions?.RemoveAll(s => s.Id == id);");
                 break;
 
             case 1: // Locking
-                sb.AppendLine("        var lockObj = _lock ??= new object();");
-                sb.AppendLine("        lock (lockObj)");
+                sb.AppendLine("        lock (_state.Lock)");
                 sb.AppendLine("        {");
-                sb.AppendLine("            _subscriptions?.RemoveAll(s => s.Id == id);");
+                sb.AppendLine("            _state.Subscriptions?.RemoveAll(s => s.Id == id);");
                 sb.AppendLine("        }");
                 break;
 
             case 2: // Concurrent
                 if (config.Order == 0) // RegistrationOrder
                 {
-                    sb.AppendLine("        System.Collections.Immutable.ImmutableInterlocked.Update(ref _subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, id);");
+                    sb.AppendLine("        System.Collections.Immutable.ImmutableInterlocked.Update(ref _state.Subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, id);");
                 }
                 else // Undefined - ConcurrentBag doesn't support efficient removal
                 {
@@ -443,10 +504,10 @@ public sealed class ObserverGenerator : IIncrementalGenerator
 
     private static void GenerateSubscriptionClass(StringBuilder sb, string payloadType, ObserverConfig config)
     {
-        // Use generic parent reference to avoid dynamic
+        // Subscription now uses a delegate callback instead of reflection
         sb.AppendLine($"    private sealed class Subscription : System.IDisposable");
         sb.AppendLine("    {");
-        sb.AppendLine("        private object? _parent;");
+        sb.AppendLine("        private ObserverState? _state;");
         sb.AppendLine("        private readonly int _id;");
         sb.AppendLine("        private readonly object _handler;");
         sb.AppendLine("        private readonly bool _isAsync;");
@@ -455,9 +516,9 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         sb.AppendLine("        public int Id => _id;");
         sb.AppendLine("        public bool IsAsync => _isAsync;");
         sb.AppendLine();
-        sb.AppendLine("        public Subscription(object parent, int id, object handler, bool isAsync)");
+        sb.AppendLine("        public Subscription(ObserverState state, int id, object handler, bool isAsync)");
         sb.AppendLine("        {");
-        sb.AppendLine("            _parent = parent;");
+        sb.AppendLine("            _state = state;");
         sb.AppendLine("            _id = id;");
         sb.AppendLine("            _handler = handler;");
         sb.AppendLine("            _isAsync = isAsync;");
@@ -484,11 +545,36 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         sb.AppendLine("        public void Dispose()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (System.Threading.Interlocked.Exchange(ref _disposed, 1) != 0) return;");
-        sb.AppendLine("            // Use reflection to call Unsubscribe since parent type is generic");
-        sb.AppendLine("            var parent = System.Threading.Interlocked.Exchange(ref _parent, null);");
-        sb.AppendLine("            if (parent == null) return;");
-        sb.AppendLine("            var method = parent.GetType().GetMethod(\"Unsubscribe\", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);");
-        sb.AppendLine("            method?.Invoke(parent, new object[] { _id });");
+        sb.AppendLine("            var state = System.Threading.Interlocked.Exchange(ref _state, null);");
+        sb.AppendLine("            if (state == null) return;");
+        sb.AppendLine();
+
+        // Generate the appropriate unsubscribe logic based on threading policy
+        switch (config.Threading)
+        {
+            case 0: // SingleThreadedFast
+                sb.AppendLine("            state.Subscriptions?.RemoveAll(s => s.Id == _id);");
+                break;
+
+            case 1: // Locking
+                sb.AppendLine("            lock (state.Lock)");
+                sb.AppendLine("            {");
+                sb.AppendLine("                state.Subscriptions?.RemoveAll(s => s.Id == _id);");
+                sb.AppendLine("            }");
+                break;
+
+            case 2: // Concurrent
+                if (config.Order == 0) // RegistrationOrder
+                {
+                    sb.AppendLine("            System.Collections.Immutable.ImmutableInterlocked.Update(ref state.Subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, _id);");
+                }
+                else
+                {
+                    sb.AppendLine("            // ConcurrentBag doesn't support removal efficiently");
+                }
+                break;
+        }
+
         sb.AppendLine("        }");
         sb.AppendLine("    }");
     }
