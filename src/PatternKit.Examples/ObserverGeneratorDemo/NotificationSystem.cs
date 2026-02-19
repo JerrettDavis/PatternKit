@@ -185,10 +185,10 @@ public static class AsyncNotificationDemo
         // Send notifications with different priorities
         var notifications = new[]
         {
-            new Notification("user123", "Welcome to our service!", Priority: 1),
-            new Notification("user456", "Your order has shipped", Priority: 1),
-            new Notification("user789", "URGENT: Security alert", Priority: 2),
-            new Notification("user999", "Daily digest available", Priority: 0)
+            new Notification("user123", "Welcome to our service!", 1),
+            new Notification("user456", "Your order has shipped", 1),
+            new Notification("user789", "URGENT: Security alert", 2),
+            new Notification("user999", "Daily digest available", 0)
         };
 
         foreach (var notification in notifications)
