@@ -443,9 +443,10 @@ public sealed class ObserverGenerator : IIncrementalGenerator
 
     private static void GenerateSubscriptionClass(StringBuilder sb, string payloadType, ObserverConfig config)
     {
-        sb.AppendLine("    private sealed class Subscription : System.IDisposable");
+        // Use generic parent reference to avoid dynamic
+        sb.AppendLine($"    private sealed class Subscription : System.IDisposable");
         sb.AppendLine("    {");
-        sb.AppendLine("        private readonly object _parent;");
+        sb.AppendLine("        private object? _parent;");
         sb.AppendLine("        private readonly int _id;");
         sb.AppendLine("        private readonly object _handler;");
         sb.AppendLine("        private readonly bool _isAsync;");
@@ -483,7 +484,11 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         sb.AppendLine("        public void Dispose()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (System.Threading.Interlocked.Exchange(ref _disposed, 1) != 0) return;");
-        sb.AppendLine("            ((dynamic)_parent).Unsubscribe(_id);");
+        sb.AppendLine("            // Use reflection to call Unsubscribe since parent type is generic");
+        sb.AppendLine("            var parent = System.Threading.Interlocked.Exchange(ref _parent, null);");
+        sb.AppendLine("            if (parent == null) return;");
+        sb.AppendLine("            var method = parent.GetType().GetMethod(\"Unsubscribe\", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);");
+        sb.AppendLine("            method?.Invoke(parent, new object[] { _id });");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
     }
