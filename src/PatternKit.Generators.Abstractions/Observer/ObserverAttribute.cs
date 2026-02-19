@@ -2,7 +2,7 @@ namespace PatternKit.Generators.Observer;
 
 /// <summary>
 /// Marks a type for Observer pattern code generation.
-/// The type must be declared as partial (class, struct, record class, or record struct).
+/// The type must be declared as partial class or partial record class.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,7 +17,7 @@ namespace PatternKit.Generators.Observer;
 /// </code>
 /// </para>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
 public sealed class ObserverAttribute : Attribute
 {
     /// <summary>

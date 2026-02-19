@@ -349,13 +349,15 @@ public partial class DataAvailable { }
 
 The generator supports:
 
-| Type | Supported | Example |
-|------|-----------|---------|
+| Type | Supported | Example / Notes |
+|------|-----------|------------------|
 | `partial class` | ✅ | `public partial class Event { }` |
-| `partial struct` | ✅ | `public partial struct Event { }` |
+| `partial struct` | ❌ | Generates PKOBS003 diagnostic (struct observers are not supported) |
 | `partial record class` | ✅ | `public partial record class Event;` |
-| `partial record struct` | ✅ | `public partial record struct Event;` |
+| `partial record struct` | ❌ | Generates PKOBS003 diagnostic (struct observers are not supported) |
 | Non-partial types | ❌ | Generates PKOBS001 error |
+
+> **Note:** Struct-based observer types (`partial struct`, `partial record struct`) are rejected with PKOBS003 diagnostic. Supporting struct observers would require complex capture and boxing semantics, so only class-based observer types are currently supported.
 
 ## API Reference
 
