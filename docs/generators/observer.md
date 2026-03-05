@@ -484,7 +484,7 @@ public partial class EventOccurred
 
 - **SingleThreadedFast**: Uses `List<T>`, minimal allocations
 - **Locking**: Uses `List<T>` with lock, snapshots on publish
-- **Concurrent**: Uses `ImmutableList` (RegistrationOrder) or `ConcurrentBag` (Undefined)
+- **Concurrent**: Uses `ImmutableList` (RegistrationOrder) or `ConcurrentBag` (Undefined). When using `ImmutableList`, the generated code depends on `System.Collections.Immutable`; for TFMs that don't reference it by default (for example, `netstandard2.0`), you may need to add an explicit `System.Collections.Immutable` package reference.
 
 ### Thread Safety Overhead
 

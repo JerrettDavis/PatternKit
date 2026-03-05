@@ -98,7 +98,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         }
 
         var attr = occurrence.Attributes.Length > 0 ? occurrence.Attributes[0] : null;
-        if (attr == null || attr.ConstructorArguments.Length == 0 || attr.ConstructorArguments[0].Value is not INamedTypeSymbol payloadType)
+        if (attr == null || attr.ConstructorArguments.Length == 0 || attr.ConstructorArguments[0].Value is not ITypeSymbol payloadType)
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 MissingPayloadRule,
@@ -124,13 +124,16 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             switch (arg.Key)
             {
                 case "Threading":
-                    config.Threading = (int)arg.Value.Value!;
+                    var threading = (int)arg.Value.Value!;
+                    config.Threading = threading >= 0 && threading <= 2 ? threading : 1; // Default to Locking if invalid
                     break;
                 case "Exceptions":
-                    config.Exceptions = (int)arg.Value.Value!;
+                    var exceptions = (int)arg.Value.Value!;
+                    config.Exceptions = exceptions >= 0 && exceptions <= 2 ? exceptions : 0; // Default to Continue if invalid
                     break;
                 case "Order":
-                    config.Order = (int)arg.Value.Value!;
+                    var order = (int)arg.Value.Value!;
+                    config.Order = order >= 0 && order <= 1 ? order : 0; // Default to RegistrationOrder if invalid
                     break;
                 case "GenerateAsync":
                     config.GenerateAsync = (bool)arg.Value.Value!;
@@ -140,10 +143,17 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                     break;
             }
         }
+        
+        // If ForceAsync is true but GenerateAsync is false, enable GenerateAsync
+        if (config.ForceAsync && !config.GenerateAsync)
+        {
+            config.GenerateAsync = true;
+        }
+        
         return config;
     }
 
-    private static string GenerateSource(INamedTypeSymbol typeSymbol, INamedTypeSymbol payloadType, ObserverConfig config)
+    private static string GenerateSource(INamedTypeSymbol typeSymbol, ITypeSymbol payloadType, ObserverConfig config)
     {
         var ns = typeSymbol.ContainingNamespace.IsGlobalNamespace
             ? null

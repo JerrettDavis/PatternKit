@@ -156,7 +156,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -207,7 +208,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -261,7 +263,8 @@ public class ObserverGeneratorTests
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -326,7 +329,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -392,7 +396,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -455,7 +460,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -611,7 +617,8 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         using var pe = new MemoryStream();
-        updated.Emit(pe);
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
