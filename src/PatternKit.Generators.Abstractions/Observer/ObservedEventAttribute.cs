@@ -8,10 +8,11 @@ namespace PatternKit.Generators.Observer;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The generator will create a singleton instance of the event type for this property.
+/// This attribute is reserved for future hub-based generation support.
+/// Generators may use this information to provide strongly-typed event infrastructure for the associated event type.
 /// </para>
 /// <para>
-/// Example:
+/// Example (not yet implemented):
 /// <code>
 /// [ObserverHub]
 /// public static partial class SystemEvents

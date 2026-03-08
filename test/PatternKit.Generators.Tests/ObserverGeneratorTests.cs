@@ -586,6 +586,7 @@ public class ObserverGeneratorTests
                 public static async System.Threading.Tasks.Task<string> Run()
                 {
                     var log = new System.Collections.Generic.List<string>();
+                    var tcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
                     var evt = new TemperatureChanged();
                     
                     // Subscribe sync handler
@@ -594,15 +595,16 @@ public class ObserverGeneratorTests
                     // Subscribe async handler
                     evt.Subscribe(async (Temperature t) =>
                     {
-                        await System.Threading.Tasks.Task.Delay(1);
+                        await System.Threading.Tasks.Task.Yield();
                         log.Add("Async");
+                        tcs.TrySetResult(true);
                     });
                     
                     // Sync Publish should invoke async handlers fire-and-forget
                     evt.Publish(new Temperature(10));
                     
-                    // Wait a bit for fire-and-forget to complete
-                    await System.Threading.Tasks.Task.Delay(50);
+                    // Wait deterministically for async handler to complete
+                    await tcs.Task.WaitAsync(System.TimeSpan.FromSeconds(5));
                     
                     return string.Join("|", log);
                 }

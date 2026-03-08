@@ -547,14 +547,15 @@ public class ViewModel
 ### Event Aggregator
 
 ```csharp
+// Note: Observer types must be top-level; nested observers are not supported (PKOBS003)
+[Observer(typeof(UserLoggedIn))]
+public partial class UserLoggedInEvent { }
+
+[Observer(typeof(OrderPlaced))]
+public partial class OrderPlacedEvent { }
+
 public partial class EventAggregator
 {
-    [Observer(typeof(UserLoggedIn))]
-    private partial class UserLoggedInEvent { }
-    
-    [Observer(typeof(OrderPlaced))]
-    private partial class OrderPlacedEvent { }
-    
     private readonly UserLoggedInEvent _userLoggedIn = new();
     private readonly OrderPlacedEvent _orderPlaced = new();
     

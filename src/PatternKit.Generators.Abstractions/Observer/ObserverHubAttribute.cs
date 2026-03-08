@@ -8,11 +8,12 @@ namespace PatternKit.Generators.Observer;
 /// </summary>
 /// <remarks>
 /// <para>
+/// This attribute is reserved for future hub-based generation support.
 /// Use this attribute on a static class that will contain multiple <see cref="ObservedEventAttribute"/>
 /// properties, each representing a separate event stream.
 /// </para>
 /// <para>
-/// Example:
+/// Example (not yet implemented):
 /// <code>
 /// [ObserverHub]
 /// public static partial class SystemEvents

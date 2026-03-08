@@ -292,7 +292,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 else // Undefined
                 {
-                    sb.AppendLine($"{indent}({stateVar}.Subscriptions ??= new()).Add(sub);");
+                    sb.AppendLine($"{indent}System.Threading.LazyInitializer.EnsureInitialized(ref {stateVar}.Subscriptions, static () => new System.Collections.Concurrent.ConcurrentBag<Subscription>()).Add(sub);");
                 }
                 break;
         }

@@ -195,14 +195,16 @@ public class ViewModel
 ### 2. Event Aggregator
 
 ```csharp
+// Note: Observer types must be top-level; nested observers are not supported by the generator (PKOBS003).
+
+[Observer(typeof(UserLoggedIn))]
+public partial class UserLoggedInEvent { }
+
+[Observer(typeof(OrderPlaced))]
+public partial class OrderPlacedEvent { }
+
 public class EventBus
 {
-    [Observer(typeof(UserLoggedIn))]
-    private partial class UserLoggedInEvent { }
-
-    [Observer(typeof(OrderPlaced))]
-    private partial class OrderPlacedEvent { }
-
     private readonly UserLoggedInEvent _userLoggedIn = new();
     private readonly OrderPlacedEvent _orderPlaced = new();
 
