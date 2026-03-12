@@ -19,7 +19,7 @@ namespace PatternKit.Generators.Observer;
 /// </code>
 /// </para>
 /// </remarks>
-[AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
 public sealed class ObserverAttribute : Attribute
 {
     /// <summary>

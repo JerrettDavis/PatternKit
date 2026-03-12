@@ -417,7 +417,7 @@ Publishes an event to all subscribers synchronously.
 
 **Behavior:**
 - Invokes synchronous handlers directly
-- Invokes async handlers synchronously (fire-and-forget)
+- Invokes async handlers asynchronously in fire-and-forget mode
 - Exception handling per configured policy
 
 **Example:**

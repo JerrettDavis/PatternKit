@@ -8,6 +8,10 @@ namespace PatternKit.Generators.Observer;
 /// Incremental source generator for the Observer pattern.
 /// Generates Subscribe/Publish methods with configurable threading, exception, and ordering policies.
 /// </summary>
+/// <remarks>
+/// This generator currently implements only single-event observer types via [Observer].
+/// Hub-based generation via [ObserverHub] and [ObservedEvent] is reserved for future implementation.
+/// </remarks>
 [Generator]
 public sealed class ObserverGenerator : IIncrementalGenerator
 {
