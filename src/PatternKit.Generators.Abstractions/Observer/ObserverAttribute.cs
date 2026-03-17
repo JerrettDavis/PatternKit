@@ -5,6 +5,7 @@ namespace PatternKit.Generators.Observer;
 /// <summary>
 /// Marks a type for Observer pattern code generation.
 /// The type must be declared as partial class or partial record class.
+/// Struct types (partial struct, partial record struct) may be annotated but will be rejected by the generator with diagnostic PKOBS003.
 /// </summary>
 /// <remarks>
 /// <para>

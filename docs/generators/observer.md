@@ -416,9 +416,12 @@ Publishes an event to all subscribers synchronously.
 - `payload`: The event data to publish
 
 **Behavior:**
-- Invokes synchronous handlers directly
-- Invokes async handlers asynchronously in fire-and-forget mode
-- Exception handling per configured policy
+- Invokes synchronous handlers directly (exception handling follows configured policy)
+- Invokes async handlers asynchronously in fire-and-forget mode:
+  - `Continue` policy: exceptions routed to `OnSubscriberError` hook
+  - `Stop` policy: exceptions are unobserved (cannot stop synchronous execution)
+  - `Aggregate` policy: exceptions logged via `OnSubscriberError` (cannot aggregate synchronously)
+  - For deterministic exception behavior with async handlers, use `PublishAsync` instead
 
 **Example:**
 ```csharp

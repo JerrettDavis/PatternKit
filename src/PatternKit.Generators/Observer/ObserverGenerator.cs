@@ -325,7 +325,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             sb.AppendLine("            {");
             if (config.Exceptions == 0) // Continue - fire and forget with error handling
             {
-                sb.AppendLine("                System.Threading.Tasks.Task.Run(async () =>");
+                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
                 sb.AppendLine("                {");
                 sb.AppendLine("                    try");
                 sb.AppendLine("                    {");
@@ -340,7 +340,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             else if (config.Exceptions == 1) // Stop - fire and forget; exceptions are unobserved
             {
                 sb.AppendLine("                // Fire-and-forget: exceptions from async handlers cannot stop sync execution");
-                sb.AppendLine("                System.Threading.Tasks.Task.Run(async () =>");
+                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
                 sb.AppendLine("                {");
                 sb.AppendLine("                    await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
                 sb.AppendLine("                });");
@@ -348,7 +348,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             else // Aggregate - fire and forget with error logging via OnSubscriberError
             {
                 sb.AppendLine("                // Fire-and-forget: async exceptions logged via OnSubscriberError (cannot aggregate synchronously)");
-                sb.AppendLine("                System.Threading.Tasks.Task.Run(async () =>");
+                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
                 sb.AppendLine("                {");
                 sb.AppendLine("                    try");
                 sb.AppendLine("                    {");
