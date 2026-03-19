@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text;
 
@@ -118,7 +119,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
     }
 
     private static bool IsPartial(TypeDeclarationSyntax syntax)
-        => syntax.Modifiers.Any(m => m.Text == "partial");
+        => syntax.Modifiers.Any(SyntaxKind.PartialKeyword);
 
     private static ObserverConfig ExtractConfig(AttributeData attr)
     {
@@ -561,11 +562,20 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 {
                     sb.AppendLine("            System.Collections.Immutable.ImmutableInterlocked.Update(ref state.Subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, _id);");
                 }
-                else
+                else // Undefined - rebuild bag to remove this subscription
                 {
-                    sb.AppendLine("            // ConcurrentBag doesn't support efficient removal.");
-                    sb.AppendLine("            // Disposed subscriptions remain in the bag but are marked as disposed and won't be invoked.");
-                    sb.AppendLine("            // Note: This can cause memory growth if many subscriptions are created and disposed.");
+                    sb.AppendLine("            // Compact the ConcurrentBag by rebuilding it without this subscription.");
+                    sb.AppendLine("            var oldBag = state.Subscriptions;");
+                    sb.AppendLine("            if (oldBag == null) return;");
+                    sb.AppendLine("            var newBag = new System.Collections.Concurrent.ConcurrentBag<Subscription>();");
+                    sb.AppendLine("            foreach (var s in oldBag)");
+                    sb.AppendLine("            {");
+                    sb.AppendLine("                if (s.Id != _id)");
+                    sb.AppendLine("                {");
+                    sb.AppendLine("                    newBag.Add(s);");
+                    sb.AppendLine("                }");
+                    sb.AppendLine("            }");
+                    sb.AppendLine("            System.Threading.Interlocked.CompareExchange(ref state.Subscriptions, newBag, oldBag);");
                 }
                 break;
         }
