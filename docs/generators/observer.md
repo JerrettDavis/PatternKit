@@ -463,7 +463,7 @@ await observable.PublishAsync(
 partial void OnSubscriberError(Exception ex);
 ```
 
-Optional method for handling subscriber exceptions when using `Exceptions = ObserverExceptionPolicy.Continue`.
+Optional method for handling subscriber exceptions. Primarily used with `Exceptions = ObserverExceptionPolicy.Continue`, but also invoked for fire-and-forget async handler exceptions in sync `Publish` under the `Aggregate` policy (since those cannot be aggregated synchronously).
 
 **Parameters:**
 - `ex`: The exception thrown by a subscriber

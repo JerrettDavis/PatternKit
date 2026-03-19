@@ -642,4 +642,193 @@ public class ObserverGeneratorTests
             alc.Unload();
         }
     }
+
+    [Fact]
+    public void SingleThreadedFast_Threading_Policy_Works()
+    {
+        var user = """
+            using PatternKit.Generators.Observer;
+
+            namespace PatternKit.Examples.Generators;
+
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature), Threading = ObserverThreadingPolicy.SingleThreadedFast)]
+            public partial class TemperatureChanged
+            {
+            }
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var log = new System.Collections.Generic.List<string>();
+                    var evt = new TemperatureChanged();
+                    
+                    evt.Subscribe((Temperature t) => log.Add($"Handler1:{t.Celsius}"));
+                    evt.Subscribe((Temperature t) => log.Add($"Handler2:{t.Celsius}"));
+                    
+                    evt.Publish(new Temperature(23.5));
+                    
+                    return string.Join("|", log);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(SingleThreadedFast_Threading_Policy_Works));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        pe.Position = 0;
+
+        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
+        try
+        {
+            var asm = alc.LoadFromStream(pe);
+            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
+            var runMethod = demoType!.GetMethod("Run");
+            var result = (string)runMethod!.Invoke(null, null)!;
+            
+            Assert.Equal("Handler1:23.5|Handler2:23.5", result);
+        }
+        finally
+        {
+            alc.Unload();
+        }
+    }
+
+    [Fact]
+    public void Concurrent_RegistrationOrder_Threading_Policy_Works()
+    {
+        var user = """
+            using PatternKit.Generators.Observer;
+
+            namespace PatternKit.Examples.Generators;
+
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature), Threading = ObserverThreadingPolicy.Concurrent, Order = ObserverOrderPolicy.RegistrationOrder)]
+            public partial class TemperatureChanged
+            {
+            }
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var log = new System.Collections.Generic.List<string>();
+                    var evt = new TemperatureChanged();
+                    
+                    evt.Subscribe((Temperature t) => log.Add($"Handler1:{t.Celsius}"));
+                    evt.Subscribe((Temperature t) => log.Add($"Handler2:{t.Celsius}"));
+                    
+                    evt.Publish(new Temperature(23.5));
+                    
+                    return string.Join("|", log);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(Concurrent_RegistrationOrder_Threading_Policy_Works),
+            extra: [
+                MetadataReference.CreateFromFile(typeof(System.Collections.Immutable.ImmutableList).Assembly.Location)
+            ]);
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        pe.Position = 0;
+
+        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
+        try
+        {
+            var asm = alc.LoadFromStream(pe);
+            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
+            var runMethod = demoType!.GetMethod("Run");
+            var result = (string)runMethod!.Invoke(null, null)!;
+            
+            // With RegistrationOrder, order should be preserved
+            Assert.Equal("Handler1:23.5|Handler2:23.5", result);
+        }
+        finally
+        {
+            alc.Unload();
+        }
+    }
+
+    [Fact]
+    public void Concurrent_Undefined_Threading_Policy_Works()
+    {
+        var user = """
+            using PatternKit.Generators.Observer;
+
+            namespace PatternKit.Examples.Generators;
+
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature), Threading = ObserverThreadingPolicy.Concurrent, Order = ObserverOrderPolicy.Undefined)]
+            public partial class TemperatureChanged
+            {
+            }
+
+            public static class Demo
+            {
+                public static string Run()
+                {
+                    var log = new System.Collections.Generic.List<string>();
+                    var evt = new TemperatureChanged();
+                    
+                    evt.Subscribe((Temperature t) => log.Add($"Handler1:{t.Celsius}"));
+                    evt.Subscribe((Temperature t) => log.Add($"Handler2:{t.Celsius}"));
+                    
+                    evt.Publish(new Temperature(23.5));
+                    
+                    return string.Join("|", log);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(Concurrent_Undefined_Threading_Policy_Works),
+            extra: [
+                MetadataReference.CreateFromFile(typeof(System.Collections.Concurrent.ConcurrentBag<>).Assembly.Location)
+            ]);
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        pe.Position = 0;
+
+        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
+        try
+        {
+            var asm = alc.LoadFromStream(pe);
+            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
+            var runMethod = demoType!.GetMethod("Run");
+            var result = (string)runMethod!.Invoke(null, null)!;
+            
+            // With Undefined order, both handlers should still be invoked (order not guaranteed)
+            Assert.Contains("Handler1:23.5", result);
+            Assert.Contains("Handler2:23.5", result);
+        }
+        finally
+        {
+            alc.Unload();
+        }
+    }
 }
