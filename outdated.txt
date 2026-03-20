@@ -1,52 +1,176 @@
 Discovering projects...
 Analyzing project(s)...
 Analyzing dependencies...
+» PatternKit.Examples
+  [net9.0]
+  Microsoft.Extensions.Configuration.Abstractions       10.0.3 -> 10.0.5
+  Microsoft.Extensions.Configuration.Binder             10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection              10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions             10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.ConfigurationExtensions  10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.DataAnnotations          10.0.3 -> 10.0.5
+  [net8.0]
+  Microsoft.Extensions.Configuration.Abstractions       10.0.3 -> 10.0.5
+  Microsoft.Extensions.Configuration.Binder             10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection              10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions             10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.ConfigurationExtensions  10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.DataAnnotations          10.0.3 -> 10.0.5
+  [net10.0]
+  Microsoft.Extensions.Configuration.Abstractions       10.0.3 -> 10.0.5
+  Microsoft.Extensions.Configuration.Binder             10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection              10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions             10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options                          10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.ConfigurationExtensions  10.0.3 -> 10.0.5
+  Microsoft.Extensions.Options.DataAnnotations          10.0.3 -> 10.0.5
+
 » PatternKit.Examples.Tests
   [net9.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  Microsoft.Extensions.Configuration         10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection   10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions  10.0.3 -> 10.0.5
+  System.Collections.Immutable               10.0.3 -> 10.0.5
+  TinyBDD.Xunit                              0.19.5 -> 0.19.6
   [net8.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  Microsoft.Extensions.Configuration         10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection   10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions  10.0.3 -> 10.0.5
+  System.Collections.Immutable               10.0.3 -> 10.0.5
+  TinyBDD.Xunit                              0.19.5 -> 0.19.6
   [net10.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  Microsoft.Extensions.Configuration         10.0.3 -> 10.0.5
+  Microsoft.Extensions.DependencyInjection   10.0.3 -> 10.0.5
+  Microsoft.Extensions.Hosting.Abstractions  10.0.3 -> 10.0.5
+  System.Collections.Immutable               10.0.3 -> 10.0.5
+  TinyBDD.Xunit                              0.19.5 -> 0.19.6
+
+» PatternKit.Generators
+  [.NETStandard,Version=v2.0]
+  Microsoft.CodeAnalysis.CSharp  5.0.0  -> 5.3.0 
+  System.Collections.Immutable   10.0.3 -> 10.0.5
 
 » PatternKit.Generators.Tests
-  [net9.0]
-  TinyBDD        0.19.3 -> 0.19.5
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
-  [net8.0]
-  TinyBDD        0.19.3 -> 0.19.5
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
   [net10.0]
-  TinyBDD        0.19.3 -> 0.19.5
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  Microsoft.CodeAnalysis.CSharp  5.0.0  -> 5.3.0 
+  System.Collections.Immutable   10.0.3 -> 10.0.5
+  TinyBDD                        0.19.5 -> 0.19.6
+  TinyBDD.Xunit                  0.19.5 -> 0.19.6
+  [net8.0]
+  Microsoft.CodeAnalysis.CSharp  5.0.0  -> 5.3.0 
+  System.Collections.Immutable   10.0.3 -> 10.0.5
+  TinyBDD                        0.19.5 -> 0.19.6
+  TinyBDD.Xunit                  0.19.5 -> 0.19.6
+  [net9.0]
+  Microsoft.CodeAnalysis.CSharp  5.0.0  -> 5.3.0 
+  System.Collections.Immutable   10.0.3 -> 10.0.5
+  TinyBDD                        0.19.5 -> 0.19.6
+  TinyBDD.Xunit                  0.19.5 -> 0.19.6
 
 » PatternKit.Tests
   [net9.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  System.Collections.Immutable  10.0.3 -> 10.0.5
+  TinyBDD.Xunit                 0.19.5 -> 0.19.6
   [net10.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  System.Collections.Immutable  10.0.3 -> 10.0.5
+  TinyBDD.Xunit                 0.19.5 -> 0.19.6
   [net8.0]
-  TinyBDD.Xunit  0.19.3 -> 0.19.5
+  System.Collections.Immutable  10.0.3 -> 10.0.5
+  TinyBDD.Xunit                 0.19.5 -> 0.19.6
 
 Version color legend:
 <red>   : Major version update or pre-release version. Possible breaking changes.
 <yellow>: Minor version update. Backwards-compatible features added.
 <green> : Patch version update. Backwards-compatible bug fixes.
 
-Upgrading package TinyBDD.Xunit...
+Upgrading package Microsoft.Extensions.Configuration.Abstractions...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Configuration.Binder...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.DependencyInjection...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
 Project PatternKit.Examples.Tests [net9.0] upgraded successfully
 Project PatternKit.Examples.Tests [net8.0] upgraded successfully
 Project PatternKit.Examples.Tests [net10.0] upgraded successfully
-Project PatternKit.Generators.Tests [net9.0] upgraded successfully
-Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Hosting...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Hosting.Abstractions...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+Project PatternKit.Examples.Tests [net9.0] upgraded successfully
+Project PatternKit.Examples.Tests [net8.0] upgraded successfully
+Project PatternKit.Examples.Tests [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Options...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Options.ConfigurationExtensions...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Options.DataAnnotations...
+Project PatternKit.Examples [net9.0] upgraded successfully
+Project PatternKit.Examples [net8.0] upgraded successfully
+Project PatternKit.Examples [net10.0] upgraded successfully
+
+Upgrading package Microsoft.Extensions.Configuration...
+Project PatternKit.Examples.Tests [net9.0] upgraded successfully
+Project PatternKit.Examples.Tests [net8.0] upgraded successfully
+Project PatternKit.Examples.Tests [net10.0] upgraded successfully
+
+Upgrading package System.Collections.Immutable...
+Project PatternKit.Examples.Tests [net9.0] upgraded successfully
+Project PatternKit.Examples.Tests [net8.0] upgraded successfully
+Project PatternKit.Examples.Tests [net10.0] upgraded successfully
+Project PatternKit.Generators [.NETStandard,Version=v2.0] upgraded successfully
 Project PatternKit.Generators.Tests [net10.0] upgraded successfully
+Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+Project PatternKit.Generators.Tests [net9.0] upgraded successfully
 Project PatternKit.Tests [net9.0] upgraded successfully
 Project PatternKit.Tests [net10.0] upgraded successfully
 Project PatternKit.Tests [net8.0] upgraded successfully
 
-Upgrading package TinyBDD...
-Project PatternKit.Generators.Tests [net9.0] upgraded successfully
-Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+Upgrading package TinyBDD.Xunit...
+Project PatternKit.Examples.Tests [net9.0] upgraded successfully
+Project PatternKit.Examples.Tests [net8.0] upgraded successfully
+Project PatternKit.Examples.Tests [net10.0] upgraded successfully
 Project PatternKit.Generators.Tests [net10.0] upgraded successfully
+Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+Project PatternKit.Generators.Tests [net9.0] upgraded successfully
+Project PatternKit.Tests [net9.0] upgraded successfully
+Project PatternKit.Tests [net10.0] upgraded successfully
+Project PatternKit.Tests [net8.0] upgraded successfully
 
-Elapsed: 00:00:34.7482772
+Upgrading package Microsoft.CodeAnalysis.CSharp...
+Project PatternKit.Generators [.NETStandard,Version=v2.0] upgraded successfully
+Project PatternKit.Generators.Tests [net10.0] upgraded successfully
+Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+Project PatternKit.Generators.Tests [net9.0] upgraded successfully
+
+Upgrading package TinyBDD...
+Project PatternKit.Generators.Tests [net10.0] upgraded successfully
+Project PatternKit.Generators.Tests [net8.0] upgraded successfully
+Project PatternKit.Generators.Tests [net9.0] upgraded successfully
+
+Elapsed: 00:02:17.2357944
