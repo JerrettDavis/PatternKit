@@ -77,13 +77,13 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Upload coverage HTML report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage-report
 
       - name: Add coverage summary to PR
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           recreate: true
           message: |
@@ -188,7 +188,7 @@ jobs:
           /p:PackageVersion=${{ env.PACKAGE_VERSION }}
 
       - name: Upload packages as artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: nuget-packages
           path: |
