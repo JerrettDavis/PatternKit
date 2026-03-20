@@ -65,6 +65,31 @@ public class ObserverGeneratorTests
     }
 
     [Fact]
+    public void Escaped_Type_Name_Generates_Compilable_Source()
+    {
+        var code = """
+            using PatternKit.Generators.Observer;
+            namespace Test;
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature))]
+            public partial class @event
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(Escaped_Type_Name_Generates_Compilable_Source));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
     public void Subscribe_And_Publish_Works()
     {
         var user = SimpleObserver + """
@@ -372,7 +397,7 @@ public class ObserverGeneratorTests
                     var evt = new TemperatureChanged();
                     
                     evt.Subscribe((Temperature t) => { });
-                    evt.Subscribe((Temperature t) => throw new System.Exception("Oops"));
+                    evt.Subscribe((System.Action<Temperature>)(t => throw new System.Exception("Oops")));
                     evt.Subscribe((Temperature t) => { });
                     
                     try
@@ -436,8 +461,8 @@ public class ObserverGeneratorTests
                 {
                     var evt = new TemperatureChanged();
                     
-                    evt.Subscribe((Temperature t) => throw new System.Exception("Error1"));
-                    evt.Subscribe((Temperature t) => throw new System.Exception("Error2"));
+                    evt.Subscribe((System.Action<Temperature>)(t => throw new System.Exception("Error1")));
+                    evt.Subscribe((System.Action<Temperature>)(t => throw new System.Exception("Error2")));
                     
                     try
                     {
@@ -644,6 +669,76 @@ public class ObserverGeneratorTests
     }
 
     [Fact]
+    public void Stop_Policy_Observes_Fire_And_Forget_Async_Exceptions()
+    {
+        var user = """
+            using PatternKit.Generators.Observer;
+
+            namespace PatternKit.Examples.Generators;
+
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature), Exceptions = ObserverExceptionPolicy.Stop)]
+            public partial class TemperatureChanged
+            {
+                partial void OnSubscriberError(System.Exception ex)
+                {
+                    Demo.Record(ex.Message);
+                }
+            }
+
+            public static class Demo
+            {
+                private static readonly System.Threading.Tasks.TaskCompletionSource<string> ErrorTcs = new(System.Threading.Tasks.TaskCreationOptions.RunContinuationsAsynchronously);
+
+                public static void Record(string message) => ErrorTcs.TrySetResult(message);
+
+                public static async System.Threading.Tasks.Task<string> Run()
+                {
+                    var evt = new TemperatureChanged();
+
+                    evt.Subscribe(async (Temperature t) =>
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                        throw new System.Exception("AsyncOops");
+                    });
+
+                    evt.Publish(new Temperature(0));
+
+                    return await ErrorTcs.Task.WaitAsync(System.TimeSpan.FromSeconds(5));
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(Stop_Policy_Observes_Fire_And_Forget_Async_Exceptions));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
+
+        using var pe = new MemoryStream();
+        var emitResult = updated.Emit(pe);
+        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        pe.Position = 0;
+
+        var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
+        try
+        {
+            var asm = alc.LoadFromStream(pe);
+            var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
+            var runMethod = demoType!.GetMethod("Run");
+            var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
+            task.Wait();
+            Assert.Equal("AsyncOops", task.Result);
+        }
+        finally
+        {
+            alc.Unload();
+        }
+    }
+
+    [Fact]
     public void SingleThreadedFast_Threading_Policy_Works()
     {
         var user = """
@@ -701,6 +796,41 @@ public class ObserverGeneratorTests
         {
             alc.Unload();
         }
+    }
+
+    [Fact]
+    public void Concurrent_Undefined_Uses_Removable_Concurrent_Dictionary()
+    {
+        var user = """
+            using PatternKit.Generators.Observer;
+
+            namespace PatternKit.Examples.Generators;
+
+            public record Temperature(double Celsius);
+
+            [Observer(typeof(Temperature), Threading = ObserverThreadingPolicy.Concurrent, Order = ObserverOrderPolicy.Undefined)]
+            public partial class TemperatureChanged
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(Concurrent_Undefined_Uses_Removable_Concurrent_Dictionary),
+            extra: [
+                MetadataReference.CreateFromFile(typeof(System.Collections.Concurrent.ConcurrentDictionary<,>).Assembly.Location)
+            ]);
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var generatedSource = Assert.Single(run.Results.SelectMany(r => r.GeneratedSources)).SourceText.ToString();
+        Assert.Contains("System.Collections.Concurrent.ConcurrentDictionary<int, Subscription>", generatedSource);
+        Assert.Contains("state.Subscriptions?.TryRemove(_id, out _);", generatedSource);
+        Assert.DoesNotContain("ConcurrentBag<Subscription>", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     [Fact]

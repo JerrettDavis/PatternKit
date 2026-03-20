@@ -419,7 +419,7 @@ Publishes an event to all subscribers synchronously.
 - Invokes synchronous handlers directly (exception handling follows configured policy)
 - Invokes async handlers asynchronously in fire-and-forget mode:
   - `Continue` policy: exceptions routed to `OnSubscriberError` hook
-  - `Stop` policy: exceptions are unobserved (cannot stop synchronous execution)
+  - `Stop` policy: exceptions are observed and routed to `OnSubscriberError` (cannot stop synchronous execution)
   - `Aggregate` policy: exceptions logged via `OnSubscriberError` (cannot aggregate synchronously)
   - For deterministic exception behavior with async handlers, use `PublishAsync` instead
 
@@ -463,7 +463,7 @@ await observable.PublishAsync(
 partial void OnSubscriberError(Exception ex);
 ```
 
-Optional method for handling subscriber exceptions. Primarily used with `Exceptions = ObserverExceptionPolicy.Continue`, but also invoked for fire-and-forget async handler exceptions in sync `Publish` under the `Aggregate` policy (since those cannot be aggregated synchronously).
+Optional method for handling subscriber exceptions. Primarily used with `Exceptions = ObserverExceptionPolicy.Continue`, but also invoked for fire-and-forget async handler exceptions in sync `Publish` under the `Stop` and `Aggregate` policies (since those exceptions cannot alter synchronous control flow deterministically).
 
 **Parameters:**
 - `ex`: The exception thrown by a subscriber
@@ -487,7 +487,7 @@ public partial class EventOccurred
 
 - **SingleThreadedFast**: Uses `List<T>`, minimal allocations
 - **Locking**: Uses `List<T>` with lock, snapshots on publish
-- **Concurrent**: Uses `ImmutableList` (RegistrationOrder) or `ConcurrentBag` (Undefined). When using `ImmutableList`, the generated code depends on `System.Collections.Immutable`; for TFMs that don't reference it by default (for example, `netstandard2.0`), you may need to add an explicit `System.Collections.Immutable` package reference. For `Undefined` order, disposal rebuilds the bag to remove disposed subscriptions, which may have performance implications with high subscription churn.
+- **Concurrent**: Uses `ImmutableList` (RegistrationOrder) or `ConcurrentDictionary` (Undefined). When using `ImmutableList`, the generated code depends on `System.Collections.Immutable`; for TFMs that don't reference it by default (for example, `netstandard2.0`), you may need to add an explicit `System.Collections.Immutable` package reference. For `Undefined` order, disposal removes entries by subscription id without rebuilding the concurrent collection.
 
 ### Thread Safety Overhead
 

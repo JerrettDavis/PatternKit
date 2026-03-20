@@ -113,7 +113,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         }
 
         var config = ExtractConfig(attr);
-        var source = GenerateSource(typeSymbol, payloadType, config);
+        var source = GenerateSource(typeSymbol, syntax.Identifier.Text, payloadType, config);
         var fileName = $"{typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat).Replace("global::", "").Replace("<", "_").Replace(">", "_").Replace(".", "_")}.Observer.g.cs";
         context.AddSource(fileName, source);
     }
@@ -158,7 +158,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
         return config;
     }
 
-    private static string GenerateSource(INamedTypeSymbol typeSymbol, ITypeSymbol payloadType, ObserverConfig config)
+    private static string GenerateSource(INamedTypeSymbol typeSymbol, string typeName, ITypeSymbol payloadType, ObserverConfig config)
     {
         var ns = typeSymbol.ContainingNamespace.IsGlobalNamespace
             ? null
@@ -181,7 +181,6 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             _ => "internal"
         };
 
-        var typeName = typeSymbol.Name;
         var payloadTypeName = payloadType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
         var sb = new StringBuilder();
@@ -243,7 +242,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 else // Undefined
                 {
-                    sb.AppendLine("        public System.Collections.Concurrent.ConcurrentBag<Subscription>? Subscriptions;");
+                    sb.AppendLine("        public System.Collections.Concurrent.ConcurrentDictionary<int, Subscription>? Subscriptions;");
                     sb.AppendLine("        public int NextId;");
                 }
                 break;
@@ -304,7 +303,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 else // Undefined
                 {
-                    sb.AppendLine($"{indent}System.Threading.LazyInitializer.EnsureInitialized(ref {stateVar}.Subscriptions, static () => new System.Collections.Concurrent.ConcurrentBag<Subscription>()).Add(sub);");
+                    sb.AppendLine($"{indent}System.Threading.LazyInitializer.EnsureInitialized(ref {stateVar}.Subscriptions, static () => new System.Collections.Concurrent.ConcurrentDictionary<int, Subscription>()).TryAdd(sub.Id, sub);");
                 }
                 break;
         }
@@ -345,12 +344,19 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 sb.AppendLine("                    }");
                 sb.AppendLine("                });");
             }
-            else if (config.Exceptions == 1) // Stop - fire and forget; exceptions are unobserved
+            else if (config.Exceptions == 1) // Stop - fire and forget with observed exceptions
             {
-                sb.AppendLine("                // Fire-and-forget: exceptions from async handlers cannot stop sync execution");
+                sb.AppendLine("                // Fire-and-forget: exceptions from async handlers are observed but cannot stop sync execution");
                 sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
                 sb.AppendLine("                {");
-                sb.AppendLine("                    await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
+                sb.AppendLine("                    try");
+                sb.AppendLine("                    {");
+                sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                    catch (System.Exception ex)");
+                sb.AppendLine("                    {");
+                sb.AppendLine("                        OnSubscriberError(ex);");
+                sb.AppendLine("                    }");
                 sb.AppendLine("                });");
             }
             else // Aggregate - fire and forget with error logging via OnSubscriberError
@@ -484,7 +490,9 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 else // Undefined
                 {
-                    sb.AppendLine($"{indent}var snapshot = _state.Subscriptions?.ToArray() ?? System.Array.Empty<Subscription>();");
+                    sb.AppendLine($"{indent}var snapshot = _state.Subscriptions is {{ Count: > 0 }} subscriptions");
+                    sb.AppendLine($"{indent}    ? new System.Collections.Generic.List<Subscription>(subscriptions.Values).ToArray()");
+                    sb.AppendLine($"{indent}    : System.Array.Empty<Subscription>();");
                 }
                 break;
         }
@@ -562,20 +570,9 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 {
                     sb.AppendLine("            System.Collections.Immutable.ImmutableInterlocked.Update(ref state.Subscriptions, static (list, id) => list?.RemoveAll(s => s.Id == id) ?? list, _id);");
                 }
-                else // Undefined - rebuild bag to remove this subscription
+                else // Undefined
                 {
-                    sb.AppendLine("            // Compact the ConcurrentBag by rebuilding it without this subscription.");
-                    sb.AppendLine("            var oldBag = state.Subscriptions;");
-                    sb.AppendLine("            if (oldBag == null) return;");
-                    sb.AppendLine("            var newBag = new System.Collections.Concurrent.ConcurrentBag<Subscription>();");
-                    sb.AppendLine("            foreach (var s in oldBag)");
-                    sb.AppendLine("            {");
-                    sb.AppendLine("                if (s.Id != _id)");
-                    sb.AppendLine("                {");
-                    sb.AppendLine("                    newBag.Add(s);");
-                    sb.AppendLine("                }");
-                    sb.AppendLine("            }");
-                    sb.AppendLine("            System.Threading.Interlocked.CompareExchange(ref state.Subscriptions, newBag, oldBag);");
+                    sb.AppendLine("            state.Subscriptions?.TryRemove(_id, out _);");
                 }
                 break;
         }
