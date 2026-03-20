@@ -330,50 +330,7 @@ public sealed class ObserverGenerator : IIncrementalGenerator
             // Handle async subscriptions in fire-and-forget mode
             sb.AppendLine("            if (sub.IsAsync)");
             sb.AppendLine("            {");
-            if (config.Exceptions == 0) // Continue - fire and forget with error handling
-            {
-                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
-                sb.AppendLine("                {");
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (System.Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        OnSubscriberError(ex);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                });");
-            }
-            else if (config.Exceptions == 1) // Stop - fire and forget with observed exceptions
-            {
-                sb.AppendLine("                // Fire-and-forget: exceptions from async handlers are observed but cannot stop sync execution");
-                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
-                sb.AppendLine("                {");
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (System.Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        OnSubscriberError(ex);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                });");
-            }
-            else // Aggregate - fire and forget with error logging via OnSubscriberError
-            {
-                sb.AppendLine("                // Fire-and-forget: async exceptions logged via OnSubscriberError (cannot aggregate synchronously)");
-                sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
-                sb.AppendLine("                {");
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (System.Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine("                        OnSubscriberError(ex);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                });");
-            }
+            GenerateFireAndForgetAsyncInvocation(sb, config);
             sb.AppendLine("                continue;");
             sb.AppendLine("            }");
 
@@ -496,6 +453,30 @@ public sealed class ObserverGenerator : IIncrementalGenerator
                 }
                 break;
         }
+    }
+
+    private static void GenerateFireAndForgetAsyncInvocation(StringBuilder sb, ObserverConfig config)
+    {
+        if (config.Exceptions == 1)
+        {
+            sb.AppendLine("                // Fire-and-forget: exceptions from async handlers are observed but cannot stop sync execution");
+        }
+        else if (config.Exceptions == 2)
+        {
+            sb.AppendLine("                // Fire-and-forget: async exceptions logged via OnSubscriberError (cannot aggregate synchronously)");
+        }
+
+        sb.AppendLine("                _ = System.Threading.Tasks.Task.Run(async () =>");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    try");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        await sub.InvokeAsync(payload, System.Threading.CancellationToken.None).ConfigureAwait(false);");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                    catch (System.Exception ex)");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        OnSubscriberError(ex);");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                });");
     }
 
     private static void GenerateOnErrorHook(StringBuilder sb)
