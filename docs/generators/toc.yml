@@ -28,6 +28,9 @@
 - name: Visitor Generator
   href: visitor-generator.md
 
+- name: Observer
+  href: observer.md
+
 - name: Examples
   href: examples.md
 
