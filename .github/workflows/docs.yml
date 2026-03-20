@@ -29,7 +29,11 @@ jobs:
           dotnet-version: 9.x
 
       - run: dotnet tool update -g docfx
-      - run: dotnet build -c Release
+      - name: Build DocFX source projects
+        run: |
+          # Keep this list in sync with docs/docfx.json metadata.src.files.
+          dotnet build src/PatternKit.Core/PatternKit.Core.csproj -c Release
+          dotnet build src/PatternKit.Generators.Abstractions/PatternKit.Generators.Abstractions.csproj -c Release
       - run: docfx metadata docs/docfx.json
       - run: docfx build docs/docfx.json
 
