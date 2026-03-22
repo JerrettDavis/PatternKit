@@ -35,11 +35,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.6, )",
-        "resolved": "0.19.6",
-        "contentHash": "z0/b1LXQZkE7SfjsM8eRlsesvru57unotOBfiTkvqeCW+n5Nl3LsjzethSidXS5gZX97aW++rxVNPae8ZLrCLA==",
+        "requested": "[0.19.7, )",
+        "resolved": "0.19.7",
+        "contentHash": "f8Wo+esJz+QEe+efLhoHpASNPwrPbbeYc5e1julRjCE8ca6Ro3WATRlwVaYkCvxadj9FBLl8pGU2lisWsWIQDA==",
         "dependencies": {
-          "TinyBDD": "0.19.6",
+          "TinyBDD": "0.19.7",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -399,11 +399,11 @@
       },
       "TinyBDD": {
         "type": "Transitive",
-        "resolved": "0.19.6",
-        "contentHash": "4LNJdg+eMVA0KbCbHI2JtHpJRAtQyJK9L0aR0Sb4w0w5xruE3aH/DqTorFbZ8nyulsjFPwi3CUgFxIZOtfWXQg==",
+        "resolved": "0.19.7",
+        "contentHash": "cs2su0a/hjpWA9XJuBZjmzIeBUTtrWQFsbxUFNFuXJa8gn6wNXq7yOHf17DZa22R0w3SErYNNjQrX6jf8KOgiw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.3",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.3"
+          "Microsoft.Extensions.DependencyInjection": "10.0.5",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
         }
       },
       "xunit.abstractions": {
@@ -496,11 +496,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.6, )",
-        "resolved": "0.19.6",
-        "contentHash": "z0/b1LXQZkE7SfjsM8eRlsesvru57unotOBfiTkvqeCW+n5Nl3LsjzethSidXS5gZX97aW++rxVNPae8ZLrCLA==",
+        "requested": "[0.19.7, )",
+        "resolved": "0.19.7",
+        "contentHash": "f8Wo+esJz+QEe+efLhoHpASNPwrPbbeYc5e1julRjCE8ca6Ro3WATRlwVaYkCvxadj9FBLl8pGU2lisWsWIQDA==",
         "dependencies": {
-          "TinyBDD": "0.19.6",
+          "TinyBDD": "0.19.7",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -897,11 +897,11 @@
       },
       "TinyBDD": {
         "type": "Transitive",
-        "resolved": "0.19.6",
-        "contentHash": "4LNJdg+eMVA0KbCbHI2JtHpJRAtQyJK9L0aR0Sb4w0w5xruE3aH/DqTorFbZ8nyulsjFPwi3CUgFxIZOtfWXQg==",
+        "resolved": "0.19.7",
+        "contentHash": "cs2su0a/hjpWA9XJuBZjmzIeBUTtrWQFsbxUFNFuXJa8gn6wNXq7yOHf17DZa22R0w3SErYNNjQrX6jf8KOgiw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.3",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.3"
+          "Microsoft.Extensions.DependencyInjection": "10.0.5",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
         }
       },
       "xunit.abstractions": {
@@ -994,11 +994,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.6, )",
-        "resolved": "0.19.6",
-        "contentHash": "z0/b1LXQZkE7SfjsM8eRlsesvru57unotOBfiTkvqeCW+n5Nl3LsjzethSidXS5gZX97aW++rxVNPae8ZLrCLA==",
+        "requested": "[0.19.7, )",
+        "resolved": "0.19.7",
+        "contentHash": "f8Wo+esJz+QEe+efLhoHpASNPwrPbbeYc5e1julRjCE8ca6Ro3WATRlwVaYkCvxadj9FBLl8pGU2lisWsWIQDA==",
         "dependencies": {
-          "TinyBDD": "0.19.6",
+          "TinyBDD": "0.19.7",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -1395,11 +1395,11 @@
       },
       "TinyBDD": {
         "type": "Transitive",
-        "resolved": "0.19.6",
-        "contentHash": "4LNJdg+eMVA0KbCbHI2JtHpJRAtQyJK9L0aR0Sb4w0w5xruE3aH/DqTorFbZ8nyulsjFPwi3CUgFxIZOtfWXQg==",
+        "resolved": "0.19.7",
+        "contentHash": "cs2su0a/hjpWA9XJuBZjmzIeBUTtrWQFsbxUFNFuXJa8gn6wNXq7yOHf17DZa22R0w3SErYNNjQrX6jf8KOgiw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.3",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.3"
+          "Microsoft.Extensions.DependencyInjection": "10.0.5",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
         }
       },
       "xunit.abstractions": {
