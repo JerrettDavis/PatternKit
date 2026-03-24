@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "dependencies": {
     ".NETStandard,Version=v2.0": {
       "Microsoft.CodeAnalysis.Analyzers": {
@@ -109,16 +109,17 @@
           "System.Runtime.CompilerServices.Unsafe": "6.0.0"
         }
       },
+      "patternkit.generators.abstractions": {
+        "type": "Project"
+      },
       "System.Threading.Tasks.Extensions": {
-        "type": "Transitive",
+        "type": "CentralTransitive",
+        "requested": "[4.6.3, )",
         "resolved": "4.6.0",
         "contentHash": "I5G6Y8jb0xRtGUC9Lahy7FUvlYlnGMMkbuKAQBy8Jb7Y6Yn8OlBEiUOY0PqZ0hy6Ua8poVA1ui1tAIiXNxGdsg==",
         "dependencies": {
           "System.Runtime.CompilerServices.Unsafe": "6.1.0"
         }
-      },
-      "patternkit.generators.abstractions": {
-        "type": "Project"
       }
     }
   }
