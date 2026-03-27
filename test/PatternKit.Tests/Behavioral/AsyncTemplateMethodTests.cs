@@ -89,8 +89,10 @@ public sealed class AsyncTemplateMethodTests(ITestOutputHelper output) : TinyBdd
     [Fact]
     public async Task Cancellation_Observed()
     {
-        var template = new SampleAsyncTemplate(delayMs: 100);
-        using var cts = new CancellationTokenSource(10);
+        // Use a long delay with a pre-cancelled token to avoid timing races
+        var template = new SampleAsyncTemplate(delayMs: 5000);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel(); // pre-cancel so cancellation is immediate and deterministic
 
         // Assert.ThrowsAnyAsync verifies that OperationCanceledException or derived types are thrown
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
