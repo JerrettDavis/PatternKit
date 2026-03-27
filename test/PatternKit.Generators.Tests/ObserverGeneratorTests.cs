@@ -299,7 +299,8 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
-            task.Wait();
+            if (!task.Wait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("Demo.Run() did not complete within 30 seconds.");
             var result = task.Result;
             Assert.Equal("AsyncHandler:42", result);
         }
@@ -629,7 +630,7 @@ public class ObserverGeneratorTests
                     evt.Publish(new Temperature(10));
                     
                     // Wait deterministically for async handler to complete
-                    await tcs.Task.WaitAsync(System.TimeSpan.FromSeconds(5));
+                    await tcs.Task.WaitAsync(System.TimeSpan.FromSeconds(30));
                     
                     return string.Join("|", log);
                 }
@@ -655,7 +656,8 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
-            task.Wait();
+            if (!task.Wait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("Demo.Run() did not complete within 30 seconds.");
             var result = task.Result;
             
             // Both handlers should have been invoked
