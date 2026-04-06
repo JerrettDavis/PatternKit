@@ -489,7 +489,7 @@
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.10, )",
+        "requested": "[0.19.11, )",
         "resolved": "0.19.8",
         "contentHash": "W5J/Ftk6MMphFsu54Nm4rePdQvPQSANAeU6yAPs1+SbdBsETNMldNFj6wJdpr/nh7GLJfOPHmbhER1MubLv+tg==",
         "dependencies": {
