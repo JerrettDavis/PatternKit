@@ -11,7 +11,7 @@
 
 ---
 
-## ✨ Overview
+## Overview
 
 **PatternKit** is a modern library that reimagines the GoF design patterns for .NET 9+.  
 Instead of boilerplate-heavy class hierarchies, we favor:
@@ -26,7 +26,7 @@ Our goal: make patterns a joy to use, not a chore to implement.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 Install via NuGet:
 
@@ -122,7 +122,7 @@ var reused = Enumerable.Range(1,6)
 
 ---
 
-## 📘 Pattern Quick Reference
+## Pattern Quick Reference
 Tiny, copy‑paste friendly snippets for the most common patterns. Each builds an immutable, hot‑path friendly artifact.
 
 ### ActionChain (middleware style rule pack)
@@ -445,7 +445,7 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 
 ---
 
-## 📚 Patterns Table
+## Patterns Table
 | Category       | Patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Creational** | [Factory](docs/patterns/creational/factory/factory.md) • [Composer](docs/patterns/creational/builder/composer.md) • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) • [Prototype](docs/patterns/creational/prototype/prototype.md) • [Singleton](docs/patterns/creational/singleton/singleton.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
