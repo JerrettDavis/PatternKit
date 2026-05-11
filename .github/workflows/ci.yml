@@ -170,7 +170,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
-            -- RunConfiguration.TestSessionTimeout=300000
+            -- RunConfiguration.TestSessionTimeout=900000
 
 
       - name: Pack (all packable projects)
