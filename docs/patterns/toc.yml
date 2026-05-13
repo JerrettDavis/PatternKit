@@ -292,6 +292,13 @@
 
 - name: Additional Patterns
   items:
+    - name: Messaging
+      href: messaging/README.md
+      items:
+        - name: Message Envelope and Context
+          href: messaging/message-envelope.md
+        - name: Source-Generated Dispatcher
+          href: messaging/dispatcher.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:
