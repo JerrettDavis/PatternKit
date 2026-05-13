@@ -127,6 +127,10 @@ PKCH004 | PatternKit.Generators.Chain | Error | Chain handler signature invalid
 PKCH005 | PatternKit.Generators.Chain | Error | Pipeline terminal missing
 PKCH006 | PatternKit.Generators.Chain | Error | Multiple pipeline terminals
 PKCH007 | PatternKit.Generators.Chain | Error | Chain default missing
+PKCMD001 | PatternKit.Generators.Command | Error | Command type must be partial
+PKCMD002 | PatternKit.Generators.Command | Error | Command handler missing
+PKCMD003 | PatternKit.Generators.Command | Error | Multiple command handlers
+PKCMD004 | PatternKit.Generators.Command | Error | Command handler signature invalid
 PKCMP001 | PatternKit.Generators.Composite | Error | Composite component must be partial
 PKCMP002 | PatternKit.Generators.Composite | Error | Composite component target is invalid
 PKCMP003 | PatternKit.Generators.Composite | Error | Generated Composite type name conflicts
