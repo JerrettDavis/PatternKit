@@ -137,6 +137,10 @@ PKFLY003 | PatternKit.Generators.Flyweight | Error | Multiple flyweight factorie
 PKFLY004 | PatternKit.Generators.Flyweight | Error | Flyweight factory signature is invalid
 PKFLY005 | PatternKit.Generators.Flyweight | Error | Flyweight cache type name conflicts
 PKFLY006 | PatternKit.Generators.Flyweight | Error | Invalid flyweight eviction configuration
+PKIT001 | PatternKit.Generators.Iterator | Error | Iterator type must be partial
+PKIT002 | PatternKit.Generators.Iterator | Error | Iterator step missing
+PKIT003 | PatternKit.Generators.Iterator | Error | Multiple iterator steps
+PKIT004 | PatternKit.Generators.Iterator | Error | Iterator step signature invalid
 PKST001 | PatternKit.Generators.State | Error | Type marked with [StateMachine] must be partial
 PKST002 | PatternKit.Generators.State | Error | State type must be an enum
 PKST003 | PatternKit.Generators.State | Error | Trigger type must be an enum
