@@ -301,6 +301,8 @@
           href: messaging/message-routing.md
         - name: Routing Slip
           href: messaging/routing-slip.md
+        - name: Saga / Process Manager
+          href: messaging/saga.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
     - name: Type-Dispatcher
