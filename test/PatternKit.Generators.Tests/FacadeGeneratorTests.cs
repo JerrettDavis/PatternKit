@@ -449,6 +449,50 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void HostFirst_PreservesNullableReturnAnnotations()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace PatternKit.Examples;
+
+            public sealed class Invoice { }
+
+            public sealed class InvoiceService
+            {
+                public Invoice? GetInvoice(string invoiceNumber) => null;
+            }
+
+            [GenerateFacade(FacadeTypeName = "BillingFacade")]
+            public static partial class BillingHost
+            {
+                [FacadeExpose]
+                public static Invoice? GetInvoice(InvoiceService invoiceService, string invoiceNumber)
+                {
+                    return invoiceService.GetInvoice(invoiceNumber);
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(HostFirst_PreservesNullableReturnAnnotations),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        var generatedSource = Assert.Single(
+            run.Results.SelectMany(r => r.GeneratedSources),
+            gs => gs.HintName.Contains("BillingFacade")).SourceText.ToString();
+        Assert.Contains("public global::PatternKit.Examples.Invoice? GetInvoice", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
     public void HostFirst_StaticToInstance_Transformation()
     {
         const string source = """

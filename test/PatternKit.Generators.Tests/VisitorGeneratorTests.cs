@@ -63,6 +63,13 @@ public class VisitorGeneratorTests
         Assert.Contains("NumberExpression.Accept.g.cs", names);
         Assert.Contains("AddExpression.Accept.g.cs", names);
 
+        var generatedSources = run.Results.SelectMany(r => r.GeneratedSources).ToDictionary(
+            gs => gs.HintName,
+            gs => gs.SourceText.ToString());
+        Assert.Contains("public TResult Accept<TResult>", generatedSources["AstNode.Accept.g.cs"]);
+        Assert.Contains("public new TResult Accept<TResult>", generatedSources["Expression.Accept.g.cs"]);
+        Assert.Contains("public new System.Threading.Tasks.ValueTask<TResult> AcceptAsync<TResult>", generatedSources["NumberExpression.Accept.g.cs"]);
+
         // Builders
         Assert.Contains("AstNodeVisitorBuilder.g.cs", names);
         Assert.Contains("AstNodeActionVisitorBuilder.g.cs", names);
