@@ -907,7 +907,7 @@ public void CanPay_ReturnsFalse_WhenAmountIsZero()
 
 ## See Also
 
-- [State Pattern Examples](../examples/state-machine-examples.md)
+- [State Machine Example](../examples/state-machine.md)
 - [Template Method Generator](template-method-generator.md) - For sequential workflows
 - [Builder Pattern](builder.md) - For object construction
 - [Visitor Pattern](visitor-generator.md) - For operation dispatch

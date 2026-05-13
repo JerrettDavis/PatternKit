@@ -6,8 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PatternKit.Generators.Builders;
 
-// Local copy of BuilderModel enum to avoid assembly loading issues
-internal enum BuilderModel
+internal enum BuilderModelValue
 {
     MutableInstance = 0,
     StateProjection = 1
@@ -63,7 +62,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         var builderTypeName = ReadNamedArgument(attribute, "BuilderTypeName");
         var newMethodName = ReadNamedArgument(attribute, "NewMethodName") ?? "New";
         var buildMethodName = ReadNamedArgument(attribute, "BuildMethodName") ?? "Build";
-        var model = ReadNamedArgument(attribute, "Model", BuilderModel.MutableInstance);
+        var model = ReadNamedArgument(attribute, "Model", BuilderModelValue.MutableInstance);
         var generateBuilderMethods = ReadNamedArgument(attribute, "GenerateBuilderMethods", false);
         var forceAsync = ReadNamedArgument(attribute, "ForceAsync", false);
         var includeFields = ReadNamedArgument(attribute, "IncludeFields", false);
@@ -80,7 +79,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             return new GenerationResult(string.Empty, string.Empty, diagnostics.ToImmutable());
         }
 
-        if (model == BuilderModel.MutableInstance)
+        if (model == BuilderModelValue.MutableInstance)
         {
             return BuildMutable(symbol, builderTypeName, newMethodName, buildMethodName, generateBuilderMethods, forceAsync, includeFields, diagnostics);
         }

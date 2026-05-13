@@ -18,8 +18,8 @@ Browse the API documentation by namespace:
 If you're new to PatternKit, check out:
 
 - [Home](../index.md) - Overview and quick start guide
-- [Patterns](../patterns/) - Pattern documentation and examples
-- [Generators](../generators/) - Source generator guides
+- [Patterns](../patterns/index.md) - Pattern documentation and examples
+- [Generators](../generators/index.md) - Source generator guides
 
 ## Additional Resources
 

@@ -1,5 +1,7 @@
 bin/
 obj/
+.vs/
+*.log
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
@@ -10,3 +12,4 @@ docs/api/*.yml
 docs/api/.manifest
 *.user
 TestResults/
+coverage-report/

@@ -80,14 +80,14 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ### Interpreter
 
-- **[Behavioral.Interpreter.Interpreter](behavioral/interpreter/interpreter.md)**
+- **[Behavioral.Interpreter](behavioral/interpreter/index.md)**
   Parse and evaluate domain-specific languages with composable expression trees.
 
 ---
 
 ## Creational (Builder)
 
-- **[Creational.AbstractFactory](creational/abstractfactory/abstractfactory.md)**
+- **[Creational.AbstractFactory](creational/abstract-factory/index.md)**
   Family-aware factory that produces related objects with consistent themes.
 
 - **[Creational.Builder.BranchBuilder](creational/builder/branchbuilder.md)**
@@ -139,7 +139,7 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ## Additional Patterns
 
-- **[TypeDispatcher](additional/type-dispatcher/type-dispatcher.md)**
+- **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 
 ---

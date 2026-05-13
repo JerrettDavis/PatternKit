@@ -437,12 +437,12 @@ var validator = new DocumentVisitorBuilder<ValidationResult>()
 
 - Review [Visitor Generator Documentation](../generators/visitor-generator.md) for advanced options
 - Explore [Runtime Visitor Pattern](../patterns/behavioral/visitor/visitor.md) for non-generated scenarios
-- See [Source Generator Best Practices](../generators/best-practices.md) for performance tips
+- See [Generator Troubleshooting](../generators/troubleshooting.md) for common generator diagnostics and fixes
 
 ## Complete Example
 
 The full working example is available at:
-- [DocumentProcessingDemo.cs](../../src/PatternKit.Examples/Generators/Visitors/DocumentProcessingDemo.cs)
+- `src/PatternKit.Examples/Generators/Visitors/DocumentProcessingDemo.cs`
 
 Run it with:
 ```bash

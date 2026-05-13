@@ -832,7 +832,7 @@ public partial interface IUserService { }
 - [Decorator Generator](decorator.md) - For wrapping objects with additional behavior
 - [Facade Generator](facade.md) - For simplifying complex subsystems
 - [Factory Generators](factory-method.md) - For object creation patterns
-- [Examples](../examples/) - Real-world usage examples
+- [Examples](../examples/index.md) - Real-world usage examples
 
 ## Feedback
 

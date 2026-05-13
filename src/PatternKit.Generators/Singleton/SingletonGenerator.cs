@@ -91,7 +91,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InvalidPropertyNameDescriptor = new(
         id: DiagIdInvalidPropertyName,
         title: "Invalid instance property name",
-        messageFormat: "The instance property name '{0}' is not a valid C# identifier.",
+        messageFormat: "The instance property name '{0}' is not a valid C# identifier",
         category: "PatternKit.Generators.Singleton",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
