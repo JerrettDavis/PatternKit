@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 namespace PatternKit.Examples.Tests.ApiGateway;
 
 [Feature("ApiGateway Demo.Run prints expected responses and middleware output")]
+[Collection("ConsoleOutput")]
 public sealed class DemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     [Scenario("Demo.Run end-to-end console output")]
