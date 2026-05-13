@@ -151,6 +151,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Routing Slip](messaging/routing-slip.md)**
   Runtime and source-generated ordered itineraries that record message progress in headers.
 
+- **[Saga / Process Manager](messaging/saga.md)**
+  Runtime and source-generated process managers for typed message transitions over explicit state.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 

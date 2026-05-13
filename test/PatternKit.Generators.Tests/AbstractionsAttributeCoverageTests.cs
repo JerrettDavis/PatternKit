@@ -71,6 +71,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RoutingSlipStepAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateSagaAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(SagaStepAttribute), AttributeTargets.Method, false, false },
+        { typeof(SagaCompleteWhenAttribute), AttributeTargets.Method, false, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ObserverHubAttribute), AttributeTargets.Class, false, false },
         { typeof(ObservedEventAttribute), AttributeTargets.Property, false, false },
@@ -306,6 +309,12 @@ public sealed class AbstractionsAttributeCoverageTests
             AsyncFactoryName = "BuildAsync"
         };
         var routingStep = new RoutingSlipStepAttribute("validate", 10);
+        var saga = new GenerateSagaAttribute(typeof(int))
+        {
+            FactoryName = "BuildSaga",
+            AsyncFactoryName = "BuildSagaAsync"
+        };
+        var sagaStep = new SagaStepAttribute(typeof(decimal), 11);
 
         Assert.Equal(typeof(string), flyweight.KeyType);
         Assert.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -325,8 +334,16 @@ public sealed class AbstractionsAttributeCoverageTests
         Assert.Equal("BuildAsync", routingSlip.AsyncFactoryName);
         Assert.Equal("validate", routingStep.Name);
         Assert.Equal(10, routingStep.Order);
+        Assert.Equal(typeof(int), saga.StateType);
+        Assert.Equal("BuildSaga", saga.FactoryName);
+        Assert.Equal("BuildSagaAsync", saga.AsyncFactoryName);
+        Assert.Equal(typeof(decimal), sagaStep.MessageType);
+        Assert.Equal(11, sagaStep.Order);
         Assert.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         Assert.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
+        Assert.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
+        Assert.Throws<ArgumentNullException>(() => new SagaStepAttribute(null!, 1));
+        Assert.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         Assert.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         Assert.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         Assert.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());

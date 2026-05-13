@@ -161,3 +161,7 @@ PKOBS003 | PatternKit.Generators.Observer | Warning | Unsupported observer type 
 PKRS001 | PatternKit.Generators.Messaging | Error | Routing slip type must be partial
 PKRS002 | PatternKit.Generators.Messaging | Error | Routing slip has no steps
 PKRS003 | PatternKit.Generators.Messaging | Error | Routing slip step signature is invalid
+PKSG001 | PatternKit.Generators.Messaging | Error | Saga type must be partial
+PKSG002 | PatternKit.Generators.Messaging | Error | Saga has no steps
+PKSG003 | PatternKit.Generators.Messaging | Error | Saga step signature is invalid
+PKSG004 | PatternKit.Generators.Messaging | Error | Saga completion signature is invalid
