@@ -7,6 +7,9 @@
 - name: Bridge
   href: bridge.md
 
+- name: Chain
+  href: chain.md
+
 - name: Composite
   href: composite.md
 

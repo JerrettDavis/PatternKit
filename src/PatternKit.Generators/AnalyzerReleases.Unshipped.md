@@ -120,6 +120,13 @@ PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be par
 PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
 PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported
 PKBRG004 | PatternKit.Generators.Bridge | Error | Generated default abstraction name conflicts
+PKCH001 | PatternKit.Generators.Chain | Error | Chain type must be partial
+PKCH002 | PatternKit.Generators.Chain | Error | No chain handlers found
+PKCH003 | PatternKit.Generators.Chain | Error | Duplicate chain handler order
+PKCH004 | PatternKit.Generators.Chain | Error | Chain handler signature invalid
+PKCH005 | PatternKit.Generators.Chain | Error | Pipeline terminal missing
+PKCH006 | PatternKit.Generators.Chain | Error | Multiple pipeline terminals
+PKCH007 | PatternKit.Generators.Chain | Error | Chain default missing
 PKCMP001 | PatternKit.Generators.Composite | Error | Composite component must be partial
 PKCMP002 | PatternKit.Generators.Composite | Error | Composite component target is invalid
 PKCMP003 | PatternKit.Generators.Composite | Error | Generated Composite type name conflicts
