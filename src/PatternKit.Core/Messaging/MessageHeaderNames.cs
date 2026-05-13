@@ -25,4 +25,13 @@ public static class MessageHeaderNames
 
     /// <summary>Timestamp recorded when the message was created or accepted.</summary>
     public const string Timestamp = "timestamp";
+
+    /// <summary>Routing slip itinerary carried with a message.</summary>
+    public const string RoutingSlip = "routing-slip";
+
+    /// <summary>Zero-based index of the next or current routing slip step.</summary>
+    public const string RoutingSlipIndex = "routing-slip-index";
+
+    /// <summary>Names of routing slip steps completed by the current process.</summary>
+    public const string RoutingSlipCompleted = "routing-slip-completed";
 }

@@ -299,6 +299,8 @@
           href: messaging/message-envelope.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
+        - name: Routing Slip
+          href: messaging/routing-slip.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
     - name: Type-Dispatcher

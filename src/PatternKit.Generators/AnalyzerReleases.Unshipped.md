@@ -158,3 +158,6 @@ PKST010 | PatternKit.Generators.State | Error | Nested types not supported for S
 PKOBS001 | PatternKit.Generators.Observer | Error | Type marked with [Observer] must be partial
 PKOBS002 | PatternKit.Generators.Observer | Error | Unable to extract payload type from [Observer] attribute
 PKOBS003 | PatternKit.Generators.Observer | Warning | Unsupported observer type or configuration
+PKRS001 | PatternKit.Generators.Messaging | Error | Routing slip type must be partial
+PKRS002 | PatternKit.Generators.Messaging | Error | Routing slip has no steps
+PKRS003 | PatternKit.Generators.Messaging | Error | Routing slip step signature is invalid
