@@ -8,6 +8,12 @@ This section covers messaging and event-driven patterns in PatternKit.
 
 [Learn More](message-envelope.md)
 
+## Enterprise Message Routing
+
+Content router, recipient list, splitter, and aggregator primitives model common Enterprise Integration Patterns for deterministic in-process workflows.
+
+[Learn More](message-routing.md)
+
 ## Mediator (Source Generated)
 
 A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
@@ -64,6 +70,7 @@ var result = await dispatcher.Send<CreateUser, UserCreated>(
 The Source-Generated Mediator complements other PatternKit patterns:
 
 - **[Message Envelope and Context](message-envelope.md)** - Shared metadata for routers, routing slips, sagas, mailboxes, and idempotent receivers
+- **[Enterprise Message Routing](message-routing.md)** - Content-based router, recipient list, splitter, and aggregator primitives
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
