@@ -116,6 +116,10 @@ PKADP015 | PatternKit.Generators.Adapter | Error | Mapping method must be access
 PKADP016 | PatternKit.Generators.Adapter | Error | Static members are not supported
 PKADP017 | PatternKit.Generators.Adapter | Error | Ref-return members are not supported
 PKADP018 | PatternKit.Generators.Adapter | Error | Indexers are not supported
+PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be partial
+PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
+PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported
+PKBRG004 | PatternKit.Generators.Bridge | Error | Generated default abstraction name conflicts
 PKST001 | PatternKit.Generators.State | Error | Type marked with [StateMachine] must be partial
 PKST002 | PatternKit.Generators.State | Error | State type must be an enum
 PKST003 | PatternKit.Generators.State | Error | Trigger type must be an enum

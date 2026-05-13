@@ -4,6 +4,9 @@
 - name: Builder
   href: builder.md
 
+- name: Bridge
+  href: bridge.md
+
 - name: Facade
   href: facade.md
 
