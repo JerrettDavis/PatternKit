@@ -120,6 +120,10 @@ PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be par
 PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
 PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported
 PKBRG004 | PatternKit.Generators.Bridge | Error | Generated default abstraction name conflicts
+PKCMP001 | PatternKit.Generators.Composite | Error | Composite component must be partial
+PKCMP002 | PatternKit.Generators.Composite | Error | Composite component target is invalid
+PKCMP003 | PatternKit.Generators.Composite | Error | Generated Composite type name conflicts
+PKCMP004 | PatternKit.Generators.Composite | Error | Composite contract member is unsupported
 PKST001 | PatternKit.Generators.State | Error | Type marked with [StateMachine] must be partial
 PKST002 | PatternKit.Generators.State | Error | State type must be an enum
 PKST003 | PatternKit.Generators.State | Error | Trigger type must be an enum
