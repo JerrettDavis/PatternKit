@@ -124,6 +124,12 @@ PKCMP001 | PatternKit.Generators.Composite | Error | Composite component must be
 PKCMP002 | PatternKit.Generators.Composite | Error | Composite component target is invalid
 PKCMP003 | PatternKit.Generators.Composite | Error | Generated Composite type name conflicts
 PKCMP004 | PatternKit.Generators.Composite | Error | Composite contract member is unsupported
+PKFLY001 | PatternKit.Generators.Flyweight | Error | Flyweight type must be partial
+PKFLY002 | PatternKit.Generators.Flyweight | Error | Flyweight factory method missing
+PKFLY003 | PatternKit.Generators.Flyweight | Error | Multiple flyweight factories
+PKFLY004 | PatternKit.Generators.Flyweight | Error | Flyweight factory signature is invalid
+PKFLY005 | PatternKit.Generators.Flyweight | Error | Flyweight cache type name conflicts
+PKFLY006 | PatternKit.Generators.Flyweight | Error | Invalid flyweight eviction configuration
 PKST001 | PatternKit.Generators.State | Error | Type marked with [StateMachine] must be partial
 PKST002 | PatternKit.Generators.State | Error | State type must be an enum
 PKST003 | PatternKit.Generators.State | Error | Trigger type must be an enum

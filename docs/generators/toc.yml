@@ -19,6 +19,9 @@
 - name: Factory Method
   href: factory-method.md
 
+- name: Flyweight
+  href: flyweight.md
+
 - name: Prototype
   href: prototype.md
 
