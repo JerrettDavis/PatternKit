@@ -139,6 +139,12 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ## Additional Patterns
 
+- **[Messaging](messaging/README.md)**
+  In-process messaging primitives and source-generated dispatchers for application flows that are not durable broker responsibilities.
+
+- **[Message Envelope and Context](messaging/message-envelope.md)**
+  Immutable payload envelopes, headers, and execution context for enterprise integration patterns.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 

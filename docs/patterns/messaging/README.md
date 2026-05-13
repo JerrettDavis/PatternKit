@@ -1,6 +1,12 @@
 # Messaging Patterns
 
-This section covers messaging and event-driven patterns in PatternKit, with a focus on the **Mediator pattern**.
+This section covers messaging and event-driven patterns in PatternKit.
+
+## Message Envelope and Context
+
+`Message<TPayload>`, `MessageHeaders`, and `MessageContext` provide shared in-process metadata for enterprise integration patterns. They carry correlation IDs, causation IDs, idempotency keys, content types, reply addresses, timestamps, cancellation, and execution-scoped items without pretending to be a broker or durable queue.
+
+[Learn More](message-envelope.md)
 
 ## Mediator (Source Generated)
 
@@ -57,6 +63,7 @@ var result = await dispatcher.Send<CreateUser, UserCreated>(
 
 The Source-Generated Mediator complements other PatternKit patterns:
 
+- **[Message Envelope and Context](message-envelope.md)** - Shared metadata for routers, routing slips, sagas, mailboxes, and idempotent receivers
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
