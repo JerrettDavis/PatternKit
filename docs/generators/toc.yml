@@ -25,6 +25,9 @@
 - name: Flyweight
   href: flyweight.md
 
+- name: Iterator
+  href: iterator.md
+
 - name: Prototype
   href: prototype.md
 
