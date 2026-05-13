@@ -196,7 +196,11 @@ public sealed class CompositeGenerator : IIncrementalGenerator
         sb.AppendLine("            var current = stack.Pop();");
         sb.AppendLine("            yield return current;");
         sb.AppendLine("            var children = current." + childrenName + ";");
-        sb.AppendLine("            for (var i = children.Count - 1; i >= 0; i--) stack.Push(children[i]);");
+        sb.AppendLine("            for (var i = children.Count - 1; i >= 0; i--)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if (children[i] is " + contract + " child) stack.Push(child);");
+        sb.AppendLine("                else throw new global::System.InvalidOperationException(\"Traversal requires generated composite component base instances.\");");
+        sb.AppendLine("            }");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -209,7 +213,11 @@ public sealed class CompositeGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         sb.AppendLine("            var current = queue.Dequeue();");
         sb.AppendLine("            yield return current;");
-        sb.AppendLine("            foreach (var child in current." + childrenName + ") queue.Enqueue(child);");
+        sb.AppendLine("            foreach (var item in current." + childrenName + ")");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if (item is " + contract + " child) queue.Enqueue(child);");
+        sb.AppendLine("                else throw new global::System.InvalidOperationException(\"Traversal requires generated composite component base instances.\");");
+        sb.AppendLine("            }");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine("}");
