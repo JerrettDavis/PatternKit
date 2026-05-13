@@ -145,6 +145,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Message Envelope and Context](messaging/message-envelope.md)**
   Immutable payload envelopes, headers, and execution context for enterprise integration patterns.
 
+- **[Enterprise Message Routing](messaging/message-routing.md)**
+  Content router, recipient list, splitter, and aggregator primitives for deterministic in-process flows.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 
