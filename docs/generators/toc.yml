@@ -10,6 +10,9 @@
 - name: Chain
   href: chain.md
 
+- name: Command
+  href: command.md
+
 - name: Composite
   href: composite.md
 
