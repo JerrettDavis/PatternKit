@@ -69,6 +69,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(BreadthFirstAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalChildrenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
+        { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(RoutingSlipStepAttribute), AttributeTargets.Method, false, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ObserverHubAttribute), AttributeTargets.Class, false, false },
         { typeof(ObservedEventAttribute), AttributeTargets.Property, false, false },
@@ -298,6 +300,12 @@ public sealed class AbstractionsAttributeCoverageTests
             IncludeStreaming = false,
             Visibility = GeneratedVisibility.Internal
         };
+        var routingSlip = new GenerateRoutingSlipAttribute(typeof(string))
+        {
+            FactoryName = "Build",
+            AsyncFactoryName = "BuildAsync"
+        };
+        var routingStep = new RoutingSlipStepAttribute("validate", 10);
 
         Assert.Equal(typeof(string), flyweight.KeyType);
         Assert.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -312,6 +320,13 @@ public sealed class AbstractionsAttributeCoverageTests
         Assert.True(dispatcher.IncludeObjectOverloads);
         Assert.False(dispatcher.IncludeStreaming);
         Assert.Equal(GeneratedVisibility.Internal, dispatcher.Visibility);
+        Assert.Equal(typeof(string), routingSlip.PayloadType);
+        Assert.Equal("Build", routingSlip.FactoryName);
+        Assert.Equal("BuildAsync", routingSlip.AsyncFactoryName);
+        Assert.Equal("validate", routingStep.Name);
+        Assert.Equal(10, routingStep.Order);
+        Assert.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
+        Assert.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         Assert.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         Assert.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         Assert.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());

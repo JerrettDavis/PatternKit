@@ -148,6 +148,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Enterprise Message Routing](messaging/message-routing.md)**
   Content router, recipient list, splitter, and aggregator primitives for deterministic in-process flows.
 
+- **[Routing Slip](messaging/routing-slip.md)**
+  Runtime and source-generated ordered itineraries that record message progress in headers.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 

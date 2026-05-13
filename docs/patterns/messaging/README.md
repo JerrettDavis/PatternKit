@@ -14,6 +14,12 @@ Content router, recipient list, splitter, and aggregator primitives model common
 
 [Learn More](message-routing.md)
 
+## Routing Slip
+
+Runtime and source-generated routing slip factories execute named message itineraries in order and record progress in message headers.
+
+[Learn More](routing-slip.md)
+
 ## Mediator (Source Generated)
 
 A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
@@ -71,6 +77,7 @@ The Source-Generated Mediator complements other PatternKit patterns:
 
 - **[Message Envelope and Context](message-envelope.md)** - Shared metadata for routers, routing slips, sagas, mailboxes, and idempotent receivers
 - **[Enterprise Message Routing](message-routing.md)** - Content-based router, recipient list, splitter, and aggregator primitives
+- **[Routing Slip](routing-slip.md)** - Ordered message itineraries with fluent runtime and source-generated factories
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
