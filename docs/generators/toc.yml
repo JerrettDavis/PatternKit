@@ -7,6 +7,9 @@
 - name: Bridge
   href: bridge.md
 
+- name: Composite
+  href: composite.md
+
 - name: Facade
   href: facade.md
 
