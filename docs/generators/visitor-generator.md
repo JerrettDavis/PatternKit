@@ -602,8 +602,8 @@ These warnings are expected when derived types have their own Accept methods. Th
 
 ## See Also
 
-- [Visitor Pattern (Runtime)](../../../patterns/behavioral/visitor/visitor.md)
-- [ActionVisitor Pattern](../../../patterns/behavioral/visitor/actionvisitor.md)
-- [AsyncVisitor Pattern](../../../patterns/behavioral/visitor/asyncvisitor.md)
-- [AsyncActionVisitor Pattern](../../../patterns/behavioral/visitor/asyncactionvisitor.md)
-- [Document Processing Example](../../../examples/document-processing-visitor.md)
+- [Visitor Pattern (Runtime)](../patterns/behavioral/visitor/visitor.md)
+- [ActionVisitor Pattern](../patterns/behavioral/visitor/actionvisitor.md)
+- [AsyncVisitor Pattern](../patterns/behavioral/visitor/asyncvisitor.md)
+- [AsyncActionVisitor Pattern](../patterns/behavioral/visitor/asyncactionvisitor.md)
+- [Document Processing Example](../examples/document-processing-visitor.md)

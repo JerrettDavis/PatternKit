@@ -660,8 +660,9 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return $"({enumType.ToDisplayString(TypeFormat)}){param.ExplicitDefaultValue}";
         }
 
-        // Use Roslyn's culture-invariant literal formatting for all other types
-        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false);
+        // Use Roslyn's culture-invariant literal formatting for all other types.
+        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false)
+            ?? "default";
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)

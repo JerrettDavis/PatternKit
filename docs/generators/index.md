@@ -1,12 +1,12 @@
 # PatternKit Generators
 
-PatternKit includes a Roslyn incremental generator package (`PatternKit.Generators`) that emits pattern implementations at compile time. Use it when you want predictable, allocation-light helpers without writing the boilerplate by hand.
+PatternKit includes a Roslyn incremental generator package (`PatternKit.Generators`) that emits pattern implementations at compile time. Use it when you want predictable generated code, design-time diagnostics, and less handwritten pattern scaffolding.
 
 ## When to Use
 
 - You already express intent with attributes and want the compiler to write the implementation.
-- You need both synchronous and `ValueTask`-first async entry points.
-- You want deterministic codegen with no runtime dependency on PatternKit.
+- You need synchronous APIs, `ValueTask`-first async APIs, or both.
+- You want deterministic codegen that is friendly to trimming and AOT scenarios.
 
 ## Package & Setup
 
@@ -27,9 +27,10 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | Generator | Description | Attribute |
 |---|---|---|
 | [**Builder**](builder.md) | GoF-aligned builders with mutable or state-projection models, sync/async pipelines | `[GenerateBuilder]` |
-| [**Factory Method**](factory-method.md) | Keyed dispatcher from a static partial class | `[GenerateFactoryMethod]` |
-| [**Factory Class**](factory-class.md) | GoF-style factory mapping keys to products | `[GenerateFactory]` |
+| [**Factory Method**](factory-method.md) | Keyed dispatcher from a static partial class | `[FactoryMethod]` |
+| [**Factory Class**](factory-class.md) | GoF-style factory mapping keys to products | `[FactoryClass]` |
 | [**Prototype**](prototype.md) | Clone/deep-copy generation for types | `[Prototype]` |
+| [**Singleton**](singleton.md) | Thread-safe singleton accessors with optional factory hooks | `[Singleton]` |
 
 ### Structural Patterns
 
@@ -37,14 +38,23 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 |---|---|---|
 | [**Decorator**](decorator.md) | Base decorator classes with forwarding and composition helpers | `[GenerateDecorator]` |
 | [**Facade**](facade.md) | Simplified interfaces to complex subsystems | `[GenerateFacade]` |
+| [**Adapter**](adapter.md) | Adapter implementations from mapping attributes | `[GenerateAdapter]` |
+| [**Bridge**](bridge.md) | Abstraction/implementation pairs with forwarding | `[BridgeAbstraction]` / `[BridgeImplementor]` |
+| [**Composite**](composite.md) | Component trees and traversal helpers | `[CompositeComponent]` |
+| [**Flyweight**](flyweight.md) | Keyed flyweight factories and caches | `[Flyweight]` |
 | [**Proxy**](proxy.md) | Proxy implementations with interception support | `[GenerateProxy]` |
 
 ### Behavioral Patterns
 
 | Generator | Description | Attribute |
 |---|---|---|
+| [**Chain**](chain.md) | Chain-of-responsibility pipelines | `[Chain]` |
+| [**Command**](command.md) | Command objects and invokers | `[Command]` |
 | [**Composer**](composer.md) | Pipeline composition from ordered steps | `[Composer]` |
+| [**Iterator**](iterator.md) | Enumerable/async-enumerable iteration helpers | `[Iterator]` |
 | [**Memento**](memento.md) | Immutable snapshots with optional undo/redo history | `[Memento]` |
+| [**Observer**](observer.md) | Event hubs and observer dispatch | `[ObserverHub]` |
+| [**State Machine**](state-machine.md) | Deterministic finite state machines | `[StateMachine]` |
 | [**Strategy**](strategy.md) | Predicate-based dispatch with fluent builder | `[GenerateStrategy]` |
 | [**Template Method**](template-method-generator.md) | Template method skeletons with hook points | `[Template]` |
 | [**Visitor**](visitor-generator.md) | Type-safe visitor implementations | `[GenerateVisitor]` |

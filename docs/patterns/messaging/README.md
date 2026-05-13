@@ -50,8 +50,8 @@ var result = await dispatcher.Send<CreateUser, UserCreated>(
 ### Documentation
 
 - [Full Documentation](dispatcher.md)
-- [Simple Examples](../../src/PatternKit.Examples/Messaging/DispatcherExample.cs)
-- **[Comprehensive Production Demo](../../src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs)** - DI integration, CQRS, behaviors, real-world domain
+- `src/PatternKit.Examples/Messaging/DispatcherExample.cs`
+- `src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs` - DI integration, CQRS, behaviors, real-world domain
 
 ### Related Patterns
 

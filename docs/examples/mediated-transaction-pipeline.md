@@ -15,7 +15,7 @@ Everything runs on in-memory types so you can exercise it entirely from unit tes
 
 ## What we’re building
 
-The pipeline transforms a mutable [xref\:PatternKit.Examples.Chain.TransactionContext](xref:PatternKit.Examples.Chain.TransactionContext) through a series of stages and returns a terminal [xref\:PatternKit.Examples.Chain.TxResult](xref:PatternKit.Examples.Chain.TxResult):
+The pipeline transforms a mutable `PatternKit.Examples.Chain.TransactionContext` through a series of stages and returns a terminal `PatternKit.Examples.Chain.TxResult`:
 
 ```
 [Preauth] → [Discounts & Tax] → [Rounding] → [Tender Handling] → [Finalize]
@@ -35,7 +35,7 @@ The pipeline transforms a mutable [xref\:PatternKit.Examples.Chain.TransactionCo
 ### The `Stage` delegate and the pipeline runner
 
 * `Stage` is just: **mutate ctx, decide continue/stop**.
-* [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline) runs the ordered stages and enforces a terminal result:
+* `PatternKit.Examples.Chain.TransactionPipeline` runs the ordered stages and enforces a terminal result:
 
     * If any stage returns **false**: stop and return the current `ctx.Result`.
     * If no stage stopped and `ctx.Result` is still null: force success `("paid", "paid in full")`.
@@ -53,7 +53,7 @@ If an action chain sets a failing `ctx.Result`, the adapted stage returns **fals
 
 ## Building the pipeline
 
-Use [xref\:PatternKit.Examples.Chain.TransactionPipelineBuilder](xref:PatternKit.Examples.Chain.TransactionPipelineBuilder) to declaratively assemble stages:
+Use `PatternKit.Examples.Chain.TransactionPipelineBuilder` to declaratively assemble stages:
 
 ```csharp
 var pipeline = TransactionPipelineBuilder.New()
@@ -91,10 +91,10 @@ All values are rounded to two decimals at the point of application.
 
 ### 3) Rounding rules (first-match-wins)
 
-[xref\:PatternKit.Examples.Chain.RoundingPipeline](xref:PatternKit.Examples.Chain.RoundingPipeline) evaluates `IRoundingRule` implementations **in order** and applies the first that matches:
+`PatternKit.Examples.Chain.RoundingPipeline` evaluates `IRoundingRule` implementations **in order** and applies the first that matches:
 
-* [xref\:PatternKit.Examples.Chain.CharityRoundUpRule](xref:PatternKit.Examples.Chain.CharityRoundUpRule) — if any `Sku` starts with `CHARITY:`, round up to next dollar and notify [xref\:PatternKit.Examples.Chain.ICharityTracker](xref:PatternKit.Examples.Chain.ICharityTracker)
-* [xref\:PatternKit.Examples.Chain.NickelCashOnlyRule](xref:PatternKit.Examples.Chain.NickelCashOnlyRule) — if *all tenders are cash* and a `ROUND:NICKEL` SKU is present, round to nearest \$0.05
+* `PatternKit.Examples.Chain.CharityRoundUpRule` — if any `Sku` starts with `CHARITY:`, round up to next dollar and notify `PatternKit.Examples.Chain.ICharityTracker`
+* `PatternKit.Examples.Chain.NickelCashOnlyRule` — if *all tenders are cash* and a `ROUND:NICKEL` SKU is present, round to nearest \$0.05
 
 Every rule logs the delta and the new total when applied.
 
@@ -108,7 +108,7 @@ TransactionPipelineBuilder.New()
 
 ### 4) Tender handling (BranchBuilder router)
 
-Handlers live behind a **zero-`if` router** built by [xref\:PatternKit.Examples.Chain.TenderRouterFactory](xref:PatternKit.Examples.Chain.TenderRouterFactory):
+Handlers live behind a **zero-`if` router** built by `PatternKit.Examples.Chain.TenderRouterFactory`:
 
 * Each handler implements `ITenderHandler` (from `ConfigDriven` sample) with:
 
@@ -259,19 +259,19 @@ var (result, finalCtx) = MediatedTransactionPipelineDemo.Run(ctx);
 
 * Pipeline
 
-    * [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline)
-    * [xref\:PatternKit.Examples.Chain.TransactionPipelineBuilder](xref:PatternKit.Examples.Chain.TransactionPipelineBuilder)
-    * [xref\:PatternKit.Examples.Chain.MediatedTransactionPipelineDemo](xref:PatternKit.Examples.Chain.MediatedTransactionPipelineDemo)
+    * `PatternKit.Examples.Chain.TransactionPipeline`
+    * `PatternKit.Examples.Chain.TransactionPipelineBuilder`
+    * `PatternKit.Examples.Chain.MediatedTransactionPipelineDemo`
 * Domain types & services
 
-    * [xref\:PatternKit.Examples.Chain.TransactionContext](xref:PatternKit.Examples.Chain.TransactionContext), [xref\:PatternKit.Examples.Chain.TxResult](xref:PatternKit.Examples.Chain.TxResult), [xref\:PatternKit.Examples.Chain.Tender](xref:PatternKit.Examples.Chain.Tender), [xref\:PatternKit.Examples.Chain.LineItem](xref:PatternKit.Examples.Chain.LineItem), [xref\:PatternKit.Examples.Chain.Customer](xref:PatternKit.Examples.Chain.Customer)
-    * [xref\:PatternKit.Examples.Chain.IDeviceBus](xref:PatternKit.Examples.Chain.IDeviceBus), [xref\:PatternKit.Examples.Chain.ICardProcessor](xref:PatternKit.Examples.Chain.ICardProcessor), [xref\:PatternKit.Examples.Chain.CardProcessors](xref:PatternKit.Examples.Chain.CardProcessors)
+    * `PatternKit.Examples.Chain.TransactionContext`, `PatternKit.Examples.Chain.TxResult`, `PatternKit.Examples.Chain.Tender`, `PatternKit.Examples.Chain.LineItem`, `PatternKit.Examples.Chain.Customer`
+    * `PatternKit.Examples.Chain.IDeviceBus`, `PatternKit.Examples.Chain.ICardProcessor`, `PatternKit.Examples.Chain.CardProcessors`
 * Rounding
 
-    * [xref\:PatternKit.Examples.Chain.IRoundingRule](xref:PatternKit.Examples.Chain.IRoundingRule), [xref\:PatternKit.Examples.Chain.CharityRoundUpRule](xref:PatternKit.Examples.Chain.CharityRoundUpRule), [xref\:PatternKit.Examples.Chain.NickelCashOnlyRule](xref:PatternKit.Examples.Chain.NickelCashOnlyRule), [xref\:PatternKit.Examples.Chain.RoundingPipeline](xref:PatternKit.Examples.Chain.RoundingPipeline)
+    * `PatternKit.Examples.Chain.IRoundingRule`, `PatternKit.Examples.Chain.CharityRoundUpRule`, `PatternKit.Examples.Chain.NickelCashOnlyRule`, `PatternKit.Examples.Chain.RoundingPipeline`
 * Tender routing
 
-    * [xref\:PatternKit.Examples.Chain.TenderRouterFactory](xref:PatternKit.Examples.Chain.TenderRouterFactory)
+    * `PatternKit.Examples.Chain.TenderRouterFactory`
     * [xref\:PatternKit.Creational.Builder.BranchBuilder\`2](xref:PatternKit.Creational.Builder.BranchBuilder`2)
     * [xref\:PatternKit.Creational.Builder.ChainBuilder\`1](xref:PatternKit.Creational.Builder.ChainBuilder`1)
 * Chains

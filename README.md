@@ -1,7 +1,7 @@
 # PatternKit
 
 > **Fluent Design Patterns for Modern .NET**  
-> Elegant, declarative, allocation-light implementations of classic patterns—optimized for .NET 9.
+> Fluent APIs and incremental source generators for classic patterns in modern .NET.
 
 
 [![CI](https://github.com/JerrettDavis/PatternKit/actions/workflows/ci.yml/badge.svg)](https://github.com/JerrettDavis/PatternKit/actions/workflows/ci.yml)
@@ -13,16 +13,16 @@
 
 ## Overview
 
-**PatternKit** is a modern library that reimagines the GoF design patterns for .NET 9+.  
-Instead of boilerplate-heavy class hierarchies, we favor:
+**PatternKit** provides fluent runtime helpers and Roslyn incremental source generators for GoF-style design patterns in .NET.
+Instead of repeating handwritten pattern scaffolding, it favors:
 
 - **Fluent builders** and DSLs (chainable, declarative, composable).
-- **Source generators** to eliminate reflection and runtime overhead.
-- **Zero-allocation hot paths** for performance-critical scenarios.
-- **Strong typing** with `in` parameters, avoiding boxing and defensive copies.
+- **Source generators** that emit deterministic code at compile time.
+- **AOT-friendly generated code** where pattern shape is known at design time.
+- **Strong typing** with validation diagnostics from analyzers and generator tests.
 - **Testable, deterministic APIs** that pair naturally with BDD and xUnit/NUnit/MSTest.
 
-Our goal: make patterns a joy to use, not a chore to implement.
+The goal is to make patterns clear to read, straightforward to test, and inexpensive to maintain.
 
 ---
 
@@ -448,6 +448,6 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ## Patterns Table
 | Category       | Patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | -------------- |--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) • [Composer](docs/patterns/creational/builder/composer.md) • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) • [BranchBuilder](docs/patterns/creational/builder/chainbuilder.md) • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) • [Prototype](docs/patterns/creational/prototype/prototype.md) • [Singleton](docs/patterns/creational/singleton/singleton.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) • [Bridge](docs/patterns/structural/bridge/bridge.md) • [Composite](docs/patterns/structural/composite/composite.md) • [Decorator](docs/patterns/structural/decorator/decorator.md) • [Facade](docs/patterns/structural/facade/facade.md) • [Flyweight](docs/patterns/structural/flyweight/index.md) • [Proxy](docs/patterns/structural/proxy/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| **Creational** | [Factory](docs/patterns/creational/factory/factory.md) • [Composer](docs/patterns/creational/builder/composer.md) • [ChainBuilder](docs/patterns/creational/builder/chainbuilder.md) • [BranchBuilder](docs/patterns/creational/builder/branchbuilder.md) • [MutableBuilder](docs/patterns/creational/builder/mutablebuilder.md) • [Prototype](docs/patterns/creational/prototype/prototype.md) • [Singleton](docs/patterns/creational/singleton/singleton.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **Structural** | [Adapter](docs/patterns/structural/adapter/fluent-adapter.md) • [Bridge](docs/patterns/structural/bridge/bridge.md) • [Composite](docs/patterns/structural/composite/composite.md) • [Decorator](docs/patterns/structural/decorator/decorator.md) • [Facade](docs/patterns/structural/facade/index.md) • [Flyweight](docs/patterns/structural/flyweight/index.md) • [Proxy](docs/patterns/structural/proxy/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | **Behavioral** | [Strategy](docs/patterns/behavioral/strategy/strategy.md) • [TryStrategy](docs/patterns/behavioral/strategy/trystrategy.md) • [ActionStrategy](docs/patterns/behavioral/strategy/actionstrategy.md) • [ActionChain](docs/patterns/behavioral/chain/actionchain.md) • [ResultChain](docs/patterns/behavioral/chain/resultchain.md) • [ReplayableSequence](docs/patterns/behavioral/iterator/replayablesequence.md) • [WindowSequence](docs/patterns/behavioral/iterator/windowsequence.md) • [Command](docs/patterns/behavioral/command/command.md) • [Mediator](docs/patterns/behavioral/mediator/mediator.md) • [Memento](docs/patterns/behavioral/memento/memento.md) • [Observer](docs/patterns/behavioral/observer/observer.md) • [State](docs/patterns/behavioral/state/state.md) • [Template Method](docs/patterns/behavioral/template/template.md) • [Visitor](docs/patterns/behavioral/visitor/visitor.md) |

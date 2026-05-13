@@ -15,7 +15,7 @@
 6. **Mock Framework** — Build a test double system (like Moq)
 7. **Remote Proxy** — Optimize network calls with caching
 
-All demonstrations are in [xref:PatternKit.Examples.ProxyDemo.ProxyDemo](xref:PatternKit.Examples.ProxyDemo.ProxyDemo).
+All demonstrations are in `PatternKit.Examples.ProxyDemo.ProxyDemo`.
 
 ---
 
@@ -364,7 +364,7 @@ Build a **mock framework** using the proxy pattern to create test doubles that r
 
 ### Code
 
-The complete mock framework is in [xref:PatternKit.Examples.ProxyDemo.ProxyDemo.MockFramework](xref:PatternKit.Examples.ProxyDemo.ProxyDemo.MockFramework).
+The complete mock framework is in `PatternKit.Examples.ProxyDemo.ProxyDemo.MockFramework`.
 
 ### Usage
 
@@ -581,7 +581,7 @@ var finalProxy = Proxy<string, string>.Create(url => cachedProxy.Execute(url))
 
 ## Testing the Demos
 
-All demonstrations have comprehensive unit tests in [xref:PatternKit.Examples.Tests.ProxyDemo.ProxyDemoTests](xref:PatternKit.Examples.Tests.ProxyDemo.ProxyDemoTests).
+All demonstrations have comprehensive unit tests in `PatternKit.Examples.Tests.ProxyDemo.ProxyDemoTests`.
 
 ### Example Test
 

@@ -29,9 +29,9 @@ A composed strategy lets us encode these as **named predicates and handlers**, t
 
 ## Model types
 
-* **Channels**: `<xref:PatternKit.Examples.Strategies.Composed.Channel>` — `Email`, `Sms`, `Push`, `Im`.
-* **Input**: `<xref:PatternKit.Examples.Strategies.Composed.SendContext>` — `(UserId, Message, IsCritical, Locale?)`.
-* **Output**: `<xref:PatternKit.Examples.Strategies.Composed.SendResult>` — `(Channel, Success, Info?)`.
+* **Channels**: ``PatternKit.Examples.Strategies.Composed.Channel`` — `Email`, `Sms`, `Push`, `Im`.
+* **Input**: ``PatternKit.Examples.Strategies.Composed.SendContext`` — `(UserId, Message, IsCritical, Locale?)`.
+* **Output**: ``PatternKit.Examples.Strategies.Composed.SendResult`` — `(Channel, Success, Info?)`.
 
 Dependencies (`IIdentityService`, `IPresenceService`, `IRateLimiter`, `IPreferenceService`, and four sender interfaces) are small and focused. They can be synchronous or asynchronous (we use `ValueTask<bool>`/`ValueTask<SendResult>` everywhere).
 
@@ -56,12 +56,12 @@ var strategy = AsyncStrategy<SendContext, SendResult>.Create()
 
 ## Channel policies = Gate + Send
 
-We keep channels self-contained with `<xref:PatternKit.Examples.Strategies.Composed.ChannelPolicy>`:
+We keep channels self-contained with ``PatternKit.Examples.Strategies.Composed.ChannelPolicy``:
 
 * `Gate : AsyncStrategy<SendContext,bool>` — **all** checks must pass.
 * `Send : Handler` — the sender to invoke if the gate allows it.
 
-`<xref:PatternKit.Examples.Strategies.Composed.ChannelPolicyFactory>` wires this up:
+``PatternKit.Examples.Strategies.Composed.ChannelPolicyFactory`` wires this up:
 
 * **Push** gate: `HasPushToken && !DoNotDisturb && RateOkPush`
 * **IM** gate: `OnlineIm && RateOkIm`
@@ -76,13 +76,13 @@ We keep channels self-contained with `<xref:PatternKit.Examples.Strategies.Compo
 
 ## Preference-aware composition
 
-`<xref:PatternKit.Examples.Strategies.Composed.ComposedStrategies.BuildPreferenceAware*>` builds the top-level strategy:
+``PatternKit.Examples.Strategies.Composed.ComposedStrategies.BuildPreferenceAware*`` builds the top-level strategy:
 
 1. **Critical path**
-   If `<xref:PatternKit.Examples.Strategies.Composed.SendContext.IsCritical>` is true, we **prepend `Sms`** to the order (if it isn’t already first) and evaluate gates in that order.
+   If ``PatternKit.Examples.Strategies.Composed.SendContext.IsCritical`` is true, we **prepend `Sms`** to the order (if it isn’t already first) and evaluate gates in that order.
 
 2. **Preferred path**
-   Otherwise we ask `<xref:PatternKit.Examples.Strategies.Composed.IPreferenceService>` for the user’s order, **de-dupe while preserving first occurrence**, then build a per-request strategy that tries each policy’s gate in that order.
+   Otherwise we ask ``PatternKit.Examples.Strategies.Composed.IPreferenceService`` for the user’s order, **de-dupe while preserving first occurrence**, then build a per-request strategy that tries each policy’s gate in that order.
 
 3. **Fallback**
    If nothing matches, we call **Email’s send handler** as a final attempt **even if Email’s gate would fail**. That is by design to guarantee a last-ditch delivery.
@@ -240,10 +240,10 @@ var result = await strategy.ExecuteAsync(
 ## Cross-references
 
 * `<xref:PatternKit.Behavioral.Strategy.AsyncStrategy%602>`
-* `<xref:PatternKit.Examples.Strategies.Composed.Channel>`
-* `<xref:PatternKit.Examples.Strategies.Composed.SendContext>`
-* `<xref:PatternKit.Examples.Strategies.Composed.SendResult>`
-* `<xref:PatternKit.Examples.Strategies.Composed.ChannelPolicy>`
-* `<xref:PatternKit.Examples.Strategies.Composed.ChannelPolicyFactory>`
-* `<xref:PatternKit.Examples.Strategies.Composed.ComposedStrategies>`
+* ``PatternKit.Examples.Strategies.Composed.Channel``
+* ``PatternKit.Examples.Strategies.Composed.SendContext``
+* ``PatternKit.Examples.Strategies.Composed.SendResult``
+* ``PatternKit.Examples.Strategies.Composed.ChannelPolicy``
+* ``PatternKit.Examples.Strategies.Composed.ChannelPolicyFactory``
+* ``PatternKit.Examples.Strategies.Composed.ComposedStrategies``
 

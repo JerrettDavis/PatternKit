@@ -35,7 +35,7 @@ Key characteristics:
 - **Fluent builder**: Register handlers using `On<T>()` method chaining
 - **Optional default**: Handle unmatched types with a fallback
 
-> **Note**: This is NOT the Gang of Four Visitor pattern. TypeDispatcher uses runtime type checks, not double dispatch. For true Visitor with double dispatch, see [Visitor](../visitor/index.md) and [FluentVisitor](../visitor/fluent-visitor.md).
+> **Note**: This is NOT the Gang of Four Visitor pattern. TypeDispatcher uses runtime type checks, not double dispatch. For true Visitor with double dispatch, see [Visitor](../visitor/index.md) and [FluentVisitor](../visitor/guide.md).
 
 ## When to Use
 
@@ -47,7 +47,7 @@ Key characteristics:
 
 ## When to Avoid
 
-- **True Visitor pattern needed**: When elements must control dispatch, use [FluentVisitor](../visitor/fluent-visitor.md)
+- **True Visitor pattern needed**: When elements must control dispatch, use [FluentVisitor](../visitor/guide.md)
 - **Simple conditionals**: For 2-3 types, a switch expression may be clearer
 - **Performance-critical**: Each dispatch checks predicates sequentially
 - **Open types**: When new types are frequently added, consider [Strategy](../strategy/index.md)
@@ -106,5 +106,5 @@ classDiagram
 - [Comprehensive Guide](guide.md) - Detailed usage and patterns
 - [API Reference](api-reference.md) - Complete API documentation
 - [Real-World Examples](real-world-examples.md) - Production-ready examples
-- [FluentVisitor](../visitor/fluent-visitor.md) - For true double-dispatch visitor
+- [FluentVisitor](../visitor/guide.md) - For true double-dispatch visitor
 - [Strategy Pattern](../strategy/index.md) - For predicate-based dispatch
