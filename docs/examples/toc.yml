@@ -52,6 +52,9 @@
 - name: Resilient Checkout and Collaborating Mailboxes
   href: resilient-checkout-and-mailboxes.md
 
+- name: Messaging Backplane Facade
+  href: messaging-backplane-facade.md
+
 - name: Prototype — Game Character Factory with Clone Registry
   href: prototype-demo.md
 

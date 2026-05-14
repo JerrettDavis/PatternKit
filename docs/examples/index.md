@@ -15,6 +15,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Snapshot history & undo/redo (Memento)** for document/editor style workflows.
 * **Source-generated application wiring** for builders, factories, facades, proxies, observers, visitors, state machines, strategies, mementos, template methods, and messaging factories.
 * **Enterprise messaging workflows** for envelopes, routers, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, and outboxes.
+* **Messaging backplane facade** for request/reply and publish/subscribe over an application-owned transport boundary.
 
 ## Demos in this section
 
@@ -63,6 +64,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Resilient Checkout and Collaborating Mailboxes**
   Application-shaped messaging demos: checkout route selection, routing-slip execution, command compensation, fallback routes, and service mailboxes collaborating over correlated messages. See [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md).
 
+* **Messaging Backplane Facade**
+  Demonstrates how PatternKit can sit behind a MassTransit- or MediatR-style application API while RabbitMQ, Azure Service Bus, Postgres, MQTT, or another adapter remains infrastructure-owned. See [Messaging Backplane Facade](messaging-backplane-facade.md).
+
 ## How to run
 
 From the repo root:
@@ -107,6 +111,7 @@ dotnet test PatternKit.slnx -c Release
 * **Enterprise Messaging:** `src/PatternKit.Examples/Messaging` (+ `PatternKit.Examples.Tests/Messaging`) — runtime and generated messaging workflows.
 * **Resilient Checkout:** `ResilientCheckoutDemo` (+ `ResilientCheckoutDemoTests`) — fallback checkout routes with compensation.
 * **Collaborating Mailboxes:** `ServiceCollaborationMailboxDemo` (+ `ServiceCollaborationMailboxDemoTests`) — inventory, payment, shipping, and notification services collaborating through serialized mailboxes.
+* **Messaging Backplane Facade:** `BackplaneFacadeDemo` (+ `BackplaneFacadeDemoTests`) — request/reply, pub/sub, outbox, idempotency, and mailbox-backed transport subscribers.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
