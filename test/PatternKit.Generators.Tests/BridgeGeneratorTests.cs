@@ -99,4 +99,93 @@ public class BridgeGeneratorTests
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKBRG002");
     }
+
+    [Fact]
+    public void GeneratesGenericBridgeWithForwardedPropertiesRefParametersAndDefaults()
+    {
+        const string source = """
+            using PatternKit.Generators.Bridge;
+
+            [BridgeImplementor]
+            public abstract class Repository<T>
+            {
+                public abstract string Name { get; }
+                public abstract void Copy(ref int source, out int destination, in bool enabled);
+                public abstract string Format(string value = "quoted", bool enabled = true, int count = 3, object? state = null);
+                [BridgeIgnore] public abstract void Ignored();
+                public static void StaticUtility() { }
+            }
+
+            [BridgeAbstraction(typeof(Repository<string>), ImplementorPropertyName = "Backend")]
+            public partial record Store<T>
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GeneratesGenericBridgeWithForwardedPropertiesRefParametersAndDefaults));
+        var gen = new BridgeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Store.Bridge.g.cs").SourceText.ToString();
+        Assert.Contains("public abstract partial record class Store<T>", generated);
+        Assert.Contains("protected string Name => Backend.Name;", generated);
+        Assert.Contains("ref int source, out int destination, in bool enabled", generated);
+        Assert.Contains("Backend.Copy(ref source, out destination, in enabled)", generated);
+        Assert.Contains(@"string value = @""quoted""", generated);
+        Assert.Contains("bool enabled = true", generated);
+        Assert.Contains("int count = 3", generated);
+        Assert.Contains("object? state = default", generated);
+        Assert.DoesNotContain("Ignored", generated);
+        Assert.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
+    }
+
+    [Fact]
+    public void ReportsDiagnosticForEventMembersAndDefaultNameConflicts()
+    {
+        const string unsupportedEvent = """
+            using PatternKit.Generators.Bridge;
+
+            namespace TestNamespace;
+
+            public interface IRenderer
+            {
+                event System.Action? Rendered;
+            }
+
+            [BridgeAbstraction(typeof(IRenderer))]
+            public partial class Shape
+            {
+            }
+            """;
+        const string conflictingDefault = """
+            using PatternKit.Generators.Bridge;
+
+            namespace TestNamespace;
+
+            public interface IRenderer
+            {
+                void Draw();
+            }
+
+            public sealed class ExistingShape
+            {
+            }
+
+            [BridgeAbstraction(typeof(IRenderer), GenerateDefault = true, DefaultTypeName = "ExistingShape")]
+            public partial class Shape
+            {
+            }
+            """;
+
+        var eventComp = RoslynTestHelpers.CreateCompilation(unsupportedEvent, nameof(ReportsDiagnosticForEventMembersAndDefaultNameConflicts) + "Event");
+        var conflictComp = RoslynTestHelpers.CreateCompilation(conflictingDefault, nameof(ReportsDiagnosticForEventMembersAndDefaultNameConflicts) + "Conflict");
+        var gen = new BridgeGenerator();
+
+        _ = RoslynTestHelpers.Run(eventComp, gen, out var eventResult, out _);
+        _ = RoslynTestHelpers.Run(conflictComp, gen, out var conflictResult, out _);
+
+        Assert.Contains(eventResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG003");
+        Assert.Contains(conflictResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG004");
+    }
 }

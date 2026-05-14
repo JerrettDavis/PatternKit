@@ -52,4 +52,41 @@ public sealed class CorporateApplicationBuilderDemoTests(ITestOutputHelper outpu
                 })
             .AssertPassed();
     }
+
+    [Scenario("BuildProductionAsync returns the fully initialized production application")]
+    [Fact]
+    public async Task BuildProductionAsync_UsesDefaultProductionRecipe()
+    {
+        await Given("the public production build recipe", () => (Func<ValueTask<CorporateApp>>)CorporateApplicationDemo.BuildProductionAsync)
+            .When<CorporateApp>("building the production app", async ValueTask<CorporateApp> (build) => await build())
+            .Then("production configuration is selected", bool (app) =>
+                app.Host.Services.GetRequiredService<IConfiguration>()["ConnectionStrings:Primary"] == "Server=prod;Database=Corporate;")
+            .And("all production modules are enabled", bool (app) =>
+                app.Host.Services.GetService<IMetricsSink>() is not null
+                && app.Host.Services.GetService<INotificationPublisher>() is not null
+                && app.Host.Services.GetService<IBackgroundJobScheduler>() is not null)
+            .And("startup tasks ran", bool (app) =>
+                app.Log.Contains("startup:notifications")
+                && app.Log.Contains("startup:jobs"))
+            .AssertPassed();
+    }
+
+    [Scenario("Notification options expose production-ready defaults and overrides")]
+    [Fact]
+    public Task NotificationOptions_Defaults_And_Overrides_AreExplicit()
+        => Given("default and configured notification options", () => new
+            {
+                Defaults = new NotificationOptions(),
+                Configured = new NotificationOptions { Enabled = false, Provider = "rabbitmq" }
+            })
+            .When("reading options", options => (
+                DefaultEnabled: options.Defaults.Enabled,
+                DefaultProvider: options.Defaults.Provider,
+                ConfiguredEnabled: options.Configured.Enabled,
+                ConfiguredProvider: options.Configured.Provider))
+            .Then("defaults enable queue-backed notifications", values =>
+                values.DefaultEnabled && values.DefaultProvider == "queue")
+            .And("configured values are preserved", values =>
+                values.ConfiguredEnabled == false && values.ConfiguredProvider == "rabbitmq")
+            .AssertPassed();
 }

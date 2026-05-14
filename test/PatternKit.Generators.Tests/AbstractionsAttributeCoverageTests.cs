@@ -15,6 +15,7 @@ using PatternKit.Generators.Proxy;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
+using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 
 namespace PatternKit.Generators.Tests;
@@ -95,7 +96,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(StateExitAttribute), AttributeTargets.Method, true, false },
         { typeof(TemplateAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(TemplateStepAttribute), AttributeTargets.Method, false, false },
-        { typeof(TemplateHookAttribute), AttributeTargets.Method, false, false }
+        { typeof(TemplateHookAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateVisitorAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, false, false }
     };
 
     [Theory]
@@ -533,6 +535,28 @@ public sealed class AbstractionsAttributeCoverageTests
         AssertEnumValues(StateMachineGuardFailurePolicy.Throw, StateMachineGuardFailurePolicy.Ignore, StateMachineGuardFailurePolicy.ReturnFalse);
         AssertEnumValues(HookPoint.BeforeAll, HookPoint.AfterAll, HookPoint.OnError);
         AssertEnumValues(TemplateErrorPolicy.Rethrow, TemplateErrorPolicy.HandleAndContinue);
+    }
+
+    [Fact]
+    public void Visitor_Attribute_Exposes_Defaults_And_Configuration()
+    {
+        var defaults = new GenerateVisitorAttribute();
+        var configured = new GenerateVisitorAttribute
+        {
+            VisitorInterfaceName = "IWorkflowNodeVisitor",
+            GenerateAsync = false,
+            GenerateActions = false,
+            AutoDiscoverDerivedTypes = false
+        };
+
+        Assert.Null(defaults.VisitorInterfaceName);
+        Assert.True(defaults.GenerateAsync);
+        Assert.True(defaults.GenerateActions);
+        Assert.True(defaults.AutoDiscoverDerivedTypes);
+        Assert.Equal("IWorkflowNodeVisitor", configured.VisitorInterfaceName);
+        Assert.False(configured.GenerateAsync);
+        Assert.False(configured.GenerateActions);
+        Assert.False(configured.AutoDiscoverDerivedTypes);
     }
 
     private static void AssertEnumValues<TEnum>(params TEnum[] values)

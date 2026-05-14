@@ -96,4 +96,95 @@ public sealed class MementoDemoTests(ITestOutputHelper output) : TinyBddXunitBas
                 return true;
             })
             .AssertPassed();
+
+    [Scenario("No-op edits, null input guards, selections, and delete-forward paths are explicit")]
+    [Fact]
+    public Task Editor_EdgeCases_AreStable()
+        => Given("an editor with text and a selection", () =>
+            {
+                var editor = new Editor();
+                editor.Insert("abcdef");
+                editor.Select(1, 3);
+                return editor;
+            })
+            .When("exercise no-op and guarded operations", ed =>
+            {
+                var versionBeforeNoOps = ed.Version;
+                var emptyInsertVersion = ed.Insert("");
+                var sameSelectionVersion = ed.Select(1, 3);
+                var negativeBackspaceVersion = ed.Backspace(0);
+                ArgumentNullException? insertNull = null;
+                ArgumentNullException? replaceNull = null;
+
+                try
+                {
+                    ed.Insert(null!);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    insertNull = ex;
+                }
+
+                try
+                {
+                    ed.ReplaceSelection(null!);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    replaceNull = ex;
+                }
+
+                return (ed, versionBeforeNoOps, emptyInsertVersion, sameSelectionVersion, negativeBackspaceVersion, insertNull, replaceNull);
+            })
+            .Then("no-op edits keep the current version", r =>
+                r.emptyInsertVersion == r.versionBeforeNoOps
+                && r.sameSelectionVersion == r.versionBeforeNoOps
+                && r.negativeBackspaceVersion == r.versionBeforeNoOps)
+            .And("null text is rejected", r => r.insertNull is not null && r.replaceNull is not null)
+            .When("delete the selection and attempt delete at end", r =>
+            {
+                var editor = r.ed;
+                editor.DeleteForward();
+                var textAfterSelectionDelete = editor.State.Text;
+                editor.MoveCaret(editor.State.Text.Length);
+                var versionAtEnd = editor.Version;
+                var endDeleteVersion = editor.DeleteForward();
+                return (editor, textAfterSelectionDelete, versionAtEnd, endDeleteVersion);
+            })
+            .Then("delete-forward removes the selected text", r => r.textAfterSelectionDelete == "aef")
+            .And("delete-forward at end is a no-op", r => r.endDeleteVersion == r.versionAtEnd)
+            .AssertPassed();
+
+    [Scenario("Batch rejects nesting and can decline commits")]
+    [Fact]
+    public Task Editor_Batch_EdgeCases_AreStable()
+        => Given("a new editor", () => new Editor())
+            .When("running non-committing and nested batches", ed =>
+            {
+                var startVersion = ed.Version;
+                var noCommitVersion = ed.Batch("no-commit", e =>
+                {
+                    e.Insert("draft");
+                    return false;
+                });
+
+                InvalidOperationException? nested = null;
+                try
+                {
+                    ed.Batch("outer", e =>
+                    {
+                        e.Batch("inner", _ => true);
+                        return true;
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    nested = ex;
+                }
+
+                return (ed, startVersion, noCommitVersion, nested);
+            })
+            .Then("declined batch does not commit a new version", r => r.noCommitVersion == r.startVersion)
+            .And("nested batches are rejected", r => r.nested is not null)
+            .AssertPassed();
 }

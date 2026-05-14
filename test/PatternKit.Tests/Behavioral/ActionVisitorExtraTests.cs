@@ -44,6 +44,15 @@ public sealed class ActionVisitorExtraTests(ITestOutputHelper output) : TinyBddX
            .Then("ok == true", ok => ok)
            .AssertPassed();
 
+    [Scenario("TryVisit returns false when no action or default matches")]
+    [Fact]
+    public Task ActionVisitor_TryVisit_NoDefault_ReturnsFalse()
+        => Given("visitor with one concrete action and no default", () =>
+            ActionVisitor<Node>.Create().On<Number>(_ => { }).Build())
+           .When("TryVisit Neg", v => v.TryVisit(new Neg(new Number(2))))
+           .Then("ok == false", ok => ok == false)
+           .AssertPassed();
+
     [Scenario("Registration order matters: base before derived")]
     [Fact]
     public Task ActionVisitor_Order_Matters()

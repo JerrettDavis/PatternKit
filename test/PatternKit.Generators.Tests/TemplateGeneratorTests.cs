@@ -916,5 +916,78 @@ public class TemplateGeneratorTests
         Assert.DoesNotContain("public void Execute(", generatedSource);
     }
 
+    [Fact]
+    public void Generates_Async_Template_With_Mixed_Sync_Async_Hooks_And_Error_Rethrow()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public string Data { get; set; } = "";
+            }
+
+            [Template(ExecuteAsyncMethodName = "RunAsync", ErrorPolicy = TemplateErrorPolicy.Rethrow)]
+            public partial class ImportWorkflow
+            {
+                [TemplateHook(HookPoint.BeforeAll)]
+                private ValueTask OpenAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void TraceOpen(ImportContext ctx) { }
+
+                [TemplateStep(0, Name = "Validate")]
+                private ValueTask ValidateAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateStep(1, Name = "Transform")]
+                private void Transform(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private ValueTask CloseAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void TraceClose(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.OnError)]
+                private ValueTask CaptureErrorAsync(ImportContext ctx, Exception ex, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.OnError)]
+                private void TraceError(ImportContext ctx, Exception ex) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Generates_Async_Template_With_Mixed_Sync_Async_Hooks_And_Error_Rethrow));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("public async System.Threading.Tasks.ValueTask RunAsync", generated);
+        Assert.Contains("await OpenAsync(ctx, ct).ConfigureAwait(false);", generated);
+        Assert.Contains("TraceOpen(ctx);", generated);
+        Assert.Contains("await ValidateAsync(ctx, ct).ConfigureAwait(false);", generated);
+        Assert.Contains("Transform(ctx);", generated);
+        Assert.Contains("await CloseAsync(ctx, ct).ConfigureAwait(false);", generated);
+        Assert.Contains("TraceClose(ctx);", generated);
+        Assert.Contains("await CaptureErrorAsync(ctx, ex, ct).ConfigureAwait(false);", generated);
+        Assert.Contains("TraceError(ctx, ex);", generated);
+        Assert.Contains("throw;", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     #endregion
 }

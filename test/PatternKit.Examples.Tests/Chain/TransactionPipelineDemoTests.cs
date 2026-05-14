@@ -163,4 +163,52 @@ public sealed class TransactionPipelineDemoTests(ITestOutputHelper output) : Tin
 
         PaymentPipeline Pipe() => BuildPipeline(discounts: [], rounding: []);
     }
+
+    [Scenario("Config-driven rules cover skipped discounts, bundle application, rounding no-op, and card short-circuit")]
+    [Fact]
+    public async Task ConfigDrivenRules_CoverBranchBehavior()
+    {
+        await Given("standalone config-driven rules and handlers", () =>
+            {
+                var context = Ctx(
+                    items:
+                    [
+                        new LineItem("A", 10m, BundleKey: "B"),
+                        new LineItem("B", 5m, Qty: 1, BundleKey: "B")
+                    ],
+                    tenders: [new Tender(PaymentKind.Card, CardAuthType.Chip, CardVendor.Visa)]);
+                context.RecomputeSubtotal();
+                context.SetTax(0m);
+
+                return new
+                {
+                    Context = context,
+                    CashRule = new Cash2Pct(),
+                    LoyaltyRule = new Loyalty5Pct(),
+                    BundleRule = new Bundle1OffEach(),
+                    Charity = new CharityRoundUp(),
+                    Nickel = new NickelCashOnly(),
+                    Card = new CardTender(new CardProcessors(new() { [CardVendor.Visa] = new GenericProcessor("VisaNet") }))
+                };
+            })
+            .When("applying rules and card handler edge paths", rules =>
+            {
+                rules.CashRule.Apply(rules.Context);
+                rules.LoyaltyRule.Apply(rules.Context);
+                rules.BundleRule.Apply(rules.Context);
+                rules.Charity.Apply(rules.Context);
+                rules.Nickel.Apply(rules.Context);
+                rules.Context.ApplyPayment(rules.Context.RemainderDue, "prepaid");
+                var cardResult = rules.Card.Handle(rules.Context, new Tender(PaymentKind.Card, CardAuthType.Chip, CardVendor.Visa));
+
+                return (rules.Context, cardResult);
+            })
+            .Then("cash and loyalty discounts were skipped", result =>
+                !result.Context.Log.Any(log => log.Contains("cash 2% off", StringComparison.Ordinal))
+                && !result.Context.Log.Any(log => log.Contains("loyalty", StringComparison.Ordinal)))
+            .And("bundle discount was applied", result => result.Context.Log.Any(log => log.Contains("bundle deal", StringComparison.Ordinal)))
+            .And("nickel rounding logged the non-cash skip", result => result.Context.Log.Any(log => log.Contains("not cash-only", StringComparison.Ordinal)))
+            .And("card handler short-circuits when nothing remains due", result => result.cardResult is { Ok: true, Code: "card", Message: "nothing to pay" })
+            .AssertPassed();
+    }
 }
