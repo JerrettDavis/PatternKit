@@ -25,6 +25,7 @@ Example source:
 | Source-generated content router | `ContentRouterGeneratorExample.cs` | Attribute-driven content routing without runtime scanning. |
 | Resilient checkout orchestration | `ResilientCheckoutDemo.cs` | Route selection, routing-slip execution, command compensation, and fallback routes. |
 | Collaborating service mailboxes | `ServiceCollaborationMailboxDemo.cs` | Inventory, payment, shipping, and notification mailboxes collaborating over correlated messages. |
+| Backplane facade | `BackplaneFacadeDemo.cs` | MassTransit/MediatR-shaped request/reply and pub/sub over an application-owned transport boundary. |
 
 ## Workflow Shape
 
@@ -76,6 +77,7 @@ The example tests use behavior-oriented assertions:
 - Generator tests assert that generated factories compile and behave like the equivalent runtime builders.
 - Resilient checkout tests assert rollback, fallback route selection, manual review, and side-effect boundaries.
 - Mailbox collaboration tests assert service handoff, compensation, correlation propagation, and final notification outcomes.
+- Backplane facade tests assert routed request/reply, publish/subscribe fanout, outbox dispatch, idempotent replay, and correlation propagation.
 
 ## Related Documentation
 
@@ -88,3 +90,4 @@ The example tests use behavior-oriented assertions:
 - [Idempotent Receiver, Inbox, and Outbox](../patterns/messaging/reliability.md)
 - [Messaging Generators](../generators/messaging.md)
 - [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md)
+- [Messaging Backplane Facade](messaging-backplane-facade.md)
