@@ -154,6 +154,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Saga / Process Manager](messaging/saga.md)**
   Runtime and source-generated process managers for typed message transitions over explicit state.
 
+- **[Mailbox](messaging/mailbox.md)**
+  Serialized in-process inboxes with bounded backpressure, error policy, and shutdown behavior.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 

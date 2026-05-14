@@ -303,6 +303,8 @@
           href: messaging/routing-slip.md
         - name: Saga / Process Manager
           href: messaging/saga.md
+        - name: Mailbox
+          href: messaging/mailbox.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
     - name: Type-Dispatcher
