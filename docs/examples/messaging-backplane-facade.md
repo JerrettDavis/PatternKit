@@ -6,6 +6,7 @@ Source:
 
 - `src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs`
 - `test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs`
+- `test/PatternKit.Examples.Tests/Messaging/BackplaneTestcontainerE2ETests.cs`
 
 ## What PatternKit Provides
 
@@ -122,6 +123,14 @@ The tests assert that:
 - Published events fan out to independent services.
 - Every event is recorded in the outbox before transport dispatch.
 - Correlation IDs flow from the original command through payment, fulfillment, and notification services.
+- RabbitMQ and MQTT Testcontainers run the same host/client workflow through real broker processes.
+
+The container tests live in the examples test project and are compiled for `net8.0` only so the full multi-target suite does not start duplicate broker containers. They use test-owned adapters:
+
+- `RabbitMqBackplaneTransport` maps PatternKit addresses to RabbitMQ fanout exchanges and subscriber queues.
+- `MqttBackplaneTransport` maps PatternKit addresses to MQTT topics over Eclipse Mosquitto.
+
+Those adapters are intentionally in test code. They demonstrate the integration boundary without making PatternKit depend on any broker package.
 
 ## Production Adapter Shape
 
