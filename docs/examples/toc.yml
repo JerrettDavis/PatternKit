@@ -9,22 +9,22 @@
 
 - name: Composed, Preference-Aware Notification Strategy (Email/SMS/Push/IM)
   href: composed-notification-strategy.md
-  
-- name: Mediated Transaction Pipeline 
+
+- name: Mediated Transaction Pipeline
   href: mediated-transaction-pipeline.md
-  
+
 - name: Configuration-Driven Transaction Pipeline
   href: config-driven-transaction-pipeline.md
 
 - name: Minimal Web Request Router
   href: mini-router.md
-  
+
 - name: Payment Processor — Fluent Decorator Pattern for Point of Sale
   href: payment-processor-decorator.md
 
 - name: POS App State Singleton
   href: pos-app-state-singleton.md
-  
+
 - name: Pricing Calculator (Async Sources, Loyalty, Rounding)
   href: pricing-calculator.md
 
@@ -43,12 +43,18 @@
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 
+- name: Source Generator Application Suite
+  href: source-generator-application-suite.md
+
+- name: Enterprise Messaging Workflow Suite
+  href: enterprise-messaging-workflows.md
+
 - name: Prototype — Game Character Factory with Clone Registry
   href: prototype-demo.md
-  
+
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
-  
+
 - name: Flyweight Glyph Cache & Style Sharing
   href: flyweight-glyph-cache.md
 
