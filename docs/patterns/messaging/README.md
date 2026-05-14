@@ -26,6 +26,12 @@ Runtime and source-generated process managers coordinate typed message transitio
 
 [Learn More](saga.md)
 
+## Mailbox
+
+Bounded or unbounded in-process inboxes serialize async message handling through a single consumer, with explicit backpressure, error, lifecycle, and diagnostics policies.
+
+[Learn More](mailbox.md)
+
 ## Mediator (Source Generated)
 
 A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
@@ -85,6 +91,7 @@ The Source-Generated Mediator complements other PatternKit patterns:
 - **[Enterprise Message Routing](message-routing.md)** - Content-based router, recipient list, splitter, and aggregator primitives
 - **[Routing Slip](routing-slip.md)** - Ordered message itineraries with fluent runtime and source-generated factories
 - **[Saga / Process Manager](saga.md)** - Typed message transitions over explicit long-running process state
+- **[Mailbox](mailbox.md)** - Serialized in-process inbox with bounded backpressure and shutdown behavior
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
