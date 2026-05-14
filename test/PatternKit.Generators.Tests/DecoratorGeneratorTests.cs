@@ -1041,4 +1041,92 @@ public class DecoratorGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void GenerateDecoratorForAbstractClass_PreservesAccessibilityRefsAndAccessors()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator(Composition = DecoratorCompositionMode.HelpersOnly)]
+            public abstract class RepositoryBase
+            {
+                public abstract string Name { get; internal set; }
+                public abstract int Version { set; }
+                public abstract void Copy(ref int source, out int destination, in bool enabled);
+                public abstract ref int GetCurrent();
+
+                [DecoratorIgnore]
+                public abstract string Snapshot();
+
+                protected abstract void ProtectedOperation();
+                public int NonVirtualValue => 42;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForAbstractClass_PreservesAccessibilityRefsAndAccessors));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKDEC004" && d.GetMessage().Contains("ProtectedOperation"));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_RepositoryBase.Decorator.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("public abstract partial class RepositoryBaseDecoratorBase", generatedSource);
+        Assert.Contains("override string Name", generatedSource);
+        Assert.Contains("internal set => Inner.Name = value;", generatedSource);
+        Assert.Contains("override int Version", generatedSource);
+        Assert.Contains("set => Inner.Version = value;", generatedSource);
+        Assert.Contains("public override void Copy(ref int source, out int destination, in bool enabled)", generatedSource);
+        Assert.Contains("Inner.Copy(ref source, out destination, in enabled);", generatedSource);
+        Assert.Contains("public override ref int GetCurrent()", generatedSource);
+        Assert.Contains("=> ref Inner.GetCurrent();", generatedSource);
+        Assert.Contains("public sealed override string Snapshot()", generatedSource);
+        Assert.Contains("RepositoryBaseDecorators", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void DecoratorDiagnostics_ForIndexerInitPropertyFieldAndNestedType()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public abstract class InvalidContract
+            {
+                public int Field;
+                public abstract string this[int index] { get; }
+                public abstract string InitOnly { get; init; }
+                public abstract event System.EventHandler? Changed;
+
+                public class NestedType
+                {
+                }
+
+                public abstract void Save();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(DecoratorDiagnostics_ForIndexerInitPropertyFieldAndNestedType));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Init-only property"));
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Field"));
+        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("NestedType"));
+    }
 }

@@ -877,6 +877,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     private void GenerateProxyMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var overrideModifier = contractInfo.IsAbstractClass ? "override " : "";
 
         // Determine if this method needs async modifier (uses interceptors with async support)
         // Note: ref-returning methods cannot be async
@@ -888,7 +889,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         var asyncModifier = useAsync ? "async " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
-        sb.Append($"    {accessibility} {asyncModifier}{member.ReturnType} {member.Name}(");
+        sb.Append($"    {accessibility} {overrideModifier}{asyncModifier}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -995,8 +996,15 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         else
         {
             var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
-            var awaitModifier = member.IsAsync ? "await " : "";
-            sb.Append($"            return {awaitModifier}{refModifier}_inner.{member.Name}(");
+            if (member.IsAsync && !member.IsGenericAsyncReturnType)
+            {
+                sb.Append($"            await _inner.{member.Name}(");
+            }
+            else
+            {
+                var awaitModifier = member.IsAsync ? "await " : "";
+                sb.Append($"            return {awaitModifier}{refModifier}_inner.{member.Name}(");
+            }
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -1009,6 +1017,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 return $"{refKind}{p.Name}";
             })));
             sb.AppendLine(");");
+            if (member.IsAsync && !member.IsGenericAsyncReturnType)
+            {
+                sb.AppendLine("            return;");
+            }
         }
 
         sb.AppendLine("        }");
@@ -1132,6 +1144,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else // Swallow
         {
+            EmitOutParameterDefaults(sb, member, "            ");
             if (!member.IsVoid)
             {
                 sb.AppendLine("            return default!;");
@@ -1269,21 +1282,34 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else // Swallow
         {
-            if (!member.IsVoid)
+            if (!member.IsVoid && (!member.IsAsync || member.IsGenericAsyncReturnType))
             {
                 sb.AppendLine("            return default!;");
+            }
+            else
+            {
+                sb.AppendLine("            return;");
             }
         }
 
         sb.AppendLine("        }");
     }
 
+    private static void EmitOutParameterDefaults(StringBuilder sb, MemberInfo member, string indent)
+    {
+        foreach (var parameter in member.Parameters.Where(p => p.RefKind == RefKind.Out))
+        {
+            sb.Append(indent).Append(parameter.Name).AppendLine(" = default!;");
+        }
+    }
+
     private void GenerateProxyProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var overrideModifier = contractInfo.IsAbstractClass ? "override " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
-        sb.Append($"    {accessibility} {member.ReturnType} {member.Name}");
+        sb.Append($"    {accessibility} {overrideModifier}{member.ReturnType} {member.Name}");
 
         if (member.HasGetter && member.HasSetter)
         {

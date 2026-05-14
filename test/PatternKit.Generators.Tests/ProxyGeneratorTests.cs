@@ -1095,4 +1095,232 @@ public class ProxyGeneratorTests
         Assert.Contains("get => _inner.Age", proxySource);
         Assert.Contains("set => _inner.IsActive = value", proxySource);
     }
+
+    [Fact]
+    public void GenerateProxy_DisabledAsyncBaseInterfaceAndEscapedDefaults_CoverBranches()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace TestNamespace;
+
+            public enum Mode { Unknown = 0, Fast = 1 }
+
+            public partial interface IBaseService
+            {
+                string FromBase(char marker = '\n');
+            }
+
+            [GenerateProxy]
+            public partial interface IWarnsForAsync : IBaseService
+            {
+                Task<string> GetAsync(CancellationToken ct = default);
+                string Format(
+                    string escaped = "line\nquote\"slash\\tab\t",
+                    char quote = '\'',
+                    float ratio = 1.5f,
+                    double score = 2.25d,
+                    decimal money = 3.75m,
+                    Mode mode = Mode.Fast);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_DisabledAsyncBaseInterfaceAndEscapedDefaults_CoverBranches));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IWarnsForAsync.Proxy.g.cs")
+            .SourceText.ToString();
+        var interceptorSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IWarnsForAsync.Proxy.Interceptor.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("FromBase", proxySource);
+        Assert.Contains("string escaped = \"line\\nquote\\\"slash\\\\tab\\t\"", proxySource);
+        Assert.Contains("char quote = '\\''", proxySource);
+        Assert.Contains("float ratio = 1.5f", proxySource);
+        Assert.Contains("double score = 2.25d", proxySource);
+        Assert.Contains("decimal money = 3.75m", proxySource);
+        Assert.Contains("Mode mode = global::TestNamespace.Mode.Fast", proxySource);
+        Assert.Contains("BeforeAsync", interceptorSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenerateProxy_IndexerProperty_ReportsUnsupportedMember()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IIndexedService
+            {
+                string this[int index] { get; }
+                string GetValue();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_IndexerProperty_ReportsUnsupportedMember));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX002" && d.GetMessage().Contains("Indexer"));
+    }
+
+    [Fact]
+    public void GenerateProxy_AsyncPipelineWithVoidTasksAndRefs_CoversAsyncEmission()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.Pipeline, Exceptions = ProxyExceptionPolicy.Swallow)]
+            public partial interface Worker
+            {
+                void Copy(ref int source, out int destination, in bool enabled);
+                Task SaveAsync(int id, CancellationToken ct = default);
+                ValueTask FlushAsync(CancellationToken ct = default);
+                Task<int> CountAsync(CancellationToken ct = default);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_AsyncPipelineWithVoidTasksAndRefs_CoversAsyncEmission));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Worker.Proxy.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("for (int __i = 0; __i < _interceptors!.Count; __i++)", proxySource);
+        Assert.Contains("for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)", proxySource);
+        Assert.Contains("_inner.Copy(ref source, out destination, in enabled);", proxySource);
+        Assert.Contains("await __task.ConfigureAwait(false);", proxySource);
+        Assert.Contains("var __result = await __task.ConfigureAwait(false);", proxySource);
+        Assert.Contains("return default!;", proxySource);
+        Assert.Contains("WorkerProxy", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenerateProxy_AbstractRecordAndAccessibility_CoversRecordAndProtectedBranches()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(ProxyTypeName = "AbstractRecordProxy")]
+            public abstract partial record class AbstractRecordService
+            {
+                public abstract string Get();
+                protected abstract string ProtectedOnly();
+                public abstract string PublicGet { get; }
+                protected abstract string ProtectedProperty { get; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_AbstractRecordAndAccessibility_CoversRecordAndProtectedBranches));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX003" && d.GetMessage().Contains("ProtectedOnly"));
+        Assert.Contains(diagnostics, d => d.Id == "PKPRX003" && d.GetMessage().Contains("ProtectedProperty"));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_AbstractRecordService.Proxy.g.cs")
+            .SourceText.ToString();
+        Assert.Contains("class AbstractRecordProxy", proxySource);
+        Assert.Contains("PublicGet", proxySource);
+    }
+
+    [Fact]
+    public void GenerateProxy_NoInterceptorMode_CoversPureDelegationRefsPropertiesAndStatics()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.None, Exceptions = ProxyExceptionPolicy.Swallow)]
+            public abstract partial class WorkerContract
+            {
+                public abstract string Name { get; set; }
+                public abstract int Version { get; }
+                public static string StaticValue => "ignored";
+
+                public abstract void Copy(ref int source, out int destination, in bool enabled);
+                public abstract int Calculate(int value);
+                public virtual string Virtual(string value) => value;
+                public string Concrete(string value) => value;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_NoInterceptorMode_CoversPureDelegationRefsPropertiesAndStatics));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_WorkerContract.Proxy.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("Name", proxySource);
+        Assert.Contains("get => _inner.Name;", proxySource);
+        Assert.Contains("set => _inner.Name = value;", proxySource);
+        Assert.Contains("Version", proxySource);
+        Assert.Contains("_inner.Copy(ref source, out destination, in enabled);", proxySource);
+        Assert.Contains("return _inner.Calculate(value);", proxySource);
+        Assert.Contains("return _inner.Virtual(value);", proxySource);
+        Assert.DoesNotContain("Concrete", proxySource);
+        Assert.DoesNotContain("StaticValue", proxySource);
+        Assert.DoesNotContain("Interceptor", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void GenerateProxy_InterfaceWithIgnoredOnlyMembers_SkipsGeneration()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IEmptyProxy
+            {
+                [ProxyIgnore]
+                void Ignored();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_InterfaceWithIgnoredOnlyMembers_SkipsGeneration));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        Assert.Empty(result.Results.SelectMany(r => r.GeneratedSources));
+    }
 }

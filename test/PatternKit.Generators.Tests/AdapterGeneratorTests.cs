@@ -1277,4 +1277,121 @@ public class AdapterGeneratorTests
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKADP006");
     }
+
+    [Fact]
+    public void GenerateAdapter_ThrowingStubWithDefaultsRefsAndCustomNamespace()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public enum Mode { Slow = 0, Fast = 1 }
+
+            public interface IService
+            {
+                string Name { get; }
+                void Copy(ref int source, out int destination, in bool enabled, string? label = null, Mode mode = Mode.Fast);
+                int Retry(int count = 3);
+            }
+
+            public class LegacyService { }
+
+            [GenerateAdapter(
+                Target = typeof(IService),
+                Adaptee = typeof(LegacyService),
+                AdapterTypeName = "ServiceAdapter",
+                MissingMap = AdapterMissingMapPolicy.ThrowingStub,
+                Sealed = false,
+                Namespace = "Generated")]
+            public static partial class ServiceAdapters
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateAdapter_ThrowingStubWithDefaultsRefsAndCustomNamespace));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "Generated.ServiceAdapter.Adapter.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("namespace Generated;", generatedSource);
+        Assert.Contains("public partial class ServiceAdapter : global::TestNamespace.IService", generatedSource);
+        Assert.Contains("Name", generatedSource);
+        Assert.Contains("get => throw new global::System.NotImplementedException", generatedSource);
+        Assert.Contains("ref int source", generatedSource);
+        Assert.Contains("out int destination", generatedSource);
+        Assert.Contains("in bool enabled", generatedSource);
+        Assert.Contains("string? label = null", generatedSource);
+        Assert.Contains("global::TestNamespace.Mode mode = global::TestNamespace.Mode.Fast", generatedSource);
+        Assert.Contains("int count = 3", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void AdapterDiagnostics_OpenGenericAbstractCtorAndBadMapSignatures()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public interface IGeneric<T> { T Get(); }
+            public abstract class AbstractAdaptee { }
+            public abstract class TargetWithoutDefaultCtor
+            {
+                protected TargetWithoutDefaultCtor(string value) { }
+                public abstract string Value { get; }
+            }
+
+            public interface IService
+            {
+                string Name { get; }
+                int Get(int value);
+                void Copy(ref int value);
+            }
+
+            public class LegacyService { }
+
+            [GenerateAdapter(Target = typeof(IGeneric<>), Adaptee = typeof(LegacyService))]
+            public static partial class OpenTargetHost { }
+
+            [GenerateAdapter(Target = typeof(IService), Adaptee = typeof(AbstractAdaptee))]
+            public static partial class AbstractAdapteeHost { }
+
+            [GenerateAdapter(Target = typeof(TargetWithoutDefaultCtor), Adaptee = typeof(LegacyService))]
+            public static partial class MissingCtorHost { }
+
+            [GenerateAdapter(Target = typeof(IService), Adaptee = typeof(LegacyService))]
+            public static partial class BadMapHost
+            {
+                [AdapterMap(TargetMember = nameof(IService.Name))]
+                public static int BadProperty(LegacyService adaptee) => 0;
+
+                [AdapterMap(TargetMember = nameof(IService.Get))]
+                public static string BadReturn(LegacyService adaptee, string value) => "";
+
+                [AdapterMap(TargetMember = nameof(IService.Copy))]
+                public static void BadRef(LegacyService adaptee, int value) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AdapterDiagnostics_OpenGenericAbstractCtorAndBadMapSignatures));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKADP002" && d.GetMessage().Contains("IGeneric"));
+        Assert.Contains(diagnostics, d => d.Id == "PKADP007" && d.GetMessage().Contains("AbstractAdaptee"));
+        Assert.Contains(diagnostics, d => d.Id == "PKADP012" && d.GetMessage().Contains("TargetWithoutDefaultCtor"));
+        Assert.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Return type"));
+        Assert.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind mismatch"));
+    }
 }

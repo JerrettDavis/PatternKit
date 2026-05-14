@@ -822,4 +822,90 @@ public class ComposerGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void StructComposer_ForceAsync_CustomNames_InnerFirst_CoversStructAsyncPipeline()
+    {
+        var source = """
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer(
+                InvokeMethodName = "Run",
+                InvokeAsyncMethodName = "RunAsync",
+                ForceAsync = true,
+                WrapOrder = ComposerWrapOrder.InnerFirst)]
+            public partial struct RequestPipeline
+            {
+                [ComposeStep(2, Name = "Audit")]
+                private Response Audit(in Request req, Func<Request, Response> next) => next(req);
+
+                [ComposeStep(1)]
+                private ValueTask<Response> AuthAsync(Request req, Func<Request, ValueTask<Response>> next)
+                    => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(StructComposer_ForceAsync_CustomNames_InnerFirst_CoversStructAsyncPipeline));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
+        Assert.Contains("RunAsync", generatedSource);
+        Assert.Contains("var self = this;", generatedSource);
+        Assert.Contains("terminalFunc", generatedSource);
+        Assert.Contains("self.AuthAsync(arg, pipeline)", generatedSource);
+        Assert.Contains("self.Audit(in arg, inp => pipeline(inp).GetAwaiter().GetResult())", generatedSource);
+        Assert.DoesNotContain("public Response Run(", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void AsyncSignatureWarnings_WhenCancellationTokenIsWrongType()
+    {
+        var source = """
+            using System;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            namespace PatternKit.Examples;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private ValueTask<Response> StepAsync(Request req, Func<Request, ValueTask<Response>> next, string notCancellationToken)
+                    => next(req);
+
+                [ComposeTerminal]
+                private ValueTask<Response> TerminalAsync(Request req, string notCancellationToken)
+                    => new(new Response(200));
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AsyncSignatureWarnings_WhenCancellationTokenIsWrongType));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Equal(2, diagnostics.Count(d => d.Id == "PKCOM009"));
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.False(emit.Success);
+    }
 }
