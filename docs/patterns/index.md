@@ -157,6 +157,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Mailbox](messaging/mailbox.md)**
   Serialized in-process inboxes with bounded backpressure, error policy, and shutdown behavior.
 
+- **[Idempotent Receiver, Inbox, and Outbox](messaging/reliability.md)**
+  Pluggable idempotency stores, inbox boundaries, and outbox records for at-least-once message handling.
+
 - **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 

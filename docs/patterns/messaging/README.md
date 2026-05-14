@@ -32,6 +32,12 @@ Bounded or unbounded in-process inboxes serialize async message handling through
 
 [Learn More](mailbox.md)
 
+## Idempotent Receiver, Inbox, and Outbox
+
+Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.
+
+[Learn More](reliability.md)
+
 ## Mediator (Source Generated)
 
 A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
@@ -92,6 +98,7 @@ The Source-Generated Mediator complements other PatternKit patterns:
 - **[Routing Slip](routing-slip.md)** - Ordered message itineraries with fluent runtime and source-generated factories
 - **[Saga / Process Manager](saga.md)** - Typed message transitions over explicit long-running process state
 - **[Mailbox](mailbox.md)** - Serialized in-process inbox with bounded backpressure and shutdown behavior
+- **[Idempotent Receiver, Inbox, and Outbox](reliability.md)** - Pluggable idempotency and handoff helpers for at-least-once processing
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
