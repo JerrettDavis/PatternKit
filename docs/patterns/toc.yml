@@ -307,6 +307,8 @@
           href: messaging/mailbox.md
         - name: Idempotent Receiver, Inbox, and Outbox
           href: messaging/reliability.md
+        - name: Enterprise Integration Source Generators
+          href: messaging/enterprise-generators.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
     - name: Type-Dispatcher
