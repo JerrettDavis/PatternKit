@@ -38,6 +38,12 @@ Idempotency and handoff helpers compose message handlers with pluggable stores, 
 
 [Learn More](reliability.md)
 
+## Enterprise Integration Source Generators
+
+Generated content routers, routing slips, and sagas remove repetitive factory registration while preserving explicit opt-in and compile-time diagnostics.
+
+[Learn More](enterprise-generators.md)
+
 ## Mediator (Source Generated)
 
 A **zero-dependency**, **source-generated Mediator pattern** implementation for commands, notifications, and streams.
@@ -99,6 +105,7 @@ The Source-Generated Mediator complements other PatternKit patterns:
 - **[Saga / Process Manager](saga.md)** - Typed message transitions over explicit long-running process state
 - **[Mailbox](mailbox.md)** - Serialized in-process inbox with bounded backpressure and shutdown behavior
 - **[Idempotent Receiver, Inbox, and Outbox](reliability.md)** - Pluggable idempotency and handoff helpers for at-least-once processing
+- **[Enterprise Integration Source Generators](enterprise-generators.md)** - Generated content-router, routing-slip, and saga factories with diagnostics
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects

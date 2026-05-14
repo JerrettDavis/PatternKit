@@ -74,6 +74,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateSagaAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SagaStepAttribute), AttributeTargets.Method, false, false },
         { typeof(SagaCompleteWhenAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateContentRouterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ContentRouteAttribute), AttributeTargets.Method, false, false },
+        { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ObserverHubAttribute), AttributeTargets.Class, false, false },
         { typeof(ObservedEventAttribute), AttributeTargets.Property, false, false },
@@ -315,6 +318,11 @@ public sealed class AbstractionsAttributeCoverageTests
             AsyncFactoryName = "BuildSagaAsync"
         };
         var sagaStep = new SagaStepAttribute(typeof(decimal), 11);
+        var router = new GenerateContentRouterAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildRouter"
+        };
+        var route = new ContentRouteAttribute("priority", 4, "IsPriority");
 
         Assert.Equal(typeof(string), flyweight.KeyType);
         Assert.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -339,11 +347,22 @@ public sealed class AbstractionsAttributeCoverageTests
         Assert.Equal("BuildSagaAsync", saga.AsyncFactoryName);
         Assert.Equal(typeof(decimal), sagaStep.MessageType);
         Assert.Equal(11, sagaStep.Order);
+        Assert.Equal(typeof(string), router.PayloadType);
+        Assert.Equal(typeof(int), router.ResultType);
+        Assert.Equal("BuildRouter", router.FactoryName);
+        Assert.Equal("priority", route.Name);
+        Assert.Equal(4, route.Order);
+        Assert.Equal("IsPriority", route.PredicateMethodName);
         Assert.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         Assert.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         Assert.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
         Assert.Throws<ArgumentNullException>(() => new SagaStepAttribute(null!, 1));
+        Assert.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(null!, typeof(int)));
+        Assert.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
+        Assert.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
+        Assert.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
         Assert.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
+        Assert.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
         Assert.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         Assert.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         Assert.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());

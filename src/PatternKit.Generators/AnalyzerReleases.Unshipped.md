@@ -165,3 +165,8 @@ PKSG001 | PatternKit.Generators.Messaging | Error | Saga type must be partial
 PKSG002 | PatternKit.Generators.Messaging | Error | Saga has no steps
 PKSG003 | PatternKit.Generators.Messaging | Error | Saga step signature is invalid
 PKSG004 | PatternKit.Generators.Messaging | Error | Saga completion signature is invalid
+PKCR001 | PatternKit.Generators.Messaging | Error | Content router type must be partial.
+PKCR002 | PatternKit.Generators.Messaging | Error | Content router must declare at least one route.
+PKCR003 | PatternKit.Generators.Messaging | Error | Content route handler or predicate signature is invalid.
+PKCR004 | PatternKit.Generators.Messaging | Error | Content router default handler signature is invalid.
+PKCR005 | PatternKit.Generators.Messaging | Error | Content router route name or order is duplicated.
