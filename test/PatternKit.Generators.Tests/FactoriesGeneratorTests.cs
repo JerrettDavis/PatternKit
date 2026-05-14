@@ -581,4 +581,169 @@ public class FactoriesGeneratorTests
         var emit = updated.Emit(pe);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Fact]
+    public void FactoryMethod_Async_String_NoDefault_WithParameters_EmitsNullAndCaseBranches()
+    {
+        const string user = """
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(string), CreateMethodName = "Resolve", CaseInsensitiveStrings = true)]
+                            public static partial class FormatterFactory
+                            {
+                                [FactoryCase("json")]
+                                public static Task<string> JsonAsync(string payload, int indent) => Task.FromResult($"json:{payload}:{indent}");
+
+                                [FactoryCase("xml")]
+                                public static ValueTask<string> XmlAsync(string payload, int indent) => ValueTask.FromResult($"xml:{payload}:{indent}");
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryMethod_Async_String_NoDefault_WithParameters_EmitsNullAndCaseBranches));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "FormatterFactory.FactoryMethod.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("if (key is null) throw new global::System.ArgumentNullException", generated);
+        Assert.Contains("StringComparison.OrdinalIgnoreCase", generated);
+        Assert.Contains("ResolveAsync", generated);
+        Assert.Contains("return (false, default!);", generated);
+        Assert.Contains("JsonAsync(payload, indent)", generated);
+        Assert.Contains("XmlAsync(payload, indent)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void FactoryMethod_Async_Numeric_NoDefault_EmitsSwitchBranches()
+    {
+        const string user = """
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(int))]
+                            public static partial class NumberFactory
+                            {
+                                [FactoryCase(1)]
+                                public static Task<string> OneAsync() => Task.FromResult("one");
+
+                                [FactoryCase(2)]
+                                public static ValueTask<string> TwoAsync() => ValueTask.FromResult("two");
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryMethod_Async_Numeric_NoDefault_EmitsSwitchBranches));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "NumberFactory.FactoryMethod.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("switch (key)", generated);
+        Assert.Contains("case 1:", generated);
+        Assert.Contains("default:", generated);
+        Assert.Contains("throw new global::System.ArgumentOutOfRangeException(nameof(key));", generated);
+        Assert.Contains("return (false, default!);", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void FactoryClass_AsyncEnumKeysAndFactoryMethods_CoverCreationBranches()
+    {
+        const string user = """
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            public enum Channel { Sms = 2, Push = 7 }
+
+                            [FactoryClass(typeof(Channel), GenerateEnumKeys = true, FactoryTypeName = "ChannelFactory")]
+                            public abstract class ChannelHandler { }
+
+                            [FactoryClassKey(Channel.Sms)]
+                            public sealed class SmsHandler : ChannelHandler
+                            {
+                                public static Task<ChannelHandler> CreateAsync() => Task.FromResult<ChannelHandler>(new SmsHandler());
+                            }
+
+                            [FactoryClassKey(Channel.Push)]
+                            public sealed class PushHandler : ChannelHandler
+                            {
+                                public static ValueTask<ChannelHandler> CreateAsync() => ValueTask.FromResult<ChannelHandler>(new PushHandler());
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryClass_AsyncEnumKeysAndFactoryMethods_CoverCreationBranches));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "ChannelFactory.FactoryClass.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("public global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler> CreateAsync(Keys key)", generated);
+        Assert.Contains("TryCreateAsync(Keys key)", generated);
+        Assert.Contains("return CreateAsync(MapKey(key));", generated);
+        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler>", generated);
+        Assert.Contains("SmsHandler.CreateAsync", generated);
+        Assert.Contains("PushHandler.CreateAsync", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void FactoryClass_StringKeysGenerateStableEnumNamesAndNullComparers()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryClass(typeof(string), GenerateEnumKeys = true, FactoryTypeName = "TransportFactory")]
+                            public interface ITransport { }
+
+                            [FactoryClassKey("1-http")]
+                            public sealed class Http1 : ITransport { }
+
+                            [FactoryClassKey("1_http")]
+                            public sealed class Http2 : ITransport { }
+
+                            [FactoryClassKey("")]
+                            public sealed class Empty : ITransport { }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryClass_StringKeysGenerateStableEnumNamesAndNullComparers));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "TransportFactory.FactoryClass.g.cs")
+            .SourceText.ToString();
+
+        Assert.Contains("Key1Http", generated);
+        Assert.Contains("Key1Http2", generated);
+        Assert.Contains("Key", generated);
+        Assert.Contains("MapKey", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

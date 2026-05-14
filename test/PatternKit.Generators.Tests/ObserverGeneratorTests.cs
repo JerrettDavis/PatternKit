@@ -963,4 +963,89 @@ public class ObserverGeneratorTests
             alc.Unload();
         }
     }
+
+    [Fact]
+    public void Reports_Invalid_Config_For_Generic_Nested_And_Struct_Observers()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            namespace Test;
+
+            public record Payload(int Value);
+
+            [Observer(typeof(Payload))]
+            public partial class GenericObserver<T>
+            {
+            }
+
+            public class Outer
+            {
+                [Observer(typeof(Payload))]
+                public partial class NestedObserver
+                {
+                }
+            }
+
+            [Observer(typeof(Payload))]
+            public partial struct StructObserver
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(Reports_Invalid_Config_For_Generic_Nested_And_Struct_Observers));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Equal(3, diagnostics.Count(d => d.Id == "PKOBS003"));
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("Generic observer types"));
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("Nested observer types"));
+        Assert.Contains(diagnostics, d => d.GetMessage().Contains("Struct observer types"));
+    }
+
+    [Fact]
+    public void ForceAsync_Internal_Record_Uses_Configured_Source_Shape()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            public record Payload(int Value);
+
+            [Observer(
+                typeof(Payload),
+                Threading = ObserverThreadingPolicy.SingleThreadedFast,
+                Exceptions = ObserverExceptionPolicy.Stop,
+                Order = ObserverOrderPolicy.Undefined,
+                GenerateAsync = false,
+                ForceAsync = true)]
+            internal partial record class DomainEvent
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(ForceAsync_Internal_Record_Uses_Configured_Source_Shape));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single()
+            .SourceText.ToString();
+
+        Assert.Contains("internal partial record class DomainEvent", generated);
+        Assert.Contains("PublishAsync", generated);
+        Assert.DoesNotContain("lock (_lock)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
