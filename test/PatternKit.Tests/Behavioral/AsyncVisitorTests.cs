@@ -115,4 +115,20 @@ public sealed class AsyncVisitorTests(ITestOutputHelper output) : TinyBddXunitBa
 
     private static async Task<int> VisitNegDefaultSync(AsyncVisitor<Node, int> v)
         => await v.VisitAsync(new Neg(new Number(1)));
+
+    [Scenario("TryVisitAsync returns true when default handler handles unmatched node")]
+    [Fact]
+    public Task AsyncVisitor_TryVisit_Default_ReturnsTrue()
+        => Given("visitor with async default", () =>
+            AsyncVisitor<Node, int>.Create()
+                .On<Number>((_, _) => new ValueTask<int>(1))
+                .Default((node, _) => new ValueTask<int>(node is Neg ? -9 : -1))
+                .Build())
+           .When("trying Neg", TryNegDefault)
+           .Then("ok == true", r => r.ok)
+           .And("default result returned", r => r.result == -9)
+           .AssertPassed();
+
+    private static async Task<(bool ok, int result)> TryNegDefault(AsyncVisitor<Node, int> v)
+        => await v.TryVisitAsync(new Neg(new Number(1)));
 }

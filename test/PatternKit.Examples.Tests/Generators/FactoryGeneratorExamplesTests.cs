@@ -196,6 +196,36 @@ public sealed class OrchestratorStepFactoryTests
 
         Assert.Throws<ArgumentNullException>(() => factory.CreateFromKey(null!));
     }
+
+    [Fact]
+    public async Task ApplicationOrchestrator_RunsConfiguredStepsAgainstServices()
+    {
+        var seeder = new TestSeeder();
+        var worker = new TestWorker();
+        var services = new ServiceCollection()
+            .AddSingleton<ISeeder>(seeder)
+            .AddSingleton<ICacheProvider, MemoryCacheProvider>()
+            .AddSingleton<IWorker>(worker)
+            .BuildServiceProvider();
+        var orchestrator = new ApplicationOrchestrator(services);
+
+        await orchestrator.RunAsync(["seed", "warm-cache", "start-workers"]);
+
+        Assert.True(seeder.WasSeeded);
+        Assert.True(worker.WasStarted);
+    }
+
+    private sealed class TestSeeder : ISeeder
+    {
+        public bool WasSeeded { get; private set; }
+        public void Seed() => WasSeeded = true;
+    }
+
+    private sealed class TestWorker : IWorker
+    {
+        public bool WasStarted { get; private set; }
+        public void Start() => WasStarted = true;
+    }
 }
 
 public sealed class SeedDataStepTests

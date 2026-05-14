@@ -184,6 +184,58 @@ public class FacadeSpecsTests
     }
 
     [Fact]
+    public void BillingSubsystems_CoverValidationAndMissingRecordPaths()
+    {
+        var tax = new TaxService();
+        var invoices = new InvoiceService();
+        var payments = new PaymentProcessor();
+
+        Assert.Equal(0m, tax.CalculateTax(100m, "UNKNOWN"));
+        Assert.Equal(0m, tax.GetTaxRate("UNKNOWN"));
+        Assert.Null(invoices.GetInvoice("INV-MISSING"));
+
+        var zeroAmount = payments.ProcessPayment("CUST001", 0m, "CreditCard");
+        var missingMethod = payments.ProcessPayment("CUST001", 10m, "");
+        var missingPaymentRefund = payments.RefundPayment("REC-MISSING", 1m);
+        var paid = payments.ProcessPayment("CUST001", 25m, "CreditCard");
+        var excessiveRefund = payments.RefundPayment(paid.ReceiptNumber!, 30m);
+
+        Assert.False(zeroAmount.Success);
+        Assert.Equal("Amount must be greater than zero", zeroAmount.ErrorMessage);
+        Assert.False(missingMethod.Success);
+        Assert.Equal("Payment method is required", missingMethod.ErrorMessage);
+        Assert.False(missingPaymentRefund.Success);
+        Assert.Equal("Payment not found", missingPaymentRefund.ErrorMessage);
+        Assert.False(excessiveRefund.Success);
+        Assert.Equal("Refund amount exceeds original payment", excessiveRefund.ErrorMessage);
+    }
+
+    [Fact]
+    public void BillingFacade_HandlesPaymentAndRefundFailures()
+    {
+        var facade = new BillingFacade(
+            new InvoiceService(),
+            new NotificationService(),
+            new PaymentProcessor(),
+            new TaxService());
+
+        var failedPayment = facade.ProcessPayment(
+            customerId: "CUST-FAIL",
+            subtotal: -1m,
+            jurisdiction: "US-CA",
+            paymentMethod: "CreditCard");
+        var missingRefund = facade.ProcessRefund(
+            customerId: "CUST-FAIL",
+            receiptNumber: "REC-MISSING",
+            amount: 1m);
+
+        Assert.False(failedPayment.Success);
+        Assert.Equal("Amount must be greater than zero", failedPayment.ErrorMessage);
+        Assert.False(missingRefund.Success);
+        Assert.Equal("Payment not found", missingRefund.ErrorMessage);
+    }
+
+    [Fact]
     public void ShippingDemo_ExecutesSuccessfully()
     {
         // This test validates the demo runs without errors

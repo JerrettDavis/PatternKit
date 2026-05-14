@@ -1,4 +1,6 @@
 using PatternKit.Structural.Facade;
+using System.Linq.Expressions;
+using System.Reflection;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -253,4 +255,79 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
             })
             .Then("method call is type-safe", result => result == 30)
             .AssertPassed();
+
+    [Scenario("TypedFacade reports duplicate mappings for every supported arity")]
+    [Fact]
+    public Task TypedFacade_DuplicateMappings_Cover_All_Arities()
+        => Given("duplicate mapping operations", () => new Func<Exception?>[]
+            {
+                () => Record.Exception(() => TypedFacade<ISimpleService>.Create()
+                    .Map(x => x.GetStatus, () => "ok")
+                    .Map(x => x.GetStatus, () => "duplicate")),
+                () => Record.Exception(() => TypedFacade<IComplexService>.Create()
+                    .Map(x => x.Operation1, (string value) => value)
+                    .Map(x => x.Operation1, (string value) => value)),
+                () => Record.Exception(() => TypedFacade<ICalculator>.Create()
+                    .Map(x => x.Add, (int a, int b) => a + b)
+                    .Map(x => x.Add, (int a, int b) => a - b)),
+                () => Record.Exception(() => TypedFacade<IComplexService>.Create()
+                    .Map(x => x.Operation3, (string value, int length, bool flag) => flag && value.Length > length)
+                    .Map(x => x.Operation3, (string value, int length, bool flag) => !flag && value.Length <= length)),
+                () => Record.Exception(() => TypedFacade<IComplexService>.Create()
+                    .Map(x => x.Operation4, (decimal a, decimal b, decimal c, decimal d) => a + b + c + d)
+                    .Map(x => x.Operation4, (decimal a, decimal b, decimal c, decimal d) => a * b * c * d))
+            })
+            .When("running each duplicate mapper", operations => operations.Select(operation => operation()).ToArray())
+            .Then("each duplicate is rejected", exceptions => exceptions.All(ex => ex is ArgumentException))
+            .And("each error names the mapped method", exceptions => exceptions.All(ex => ex!.Message.Contains("already mapped", StringComparison.Ordinal)))
+            .AssertPassed();
+
+    [Scenario("TypedFacade validates method selector expressions and signatures")]
+    [Fact]
+    public Task TypedFacade_PrivateValidation_Covers_Invalid_Selectors_And_Signatures()
+        => Given("private validation helpers", () => new
+            {
+                Extract = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
+                    "ExtractMethodInfo",
+                    BindingFlags.NonPublic | BindingFlags.Static)!,
+                Validate = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
+                    "ValidateMethodSignature",
+                    BindingFlags.NonPublic | BindingFlags.Static)!,
+                GetStatus = typeof(ISimpleService).GetMethod(nameof(ISimpleService.GetStatus))!,
+                Operation1 = typeof(IComplexService).GetMethod(nameof(IComplexService.Operation1))!
+            })
+            .When("invoking invalid selectors and signature checks", helpers =>
+            {
+                Expression<Func<ISimpleService, int>> notMethodSelector = _ => 1;
+                Expression<Func<ISimpleService, Func<string>>> notMethodGroup = _ => (Func<string>)(() => "inline");
+
+                return new[]
+                {
+                    InvokePrivateArgumentException(() => helpers.Extract
+                        .MakeGenericMethod(typeof(Func<ISimpleService, int>))
+                        .Invoke(null, [notMethodSelector])),
+                    InvokePrivateArgumentException(() => helpers.Extract
+                        .MakeGenericMethod(typeof(Func<ISimpleService, Func<string>>))
+                        .Invoke(null, [notMethodGroup])),
+                    InvokePrivateArgumentException(() => helpers.Validate
+                        .Invoke(null, [helpers.GetStatus, typeof(int), Array.Empty<Type>()])),
+                    InvokePrivateArgumentException(() => helpers.Validate
+                        .Invoke(null, [helpers.Operation1, typeof(string), Array.Empty<Type>()])),
+                    InvokePrivateArgumentException(() => helpers.Validate
+                        .Invoke(null, [helpers.Operation1, typeof(string), new[] { typeof(int) }]))
+                };
+            })
+            .Then("all invalid inputs are rejected", exceptions => exceptions.All(ex => ex is not null))
+            .And("messages identify selector or signature failures", exceptions =>
+                exceptions.Any(ex => ex!.Message.Contains("method selector", StringComparison.Ordinal))
+                && exceptions.Any(ex => ex!.Message.Contains("return type mismatch", StringComparison.Ordinal))
+                && exceptions.Any(ex => ex!.Message.Contains("parameter count mismatch", StringComparison.Ordinal))
+                && exceptions.Any(ex => ex!.Message.Contains("parameter 0 type mismatch", StringComparison.Ordinal)))
+            .AssertPassed();
+
+    private static ArgumentException? InvokePrivateArgumentException(Action action)
+    {
+        var exception = Record.Exception(action);
+        return Assert.IsType<ArgumentException>(Assert.IsType<TargetInvocationException>(exception).InnerException);
+    }
 }

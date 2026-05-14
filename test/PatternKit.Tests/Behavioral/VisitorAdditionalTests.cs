@@ -45,6 +45,16 @@ public sealed class VisitorAdditionalTests(ITestOutputHelper output) : TinyBddXu
            .And("result == ?", x => x.res == "?")
            .AssertPassed();
 
+    [Scenario("TryVisit returns false and default result when no handler matches")]
+    [Fact]
+    public Task ResultVisitor_TryVisit_NoDefault_ReturnsFalse()
+        => Given("a visitor with one concrete handler and no default", () =>
+            Visitor<Node, string>.Create().On<Number>(_ => "number").Build())
+           .When("TryVisit Neg", v => { var ok = v.TryVisit(new Neg(new Number(0)), out var res); return (ok, res); })
+           .Then("ok == false", x => x.ok == false)
+           .And("result == null", x => x.res is null)
+           .AssertPassed();
+
     [Scenario("Registration order matters: base before derived (result)")]
     [Fact]
     public Task ResultVisitor_Order_Matters()

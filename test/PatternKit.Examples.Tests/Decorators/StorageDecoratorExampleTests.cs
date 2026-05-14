@@ -1,8 +1,13 @@
 using PatternKit.Examples.Decorators;
+using TinyBDD;
+using TinyBDD.Xunit;
+using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.Decorators;
 
-public sealed class StorageDecoratorExampleTests
+[Feature("Storage decorator example")]
+[Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
+public sealed class StorageDecoratorExampleTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     [Fact]
     public void InMemoryStorage_ReadWriteExistsAndDelete_WorkAsExpected()
@@ -59,6 +64,91 @@ public sealed class StorageDecoratorExampleTests
 
         Assert.Throws<IOException>(() => storage.WriteFile("data.txt", "payload"));
     }
+
+    [Scenario("Public storage decorator demo runs the composed logging, caching, and retry workflow")]
+    [Fact]
+    public async Task StorageDecoratorDemo_Run_CoversComposedWorkflow()
+    {
+        await Given("a redirected console", CaptureConsole)
+            .When("running the storage decorator demo", string (capture) =>
+            {
+                try
+                {
+                    StorageDecoratorDemo.Run();
+                    return capture.Output();
+                }
+                finally
+                {
+                    capture.Dispose();
+                }
+            })
+            .Then("the write path ran", output => output.Contains("Writing a file", StringComparison.Ordinal))
+            .And("the cache hit path ran", output => output.Contains("[Cache] Hit", StringComparison.Ordinal))
+            .And("the retry failure path was handled", output => output.Contains("Expected error:", StringComparison.Ordinal))
+            .AssertPassed();
+    }
+
+    [Scenario("Logging decorator reports read failures and delete operations")]
+    [Fact]
+    public async Task LoggingDecorator_CoversFailureAndDeleteBranches()
+    {
+        await Given("logging storage with a redirected console", () =>
+            {
+                var capture = CaptureConsole();
+                return new LoggingHarness(new LoggingFileStorage(new InMemoryFileStorage()), capture);
+            })
+            .When("deleting a missing file and reading it", LoggingResult (harness) =>
+            {
+                try
+                {
+                    harness.Storage.DeleteFile("missing.txt");
+                    FileNotFoundException? missing = null;
+                    try
+                    {
+                        harness.Storage.ReadFile("missing.txt");
+                    }
+                    catch (FileNotFoundException ex)
+                    {
+                        missing = ex;
+                    }
+
+                    return new LoggingResult(harness.Capture.Output(), missing);
+                }
+                finally
+                {
+                    harness.Capture.Dispose();
+                }
+            })
+            .Then("delete was logged", result => result.Output.Contains("Deleting file: missing.txt", StringComparison.Ordinal))
+            .And("read failure was logged", result => result.Output.Contains("Error reading missing.txt", StringComparison.Ordinal))
+            .And("the storage error propagated", result => result.Exception is not null)
+            .AssertPassed();
+    }
+
+    private static ConsoleCapture CaptureConsole() => new();
+
+    private sealed class ConsoleCapture : IDisposable
+    {
+        private readonly TextWriter _original = Console.Out;
+        private readonly StringWriter _writer = new();
+
+        public ConsoleCapture()
+        {
+            Console.SetOut(_writer);
+        }
+
+        public string Output() => _writer.ToString();
+
+        public void Dispose()
+        {
+            Console.SetOut(_original);
+            _writer.Dispose();
+        }
+    }
+
+    private sealed record LoggingHarness(LoggingFileStorage Storage, ConsoleCapture Capture);
+
+    private sealed record LoggingResult(string Output, FileNotFoundException? Exception);
 
     private sealed class FlakyStorage : IFileStorage
     {

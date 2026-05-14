@@ -43,6 +43,18 @@ public class SingletonGeneratorDemoTests
     }
 
     [Fact]
+    public void AppClock_ProvidesLocalTimeAndCurrentDate()
+    {
+        var before = DateTimeOffset.Now.AddSeconds(-1);
+        var now = AppClock.Instance.Now;
+        var after = DateTimeOffset.Now.AddSeconds(1);
+        var today = AppClock.Instance.Today;
+
+        Assert.InRange(now, before, after);
+        Assert.InRange(today.DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)).DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)).DayNumber);
+    }
+
+    [Fact]
     public void ConfigManager_ReturnsSameInstance()
     {
         // Act
@@ -63,6 +75,8 @@ public class SingletonGeneratorDemoTests
         Assert.NotNull(config.AppName);
         Assert.NotNull(config.Environment);
         Assert.NotNull(config.ConnectionString);
+        Assert.False(config.DebugLogging);
+        Assert.Contains($"App={config.AppName}", config.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]

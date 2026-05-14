@@ -93,6 +93,52 @@ public sealed class MementoGeneratorExamplesTests
     }
 
     [Fact]
+    public void GameSession_DoesNotUndoWhenGeneratedHistorySkipsDuplicateMutableState()
+    {
+        var session = new GameStateDemo.GameSession();
+
+        Assert.False(session.UndoToCheckpoint());
+        session.PerformAction(state => state.MovePlayer(2, 3), "move");
+        session.PerformAction(state =>
+        {
+            state.TakeDamage(15);
+            state.IsPaused = true;
+        }, "damage and pause");
+
+        Assert.False(session.UndoToCheckpoint());
+        Assert.Equal(2, session.State.PlayerX);
+        Assert.Equal(3, session.State.PlayerY);
+        Assert.Equal(85, session.State.Health);
+        Assert.True(session.State.IsPaused);
+        Assert.False(session.RedoToCheckpoint());
+    }
+
+    [Fact]
+    public void GameState_HealthIsClampedAndSaveLoadRestoresCapturedValues()
+    {
+        var state = new GameStateDemo.GameState();
+
+        state.TakeDamage(500);
+        Assert.Equal(0, state.Health);
+        state.Heal(500);
+        Assert.Equal(100, state.Health);
+
+        state.MovePlayer(1, 1);
+        state.AddScore(10);
+        var save = GameStateMemento.Capture(in state);
+
+        state.MovePlayer(9, 9);
+        state.TakeDamage(25);
+        state.AddScore(90);
+        save.Restore(state);
+
+        Assert.Equal(1, state.PlayerX);
+        Assert.Equal(1, state.PlayerY);
+        Assert.Equal(100, state.Health);
+        Assert.Equal(10, state.Score);
+    }
+
+    [Fact]
     public void GameStateDemo_RunAndSaveLoad_ReturnExpectedLogEntries()
     {
         var runLog = GameStateDemo.Run();
