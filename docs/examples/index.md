@@ -60,6 +60,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Enterprise Messaging Workflow Suite**
   End-to-end messaging examples for envelopes, content routing, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, outboxes, and generated messaging factories. See [Enterprise Messaging Workflow Suite](enterprise-messaging-workflows.md).
 
+* **Resilient Checkout and Collaborating Mailboxes**
+  Application-shaped messaging demos: checkout route selection, routing-slip execution, command compensation, fallback routes, and service mailboxes collaborating over correlated messages. See [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md).
+
 ## How to run
 
 From the repo root:
@@ -102,6 +105,8 @@ dotnet test PatternKit.slnx -c Release
 * **Source Generator Suite:** `src/PatternKit.Examples/Generators` (+ `PatternKit.Examples.Tests/Generators`) — generated builders, factories, facades, mementos, state machines, strategies, visitors, and host-style composition.
 * **Generator Boundary Demos:** `AdapterGeneratorDemo`, `ObserverGeneratorDemo`, `ProxyGeneratorDemo`, `SingletonGeneratorDemo`, `TemplateMethodGeneratorDemo` (+ matching tests) — generated adapters, observers, proxies, singletons, and template workflows.
 * **Enterprise Messaging:** `src/PatternKit.Examples/Messaging` (+ `PatternKit.Examples.Tests/Messaging`) — runtime and generated messaging workflows.
+* **Resilient Checkout:** `ResilientCheckoutDemo` (+ `ResilientCheckoutDemoTests`) — fallback checkout routes with compensation.
+* **Collaborating Mailboxes:** `ServiceCollaborationMailboxDemo` (+ `ServiceCollaborationMailboxDemoTests`) — inventory, payment, shipping, and notification services collaborating through serialized mailboxes.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
