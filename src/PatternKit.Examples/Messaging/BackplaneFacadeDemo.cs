@@ -16,107 +16,41 @@ public static class BackplaneFacadeDemo
     /// </summary>
     public static async ValueTask<BackplaneDemoSummary> RunAsync(CancellationToken cancellationToken = default)
     {
-        await using var transport = new InMemoryBackplaneTransport();
+        var transport = new InMemoryBackplaneTransport();
         var outbox = new BackplaneOutbox();
-        var bus = new BackplaneBus(transport, outbox);
         var idempotency = new InMemoryIdempotencyStore();
         var audit = new ConcurrentQueue<string>();
         var endpoints = new ConcurrentDictionary<string, string>();
         var notifications = new ConcurrentQueue<CustomerNotification>();
         var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var services = new BackplaneDemoServices(audit, endpoints, notifications, completed);
 
-        bus.Route<SubmitOrder>(
-            static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
-            "orders.priority");
-        bus.RouteDefault<SubmitOrder>("orders.standard");
-
-        await bus.HandleAsync<SubmitOrder, BackplaneOrderAccepted>(
-            "orders.standard",
-            async (message, context, token) =>
-                await AcceptOrderAsync("orders.standard", message, context, token).ConfigureAwait(false),
-            idempotency,
-            cancellationToken);
-
-        await bus.HandleAsync<SubmitOrder, BackplaneOrderAccepted>(
-            "orders.priority",
-            async (message, context, token) =>
-                await AcceptOrderAsync("orders.priority", message, context, token).ConfigureAwait(false),
-            idempotency,
-            cancellationToken);
-
-        await bus.SubscribeAsync<BackplaneOrderSubmitted>(
-            "orders.submitted",
-            "billing-service",
-            async (message, context, token) =>
+        await using var host = await BackplaneHost.Create()
+            .UseTransport(() => transport)
+            .UseOutbox(outbox)
+            .UseIdempotencyStore(idempotency)
+            .MapCommand<SubmitOrder, BackplaneOrderAccepted>(
+                static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
+                "orders.priority")
+            .MapDefaultCommand<SubmitOrder, BackplaneOrderAccepted>("orders.standard")
+            .ReceiveEndpoint("orders.standard", endpoint =>
+                endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptStandardOrderAsync))
+            .ReceiveEndpoint("orders.priority", endpoint =>
+                endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptPriorityOrderAsync))
+            .ReceiveEndpoint("billing-service", endpoint =>
+                endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.CapturePaymentAsync))
+            .ReceiveEndpoint("audit-service", endpoint =>
+                endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.AuditSubmittedOrderAsync))
+            .ReceiveEndpoint("fulfillment-service", endpoint =>
+                endpoint.Subscribe<PaymentCaptured>("payments.captured", services.ScheduleShipmentAsync))
+            .ReceiveEndpoint("notification-service", endpoint =>
             {
-                audit.Enqueue($"billing:received:{message.Payload.OrderId}");
-                if (message.Payload.Total > 300m)
-                {
-                    await bus.PublishAsync(
-                        "payments.declined",
-                        new PaymentDeclined(message.Payload.OrderId, "authorization-declined"),
-                        context.Headers,
-                        token).ConfigureAwait(false);
-                    return;
-                }
+                endpoint.Subscribe<PaymentDeclined>("payments.declined", services.NotifyPaymentDeclinedAsync);
+                endpoint.Subscribe<ShipmentScheduled>("shipments.scheduled", services.NotifyShipmentScheduledAsync);
+            })
+            .BuildAsync(cancellationToken).ConfigureAwait(false);
 
-                await bus.PublishAsync(
-                    "payments.captured",
-                    new PaymentCaptured(message.Payload.OrderId, message.Payload.Total),
-                    context.Headers,
-                    token).ConfigureAwait(false);
-            },
-            cancellationToken);
-
-        await bus.SubscribeAsync<BackplaneOrderSubmitted>(
-            "orders.submitted",
-            "audit-service",
-            (message, context, _) =>
-            {
-                audit.Enqueue($"audit:order-submitted:{message.Payload.OrderId}:{context.Headers.CorrelationId}");
-                return default;
-            },
-            cancellationToken);
-
-        await bus.SubscribeAsync<PaymentCaptured>(
-            "payments.captured",
-            "fulfillment-service",
-            async (message, context, token) =>
-            {
-                audit.Enqueue($"fulfillment:scheduled:{message.Payload.OrderId}");
-                await bus.PublishAsync(
-                    "shipments.scheduled",
-                    new ShipmentScheduled(message.Payload.OrderId, $"trk-{message.Payload.OrderId}"),
-                    context.Headers,
-                    token).ConfigureAwait(false);
-            },
-            cancellationToken);
-
-        await bus.SubscribeAsync<PaymentDeclined>(
-            "payments.declined",
-            "notification-service",
-            (message, context, _) =>
-            {
-                RecordNotification(new CustomerNotification(
-                    message.Payload.OrderId,
-                    "payment-declined",
-                    context.Headers.CorrelationId ?? string.Empty));
-                return default;
-            },
-            cancellationToken);
-
-        await bus.SubscribeAsync<ShipmentScheduled>(
-            "shipments.scheduled",
-            "notification-service",
-            (message, context, _) =>
-            {
-                RecordNotification(new CustomerNotification(
-                    message.Payload.OrderId,
-                    "shipment-scheduled",
-                    context.Headers.CorrelationId ?? string.Empty));
-                return default;
-            },
-            cancellationToken);
+        services.AttachClient(host.Client);
 
         var accepted = new List<BackplaneOrderAccepted>
         {
@@ -151,35 +85,339 @@ public static class BackplaneFacadeDemo
                 .WithCorrelationId($"corr-{orderId}")
                 .WithIdempotencyKey(idempotencyKey);
 
-            return await bus.RequestAsync<SubmitOrder, BackplaneOrderAccepted>(command, cancellationToken).ConfigureAwait(false);
+            return await host.Client.RequestAsync<SubmitOrder, BackplaneOrderAccepted>(command, cancellationToken).ConfigureAwait(false);
         }
+    }
+}
 
-        async ValueTask<BackplaneOrderAccepted> AcceptOrderAsync(
-            string endpoint,
-            Message<SubmitOrder> message,
-            MessageContext context,
-            CancellationToken token)
+/// <summary>Application host that owns the bus facade, typed client, transport, and active subscriptions.</summary>
+public sealed class BackplaneHost : IAsyncDisposable
+{
+    private readonly IBackplaneTransport _transport;
+    private readonly IReadOnlyList<IAsyncDisposable> _subscriptions;
+    private bool _disposed;
+
+    private BackplaneHost(
+        BackplaneBus bus,
+        BackplaneClient client,
+        IBackplaneTransport transport,
+        IReadOnlyList<IAsyncDisposable> subscriptions,
+        BackplaneOutbox outbox,
+        InMemoryIdempotencyStore? idempotencyStore,
+        IReadOnlyList<BackplaneEndpointRegistration> endpoints)
+    {
+        Bus = bus;
+        Client = client;
+        _transport = transport;
+        _subscriptions = subscriptions;
+        Outbox = outbox;
+        IdempotencyStore = idempotencyStore;
+        Endpoints = endpoints;
+    }
+
+    /// <summary>The lower-level facade for advanced application-owned integration points.</summary>
+    public BackplaneBus Bus { get; }
+
+    /// <summary>Typed application client used by request handlers, controllers, background services, and tests.</summary>
+    public BackplaneClient Client { get; }
+
+    /// <summary>The outbox configured for this host.</summary>
+    public BackplaneOutbox Outbox { get; }
+
+    /// <summary>The optional idempotency store shared by command endpoints.</summary>
+    public InMemoryIdempotencyStore? IdempotencyStore { get; }
+
+    /// <summary>The configured endpoint topology.</summary>
+    public IReadOnlyList<BackplaneEndpointRegistration> Endpoints { get; }
+
+    /// <summary>Creates a fluent host builder.</summary>
+    public static BackplaneHostBuilder Create() => new();
+
+    internal static async ValueTask<BackplaneHost> StartAsync(
+        IBackplaneTransport transport,
+        BackplaneOutbox outbox,
+        InMemoryIdempotencyStore? idempotencyStore,
+        IReadOnlyList<BackplaneEndpointRegistration> endpoints,
+        IReadOnlyList<BackplaneRouteRegistration> routes,
+        CancellationToken cancellationToken)
+    {
+        var bus = new BackplaneBus(transport, outbox);
+        foreach (var route in routes)
+            route.Configure(bus);
+
+        var subscriptions = new List<IAsyncDisposable>(endpoints.Sum(static endpoint => endpoint.Handlers.Count));
+        try
         {
-            endpoints[message.Payload.OrderId] = endpoint;
-            audit.Enqueue($"orders:accepted:{message.Payload.OrderId}:{endpoint}");
-
-            await bus.PublishAsync(
-                "orders.submitted",
-                new BackplaneOrderSubmitted(message.Payload.OrderId, message.Payload.Total, message.Payload.CustomerTier),
-                context.Headers,
-                token).ConfigureAwait(false);
-
-            return new BackplaneOrderAccepted(message.Payload.OrderId, endpoint, context.Headers.CorrelationId ?? string.Empty);
+            foreach (var endpoint in endpoints)
+            {
+                foreach (var handler in endpoint.Handlers)
+                {
+                    subscriptions.Add(await handler.StartAsync(bus, endpoint.Name, idempotencyStore, cancellationToken)
+                        .ConfigureAwait(false));
+                }
+            }
         }
-
-        void RecordNotification(CustomerNotification notification)
+        catch
         {
-            notifications.Enqueue(notification);
-            audit.Enqueue($"notification:{notification.OrderId}:{notification.Kind}");
+            foreach (var subscription in subscriptions.Reverse<IAsyncDisposable>())
+                await subscription.DisposeAsync().ConfigureAwait(false);
 
-            if (notifications.Count == 3)
-                completed.TrySetResult();
+            await transport.DisposeAsync().ConfigureAwait(false);
+            throw;
         }
+
+        return new BackplaneHost(
+            bus,
+            new BackplaneClient(bus),
+            transport,
+            subscriptions,
+            outbox,
+            idempotencyStore,
+            endpoints);
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+        foreach (var subscription in _subscriptions.Reverse())
+            await subscription.DisposeAsync().ConfigureAwait(false);
+
+        await _transport.DisposeAsync().ConfigureAwait(false);
+    }
+}
+
+/// <summary>Fluent application startup builder for the demo backplane host.</summary>
+public sealed class BackplaneHostBuilder
+{
+    private readonly List<BackplaneEndpointRegistration> _endpoints = new();
+    private readonly List<BackplaneRouteRegistration> _routes = new();
+    private Func<IBackplaneTransport> _transportFactory = static () => new InMemoryBackplaneTransport();
+    private BackplaneOutbox? _outbox;
+    private InMemoryIdempotencyStore? _idempotencyStore;
+
+    /// <summary>Uses the deterministic in-memory transport included with the demo.</summary>
+    public BackplaneHostBuilder UseInMemoryTransport()
+    {
+        _transportFactory = static () => new InMemoryBackplaneTransport();
+        return this;
+    }
+
+    /// <summary>Uses an application-owned transport adapter such as RabbitMQ, Azure Service Bus, Postgres, or MQTT.</summary>
+    public BackplaneHostBuilder UseTransport(Func<IBackplaneTransport> transportFactory)
+    {
+        _transportFactory = transportFactory ?? throw new ArgumentNullException(nameof(transportFactory));
+        return this;
+    }
+
+    /// <summary>Uses an application-owned outbox for publish-side dispatch records.</summary>
+    public BackplaneHostBuilder UseOutbox(BackplaneOutbox outbox)
+    {
+        _outbox = outbox ?? throw new ArgumentNullException(nameof(outbox));
+        return this;
+    }
+
+    /// <summary>Uses a shared idempotency store for command endpoints.</summary>
+    public BackplaneHostBuilder UseIdempotencyStore(InMemoryIdempotencyStore idempotencyStore)
+    {
+        _idempotencyStore = idempotencyStore ?? throw new ArgumentNullException(nameof(idempotencyStore));
+        return this;
+    }
+
+    /// <summary>Maps a command type to an endpoint using a content-based route.</summary>
+    public BackplaneHostBuilder MapCommand<TRequest, TResponse>(
+        ContentRouter<TRequest, string>.RoutePredicate predicate,
+        string endpointName)
+    {
+        _routes.Add(BackplaneRouteRegistration.Route<TRequest, TResponse>(predicate, endpointName));
+        return this;
+    }
+
+    /// <summary>Maps a command type to a default endpoint.</summary>
+    public BackplaneHostBuilder MapDefaultCommand<TRequest, TResponse>(string endpointName)
+    {
+        _routes.Add(BackplaneRouteRegistration.Default<TRequest, TResponse>(endpointName));
+        return this;
+    }
+
+    /// <summary>Registers a receive endpoint and its command/event consumers.</summary>
+    public BackplaneHostBuilder ReceiveEndpoint(string endpointName, Action<BackplaneEndpointBuilder> configure)
+    {
+        ValidateName(endpointName, nameof(endpointName));
+        ArgumentNullException.ThrowIfNull(configure);
+
+        var builder = new BackplaneEndpointBuilder(endpointName);
+        configure(builder);
+        _endpoints.Add(builder.Build());
+        return this;
+    }
+
+    /// <summary>Builds and starts the host.</summary>
+    public ValueTask<BackplaneHost> BuildAsync(CancellationToken cancellationToken = default)
+        => BackplaneHost.StartAsync(
+            _transportFactory() ?? throw new InvalidOperationException("The configured transport factory returned null."),
+            _outbox ?? new BackplaneOutbox(),
+            _idempotencyStore,
+            _endpoints.ToArray(),
+            _routes.ToArray(),
+            cancellationToken);
+
+    private static void ValidateName(string value, string paramName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            throw new ArgumentException("Endpoint names cannot be null, empty, or whitespace.", paramName);
+    }
+}
+
+/// <summary>Endpoint-level consumer registration builder.</summary>
+public sealed class BackplaneEndpointBuilder
+{
+    private readonly string _endpointName;
+    private readonly List<IBackplaneHandlerRegistration> _handlers = new();
+
+    internal BackplaneEndpointBuilder(string endpointName)
+    {
+        _endpointName = endpointName;
+    }
+
+    /// <summary>Registers a request/reply command consumer on this endpoint.</summary>
+    public BackplaneEndpointBuilder HandleCommand<TRequest, TResponse>(
+        BackplaneRequestHandler<TRequest, TResponse> handler)
+    {
+        _handlers.Add(new BackplaneCommandRegistration<TRequest, TResponse>(_endpointName, handler));
+        return this;
+    }
+
+    /// <summary>Registers an event consumer on this endpoint.</summary>
+    public BackplaneEndpointBuilder Subscribe<TEvent>(
+        string topic,
+        BackplaneEventHandler<TEvent> handler)
+    {
+        _handlers.Add(new BackplaneSubscriptionRegistration<TEvent>(topic, handler));
+        return this;
+    }
+
+    internal BackplaneEndpointRegistration Build() => new(_endpointName, _handlers.ToArray());
+}
+
+/// <summary>Typed client exposed to application code by the demo host.</summary>
+public sealed class BackplaneClient
+{
+    private readonly BackplaneBus _bus;
+
+    internal BackplaneClient(BackplaneBus bus)
+    {
+        _bus = bus;
+    }
+
+    /// <summary>Sends a typed request and waits for the typed reply.</summary>
+    public ValueTask<TResponse> RequestAsync<TRequest, TResponse>(
+        Message<TRequest> message,
+        CancellationToken cancellationToken = default)
+        => _bus.RequestAsync<TRequest, TResponse>(message, cancellationToken);
+
+    /// <summary>Publishes a typed event to a topic.</summary>
+    public ValueTask PublishAsync<TEvent>(
+        string topic,
+        TEvent payload,
+        MessageHeaders headers,
+        CancellationToken cancellationToken = default)
+        => _bus.PublishAsync(topic, payload, headers, cancellationToken);
+}
+
+/// <summary>Endpoint topology entry produced by the host builder.</summary>
+public sealed record BackplaneEndpointRegistration(
+    string Name,
+    IReadOnlyList<IBackplaneHandlerRegistration> Handlers);
+
+/// <summary>Handler registration that can attach itself to a started bus.</summary>
+public interface IBackplaneHandlerRegistration
+{
+    /// <summary>Starts the handler subscription.</summary>
+    ValueTask<IAsyncDisposable> StartAsync(
+        BackplaneBus bus,
+        string endpointName,
+        InMemoryIdempotencyStore? idempotencyStore,
+        CancellationToken cancellationToken);
+}
+
+internal sealed class BackplaneCommandRegistration<TRequest, TResponse> : IBackplaneHandlerRegistration
+{
+    private readonly string _address;
+    private readonly BackplaneRequestHandler<TRequest, TResponse> _handler;
+
+    internal BackplaneCommandRegistration(
+        string address,
+        BackplaneRequestHandler<TRequest, TResponse> handler)
+    {
+        _address = address;
+        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
+
+    public ValueTask<IAsyncDisposable> StartAsync(
+        BackplaneBus bus,
+        string endpointName,
+        InMemoryIdempotencyStore? idempotencyStore,
+        CancellationToken cancellationToken)
+    {
+        _ = endpointName;
+        return bus.HandleAsync(_address, _handler, idempotencyStore, cancellationToken);
+    }
+}
+
+internal sealed class BackplaneSubscriptionRegistration<TEvent> : IBackplaneHandlerRegistration
+{
+    private readonly string _topic;
+    private readonly BackplaneEventHandler<TEvent> _handler;
+
+    internal BackplaneSubscriptionRegistration(
+        string topic,
+        BackplaneEventHandler<TEvent> handler)
+    {
+        if (string.IsNullOrWhiteSpace(topic))
+            throw new ArgumentException("Topics cannot be null, empty, or whitespace.", nameof(topic));
+
+        _topic = topic;
+        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
+
+    public ValueTask<IAsyncDisposable> StartAsync(
+        BackplaneBus bus,
+        string endpointName,
+        InMemoryIdempotencyStore? idempotencyStore,
+        CancellationToken cancellationToken)
+    {
+        _ = idempotencyStore;
+        return bus.SubscribeAsync(_topic, endpointName, _handler, cancellationToken);
+    }
+}
+
+internal sealed class BackplaneRouteRegistration
+{
+    private readonly Action<BackplaneBus> _configure;
+
+    private BackplaneRouteRegistration(Action<BackplaneBus> configure)
+    {
+        _configure = configure;
+    }
+
+    internal void Configure(BackplaneBus bus) => _configure(bus);
+
+    internal static BackplaneRouteRegistration Route<TRequest, TResponse>(
+        ContentRouter<TRequest, string>.RoutePredicate predicate,
+        string endpointName)
+    {
+        _ = typeof(TResponse);
+        return new BackplaneRouteRegistration(bus => bus.Route(predicate, endpointName));
+    }
+
+    internal static BackplaneRouteRegistration Default<TRequest, TResponse>(string endpointName)
+    {
+        _ = typeof(TResponse);
+        return new BackplaneRouteRegistration(bus => bus.RouteDefault<TRequest>(endpointName));
     }
 }
 
@@ -650,6 +888,145 @@ public sealed class BackplaneOutbox
                 }
             }
         }
+    }
+}
+
+internal sealed class BackplaneDemoServices
+{
+    private readonly ConcurrentQueue<string> _audit;
+    private readonly ConcurrentDictionary<string, string> _endpoints;
+    private readonly ConcurrentQueue<CustomerNotification> _notifications;
+    private readonly TaskCompletionSource _completed;
+    private BackplaneClient? _client;
+
+    internal BackplaneDemoServices(
+        ConcurrentQueue<string> audit,
+        ConcurrentDictionary<string, string> endpoints,
+        ConcurrentQueue<CustomerNotification> notifications,
+        TaskCompletionSource completed)
+    {
+        _audit = audit;
+        _endpoints = endpoints;
+        _notifications = notifications;
+        _completed = completed;
+    }
+
+    internal void AttachClient(BackplaneClient client)
+    {
+        _client = client ?? throw new ArgumentNullException(nameof(client));
+    }
+
+    internal ValueTask<BackplaneOrderAccepted> AcceptStandardOrderAsync(
+        Message<SubmitOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+        => AcceptOrderAsync("orders.standard", message, context, cancellationToken);
+
+    internal ValueTask<BackplaneOrderAccepted> AcceptPriorityOrderAsync(
+        Message<SubmitOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+        => AcceptOrderAsync("orders.priority", message, context, cancellationToken);
+
+    internal async ValueTask CapturePaymentAsync(
+        Message<BackplaneOrderSubmitted> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _audit.Enqueue($"billing:received:{message.Payload.OrderId}");
+        if (message.Payload.Total > 300m)
+        {
+            await Client.PublishAsync(
+                "payments.declined",
+                new PaymentDeclined(message.Payload.OrderId, "authorization-declined"),
+                context.Headers,
+                cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
+        await Client.PublishAsync(
+            "payments.captured",
+            new PaymentCaptured(message.Payload.OrderId, message.Payload.Total),
+            context.Headers,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    internal ValueTask AuditSubmittedOrderAsync(
+        Message<BackplaneOrderSubmitted> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        _audit.Enqueue($"audit:order-submitted:{message.Payload.OrderId}:{context.Headers.CorrelationId}");
+        return default;
+    }
+
+    internal async ValueTask ScheduleShipmentAsync(
+        Message<PaymentCaptured> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _audit.Enqueue($"fulfillment:scheduled:{message.Payload.OrderId}");
+        await Client.PublishAsync(
+            "shipments.scheduled",
+            new ShipmentScheduled(message.Payload.OrderId, $"trk-{message.Payload.OrderId}"),
+            context.Headers,
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    internal ValueTask NotifyPaymentDeclinedAsync(
+        Message<PaymentDeclined> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        RecordNotification(new CustomerNotification(
+            message.Payload.OrderId,
+            "payment-declined",
+            context.Headers.CorrelationId ?? string.Empty));
+        return default;
+    }
+
+    internal ValueTask NotifyShipmentScheduledAsync(
+        Message<ShipmentScheduled> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _ = cancellationToken;
+        RecordNotification(new CustomerNotification(
+            message.Payload.OrderId,
+            "shipment-scheduled",
+            context.Headers.CorrelationId ?? string.Empty));
+        return default;
+    }
+
+    private BackplaneClient Client => _client ?? throw new InvalidOperationException("Backplane client has not been attached.");
+
+    private async ValueTask<BackplaneOrderAccepted> AcceptOrderAsync(
+        string endpoint,
+        Message<SubmitOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+    {
+        _endpoints[message.Payload.OrderId] = endpoint;
+        _audit.Enqueue($"orders:accepted:{message.Payload.OrderId}:{endpoint}");
+
+        await Client.PublishAsync(
+            "orders.submitted",
+            new BackplaneOrderSubmitted(message.Payload.OrderId, message.Payload.Total, message.Payload.CustomerTier),
+            context.Headers,
+            cancellationToken).ConfigureAwait(false);
+
+        return new BackplaneOrderAccepted(message.Payload.OrderId, endpoint, context.Headers.CorrelationId ?? string.Empty);
+    }
+
+    private void RecordNotification(CustomerNotification notification)
+    {
+        _notifications.Enqueue(notification);
+        _audit.Enqueue($"notification:{notification.OrderId}:{notification.Kind}");
+
+        if (_notifications.Count == 3)
+            _completed.TrySetResult();
     }
 }
 
