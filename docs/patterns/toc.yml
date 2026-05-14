@@ -305,6 +305,8 @@
           href: messaging/saga.md
         - name: Mailbox
           href: messaging/mailbox.md
+        - name: Idempotent Receiver, Inbox, and Outbox
+          href: messaging/reliability.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
     - name: Type-Dispatcher
