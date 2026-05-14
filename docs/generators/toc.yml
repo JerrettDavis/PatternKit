@@ -1,6 +1,9 @@
 - name: Generators Overview
   href: index.md
 
+- name: Adapter
+  href: adapter.md
+
 - name: Builder
   href: builder.md
 
@@ -13,8 +16,17 @@
 - name: Command
   href: command.md
 
+- name: Composer
+  href: composer.md
+
 - name: Composite
   href: composite.md
+
+- name: Decorator
+  href: decorator.md
+
+- name: Dispatcher
+  href: dispatcher.md
 
 - name: Facade
   href: facade.md
@@ -31,14 +43,26 @@
 - name: Iterator
   href: iterator.md
 
+- name: Memento
+  href: memento.md
+
+- name: Messaging Generators
+  href: messaging.md
+
 - name: Prototype
   href: prototype.md
 
 - name: Proxy
   href: proxy.md
 
+- name: Singleton
+  href: singleton.md
+
 - name: State Machine
   href: state-machine.md
+
+- name: Strategy
+  href: strategy.md
 
 - name: Template Method
   href: template-method-generator.md

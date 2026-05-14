@@ -13,6 +13,8 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
 * **Flyweight identity sharing** to eliminate duplicate immutable objects (glyphs, styles, tokens).
 * **Snapshot history & undo/redo (Memento)** for document/editor style workflows.
+* **Source-generated application wiring** for builders, factories, facades, proxies, observers, visitors, state machines, strategies, mementos, template methods, and messaging factories.
+* **Enterprise messaging workflows** for envelopes, routers, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, and outboxes.
 
 ## Demos in this section
 
@@ -37,13 +39,13 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Payment Processor — Fluent Decorator Pattern for Point of Sale**
   Demonstrates the **Decorator** pattern for building flexible payment processors. Shows how to layer tax calculation, promotional discounts, loyalty programs, employee benefits, and rounding strategies on a base processor—**no inheritance hierarchies**. Includes five real-world processors (simple, retail, e-commerce, cash register, birthday special) with full test coverage. Perfect for understanding decorator execution order and composition patterns.
 
-* **Flyweight Glyph Cache & Style Sharing**  
+* **Flyweight Glyph Cache & Style Sharing**
   Shows a high-volume text/glyph layout where each distinct glyph (and style) is allocated **once** and reused. Demonstrates intrinsic vs extrinsic state separation, preload of hot keys (spaces), custom key comparers (case-insensitive styles), and thread-safe lazy creation—mirroring classic Flyweight scenarios (rendering, AST token metadata, icon caches).
 
-* **Document Editing History (Memento)**  
+* **Document Editing History (Memento)**
   A simple document buffer with tagged snapshots, undo/redo, jump-to-version, and duplicate suppression illustrating the **Memento** pattern's practical shape in a UI/editor workflow.
 
-* **State Machine — Order Lifecycle**  
+* **State Machine — Order Lifecycle**
   A fluent state machine driving an order lifecycle with entry/exit hooks, transition effects, and default per‑state behavior. Shows determinism (first‑match wins), internal (Stay) vs cross‑state transitions, and log/audit side‑effects.
 
 * **Template Method Data Processor**
@@ -51,6 +53,12 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Template Method Async Pipeline**
   End-to-end async pipeline (fetch → transform → store) with cancellation, optional synchronization, and error observation. Shows both subclassing (`AsyncTemplateMethod`) and fluent (`AsyncTemplate`) approaches. See [Template Method Async Demo](template-method-async-demo.md).
+
+* **Source Generator Application Suite**
+  A production-shaped generator suite covering DI module wiring, corporate host composition, generated facades, generated proxies, generated observers, generated mementos, generated state machines, generated strategies, generated visitors, generated template methods, and messaging generators. See [Source Generator Application Suite](source-generator-application-suite.md).
+
+* **Enterprise Messaging Workflow Suite**
+  End-to-end messaging examples for envelopes, content routing, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, outboxes, and generated messaging factories. See [Enterprise Messaging Workflow Suite](enterprise-messaging-workflows.md).
 
 ## How to run
 
@@ -91,6 +99,9 @@ dotnet test PatternKit.slnx -c Release
 * **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
 * **Memento Document Demo:** `MementoDemo` — buffer edits with undo/redo and tags.
 * **State Machine Demo:** `OrderStateDemo` (+ `StateDemoTests`) — order lifecycle with entry/exit hooks and default behaviors.
+* **Source Generator Suite:** `src/PatternKit.Examples/Generators` (+ `PatternKit.Examples.Tests/Generators`) — generated builders, factories, facades, mementos, state machines, strategies, visitors, and host-style composition.
+* **Generator Boundary Demos:** `AdapterGeneratorDemo`, `ObserverGeneratorDemo`, `ProxyGeneratorDemo`, `SingletonGeneratorDemo`, `TemplateMethodGeneratorDemo` (+ matching tests) — generated adapters, observers, proxies, singletons, and template workflows.
+* **Enterprise Messaging:** `src/PatternKit.Examples/Messaging` (+ `PatternKit.Examples.Tests/Messaging`) — runtime and generated messaging workflows.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist

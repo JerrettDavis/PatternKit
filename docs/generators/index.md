@@ -64,6 +64,9 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | Generator | Description | Attribute |
 |---|---|---|
 | [**Dispatcher**](dispatcher.md) | Mediator pattern with commands, notifications, and streams | `[GenerateDispatcher]` |
+| [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
+| [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
+| [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
 
 ## Quick Reference
 
@@ -132,14 +135,27 @@ public interface IDocumentVisitor { }
 ```csharp
 // Dispatcher - mediator pattern
 [assembly: GenerateDispatcher(Namespace = "MyApp", Name = "Dispatcher")]
+
+// Content router - generated first-match route factory
+[GenerateContentRouter(typeof(Order), typeof(string))]
+public static partial class OrderRouter { }
+
+// Routing slip - generated ordered itinerary factory
+[GenerateRoutingSlip(typeof(Order))]
+public static partial class OrderSlip { }
+
+// Saga - generated process-manager factory
+[GenerateSaga(typeof(OrderSagaState))]
+public static partial class OrderSaga { }
 ```
 
 ## Examples
 
-See the samples in `PatternKit.Examples/Generators` for:
-- DI module wiring
-- Orchestrated application steps
-- Real-world usage patterns
+See [Generator Examples](examples.md) and [Source Generator Application Suite](../examples/source-generator-application-suite.md) for:
+- DI module wiring and generated host builders
+- Orchestrated application startup steps
+- Generated facades, proxies, observers, mementos, state machines, strategies, visitors, and messaging factories
+- Real-world usage patterns validated by `PatternKit.Examples.Tests`
 
 ## Troubleshooting
 

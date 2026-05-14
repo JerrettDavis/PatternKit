@@ -42,7 +42,7 @@ var (ok, message, total) = facade.Place(dto);
 - Adapter — `OrderDto` → `Order`: field mapping + validation.
 - Factory — `IPaymentGateway` selection by key: `sandbox`, `stripe`, default.
 - Strategy — Discount rules over `OrderContext` (first match wins).
-- Visitor — Payment fee by runtime type (`Cash`, `Card`).
+- TypeDispatcher — Payment fee by runtime type (`Cash`, `Card`).
 - Template — Algorithm skeleton: compute totals → execute commands → emit events/receipt.
 - Command — Reversible steps: reserve inventory, charge payment, schedule shipment, composed as a macro.
 - Mediator — Generate receipt and emit notifications (decoupled handlers/pre/post behaviors).
@@ -53,9 +53,9 @@ var (ok, message, total) = facade.Place(dto);
 
 ## Similarities And Differences
 
-- Visitor vs Strategy
+- TypeDispatcher vs Strategy
   - Similar: both route to behavior based on a condition.
-  - Different: Visitor dispatches by runtime type; Strategy dispatches by boolean predicates. Use Visitor when the type tells you the behavior; Strategy when rules are data/condition‑driven.
+  - Different: TypeDispatcher dispatches by runtime type; Strategy dispatches by boolean predicates. Use TypeDispatcher when the type tells you the behavior; Strategy when rules are data/condition-driven.
 
 - Adapter vs Facade
   - Similar: both present a friendlier surface area.
@@ -69,15 +69,15 @@ var (ok, message, total) = facade.Place(dto);
   - Similar: decouple senders from receivers.
   - Different: Mediator is request/response + pipeline behaviors; Observer is pub/sub broadcast. Use Mediator for commands/queries, Observer for fan‑out notifications.
 
-- Factory vs Visitor
+- Factory vs TypeDispatcher
   - Similar: both pick a concrete implementation.
-  - Different: Factory chooses a product by key; Visitor chooses a handler by input type at runtime. Use Factory for creation, Visitor for behavior.
+  - Different: Factory chooses a product by key; TypeDispatcher chooses a handler by input type at runtime. Use Factory for creation, TypeDispatcher for behavior.
 
 ---
 
 ## Best‑Fit Guidance
 
-- Type‑based behavior → Visitor (`Payment` handling).
+- Type-based behavior → TypeDispatcher (`Payment` handling).
 - Rule‑based selection → Strategy (`OrderContext` discounts).
 - Boundary transformation → Adapter (`OrderDto` to `Order`).
 - Consistent flow with hooks → Template (compute totals, run commands, report).
@@ -94,7 +94,7 @@ var (ok, message, total) = facade.Place(dto);
 - Adapter: `BuildOrderAdapter` — validates `OrderId` and requires ≥1 item.
 - Factory: `BuildPaymentFactory` — string key to `IPaymentGateway` mapping.
 - Strategy: `BuildDiscountStrategy` — promo category or VIP id.
-- Visitor: `BuildFeeVisitor` — 2.9% card fee with min $0.30, $0 for cash.
+- TypeDispatcher: `BuildFeeDispatcher` — 2.9% card fee with min $0.30, $0 for cash.
 - Template + Commands: `BuildTemplatePipeline` — reserve → charge → schedule; error hook appends to audit.
 - Mediator + Observer: `BuildMediatorAndEvents` — receipt command + AUDIT publish.
 - Facade: `Build()` — wires everything together.
