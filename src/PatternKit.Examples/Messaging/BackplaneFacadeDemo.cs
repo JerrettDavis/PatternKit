@@ -898,6 +898,7 @@ internal sealed class BackplaneDemoServices
     private readonly ConcurrentQueue<CustomerNotification> _notifications;
     private readonly TaskCompletionSource _completed;
     private BackplaneClient? _client;
+    private int _submittedAuditCount;
 
     internal BackplaneDemoServices(
         ConcurrentQueue<string> audit,
@@ -958,6 +959,8 @@ internal sealed class BackplaneDemoServices
     {
         _ = cancellationToken;
         _audit.Enqueue($"audit:order-submitted:{message.Payload.OrderId}:{context.Headers.CorrelationId}");
+        Interlocked.Increment(ref _submittedAuditCount);
+        TryComplete();
         return default;
     }
 
@@ -1024,8 +1027,12 @@ internal sealed class BackplaneDemoServices
     {
         _notifications.Enqueue(notification);
         _audit.Enqueue($"notification:{notification.OrderId}:{notification.Kind}");
+        TryComplete();
+    }
 
-        if (_notifications.Count == 3)
+    private void TryComplete()
+    {
+        if (_notifications.Count == 3 && Volatile.Read(ref _submittedAuditCount) == 3)
             _completed.TrySetResult();
     }
 }

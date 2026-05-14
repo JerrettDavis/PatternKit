@@ -77,7 +77,7 @@ The example tests use behavior-oriented assertions:
 - Generator tests assert that generated factories compile and behave like the equivalent runtime builders.
 - Resilient checkout tests assert rollback, fallback route selection, manual review, and side-effect boundaries.
 - Mailbox collaboration tests assert service handoff, compensation, correlation propagation, and final notification outcomes.
-- Backplane facade tests assert startup-style host configuration, routed request/reply, publish/subscribe fanout, outbox dispatch, idempotent replay, and correlation propagation.
+- Backplane facade tests assert startup-style host configuration, routed request/reply, publish/subscribe fanout, outbox dispatch, idempotent replay, correlation propagation, and RabbitMQ/MQTT Testcontainers E2E delivery.
 
 ## Related Documentation
 
