@@ -38,30 +38,54 @@ public interface IBackplaneTransport : IAsyncDisposable
 
 The example uses `InMemoryBackplaneTransport` for deterministic tests. A production adapter could implement the same boundary over RabbitMQ exchanges, Azure Service Bus topics/queues, Postgres-backed tables and notifications, MQTT topics, or another transport.
 
-## Request/Reply
+## Application Startup
 
-The bus facade exposes a typed request/reply API:
+The demo now starts from a host builder, which is the shape a production application would usually expose from its composition root:
 
 ```csharp
-bus.Route<SubmitOrder>(
-    static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
-    "orders.priority");
-bus.RouteDefault<SubmitOrder>("orders.standard");
-
-await bus.HandleAsync<SubmitOrder, BackplaneOrderAccepted>(
-    "orders.standard",
-    AcceptOrderAsync,
-    idempotencyStore);
+await using var host = await BackplaneHost.Create()
+    .UseTransport(() => transport)
+    .UseOutbox(outbox)
+    .UseIdempotencyStore(idempotency)
+    .MapCommand<SubmitOrder, BackplaneOrderAccepted>(
+        static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
+        "orders.priority")
+    .MapDefaultCommand<SubmitOrder, BackplaneOrderAccepted>("orders.standard")
+    .ReceiveEndpoint("orders.standard", endpoint =>
+        endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptStandardOrderAsync))
+    .ReceiveEndpoint("billing-service", endpoint =>
+        endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.CapturePaymentAsync))
+    .ReceiveEndpoint("notification-service", endpoint =>
+    {
+        endpoint.Subscribe<PaymentDeclined>("payments.declined", services.NotifyPaymentDeclinedAsync);
+        endpoint.Subscribe<ShipmentScheduled>("shipments.scheduled", services.NotifyShipmentScheduledAsync);
+    })
+    .BuildAsync(cancellationToken);
 ```
 
-`BackplaneBus.RequestAsync<TRequest, TResponse>` creates a temporary reply address, enriches the message with a reply header, routes the command with the content router, sends it through the transport, and waits for the typed response. Duplicate requests with the same idempotency key replay the stored `BackplaneOrderAccepted` response without republishing `BackplaneOrderSubmitted`.
+`BackplaneHost` owns the bus, typed client, transport, endpoint subscriptions, outbox, idempotency store, and topology metadata. Application code uses `host.Client`, while advanced integrations can still reach the lower-level `host.Bus`.
+
+## Request/Reply
+
+The client exposes a typed request/reply API:
+
+```csharp
+var accepted = await host.Client.RequestAsync<SubmitOrder, BackplaneOrderAccepted>(
+    Message<SubmitOrder>
+        .Create(new SubmitOrder("order-42", 90m, CustomerTier.Standard))
+        .WithCorrelationId("corr-order-42")
+        .WithIdempotencyKey("idem-order-42"),
+    cancellationToken);
+```
+
+`BackplaneClient.RequestAsync<TRequest, TResponse>` creates a temporary reply address, enriches the message with a reply header, routes the command with the content router, sends it through the transport, and waits for the typed response. Duplicate requests with the same idempotency key replay the stored `BackplaneOrderAccepted` response without republishing `BackplaneOrderSubmitted`.
 
 ## Publish/Subscribe
 
 The order service publishes an event through the outbox:
 
 ```csharp
-await bus.PublishAsync(
+await client.PublishAsync(
     "orders.submitted",
     new BackplaneOrderSubmitted(message.Payload.OrderId, message.Payload.Total, message.Payload.CustomerTier),
     context.Headers,
@@ -77,11 +101,23 @@ The transport uses a recipient list so every matching subscriber receives the en
 
 Each subscriber runs behind a bounded mailbox, so stateful handlers process one message at a time with explicit backpressure.
 
+## Transport Adapter Boundary
+
+The application chooses the transport at startup:
+
+```csharp
+BackplaneHost.Create()
+    .UseTransport(() => new RabbitMqBackplaneTransport(/* connection settings */));
+```
+
+`RabbitMqBackplaneTransport` is not part of PatternKit; it would be application infrastructure that implements `IBackplaneTransport`. The same host, routes, endpoints, command handlers, and event subscribers can run over any adapter that honors the transport contract.
+
 ## Tested Behavior
 
 The tests assert that:
 
 - Standard orders route to `orders.standard` and VIP orders route to `orders.priority`.
+- The host builder configures transport, outbox, idempotency, endpoint topology, and the typed client surface.
 - Duplicate commands replay the original response and do not duplicate outbox side effects.
 - Published events fan out to independent services.
 - Every event is recorded in the outbox before transport dispatch.

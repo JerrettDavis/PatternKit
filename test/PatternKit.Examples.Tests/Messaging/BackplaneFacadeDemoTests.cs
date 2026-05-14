@@ -1,9 +1,46 @@
 using PatternKit.Examples.Messaging;
+using PatternKit.Messaging;
+using PatternKit.Messaging.Reliability;
 
 namespace PatternKit.Examples.Tests.Messaging;
 
 public sealed class BackplaneFacadeDemoTests
 {
+    [Fact]
+    public async Task BackplaneHostBuilder_ConfiguresNativeMessagingPlatformSurface()
+    {
+        var transport = new InMemoryBackplaneTransport();
+        var outbox = new BackplaneOutbox();
+        var idempotency = new InMemoryIdempotencyStore();
+
+        await using var host = await BackplaneHost.Create()
+            .UseTransport(() => transport)
+            .UseOutbox(outbox)
+            .UseIdempotencyStore(idempotency)
+            .MapDefaultCommand<SubmitOrder, BackplaneOrderAccepted>("orders.standard")
+            .ReceiveEndpoint("orders.standard", endpoint =>
+                endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>((message, context, _) =>
+                    new ValueTask<BackplaneOrderAccepted>(new BackplaneOrderAccepted(
+                        message.Payload.OrderId,
+                        "orders.standard",
+                        context.Headers.CorrelationId ?? string.Empty))))
+            .BuildAsync();
+
+        var response = await host.Client.RequestAsync<SubmitOrder, BackplaneOrderAccepted>(
+            Message<SubmitOrder>
+                .Create(new SubmitOrder("order-builder", 10m, CustomerTier.Standard))
+                .WithCorrelationId("corr-builder")
+                .WithIdempotencyKey("idem-builder"));
+
+        Assert.Same(outbox, host.Outbox);
+        Assert.Same(idempotency, host.IdempotencyStore);
+        Assert.Single(host.Endpoints);
+        Assert.Equal("orders.standard", host.Endpoints[0].Name);
+        Assert.Single(host.Endpoints[0].Handlers);
+        Assert.Equal(new BackplaneOrderAccepted("order-builder", "orders.standard", "corr-builder"), response);
+        Assert.Contains(transport.DeliveryLog, static entry => entry.Contains("orders.standard->orders.standard", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task RunAsync_RoutesRequestsAndPublishesEventsThroughBackplane()
     {
