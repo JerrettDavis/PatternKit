@@ -1,4 +1,5 @@
 using System.Runtime.Loader;
+using Microsoft.CodeAnalysis;
 using PatternKit.Generators.Factories;
 
 namespace PatternKit.Generators.Tests;
@@ -745,5 +746,118 @@ public class FactoriesGeneratorTests
 
         var emit = updated.Emit(Stream.Null);
         Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void InternalHelpers_FormatKeysAsyncReturnsAndArguments()
+    {
+        const string user = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public enum Channel { Email = 1, Sms = 2 }
+            public interface IMessage { }
+            public abstract class MessageBase : IMessage { }
+            public sealed class EmailMessage : MessageBase { }
+            public sealed class Other { }
+
+            public static class KeySamples
+            {
+                [FactoryCase("hello-world")]
+                public static string StringKey() => "";
+
+                [FactoryCase(true)]
+                public static string BoolKey() => "";
+
+                [FactoryCase(42)]
+                public static string NumberKey() => "";
+
+                [FactoryCase(Channel.Email)]
+                public static string EnumKey() => "";
+            }
+
+            public static class SignatureSamples
+            {
+                public static Task<string> TaskResult(ref int count, in string name, out bool ok)
+                {
+                    ok = true;
+                    return Task.FromResult(name + count);
+                }
+            }
+            """;
+
+        var compilation = RoslynTestHelpers.CreateCompilation(user, nameof(InternalHelpers_FormatKeysAsyncReturnsAndArguments));
+        var keySamples = compilation.GetTypeByMetadataName("Demo.KeySamples")!;
+        var signatureSamples = compilation.GetTypeByMetadataName("Demo.SignatureSamples")!;
+        var message = compilation.GetTypeByMetadataName("Demo.IMessage")!;
+        var messageBase = compilation.GetTypeByMetadataName("Demo.MessageBase")!;
+        var email = compilation.GetTypeByMetadataName("Demo.EmailMessage")!;
+        var other = compilation.GetTypeByMetadataName("Demo.Other")!;
+        var stringType = compilation.GetSpecialType(SpecialType.System_String);
+        var boolType = compilation.GetSpecialType(SpecialType.System_Boolean);
+        var intType = compilation.GetSpecialType(SpecialType.System_Int32);
+
+        var constants = keySamples.GetMembers().OfType<IMethodSymbol>()
+            .ToDictionary(
+                static method => method.Name,
+                static method => method.GetAttributes().Single().ConstructorArguments.Single());
+
+        Assert.Equal("\"hello-world\"", InvokeFactoryHelper<string>("ToLiteral", constants["StringKey"]));
+        Assert.Equal("true", InvokeFactoryHelper<string>("ToLiteral", constants["BoolKey"]));
+        Assert.Equal("42", InvokeFactoryHelper<string>("ToLiteral", constants["NumberKey"]));
+        Assert.Equal("global::Demo.Channel.Email", InvokeFactoryHelper<string>("ToLiteral", constants["EnumKey"]));
+
+        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["StringKey"]));
+        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, boolType, constants["BoolKey"]));
+        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, intType, constants["NumberKey"]));
+        Assert.False(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["NumberKey"]));
+        Assert.True(InvokeFactoryHelper<bool>("NeedsNullCheck", stringType));
+        Assert.False(InvokeFactoryHelper<bool>("NeedsNullCheck", intType));
+        Assert.True(InvokeFactoryHelper<bool>("IsStringType", stringType));
+
+        var existing = new HashSet<string>(StringComparer.Ordinal);
+        Assert.Equal("HelloWorld", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
+        Assert.Equal("True", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["BoolKey"], boolType, existing));
+        Assert.Equal("Key42", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["NumberKey"], intType, existing));
+        Assert.Equal("Email", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["EnumKey"], constants["EnumKey"].Type!, existing));
+        Assert.Equal("HelloWorld2", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
+
+        Assert.True(InvokeFactoryHelper<bool>("Implements", email, message));
+        Assert.True(InvokeFactoryHelper<bool>("Implements", email, messageBase));
+        Assert.False(InvokeFactoryHelper<bool>("Implements", other, message));
+        Assert.Equal("MessageFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", message));
+        Assert.Equal("MessageBaseFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", messageBase));
+
+        var taskMethod = (IMethodSymbol)signatureSamples.GetMembers("TaskResult").Single();
+        var taskSignature = InvokeFactoryHelper<object>("BuildSignature", taskMethod, compilation);
+        var parameterArray = (System.Collections.Immutable.ImmutableArray<IParameterSymbol>)taskSignature.GetType().GetProperty("Parameters")!.GetValue(taskSignature)!;
+        Assert.Contains("ref int count", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        Assert.Contains("in string name", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        Assert.Contains("out bool ok", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        Assert.Equal("ref count, in name, out ok", InvokeFactoryHelper<string>("BuildArgumentList", parameterArray));
+
+        var asyncKindType = typeof(FactoriesGenerator).GetNestedType("AsyncKind", System.Reflection.BindingFlags.NonPublic)!;
+        var sync = Enum.Parse(asyncKindType, "Sync");
+        var task = Enum.Parse(asyncKindType, "Task");
+        var valueTask = Enum.Parse(asyncKindType, "ValueTask");
+        Assert.Equal("return invocation();", InvokeFactoryHelper<string>("BuildAsyncReturn", valueTask, "string", "invocation()"));
+        Assert.Equal("return new global::System.Threading.Tasks.ValueTask<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", task, "string", "invocation()"));
+        Assert.Equal("return global::System.Threading.Tasks.ValueTask.FromResult<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", sync, "string", "invocation()"));
+        Assert.Equal("invocation()", InvokeFactoryHelper<string>("BuildSyncValue", sync, "invocation()"));
+        Assert.Equal("invocation().GetAwaiter().GetResult()", InvokeFactoryHelper<string>("BuildSyncValue", task, "invocation()"));
+        Assert.Equal("invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", sync, "invocation()"));
+        Assert.Equal("await invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", valueTask, "invocation()"));
+    }
+
+    private static T InvokeFactoryHelper<T>(string name, params object?[] args)
+    {
+        var method = typeof(FactoriesGenerator)
+            .GetMethods(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            .Where(m => m.Name == name && m.GetParameters().Length == args.Length)
+            .Single();
+
+        return (T)method.Invoke(null, args)!;
     }
 }
