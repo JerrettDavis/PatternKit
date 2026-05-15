@@ -1033,4 +1033,155 @@ public class StateMachineGeneratorTests
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
         Assert.Contains(diagnostics, d => d.Id == "PKST010");
     }
+
+    [Fact]
+    public void AsyncMembersWithGenerateAsyncFalse_ReportsDiagnosticAndGeneratesSyncOnly()
+    {
+        var source = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger), GenerateAsync = false, FireMethodName = "Move")]
+            public partial class Machine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private ValueTask OnTransitionAsync() => ValueTask.CompletedTask;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AsyncMembersWithGenerateAsyncFalse_ReportsDiagnosticAndGeneratesSyncOnly));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKST008");
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("void Move(", generated);
+        Assert.DoesNotContain("FireAsync", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void InvalidTransitionGuardAndHookSignatures_ReportDiagnostics()
+    {
+        var transitionSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class TransitionMachine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private int BadTransition() => 0;
+            }
+            """;
+
+        var guardSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class GuardMachine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private string BadGuard(int invalidParameter) => "";
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var hookSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class HookMachine
+            {
+                [StateEntry(State.B)]
+                private int BadEntry() => 0;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        AssertDiagnostic(transitionSource, "PKST005", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Transition");
+        AssertDiagnostic(guardSource, "PKST006", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Guard");
+        AssertDiagnostic(hookSource, "PKST007", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Hook");
+
+        static void AssertDiagnostic(string source, string id, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+            Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == id);
+        }
+    }
+
+    [Fact]
+    public void ForceAsyncWithCustomNamesAndIgnorePolicies_GeneratesNoOpBranches()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1, Unknown }
+
+            [StateMachine(
+                typeof(State),
+                typeof(Trigger),
+                FireMethodName = "Move",
+                FireAsyncMethodName = "MoveAsync",
+                CanFireMethodName = "CanMove",
+                ForceAsync = true,
+                InvalidTrigger = StateMachineInvalidTriggerPolicy.Ignore,
+                GuardFailure = StateMachineGuardFailurePolicy.Ignore)]
+            public partial struct Machine
+            {
+                [StateExit(State.A)]
+                private ValueTask LeavingAsync(CancellationToken ct) => ValueTask.CompletedTask;
+
+                [StateEntry(State.B)]
+                private ValueTask EnteringAsync(CancellationToken ct) => ValueTask.CompletedTask;
+
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private bool CanTransition() => false;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void OnTransition(CancellationToken ct) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ForceAsyncWithCustomNamesAndIgnorePolicies_GeneratesNoOpBranches));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("void Move(", generated);
+        Assert.Contains("ValueTask MoveAsync", generated);
+        Assert.Contains("bool CanMove", generated);
+        Assert.Contains("LeavingAsync(cancellationToken).ConfigureAwait(false)", generated);
+        Assert.Contains("EnteringAsync(cancellationToken).ConfigureAwait(false)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

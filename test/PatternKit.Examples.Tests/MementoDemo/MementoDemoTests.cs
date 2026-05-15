@@ -187,4 +187,77 @@ public sealed class MementoDemoTests(ITestOutputHelper output) : TinyBddXunitBas
             .Then("declined batch does not commit a new version", r => r.noCommitVersion == r.startVersion)
             .And("nested batches are rejected", r => r.nested is not null)
             .AssertPassed();
+
+    [Scenario("Caret movement, replacement, and delete variants cover editor state edges")]
+    [Fact]
+    public Task Editor_StateAndDeleteVariants_AreStable()
+        => Given("an editor with sample text", () =>
+            {
+                var editor = new Editor();
+                editor.Insert("abcdef");
+                return editor;
+            })
+            .When("moving outside document bounds", ed =>
+            {
+                ed.MoveCaret(-100);
+                var clampedStart = ed.State;
+                var versionAtStart = ed.Version;
+                var repeatStartVersion = ed.MoveCaret(0);
+                ed.MoveCaret(100);
+                var clampedEnd = ed.State;
+                return (ed, clampedStart, versionAtStart, repeatStartVersion, clampedEnd);
+            })
+            .Then("caret positions are clamped and repeated movement is a no-op", r =>
+                r.clampedStart.Caret == 0
+                && r.repeatStartVersion == r.versionAtStart
+                && r.clampedEnd.Caret == r.ed.State.Text.Length)
+            .When("replacing without a selection and formatting selected state", r =>
+            {
+                var editor = r.ed;
+                editor.MoveCaret(3);
+                editor.ReplaceSelection("XYZ");
+                var afterInsertReplace = editor.State;
+                editor.Select(2, 4);
+                var selected = editor.State;
+                var selectedText = selected.ToString();
+                editor.Backspace();
+                var afterSelectionBackspace = editor.State;
+                return (editor, afterInsertReplace, selected, selectedText, afterSelectionBackspace);
+            })
+            .Then("replace without selection behaves like insert", r => r.afterInsertReplace.Text == "abcXYZdef")
+            .And("selected state exposes selection range and formatted selection", r =>
+                r.selected.HasSelection
+                && r.selected.SelectionStart == 2
+                && r.selected.SelectionEnd == 6
+                && r.selectedText.Contains("Sel=[2,6)"))
+            .And("backspace deletes selected text", r => r.afterSelectionBackspace.Text == "abdef")
+            .When("using multi-character backspace and delete-forward", r =>
+            {
+                var editor = r.editor;
+                editor.MoveCaret(editor.State.Text.Length);
+                editor.Backspace(2);
+                var afterMultiBackspace = editor.State;
+                editor.MoveCaret(1);
+                editor.DeleteForward(10);
+                var afterMultiDelete = editor.State;
+                return (editor, afterMultiBackspace, afterMultiDelete);
+            })
+            .Then("multi-character backspace removes the requested prefix before the caret", r => r.afterMultiBackspace.Text == "abd")
+            .And("delete-forward clamps count to remaining text", r => r.afterMultiDelete.Text == "a")
+            .AssertPassed();
+
+    [Scenario("Undo and redo report false when no snapshot movement is available")]
+    [Fact]
+    public Task Editor_UndoRedo_NoMovement_ReturnFalse()
+        => Given("a new editor", () => new Editor())
+            .When("undo and redo are requested before edits", ed =>
+            {
+                var undo = ed.Undo();
+                var redo = ed.Redo();
+                return (ed, undo, redo, state: ed.State.ToString());
+            })
+            .Then("undo is unavailable", r => !r.undo)
+            .And("redo is unavailable", r => !r.redo)
+            .And("unselected state formatting omits a selection", r => !r.state.Contains("Sel="))
+            .AssertPassed();
 }
