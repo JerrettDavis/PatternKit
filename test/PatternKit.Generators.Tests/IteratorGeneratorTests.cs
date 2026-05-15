@@ -58,4 +58,40 @@ public class IteratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
         Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKIT002");
     }
+
+    [Fact]
+    public void ReportsNonPartialAndBadStepSignature()
+    {
+        const string source = """
+            using PatternKit.Generators.Iterator;
+
+            namespace TestNamespace;
+
+            [Iterator]
+            public struct NonPartialCounter
+            {
+                [IteratorStep]
+                private bool Step(out int item)
+                {
+                    item = 1;
+                    return true;
+                }
+            }
+
+            [Iterator]
+            public partial struct BadStepCounter
+            {
+                [IteratorStep]
+                private int Step() => 1;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReportsNonPartialAndBadStepSignature));
+        var gen = new IteratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diagnostics, d => d.Id == "PKIT001");
+        Assert.Contains(diagnostics, d => d.Id == "PKIT004");
+    }
 }

@@ -966,7 +966,9 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                         ? (isAsync 
                             ? (hookHasCt ? $"await {exitHook.Method.Name}(cancellationToken){configureAwait};" : $"await {exitHook.Method.Name}(){configureAwait};")
                             : (hookHasCt ? $"{exitHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{exitHook.Method.Name}().GetAwaiter().GetResult();"))
-                        : $"{exitHook.Method.Name}();";
+                        : (hookHasCt
+                            ? (isAsync ? $"{exitHook.Method.Name}(cancellationToken);" : $"{exitHook.Method.Name}(global::System.Threading.CancellationToken.None);")
+                            : $"{exitHook.Method.Name}();");
                     sb.AppendLine($"                        {hookCall}");
                 }
 
@@ -981,7 +983,10 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    sb.AppendLine($"                        {transition.Method.Name}();");
+                    var transitionCall = transitionHasCt
+                        ? (isAsync ? $"{transition.Method.Name}(cancellationToken);" : $"{transition.Method.Name}(global::System.Threading.CancellationToken.None);")
+                        : $"{transition.Method.Name}();";
+                    sb.AppendLine($"                        {transitionCall}");
                 }
 
                 // Update state
@@ -996,7 +1001,9 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                         ? (isAsync 
                             ? (entryHasCt ? $"await {entryHook.Method.Name}(cancellationToken){configureAwait};" : $"await {entryHook.Method.Name}(){configureAwait};")
                             : (entryHasCt ? $"{entryHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{entryHook.Method.Name}().GetAwaiter().GetResult();"))
-                        : $"{entryHook.Method.Name}();";
+                        : (entryHasCt
+                            ? (isAsync ? $"{entryHook.Method.Name}(cancellationToken);" : $"{entryHook.Method.Name}(global::System.Threading.CancellationToken.None);")
+                            : $"{entryHook.Method.Name}();");
                     sb.AppendLine($"                        {hookCall}");
                 }
 

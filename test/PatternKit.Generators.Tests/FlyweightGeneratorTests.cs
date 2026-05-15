@@ -78,4 +78,36 @@ public class FlyweightGeneratorTests
         var diags = result.Results.SelectMany(r => r.Diagnostics);
         Assert.Contains(diags, d => d.Id == "PKFLY006");
     }
+
+    [Fact]
+    public void ReportsNonPartialAndNonStaticFactory()
+    {
+        const string source = """
+            using PatternKit.Generators.Flyweight;
+
+            namespace TestNamespace;
+
+            [Flyweight(typeof(string))]
+            public readonly record struct NonPartialGlyph(char Value)
+            {
+                [FlyweightFactory]
+                private static NonPartialGlyph Create(string key) => new(key[0]);
+            }
+
+            [Flyweight(typeof(string))]
+            public readonly partial record struct NonStaticFactoryGlyph(char Value)
+            {
+                [FlyweightFactory]
+                private NonStaticFactoryGlyph Create(string key) => new(key[0]);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReportsNonPartialAndNonStaticFactory));
+        var gen = new FlyweightGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diags = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        Assert.Contains(diags, d => d.Id == "PKFLY001");
+        Assert.Contains(diags, d => d.Id == "PKFLY004");
+    }
 }

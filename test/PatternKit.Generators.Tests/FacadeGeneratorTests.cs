@@ -1770,5 +1770,147 @@ public class FacadeGeneratorTests
         Assert.Contains("this.myTarget = myTarget ?? throw new System.ArgumentNullException(nameof(myTarget));", generatedSource);
     }
 
+    [Fact]
+    public void ContractFirst_MissingMapIgnore_CoversAsyncDefaultReturnBranches()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            [GenerateFacade(MissingMap = FacadeMissingMapPolicy.Ignore)]
+            public partial interface IAsyncDefaultsFacade
+            {
+                ValueTask<string> ReadValueAsync();
+                Task<int> CountAsync();
+                ValueTask SaveAsync();
+                Task FlushAsync();
+                string ReadName();
+                void Touch();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ContractFirst_MissingMapIgnore_CoversAsyncDefaultReturnBranches),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("ValueTask.FromResult<string>(default!)", generatedSource);
+        Assert.Contains("Task.FromResult<int>(default!)", generatedSource);
+        Assert.Contains("ValueTask.CompletedTask", generatedSource);
+        Assert.Contains("Task.CompletedTask", generatedSource);
+        Assert.Contains("return default!;", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void HostFirst_GenericConstraintsAndDependencyNameCollisions_GenerateCompilableFacade()
+    {
+        const string source = """
+            using System;
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs.Alpha
+            {
+                public interface IClient { }
+            }
+
+            namespace TestNs.Beta
+            {
+                public interface IClient { }
+            }
+
+            namespace TestNs
+            {
+                public interface IService { }
+                public sealed class Service : IService { }
+                public sealed class Request { }
+
+                [GenerateFacade(FacadeTypeName = "OperationsFacade")]
+                public static partial class Operations
+                {
+                    [FacadeExpose]
+                    public static T Create<T>(IService service) where T : class, new() => new T();
+
+                    [FacadeExpose(MethodName = "Choose")]
+                    public static T Pick<T>(IService service, T value)
+                        where T : notnull, IComparable<T>
+                        => value;
+
+                    [FacadeExpose]
+                    public static TNumber Identity<TNumber>(Request request, TNumber value) where TNumber : unmanaged => value;
+
+                    [FacadeExpose]
+                    public static string FromAlpha(Alpha.IClient client) => "alpha";
+
+                    [FacadeExpose]
+                    public static string FromBeta(Beta.IClient client) => "beta";
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(HostFirst_GenericConstraintsAndDependencyNameCollisions_GenerateCompilableFacade),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("where T : class, new()", generatedSource);
+        Assert.Contains("where T : notnull, global::System.IComparable<T>", generatedSource);
+        Assert.Contains("where TNumber : unmanaged", generatedSource);
+        Assert.Contains("private readonly global::TestNs.IService _service;", generatedSource);
+        Assert.Contains("private readonly global::TestNs.Request _request;", generatedSource);
+        Assert.Contains("private readonly global::TestNs.Alpha.IClient _client;", generatedSource);
+        Assert.Contains("private readonly global::TestNs.Beta.IClient _client1;", generatedSource);
+        Assert.Contains("T value", generatedSource);
+        Assert.Contains("TNumber value", generatedSource);
+        Assert.Contains("Choose", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void AutoFacade_NoPublicMethods_ReportsDiagnostic()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IPropertyOnly
+            {
+                string Name { get; }
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IPropertyOnly")]
+            public partial interface IPropertyOnlyFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_NoPublicMethods_ReportsDiagnostic),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        Assert.Contains(run.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKFAC003");
+    }
+
     #endregion
 }

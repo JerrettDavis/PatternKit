@@ -727,7 +727,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Build method signature
         var returnType = methodSymbol.ReturnType.ToDisplayString(FullyQualifiedFormat);
         var isAsync = method.IsAsync || info.ForceAsync;
-        var asyncModifier = isAsync ? "async " : "";
+        var asyncModifier = isAsync && method.MappingMethod is not null ? "async " : "";
 
         // Prefer ValueTask for generated async methods
         if (isAsync && returnType == "void")
@@ -738,7 +738,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var parameters = string.Join(", ", methodSymbol.Parameters.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}"));
 
-        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
+        var typeParameters = BuildTypeParameterList(methodSymbol);
+        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}{typeParameters}({parameters})");
+        AppendTypeParameterConstraints(sb, methodSymbol);
         sb.AppendLine("    {");
 
         if (method.MappingMethod is null)
@@ -1106,10 +1108,14 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             }
             constraints.Add(constraint);
         }
-        if (tp.HasValueTypeConstraint)
-            constraints.Add("struct");
         if (tp.HasUnmanagedTypeConstraint)
+        {
             constraints.Add("unmanaged");
+        }
+        else if (tp.HasValueTypeConstraint)
+        {
+            constraints.Add("struct");
+        }
         if (tp.HasNotNullConstraint)
             constraints.Add("notnull");
 
@@ -1122,6 +1128,26 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             constraints.Add("new()");
 
         return string.Join(", ", constraints);
+    }
+
+    private static string BuildTypeParameterList(IMethodSymbol method)
+    {
+        if (method.TypeParameters.Length == 0)
+            return string.Empty;
+
+        return "<" + string.Join(", ", method.TypeParameters.Select(tp => tp.Name)) + ">";
+    }
+
+    private static void AppendTypeParameterConstraints(StringBuilder sb, IMethodSymbol method)
+    {
+        foreach (var typeParameter in method.TypeParameters)
+        {
+            var constraints = BuildTypeConstraints(typeParameter);
+            if (!string.IsNullOrWhiteSpace(constraints))
+            {
+                sb.AppendLine($"        where {typeParameter.Name} : {constraints}");
+            }
+        }
     }
 
     private static void GenerateHostMethod(
@@ -1149,7 +1175,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var parameters = string.Join(", ", operationParams.Select(p =>
             $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}"));
 
-        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
+        var typeParameters = BuildTypeParameterList(hostMethod);
+        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}{typeParameters}({parameters})");
+        AppendTypeParameterConstraints(sb, hostMethod);
         sb.AppendLine("    {");
 
         // Call host method with dependencies and operation parameters
@@ -1157,7 +1185,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var awaitKeyword = IsAsyncMethod(hostMethod) ? "await " : "";
         var returnKeyword = returnType == "void" ? "" : "return ";
 
-        sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(FullyQualifiedFormat)}.{hostMethod.Name}({callArgs});");
+        var hostTypeArguments = BuildTypeParameterList(hostMethod);
+        sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(FullyQualifiedFormat)}.{hostMethod.Name}{hostTypeArguments}({callArgs});");
 
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -1213,6 +1242,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 // Heuristic: dependencies are typically the first parameters and are reference types
                 // We'll collect all unique parameter types and let the user define them properly
                 var typeStr = param.Type.ToDisplayString(FullyQualifiedFormat);
+
+                if (param.Type is ITypeParameterSymbol)
+                    continue;
 
                 // Skip primitive types
                 if (IsPrimitiveType(param.Type))

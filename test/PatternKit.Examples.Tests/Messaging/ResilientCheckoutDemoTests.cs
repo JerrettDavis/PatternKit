@@ -101,6 +101,69 @@ public sealed class ResilientCheckoutDemoTests
         Assert.Equal(["primary-card", "dropship-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
     }
 
+    [Fact]
+    public void Run_UsesPreferredGiftCardWhenBalanceCoversTotal()
+    {
+        var services = new CheckoutServices();
+        var request = CreateRequest("order-preferred-gift", total: 42m, giftCardBalance: 50m) with
+        {
+            PreferGiftCard = true
+        };
+
+        var result = ResilientCheckoutDemo.Run(request, services);
+
+        Assert.True(result.Succeeded);
+        Assert.False(result.ManualReview);
+        Assert.Equal("primary-gift-card", result.FinalRoute);
+        Assert.Single(result.Attempts);
+        Assert.StartsWith("giftcard-order-preferred-gift-", result.PaymentId, StringComparison.Ordinal);
+        Assert.Empty(services.Inventory.ReleasedReservations);
+        Assert.Empty(services.Payments.RefundedPayments);
+    }
+
+    [Fact]
+    public void Run_EmptyCartValidationFailureEscalatesToManualReview()
+    {
+        var services = new CheckoutServices();
+        var request = new CheckoutRequest(
+            "order-empty",
+            "customer-42",
+            []);
+
+        var result = ResilientCheckoutDemo.Run(request, services);
+
+        Assert.False(result.Succeeded);
+        Assert.True(result.ManualReview);
+        Assert.Equal("manual-review", result.FinalRoute);
+        Assert.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
+        Assert.Equal(CheckoutFailureKind.ValidationFailed, result.Attempts[0].FailureKind);
+        Assert.Contains("cart-empty", result.Attempts[0].Message, StringComparison.Ordinal);
+        Assert.Null(result.ReservationId);
+        Assert.Null(result.PaymentId);
+        Assert.Null(result.ShipmentId);
+    }
+
+    [Fact]
+    public void Run_CardDeclineWithoutGiftCardFallbackEscalatesToManualReviewAndReleasesInventory()
+    {
+        var services = new CheckoutServices
+        {
+            Payments = new PaymentGateway { CardApproved = false }
+        };
+        var request = CreateRequest("order-card-decline-review", total: 80m, giftCardBalance: 10m);
+
+        var result = ResilientCheckoutDemo.Run(request, services);
+
+        Assert.False(result.Succeeded);
+        Assert.True(result.ManualReview);
+        Assert.Equal("manual-review", result.FinalRoute);
+        Assert.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
+        Assert.Equal(CheckoutFailureKind.PaymentDeclined, result.Attempts[0].FailureKind);
+        Assert.Single(services.Inventory.ReleasedReservations);
+        Assert.Empty(services.Payments.RefundedPayments);
+        Assert.Contains(result.Audit, static entry => entry.StartsWith("inventory:released:", StringComparison.Ordinal));
+    }
+
     private static CheckoutRequest CreateRequest(string orderId, decimal total, decimal giftCardBalance = 0m)
         => new(
             orderId,
