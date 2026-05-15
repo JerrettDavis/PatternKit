@@ -908,4 +908,147 @@ public class ComposerGeneratorTests
         var emit = updated.Emit(Stream.Null);
         Assert.False(emit.Success);
     }
+
+    [Fact]
+    public void InvalidStep_WithTooFewParameters_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Step(in Request req) => new(200);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidStep_WithTooFewParameters_ReportsDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostic = Assert.Single(result.Results.SelectMany(r => r.Diagnostics));
+        Assert.Equal("PKCOM006", diagnostic.Id);
+        Assert.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void InvalidTerminal_WithTooManyParameters_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Step(in Request req, System.Func<Request, Response> next) => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req, int extra, string other) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidTerminal_WithTooManyParameters_ReportsDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostic = Assert.Single(result.Results.SelectMany(r => r.Diagnostics));
+        Assert.Equal("PKCOM007", diagnostic.Id);
+        Assert.Contains("Terminal", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TaskBasedAsyncPipeline_CustomAsyncName_GeneratesTaskUnwrapAndNoCancellationTokenCalls()
+    {
+        var source = """
+            using System;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer(InvokeAsyncMethodName = "ExecuteAsync")]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(2, Name = "Second")]
+                private Task<Response> SecondAsync(Request req, Func<Request, ValueTask<Response>> next)
+                    => next(req).AsTask();
+
+                [ComposeStep(1)]
+                private Response First(in Request req, Func<Request, Response> next)
+                    => next(req);
+
+                [ComposeTerminal]
+                private Task<Response> TerminalAsync(Request req)
+                    => Task.FromResult(new Response(200));
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(TaskBasedAsyncPipeline_CustomAsyncName_GeneratesTaskUnwrapAndNoCancellationTokenCalls));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("ExecuteAsync", generatedSource);
+        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(TerminalAsync(arg))", generatedSource);
+        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(SecondAsync(arg, pipeline))", generatedSource);
+        Assert.Contains("First(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult())", generatedSource);
+        Assert.DoesNotContain("namespace ", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Fact]
+    public void StructTaskBasedAsyncPipeline_WithCancellationToken_WrapsTaskCalls()
+    {
+        var source = """
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer(InvokeAsyncMethodName = "ExecuteAsync")]
+            public partial struct RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Task<Response> StepAsync(Request req, Func<Request, ValueTask<Response>> next, CancellationToken ct)
+                    => next(req).AsTask();
+
+                [ComposeTerminal]
+                private Task<Response> TerminalAsync(Request req, CancellationToken ct)
+                    => Task.FromResult(new Response(200));
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(StructTaskBasedAsyncPipeline_WithCancellationToken_WrapsTaskCalls));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        Assert.Contains("var self = this;", generatedSource);
+        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.TerminalAsync(arg, cancellationToken))", generatedSource);
+        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.StepAsync(arg, pipeline, cancellationToken))", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

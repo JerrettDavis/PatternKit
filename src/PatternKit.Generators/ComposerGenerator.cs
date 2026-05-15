@@ -581,8 +581,10 @@ public sealed class ComposerGenerator : IIncrementalGenerator
     {
         var inputTypeStr = inputType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var outputTypeStr = outputType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var valueTaskType = ValueTaskType(outputTypeStr);
+        var asyncPipelineType = AsyncPipelineType(inputTypeStr, outputTypeStr);
 
-        sb.AppendLine($"    public global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {config.InvokeAsyncMethodName}({inputTypeStr} input, global::System.Threading.CancellationToken cancellationToken = default)");
+        sb.AppendLine($"    public {valueTaskType} {config.InvokeAsyncMethodName}({inputTypeStr} input, global::System.Threading.CancellationToken cancellationToken = default)");
         sb.AppendLine("    {");
 
         if (isStruct)
@@ -594,22 +596,22 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // Start with terminal wrapped as a local function using the copy
             if (terminal.IsAsync)
             {
-                if (terminal.Method.Parameters.Length > 1 &&
-                    terminal.Method.Parameters[1].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                if (HasCancellationTokenParameter(terminal.Method, 1))
                 {
-                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(arg, cancellationToken);");
+                    sb.AppendLine($"        {valueTaskType} terminalFunc({inputTypeStr} arg) => {WrapAsyncCallIfNeeded(terminal.Method, outputTypeStr, "self." + terminal.Method.Name + "(arg, cancellationToken)")};");
                 }
                 else
                 {
-                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => self.{terminal.Method.Name}(arg);");
+                    var call = $"self.{terminal.Method.Name}(arg)";
+                    sb.AppendLine($"        {valueTaskType} terminalFunc({inputTypeStr} arg) => {WrapAsyncCallIfNeeded(terminal.Method, outputTypeStr, call)};");
                 }
             }
             else
             {
-                sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> terminalFunc({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{terminal.Method.Name}(in arg));");
+                sb.AppendLine($"        {valueTaskType} terminalFunc({inputTypeStr} arg) => new {valueTaskType}(self.{terminal.Method.Name}(in arg));");
             }
 
-            sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = terminalFunc;");
+            sb.AppendLine($"        {asyncPipelineType} pipeline = terminalFunc;");
 
             // Wrap each step around the previous pipeline
             for (int i = orderedSteps.Count - 1; i >= 0; i--)
@@ -620,14 +622,15 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 if (step.IsAsync)
                 {
                     // Check if step has cancellationToken parameter
-                    if (step.Method.Parameters.Length > 2 &&
-                        step.Method.Parameters[2].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                    if (HasCancellationTokenParameter(step.Method, 2))
                     {
-                        sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => self.{step.Method.Name}(arg, pipeline, cancellationToken);");
+                        var call = $"self.{step.Method.Name}(arg, pipeline, cancellationToken)";
+                        sb.AppendLine($"        {valueTaskType} {funcName}({inputTypeStr} arg) => {WrapAsyncCallIfNeeded(step.Method, outputTypeStr, call)};");
                     }
                     else
                     {
-                        sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => self.{step.Method.Name}(arg, pipeline);");
+                        var call = $"self.{step.Method.Name}(arg, pipeline)";
+                        sb.AppendLine($"        {valueTaskType} {funcName}({inputTypeStr} arg) => {WrapAsyncCallIfNeeded(step.Method, outputTypeStr, call)};");
                     }
                 }
                 else
@@ -635,7 +638,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                     // Wrap sync step to work with async pipeline
                     // WARNING: GetAwaiter().GetResult() can deadlock in certain synchronization contexts (UI thread, ASP.NET pre-Core)
                     // Avoid using mixed sync/async pipelines in contexts with custom SynchronizationContext
-                    sb.AppendLine($"        global::System.Threading.Tasks.ValueTask<{outputTypeStr}> {funcName}({inputTypeStr} arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>(self.{step.Method.Name}(in arg, inp => pipeline(inp).GetAwaiter().GetResult()));");
+                    sb.AppendLine($"        {valueTaskType} {funcName}({inputTypeStr} arg) => new {valueTaskType}(self.{step.Method.Name}(in arg, inp => pipeline(inp).GetAwaiter().GetResult()));");
                 }
 
                 sb.AppendLine($"        pipeline = {funcName};");
@@ -650,19 +653,20 @@ public sealed class ComposerGenerator : IIncrementalGenerator
             // If terminal is async, use it directly; otherwise wrap in ValueTask.FromResult
             if (terminal.IsAsync)
             {
-                if (terminal.Method.Parameters.Length > 1 &&
-                    terminal.Method.Parameters[1].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                if (HasCancellationTokenParameter(terminal.Method, 1))
                 {
-                    sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = (arg) => {terminal.Method.Name}(arg, cancellationToken);");
+                    var call = $"{terminal.Method.Name}(arg, cancellationToken)";
+                    sb.AppendLine($"        {asyncPipelineType} pipeline = (arg) => {WrapAsyncCallIfNeeded(terminal.Method, outputTypeStr, call)};");
                 }
                 else
                 {
-                    sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = (arg) => {terminal.Method.Name}(arg);");
+                    var call = $"{terminal.Method.Name}(arg)";
+                    sb.AppendLine($"        {asyncPipelineType} pipeline = (arg) => {WrapAsyncCallIfNeeded(terminal.Method, outputTypeStr, call)};");
                 }
             }
             else
             {
-                sb.AppendLine($"        global::System.Func<{inputTypeStr}, global::System.Threading.Tasks.ValueTask<{outputTypeStr}>> pipeline = (arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>({terminal.Method.Name}(in arg));");
+                sb.AppendLine($"        {asyncPipelineType} pipeline = (arg) => new {valueTaskType}({terminal.Method.Name}(in arg));");
             }
 
             // Wrap each step around the previous pipeline
@@ -673,14 +677,15 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                 if (step.IsAsync)
                 {
                     // Check if step has cancellationToken parameter
-                    if (step.Method.Parameters.Length > 2 &&
-                        step.Method.Parameters[2].Type.ToDisplayString() == "System.Threading.CancellationToken")
+                    if (HasCancellationTokenParameter(step.Method, 2))
                     {
-                        sb.AppendLine($"        pipeline = (arg) => {step.Method.Name}(arg, pipeline, cancellationToken);");
+                        var call = $"{step.Method.Name}(arg, pipeline, cancellationToken)";
+                        sb.AppendLine($"        pipeline = (arg) => {WrapAsyncCallIfNeeded(step.Method, outputTypeStr, call)};");
                     }
                     else
                     {
-                        sb.AppendLine($"        pipeline = (arg) => {step.Method.Name}(arg, pipeline);");
+                        var call = $"{step.Method.Name}(arg, pipeline)";
+                        sb.AppendLine($"        pipeline = (arg) => {WrapAsyncCallIfNeeded(step.Method, outputTypeStr, call)};");
                     }
                 }
                 else
@@ -690,7 +695,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
                     // Avoid using mixed sync/async pipelines in contexts with custom SynchronizationContext
                     sb.AppendLine($"        {{");
                     sb.AppendLine($"            var prevPipeline = pipeline;");
-                    sb.AppendLine($"            pipeline = (arg) => new global::System.Threading.Tasks.ValueTask<{outputTypeStr}>({step.Method.Name}(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult()));");
+                    sb.AppendLine($"            pipeline = (arg) => new {valueTaskType}({step.Method.Name}(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult()));");
                     sb.AppendLine($"        }}");
                 }
             }
@@ -700,6 +705,34 @@ public sealed class ComposerGenerator : IIncrementalGenerator
         }
 
         sb.AppendLine("    }");
+    }
+
+    private static bool HasCancellationTokenParameter(IMethodSymbol method, int index)
+    {
+        return method.Parameters.Length > index &&
+            method.Parameters[index].Type.ToDisplayString() == "System.Threading.CancellationToken";
+    }
+
+    private static string ValueTaskType(string outputTypeStr)
+    {
+        return $"global::System.Threading.Tasks.ValueTask<{outputTypeStr}>";
+    }
+
+    private static string AsyncPipelineType(string inputTypeStr, string outputTypeStr)
+    {
+        return $"global::System.Func<{inputTypeStr}, {ValueTaskType(outputTypeStr)}>";
+    }
+
+    private static string WrapAsyncCallIfNeeded(IMethodSymbol method, string outputTypeStr, string call)
+    {
+        if (method.ReturnType is INamedTypeSymbol namedType &&
+            namedType.Name == "Task" &&
+            namedType.TypeArguments.Length > 0)
+        {
+            return $"new {ValueTaskType(outputTypeStr)}({call})";
+        }
+
+        return call;
     }
 
     private bool IsAsyncMethod(IMethodSymbol method)
