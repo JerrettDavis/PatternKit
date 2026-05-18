@@ -30,9 +30,9 @@
       },
       "System.Collections.Immutable": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "QhkXUl2gNrQtvPmtBTQHb0YsUrDiDQ2QS09YbtTTiSjGcf7NBqtYbrG/BE06zcBPCKEwQGzIv13IVdXNOSub2w=="
+        "requested": "[10.0.8, )",
+        "resolved": "10.0.8",
+        "contentHash": "rvMGYko6bcE/ZTpj1Q/EM22rcZNiQyjH+71capjjfmqG+DDncVE4kSaE5ysCv2vEFIHt8+zALWYXgIETFvcFzw=="
       },
       "TinyBDD": {
         "type": "Direct",
@@ -520,9 +520,9 @@
       },
       "System.Collections.Immutable": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "QhkXUl2gNrQtvPmtBTQHb0YsUrDiDQ2QS09YbtTTiSjGcf7NBqtYbrG/BE06zcBPCKEwQGzIv13IVdXNOSub2w=="
+        "requested": "[10.0.8, )",
+        "resolved": "10.0.8",
+        "contentHash": "rvMGYko6bcE/ZTpj1Q/EM22rcZNiQyjH+71capjjfmqG+DDncVE4kSaE5ysCv2vEFIHt8+zALWYXgIETFvcFzw=="
       },
       "TinyBDD": {
         "type": "Direct",
@@ -877,7 +877,7 @@
         "type": "Project",
         "dependencies": {
           "PatternKit.Generators.Abstractions": "[1.0.0, )",
-          "System.Collections.Immutable": "[9.0.0, )"
+          "System.Collections.Immutable": "[10.0.8, )"
         }
       },
       "patternkit.generators.abstractions": {
@@ -1048,9 +1048,9 @@
       },
       "System.Collections.Immutable": {
         "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "QhkXUl2gNrQtvPmtBTQHb0YsUrDiDQ2QS09YbtTTiSjGcf7NBqtYbrG/BE06zcBPCKEwQGzIv13IVdXNOSub2w=="
+        "requested": "[10.0.8, )",
+        "resolved": "10.0.8",
+        "contentHash": "rvMGYko6bcE/ZTpj1Q/EM22rcZNiQyjH+71capjjfmqG+DDncVE4kSaE5ysCv2vEFIHt8+zALWYXgIETFvcFzw=="
       },
       "TinyBDD": {
         "type": "Direct",
@@ -1394,7 +1394,8 @@
       "patternkit.generators": {
         "type": "Project",
         "dependencies": {
-          "PatternKit.Generators.Abstractions": "[1.0.0, )"
+          "PatternKit.Generators.Abstractions": "[1.0.0, )",
+          "System.Collections.Immutable": "[10.0.8, )"
         }
       },
       "patternkit.generators.abstractions": {
