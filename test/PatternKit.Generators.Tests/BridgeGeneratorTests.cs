@@ -1,9 +1,11 @@
 using PatternKit.Generators.Bridge;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class BridgeGeneratorTests
 {
+    [Scenario("GeneratesBridgeForwardingAndDefaultType")]
     [Fact]
     public void GeneratesBridgeForwardingAndDefaultType()
     {
@@ -32,20 +34,21 @@ public class BridgeGeneratorTests
         var gen = new BridgeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Contains(generated, s => s.HintName == "Shape.Bridge.g.cs");
-        Assert.Contains(generated, s => s.HintName == "DefaultShape.Bridge.Default.g.cs");
+        ScenarioExpect.Contains(generated, s => s.HintName == "Shape.Bridge.g.cs");
+        ScenarioExpect.Contains(generated, s => s.HintName == "DefaultShape.Bridge.Default.g.cs");
 
         var bridgeSource = generated.First(s => s.HintName == "Shape.Bridge.g.cs").SourceText.ToString();
-        Assert.Contains("protected global::TestNamespace.IRenderer Implementor { get; }", bridgeSource);
-        Assert.Contains("protected void DrawLine(int x1, int y1, int x2, int y2)", bridgeSource);
-        Assert.Contains("protected global::System.Threading.Tasks.ValueTask FlushAsync", bridgeSource);
+        ScenarioExpect.Contains("protected global::TestNamespace.IRenderer Implementor { get; }", bridgeSource);
+        ScenarioExpect.Contains("protected void DrawLine(int x1, int y1, int x2, int y2)", bridgeSource);
+        ScenarioExpect.Contains("protected global::System.Threading.Tasks.ValueTask FlushAsync", bridgeSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsDiagnosticWhenAbstractionIsNotPartial")]
     [Fact]
     public void ReportsDiagnosticWhenAbstractionIsNotPartial()
     {
@@ -70,9 +73,10 @@ public class BridgeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKBRG001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKBRG001");
     }
 
+    [Scenario("ReportsDiagnosticWhenImplementorIsConcrete")]
     [Fact]
     public void ReportsDiagnosticWhenImplementorIsConcrete()
     {
@@ -97,9 +101,10 @@ public class BridgeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKBRG002");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKBRG002");
     }
 
+    [Scenario("GeneratesGenericBridgeWithForwardedPropertiesRefParametersAndDefaults")]
     [Fact]
     public void GeneratesGenericBridgeWithForwardedPropertiesRefParametersAndDefaults()
     {
@@ -126,20 +131,21 @@ public class BridgeGeneratorTests
         var gen = new BridgeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Store.Bridge.g.cs").SourceText.ToString();
-        Assert.Contains("public abstract partial record class Store<T>", generated);
-        Assert.Contains("protected string Name => Backend.Name;", generated);
-        Assert.Contains("ref int source, out int destination, in bool enabled", generated);
-        Assert.Contains("Backend.Copy(ref source, out destination, in enabled)", generated);
-        Assert.Contains(@"string value = @""quoted""", generated);
-        Assert.Contains("bool enabled = true", generated);
-        Assert.Contains("int count = 3", generated);
-        Assert.Contains("object? state = default", generated);
-        Assert.DoesNotContain("Ignored", generated);
-        Assert.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
+        ScenarioExpect.Contains("public abstract partial record class Store<T>", generated);
+        ScenarioExpect.Contains("protected string Name => Backend.Name;", generated);
+        ScenarioExpect.Contains("ref int source, out int destination, in bool enabled", generated);
+        ScenarioExpect.Contains("Backend.Copy(ref source, out destination, in enabled)", generated);
+        ScenarioExpect.Contains(@"string value = @""quoted""", generated);
+        ScenarioExpect.Contains("bool enabled = true", generated);
+        ScenarioExpect.Contains("int count = 3", generated);
+        ScenarioExpect.Contains("object? state = default", generated);
+        ScenarioExpect.DoesNotContain("Ignored", generated);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
     }
 
+    [Scenario("ReportsDiagnosticForEventMembersAndDefaultNameConflicts")]
     [Fact]
     public void ReportsDiagnosticForEventMembersAndDefaultNameConflicts()
     {
@@ -185,7 +191,7 @@ public class BridgeGeneratorTests
         _ = RoslynTestHelpers.Run(eventComp, gen, out var eventResult, out _);
         _ = RoslynTestHelpers.Run(conflictComp, gen, out var conflictResult, out _);
 
-        Assert.Contains(eventResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG003");
-        Assert.Contains(conflictResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG004");
+        ScenarioExpect.Contains(eventResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG003");
+        ScenarioExpect.Contains(conflictResult.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKBRG004");
     }
 }

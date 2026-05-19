@@ -1,9 +1,11 @@
 using PatternKit.Examples.Generators.Memento;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.GeneratorTests;
 
 public sealed class MementoGeneratorExamplesTests
 {
+    [Scenario("EditorState EditingOperations AreImmutableAndClampRanges")]
     [Fact]
     public void EditorState_EditingOperations_AreImmutableAndClampRanges()
     {
@@ -14,16 +16,17 @@ public sealed class MementoGeneratorExamplesTests
         var replaced = selected.Insert("Hi");
         var backspaced = replaced.Backspace();
 
-        Assert.Equal("", initial.Text);
-        Assert.Equal("Hello world", inserted.Text);
-        Assert.True(selected.HasSelection);
-        Assert.Equal(0, selected.SelectionStart);
-        Assert.Equal(inserted.Text.Length, selected.SelectionEnd);
-        Assert.Equal("Hi", replaced.Text);
-        Assert.Equal("H", backspaced.Text);
-        Assert.Equal("Text='H' Cursor=1", backspaced.ToString());
+        ScenarioExpect.Equal("", initial.Text);
+        ScenarioExpect.Equal("Hello world", inserted.Text);
+        ScenarioExpect.True(selected.HasSelection);
+        ScenarioExpect.Equal(0, selected.SelectionStart);
+        ScenarioExpect.Equal(inserted.Text.Length, selected.SelectionEnd);
+        ScenarioExpect.Equal("Hi", replaced.Text);
+        ScenarioExpect.Equal("H", backspaced.Text);
+        ScenarioExpect.Equal("Text='H' Cursor=1", backspaced.ToString());
     }
 
+    [Scenario("TextEditor TracksUndoRedoAndClear")]
     [Fact]
     public void TextEditor_TracksUndoRedoAndClear()
     {
@@ -32,33 +35,35 @@ public sealed class MementoGeneratorExamplesTests
         editor.Apply(state => state.Insert("Hello"));
         editor.Apply(state => state.Insert(" world"));
 
-        Assert.Equal("Hello world", editor.Current.Text);
-        Assert.True(editor.CanUndo);
-        Assert.False(editor.CanRedo);
+        ScenarioExpect.Equal("Hello world", editor.Current.Text);
+        ScenarioExpect.True(editor.CanUndo);
+        ScenarioExpect.False(editor.CanRedo);
 
-        Assert.True(editor.Undo());
-        Assert.Equal("Hello", editor.Current.Text);
-        Assert.True(editor.Redo());
-        Assert.Equal("Hello world", editor.Current.Text);
+        ScenarioExpect.True(editor.Undo());
+        ScenarioExpect.Equal("Hello", editor.Current.Text);
+        ScenarioExpect.True(editor.Redo());
+        ScenarioExpect.Equal("Hello world", editor.Current.Text);
 
         editor.Clear();
 
-        Assert.Equal(EditorStateDemo.EditorState.Empty(), editor.Current);
-        Assert.False(editor.CanUndo);
-        Assert.False(editor.CanRedo);
+        ScenarioExpect.Equal(EditorStateDemo.EditorState.Empty(), editor.Current);
+        ScenarioExpect.False(editor.CanUndo);
+        ScenarioExpect.False(editor.CanRedo);
     }
 
+    [Scenario("EditorStateDemo RunAndManualSnapshot ReturnExpectedLogEntries")]
     [Fact]
     public void EditorStateDemo_RunAndManualSnapshot_ReturnExpectedLogEntries()
     {
         var runLog = EditorStateDemo.Run();
         var manualLog = EditorStateDemo.RunManualSnapshot();
 
-        Assert.Contains(runLog, line => line.StartsWith("Final:", StringComparison.Ordinal));
-        Assert.Contains(runLog, line => line.Contains("Redo failed", StringComparison.Ordinal));
-        Assert.Contains(manualLog, line => line == "Restored equals State1: True");
+        ScenarioExpect.Contains(runLog, line => line.StartsWith("Final:", StringComparison.Ordinal));
+        ScenarioExpect.Contains(runLog, line => line.Contains("Redo failed", StringComparison.Ordinal));
+        ScenarioExpect.Contains(manualLog, line => line == "Restored equals State1: True");
     }
 
+    [Scenario("GameState MutatorsAndSaveLoad WorkAsExpected")]
     [Fact]
     public void GameState_MutatorsAndSaveLoad_WorkAsExpected()
     {
@@ -70,14 +75,15 @@ public sealed class MementoGeneratorExamplesTests
         state.AddScore(250);
         state.AdvanceLevel();
 
-        Assert.Equal(3, state.PlayerX);
-        Assert.Equal(4, state.PlayerY);
-        Assert.Equal(100, state.Health);
-        Assert.Equal(250, state.Score);
-        Assert.Equal(2, state.Level);
-        Assert.Equal("Level 2: Health=100, Score=250, Pos=(3,4)", state.ToString());
+        ScenarioExpect.Equal(3, state.PlayerX);
+        ScenarioExpect.Equal(4, state.PlayerY);
+        ScenarioExpect.Equal(100, state.Health);
+        ScenarioExpect.Equal(250, state.Score);
+        ScenarioExpect.Equal(2, state.Level);
+        ScenarioExpect.Equal("Level 2: Health=100, Score=250, Pos=(3,4)", state.ToString());
     }
 
+    [Scenario("GameSession PerformActionMutatesStateAndReportsNoRedoWhenNoForwardHistoryExists")]
     [Fact]
     public void GameSession_PerformActionMutatesStateAndReportsNoRedoWhenNoForwardHistoryExists()
     {
@@ -86,18 +92,19 @@ public sealed class MementoGeneratorExamplesTests
         session.PerformAction(state => state.MovePlayer(5, 3), "move");
         session.PerformAction(state => state.TakeDamage(10), "damage");
 
-        Assert.Equal(5, session.State.PlayerX);
-        Assert.Equal(3, session.State.PlayerY);
-        Assert.Equal(90, session.State.Health);
-        Assert.False(session.RedoToCheckpoint());
+        ScenarioExpect.Equal(5, session.State.PlayerX);
+        ScenarioExpect.Equal(3, session.State.PlayerY);
+        ScenarioExpect.Equal(90, session.State.Health);
+        ScenarioExpect.False(session.RedoToCheckpoint());
     }
 
+    [Scenario("GameSession DoesNotUndoWhenGeneratedHistorySkipsDuplicateMutableState")]
     [Fact]
     public void GameSession_DoesNotUndoWhenGeneratedHistorySkipsDuplicateMutableState()
     {
         var session = new GameStateDemo.GameSession();
 
-        Assert.False(session.UndoToCheckpoint());
+        ScenarioExpect.False(session.UndoToCheckpoint());
         session.PerformAction(state => state.MovePlayer(2, 3), "move");
         session.PerformAction(state =>
         {
@@ -105,23 +112,24 @@ public sealed class MementoGeneratorExamplesTests
             state.IsPaused = true;
         }, "damage and pause");
 
-        Assert.False(session.UndoToCheckpoint());
-        Assert.Equal(2, session.State.PlayerX);
-        Assert.Equal(3, session.State.PlayerY);
-        Assert.Equal(85, session.State.Health);
-        Assert.True(session.State.IsPaused);
-        Assert.False(session.RedoToCheckpoint());
+        ScenarioExpect.False(session.UndoToCheckpoint());
+        ScenarioExpect.Equal(2, session.State.PlayerX);
+        ScenarioExpect.Equal(3, session.State.PlayerY);
+        ScenarioExpect.Equal(85, session.State.Health);
+        ScenarioExpect.True(session.State.IsPaused);
+        ScenarioExpect.False(session.RedoToCheckpoint());
     }
 
+    [Scenario("GameState HealthIsClampedAndSaveLoadRestoresCapturedValues")]
     [Fact]
     public void GameState_HealthIsClampedAndSaveLoadRestoresCapturedValues()
     {
         var state = new GameStateDemo.GameState();
 
         state.TakeDamage(500);
-        Assert.Equal(0, state.Health);
+        ScenarioExpect.Equal(0, state.Health);
         state.Heal(500);
-        Assert.Equal(100, state.Health);
+        ScenarioExpect.Equal(100, state.Health);
 
         state.MovePlayer(1, 1);
         state.AddScore(10);
@@ -132,20 +140,21 @@ public sealed class MementoGeneratorExamplesTests
         state.AddScore(90);
         save.Restore(state);
 
-        Assert.Equal(1, state.PlayerX);
-        Assert.Equal(1, state.PlayerY);
-        Assert.Equal(100, state.Health);
-        Assert.Equal(10, state.Score);
+        ScenarioExpect.Equal(1, state.PlayerX);
+        ScenarioExpect.Equal(1, state.PlayerY);
+        ScenarioExpect.Equal(100, state.Health);
+        ScenarioExpect.Equal(10, state.Score);
     }
 
+    [Scenario("GameStateDemo RunAndSaveLoad ReturnExpectedLogEntries")]
     [Fact]
     public void GameStateDemo_RunAndSaveLoad_ReturnExpectedLogEntries()
     {
         var runLog = GameStateDemo.Run();
         var saveLoadLog = GameStateDemo.RunSaveLoad();
 
-        Assert.Contains(runLog, line => line.StartsWith("Final:", StringComparison.Ordinal));
-        Assert.Contains(runLog, line => line.Contains("Redo failed", StringComparison.Ordinal));
-        Assert.Contains(saveLoadLog, line => line.StartsWith("Game loaded:", StringComparison.Ordinal));
+        ScenarioExpect.Contains(runLog, line => line.StartsWith("Final:", StringComparison.Ordinal));
+        ScenarioExpect.Contains(runLog, line => line.Contains("Redo failed", StringComparison.Ordinal));
+        ScenarioExpect.Contains(saveLoadLog, line => line.StartsWith("Game loaded:", StringComparison.Ordinal));
     }
 }

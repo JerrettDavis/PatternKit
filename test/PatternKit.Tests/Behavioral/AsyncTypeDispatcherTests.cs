@@ -30,10 +30,10 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
         var b = await d.DispatchAsync(new Number(7));
         var c = await d.DispatchAsync(new Neg(new Number(1))); // no match, hits default
 
-        // Assert
-        Assert.Equal("+", a);
-        Assert.Equal("#7", b);
-        Assert.Equal("?", c);
+        // Then
+        ScenarioExpect.Equal("+", a);
+        ScenarioExpect.Equal("#7", b);
+        ScenarioExpect.Equal("?", c);
     }
 
     [Scenario("TryDispatchAsync returns false when no handler and no default")]
@@ -48,9 +48,9 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
         // Act
         var (ok, result) = await d.TryDispatchAsync(new Neg(new Number(3)));
 
-        // Assert
-        Assert.False(ok);
-        Assert.Null(result);
+        // Then
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Null(result);
     }
 
     [Scenario("Async action dispatcher executes side effects by runtime type")]
@@ -71,10 +71,10 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
         await d.DispatchAsync(new Number(5));
         await d.DispatchAsync(new Neg(new Number(9))); // default
 
-        // Assert
-        Assert.Equal(1, counters[0]);
-        Assert.Equal(1, counters[1]);
-        Assert.Equal(1, counters[2]);
+        // Then
+        ScenarioExpect.Equal(1, counters[0]);
+        ScenarioExpect.Equal(1, counters[1]);
+        ScenarioExpect.Equal(1, counters[2]);
     }
 
     [Scenario("Async handlers with cancellation token")]
@@ -95,8 +95,8 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
         using var cts = new CancellationTokenSource();
         var result = await d.DispatchAsync(new Number(42), cts.Token);
 
-        // Assert
-        Assert.Equal("#42", result);
+        // Then
+        ScenarioExpect.Equal("#42", result);
     }
 
     [Scenario("TryDispatchAsync action returns false when no handler and no default")]
@@ -113,9 +113,9 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
         // Act
         var ok = await d.TryDispatchAsync(new Neg(new Number(3)));
 
-        // Assert
-        Assert.False(ok);
-        Assert.Equal(0, counter);
+        // Then
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Equal(0, counter);
     }
 
     [Scenario("DispatchAsync throws when no handler and no default")]
@@ -127,8 +127,8 @@ public sealed class AsyncTypeDispatcherTests(ITestOutputHelper output) : TinyBdd
             .On<Number>(n => n.Value.ToString())
             .Build();
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        // Act and verify
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             async () => await d.DispatchAsync(new Neg(new Number(3))));
     }
 }

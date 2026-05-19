@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Routing;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Routing;
 
 public sealed class ContentRouterTests
 {
+    [Scenario("Route UsesFirstMatchingRoute")]
     [Fact]
     public void Route_UsesFirstMatchingRoute()
     {
@@ -15,9 +17,10 @@ public sealed class ContentRouterTests
 
         var result = router.Route(Message<Order>.Create(new Order("o-1", 150m)));
 
-        Assert.Equal("priority", result);
+        ScenarioExpect.Equal("priority", result);
     }
 
+    [Scenario("Route UsesDefaultWhenNothingMatches")]
     [Fact]
     public void Route_UsesDefaultWhenNothingMatches()
     {
@@ -28,9 +31,10 @@ public sealed class ContentRouterTests
 
         var result = router.Route(Message<Order>.Create(new Order("o-1", 10m)));
 
-        Assert.Equal("default", result);
+        ScenarioExpect.Equal("default", result);
     }
 
+    [Scenario("Route ThrowsWhenNothingMatchesAndNoDefaultExists")]
     [Fact]
     public void Route_ThrowsWhenNothingMatchesAndNoDefaultExists()
     {
@@ -38,9 +42,10 @@ public sealed class ContentRouterTests
             .When((m, _) => m.Payload.Total < 0).Then((_, _) => "invalid")
             .Build();
 
-        Assert.Throws<InvalidOperationException>(() => router.Route(Message<Order>.Create(new Order("o-1", 10m))));
+        ScenarioExpect.Throws<InvalidOperationException>(() => router.Route(Message<Order>.Create(new Order("o-1", 10m))));
     }
 
+    [Scenario("Route PassesContextToPredicateAndHandler")]
     [Fact]
     public void Route_PassesContextToPredicateAndHandler()
     {
@@ -52,19 +57,21 @@ public sealed class ContentRouterTests
         var message = Message<Order>.Create(new Order("o-1", 10m));
         var context = new MessageContext(MessageHeaders.Empty.WithCorrelationId("corr-1"));
 
-        Assert.Equal("corr-1:o-1", router.Route(message, context));
+        ScenarioExpect.Equal("corr-1:o-1", router.Route(message, context));
     }
 
+    [Scenario("Builder RejectsNullDelegates")]
     [Fact]
     public void Builder_RejectsNullDelegates()
     {
         var builder = ContentRouter<Order, string>.Create();
 
-        Assert.Throws<ArgumentNullException>(() => builder.When(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.Default(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.When((_, _) => true).Then(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.Default(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When((_, _) => true).Then(null!));
     }
 
+    [Scenario("Route RejectsNullMessage")]
     [Fact]
     public void Route_RejectsNullMessage()
     {
@@ -72,9 +79,10 @@ public sealed class ContentRouterTests
             .Default((_, _) => "default")
             .Build();
 
-        Assert.Throws<ArgumentNullException>(() => router.Route(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => router.Route(null!));
     }
 
+    [Scenario("AsyncRoute UsesFirstMatchingRoute")]
     [Fact]
     public async Task AsyncRoute_UsesFirstMatchingRoute()
     {
@@ -85,9 +93,10 @@ public sealed class ContentRouterTests
 
         var result = await router.RouteAsync(Message<Order>.Create(new Order("o-1", 150m)));
 
-        Assert.Equal("priority", result);
+        ScenarioExpect.Equal("priority", result);
     }
 
+    [Scenario("AsyncRoute UsesDefaultWhenNothingMatches")]
     [Fact]
     public async Task AsyncRoute_UsesDefaultWhenNothingMatches()
     {
@@ -98,9 +107,10 @@ public sealed class ContentRouterTests
 
         var result = await router.RouteAsync(Message<Order>.Create(new Order("o-1", 10m)));
 
-        Assert.Equal("default", result);
+        ScenarioExpect.Equal("default", result);
     }
 
+    [Scenario("AsyncRoute ObservesCancellation")]
     [Fact]
     public async Task AsyncRoute_ObservesCancellation()
     {
@@ -110,10 +120,11 @@ public sealed class ContentRouterTests
             .When((_, _, _) => new ValueTask<bool>(true)).Then((_, _, _) => new ValueTask<string>("never"))
             .Build();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await router.RouteAsync(Message<Order>.Create(new Order("o-1", 10m)), cancellationToken: cts.Token));
     }
 
+    [Scenario("AsyncRoute PreservesProvidedContextCancellationWhenNoTokenIsSupplied")]
     [Fact]
     public async Task AsyncRoute_PreservesProvidedContextCancellationWhenNoTokenIsSupplied()
     {
@@ -130,10 +141,11 @@ public sealed class ContentRouterTests
 
         var result = await router.RouteAsync(Message<Order>.Create(new Order("o-1", 10m)), context);
 
-        Assert.Equal("ok", result);
-        Assert.Equal(cts.Token, seenToken);
+        ScenarioExpect.Equal("ok", result);
+        ScenarioExpect.Equal(cts.Token, seenToken);
     }
 
+    [Scenario("AsyncRoute UsesExplicitCancellationTokenOverProvidedContext")]
     [Fact]
     public async Task AsyncRoute_UsesExplicitCancellationTokenOverProvidedContext()
     {
@@ -146,9 +158,10 @@ public sealed class ContentRouterTests
 
         var result = await router.RouteAsync(Message<Order>.Create(new Order("o-1", 10m)), context, callCts.Token);
 
-        Assert.Equal(callCts.Token, result);
+        ScenarioExpect.Equal(callCts.Token, result);
     }
 
+    [Scenario("AsyncRoute ThrowsWhenNothingMatchesAndNoDefaultExists")]
     [Fact]
     public async Task AsyncRoute_ThrowsWhenNothingMatchesAndNoDefaultExists()
     {
@@ -156,20 +169,22 @@ public sealed class ContentRouterTests
             .When((m, _, _) => new ValueTask<bool>(m.Payload.Total < 0)).Then((_, _, _) => new ValueTask<string>("invalid"))
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
             await router.RouteAsync(Message<Order>.Create(new Order("o-1", 10m))));
     }
 
+    [Scenario("AsyncBuilder RejectsNullDelegates")]
     [Fact]
     public void AsyncBuilder_RejectsNullDelegates()
     {
         var builder = AsyncContentRouter<Order, string>.Create();
 
-        Assert.Throws<ArgumentNullException>(() => builder.When(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.Default(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.When((_, _, _) => new ValueTask<bool>(true)).Then(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.Default(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When((_, _, _) => new ValueTask<bool>(true)).Then(null!));
     }
 
+    [Scenario("AsyncRoute RejectsNullMessage")]
     [Fact]
     public async Task AsyncRoute_RejectsNullMessage()
     {
@@ -177,7 +192,7 @@ public sealed class ContentRouterTests
             .Default((_, _, _) => new ValueTask<string>("default"))
             .Build();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await router.RouteAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await router.RouteAsync(null!));
     }
 
     private sealed record Order(string Id, decimal Total);

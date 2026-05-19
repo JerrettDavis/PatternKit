@@ -328,6 +328,6 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
     private static ArgumentException? InvokePrivateArgumentException(Action action)
     {
         var exception = Record.Exception(action);
-        return Assert.IsType<ArgumentException>(Assert.IsType<TargetInvocationException>(exception).InnerException);
+        return ScenarioExpect.IsType<ArgumentException>(ScenarioExpect.IsType<TargetInvocationException>(exception).InnerException);
     }
 }

@@ -168,6 +168,7 @@ public sealed class TryHandlerExtensionsTests
         return false;
     }
 
+    [Scenario("TryGetResult FirstMatch ReturnsTrue")]
     [Fact]
     public void TryGetResult_FirstMatch_ReturnsTrue()
     {
@@ -176,10 +177,11 @@ public sealed class TryHandlerExtensionsTests
         var input = 6;
         var success = handlers.TryGetResult(in input, out var result);
 
-        Assert.True(success);
-        Assert.Equal("even", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("even", result);
     }
 
+    [Scenario("TryGetResult SecondMatch ReturnsTrue")]
     [Fact]
     public void TryGetResult_SecondMatch_ReturnsTrue()
     {
@@ -188,10 +190,11 @@ public sealed class TryHandlerExtensionsTests
         var input = 9; // odd, divisible by 3
         var success = handlers.TryGetResult(in input, out var result);
 
-        Assert.True(success);
-        Assert.Equal("div3", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("div3", result);
     }
 
+    [Scenario("TryGetResult NoMatch ReturnsFalse")]
     [Fact]
     public void TryGetResult_NoMatch_ReturnsFalse()
     {
@@ -200,10 +203,11 @@ public sealed class TryHandlerExtensionsTests
         var input = 7; // odd, not divisible by 3
         var success = handlers.TryGetResult(in input, out var result);
 
-        Assert.False(success);
-        Assert.Null(result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("TryGetResult EmptyHandlers ReturnsFalse")]
     [Fact]
     public void TryGetResult_EmptyHandlers_ReturnsFalse()
     {
@@ -211,10 +215,11 @@ public sealed class TryHandlerExtensionsTests
         var input = 5;
         var success = handlers.TryGetResult(in input, out var result);
 
-        Assert.False(success);
-        Assert.Null(result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("FirstMatch Found ReturnsSome")]
     [Fact]
     public void FirstMatch_Found_ReturnsSome()
     {
@@ -223,10 +228,11 @@ public sealed class TryHandlerExtensionsTests
         var input = 4;
         var option = handlers.FirstMatch(in input);
 
-        Assert.True(option.HasValue);
-        Assert.Equal("even", option.ValueOrDefault);
+        ScenarioExpect.True(option.HasValue);
+        ScenarioExpect.Equal("even", option.ValueOrDefault);
     }
 
+    [Scenario("FirstMatch NotFound ReturnsNone")]
     [Fact]
     public void FirstMatch_NotFound_ReturnsNone()
     {
@@ -235,9 +241,10 @@ public sealed class TryHandlerExtensionsTests
         var input = 42;
         var option = handlers.FirstMatch(in input);
 
-        Assert.False(option.HasValue);
+        ScenarioExpect.False(option.HasValue);
     }
 
+    [Scenario("FirstMatch MultipleMatches ReturnsFirst")]
     [Fact]
     public void FirstMatch_MultipleMatches_ReturnsFirst()
     {
@@ -246,8 +253,8 @@ public sealed class TryHandlerExtensionsTests
         var input = 6; // both even and divisible by 3
         var option = handlers.FirstMatch(in input);
 
-        Assert.True(option.HasValue);
-        Assert.Equal("even", option.ValueOrDefault); // first wins
+        ScenarioExpect.True(option.HasValue);
+        ScenarioExpect.Equal("even", option.ValueOrDefault); // first wins
     }
 }
 

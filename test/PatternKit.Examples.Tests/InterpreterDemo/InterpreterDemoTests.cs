@@ -1,23 +1,26 @@
 using PatternKit.Examples.InterpreterDemo;
 using static PatternKit.Examples.InterpreterDemo.InterpreterDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.InterpreterDemoTests;
 
 public sealed class InterpreterDemoTests
 {
+    [Scenario("PricingContext Default Values")]
     [Fact]
     public void PricingContext_Default_Values()
     {
         var ctx = new PricingContext();
 
-        Assert.Equal(0m, ctx.CartTotal);
-        Assert.Equal(0, ctx.ItemCount);
-        Assert.Equal("Standard", ctx.CustomerTier);
-        Assert.False(ctx.IsHoliday);
-        Assert.Equal("", ctx.PromoCode);
-        Assert.NotNull(ctx.Variables);
+        ScenarioExpect.Equal(0m, ctx.CartTotal);
+        ScenarioExpect.Equal(0, ctx.ItemCount);
+        ScenarioExpect.Equal("Standard", ctx.CustomerTier);
+        ScenarioExpect.False(ctx.IsHoliday);
+        ScenarioExpect.Equal("", ctx.PromoCode);
+        ScenarioExpect.NotNull(ctx.Variables);
     }
 
+    [Scenario("CreatePricingInterpreter Numeric Literals")]
     [Fact]
     public void CreatePricingInterpreter_Numeric_Literals()
     {
@@ -28,9 +31,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("number", "42.5"),
             ctx);
 
-        Assert.Equal(42.5m, result);
+        ScenarioExpect.Equal(42.5m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Percent Literals")]
     [Fact]
     public void CreatePricingInterpreter_Percent_Literals()
     {
@@ -41,9 +45,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("percent", "15%"),
             ctx);
 
-        Assert.Equal(0.15m, result);
+        ScenarioExpect.Equal(0.15m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Var CartTotal")]
     [Fact]
     public void CreatePricingInterpreter_Var_CartTotal()
     {
@@ -54,9 +59,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("var", "cart_total"),
             ctx);
 
-        Assert.Equal(100m, result);
+        ScenarioExpect.Equal(100m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Var TierDiscount Gold")]
     [Fact]
     public void CreatePricingInterpreter_Var_TierDiscount_Gold()
     {
@@ -67,9 +73,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("var", "tier_discount"),
             ctx);
 
-        Assert.Equal(0.10m, result);
+        ScenarioExpect.Equal(0.10m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Var TierDiscount Platinum")]
     [Fact]
     public void CreatePricingInterpreter_Var_TierDiscount_Platinum()
     {
@@ -80,9 +87,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("var", "tier_discount"),
             ctx);
 
-        Assert.Equal(0.15m, result);
+        ScenarioExpect.Equal(0.15m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Var TierDiscount Diamond")]
     [Fact]
     public void CreatePricingInterpreter_Var_TierDiscount_Diamond()
     {
@@ -93,9 +101,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("var", "tier_discount"),
             ctx);
 
-        Assert.Equal(0.20m, result);
+        ScenarioExpect.Equal(0.20m, result);
     }
 
+    [Scenario("CreatePricingInterpreter Var CustomVariable")]
     [Fact]
     public void CreatePricingInterpreter_Var_CustomVariable()
     {
@@ -106,9 +115,10 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("var", "custom"),
             ctx);
 
-        Assert.Equal(99m, result);
+        ScenarioExpect.Equal(99m, result);
     }
 
+    [Scenario("TierDiscountRule Gold Customer")]
     [Fact]
     public void TierDiscountRule_Gold_Customer()
     {
@@ -117,9 +127,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(TierDiscountRule, ctx);
 
-        Assert.Equal(15m, result); // 150 * 0.10 = 15
+        ScenarioExpect.Equal(15m, result); // 150 * 0.10 = 15
     }
 
+    [Scenario("ThresholdDiscountRule Below Threshold")]
     [Fact]
     public void ThresholdDiscountRule_Below_Threshold()
     {
@@ -128,9 +139,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(ThresholdDiscountRule, ctx);
 
-        Assert.Equal(0m, result);
+        ScenarioExpect.Equal(0m, result);
     }
 
+    [Scenario("ThresholdDiscountRule Above Threshold")]
     [Fact]
     public void ThresholdDiscountRule_Above_Threshold()
     {
@@ -139,9 +151,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(ThresholdDiscountRule, ctx);
 
-        Assert.Equal(5m, result);
+        ScenarioExpect.Equal(5m, result);
     }
 
+    [Scenario("HolidayDiscountRule Below Cap")]
     [Fact]
     public void HolidayDiscountRule_Below_Cap()
     {
@@ -150,9 +163,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(HolidayDiscountRule, ctx);
 
-        Assert.Equal(12m, result); // 80 * 0.15 = 12
+        ScenarioExpect.Equal(12m, result); // 80 * 0.15 = 12
     }
 
+    [Scenario("HolidayDiscountRule Capped At 20")]
     [Fact]
     public void HolidayDiscountRule_Capped_At_20()
     {
@@ -161,9 +175,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(HolidayDiscountRule, ctx);
 
-        Assert.Equal(20m, result); // 200 * 0.15 = 30, but capped at 20
+        ScenarioExpect.Equal(20m, result); // 200 * 0.15 = 30, but capped at 20
     }
 
+    [Scenario("CreateEligibilityInterpreter Tier Check")]
     [Fact]
     public void CreateEligibilityInterpreter_Tier_Check()
     {
@@ -179,10 +194,11 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("tier", "Gold"),
             standardCtx);
 
-        Assert.True(goldResult);
-        Assert.False(standardResult);
+        ScenarioExpect.True(goldResult);
+        ScenarioExpect.False(standardResult);
     }
 
+    [Scenario("CreateEligibilityInterpreter CartOver Check")]
     [Fact]
     public void CreateEligibilityInterpreter_CartOver_Check()
     {
@@ -198,10 +214,11 @@ public sealed class InterpreterDemoTests
             PatternKit.Behavioral.Interpreter.ExpressionExtensions.Terminal("cartOver", "100"),
             lowCart);
 
-        Assert.True(highResult);
-        Assert.False(lowResult);
+        ScenarioExpect.True(highResult);
+        ScenarioExpect.False(lowResult);
     }
 
+    [Scenario("VipEligibilityRule Gold High Cart")]
     [Fact]
     public void VipEligibilityRule_Gold_High_Cart()
     {
@@ -210,9 +227,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(VipEligibilityRule, ctx);
 
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("VipEligibilityRule Standard High Cart")]
     [Fact]
     public void VipEligibilityRule_Standard_High_Cart()
     {
@@ -221,9 +239,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(VipEligibilityRule, ctx);
 
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("VipEligibilityRule Gold Low Cart")]
     [Fact]
     public void VipEligibilityRule_Gold_Low_Cart()
     {
@@ -232,9 +251,10 @@ public sealed class InterpreterDemoTests
 
         var result = interpreter.Interpret(VipEligibilityRule, ctx);
 
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("CreateAsyncPricingInterpreter PromoCode Lookup")]
     [Fact]
     public async Task CreateAsyncPricingInterpreter_PromoCode_Lookup()
     {
@@ -248,9 +268,10 @@ public sealed class InterpreterDemoTests
 
         var result = await interpreter.InterpretAsync(promoRule, ctx);
 
-        Assert.Equal(25m, result); // 100 * 0.25 = 25
+        ScenarioExpect.Equal(25m, result); // 100 * 0.25 = 25
     }
 
+    [Scenario("CreateAsyncPricingInterpreter Unknown PromoCode")]
     [Fact]
     public async Task CreateAsyncPricingInterpreter_Unknown_PromoCode()
     {
@@ -263,15 +284,17 @@ public sealed class InterpreterDemoTests
 
         var result = await interpreter.InterpretAsync(promoRule, ctx);
 
-        Assert.Equal(0m, result);
+        ScenarioExpect.Equal(0m, result);
     }
 
+    [Scenario("RunAsync Executes Without Errors")]
     [Fact]
     public async Task RunAsync_Executes_Without_Errors()
     {
         await PatternKit.Examples.InterpreterDemo.InterpreterDemo.RunAsync();
     }
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {

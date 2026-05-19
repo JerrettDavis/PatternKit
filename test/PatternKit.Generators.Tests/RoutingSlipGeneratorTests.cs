@@ -1,11 +1,13 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using PatternKit.Generators.Messaging;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public sealed class RoutingSlipGeneratorTests
 {
+    [Scenario("GeneratesSyncRoutingSlipFactory")]
     [Fact]
     public void GeneratesSyncRoutingSlipFactory()
     {
@@ -43,17 +45,18 @@ public sealed class RoutingSlipGeneratorTests
         var gen = new RoutingSlipGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, result => Assert.Empty(result.Diagnostics));
-        var generated = Assert.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        Assert.Equal("OrderSlip.RoutingSlip.g.cs", generated.HintName);
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        ScenarioExpect.Equal("OrderSlip.RoutingSlip.g.cs", generated.HintName);
         var text = generated.SourceText.ToString();
-        Assert.Contains(".Step(\"validate\", Validate)", text);
-        Assert.Contains(".Step(\"ship\", Ship)", text);
+        ScenarioExpect.Contains(".Step(\"validate\", Validate)", text);
+        ScenarioExpect.Contains(".Step(\"ship\", Ship)", text);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GeneratesAsyncRoutingSlipFactory")]
     [Fact]
     public void GeneratesAsyncRoutingSlipFactory()
     {
@@ -89,14 +92,15 @@ public sealed class RoutingSlipGeneratorTests
         var gen = new RoutingSlipGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, result => Assert.Empty(result.Diagnostics));
-        var generated = Assert.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        Assert.Contains("AsyncRoutingSlip<global::MyApp.Order>", generated.SourceText.ToString());
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        ScenarioExpect.Contains("AsyncRoutingSlip<global::MyApp.Order>", generated.SourceText.ToString());
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsDiagnosticForNonPartialSlip")]
     [Fact]
     public void ReportsDiagnosticForNonPartialSlip()
     {
@@ -120,10 +124,11 @@ public sealed class RoutingSlipGeneratorTests
         var gen = new RoutingSlipGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKRS001", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRS001", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForMissingSteps")]
     [Fact]
     public void ReportsDiagnosticForMissingSteps()
     {
@@ -142,10 +147,11 @@ public sealed class RoutingSlipGeneratorTests
         var gen = new RoutingSlipGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKRS002", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRS002", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidStepSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidStepSignature()
     {
@@ -169,8 +175,8 @@ public sealed class RoutingSlipGeneratorTests
         var gen = new RoutingSlipGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKRS003", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRS003", diagnostic.Id);
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

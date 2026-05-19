@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class DispatcherGeneratorTests
 {
+    [Scenario("GeneratesDispatcherWithoutDiagnostics")]
     [Fact]
     public void GeneratesDispatcherWithoutDiagnostics()
     {
@@ -23,19 +25,20 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("AppDispatcher.g.cs", names);
-        Assert.Contains("AppDispatcher.Builder.g.cs", names);
-        Assert.Contains("AppDispatcher.Contracts.g.cs", names);
+        ScenarioExpect.Contains("AppDispatcher.g.cs", names);
+        ScenarioExpect.Contains("AppDispatcher.Builder.g.cs", names);
+        ScenarioExpect.Contains("AppDispatcher.Contracts.g.cs", names);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GeneratedCodeHasNoPatternKitDependency")]
     [Fact]
     public void GeneratedCodeHasNoPatternKitDependency()
     {
@@ -57,11 +60,12 @@ public class DispatcherGeneratorTests
         // Check that generated source doesn't reference PatternKit
         foreach (var text in run.Results.SelectMany(result => result.GeneratedSources.Select(generated => generated.SourceText.ToString())))
         {
-            Assert.DoesNotContain("using PatternKit", text);
-            Assert.DoesNotContain("PatternKit.", text);
+            ScenarioExpect.DoesNotContain("using PatternKit", text);
+            ScenarioExpect.DoesNotContain("PatternKit.", text);
         }
     }
 
+    [Scenario("CommandRegistration HappyPath")]
     [Fact]
     public void CommandRegistration_HappyPath()
     {
@@ -101,12 +105,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run the demo
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -115,9 +119,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Echo: Hello", result);
+        ScenarioExpect.Equal("Echo: Hello", result);
     }
 
+    [Scenario("NotificationRegistration MultipleHandlers")]
     [Fact]
     public void NotificationRegistration_MultipleHandlers()
     {
@@ -161,12 +166,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -175,9 +180,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Email: alice|Audit: alice", result);
+        ScenarioExpect.Equal("Email: alice|Audit: alice", result);
     }
 
+    [Scenario("NotificationRegistration ZeroHandlers NoOp")]
     [Fact]
     public void NotificationRegistration_ZeroHandlers_NoOp()
     {
@@ -213,12 +219,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -227,9 +233,10 @@ public class DispatcherGeneratorTests
         var task = (Task<bool>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("CommandPipeline PreAndPost")]
     [Fact]
     public void CommandPipeline_PreAndPost()
     {
@@ -275,12 +282,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -289,9 +296,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Pre|Handler|Post:10", result);
+        ScenarioExpect.Equal("Pre|Handler|Post:10", result);
     }
 
+    [Scenario("MissingCommandHandler ThrowsException")]
     [Fact]
     public void MissingCommandHandler_ThrowsException()
     {
@@ -336,12 +344,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -350,9 +358,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("ExpectedException", result);
+        ScenarioExpect.Equal("ExpectedException", result);
     }
 
+    [Scenario("StreamRegistration LazyEnumeration")]
     [Fact]
     public void StreamRegistration_LazyEnumeration()
     {
@@ -406,12 +415,12 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and run
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -420,9 +429,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("1,2,3,4,5", result);
+        ScenarioExpect.Equal("1,2,3,4,5", result);
     }
 
+    [Scenario("ContractsFile DefinesInterfaces")]
     [Fact]
     public void ContractsFile_DefinesInterfaces()
     {
@@ -445,17 +455,18 @@ public class DispatcherGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName == "AppDispatcher.Contracts.g.cs");
 
-        Assert.NotNull(contractsFile);
+        ScenarioExpect.NotNull(contractsFile);
 
         var text = contractsFile.SourceText.ToString();
-        Assert.Contains("interface ICommandHandler<TRequest, TResponse>", text);
-        Assert.Contains("interface INotificationHandler<TNotification>", text);
-        Assert.Contains("interface IStreamHandler<TRequest, TItem>", text);
-        Assert.Contains("delegate ValueTask<TResponse> CommandNext<TResponse>", text);
+        ScenarioExpect.Contains("interface ICommandHandler<TRequest, TResponse>", text);
+        ScenarioExpect.Contains("interface INotificationHandler<TNotification>", text);
+        ScenarioExpect.Contains("interface IStreamHandler<TRequest, TItem>", text);
+        ScenarioExpect.Contains("delegate ValueTask<TResponse> CommandNext<TResponse>", text);
     }
 
     #region Around Middleware Tests
 
+    [Scenario("AroundMiddleware SingleBehavior WrapsHandler")]
     [Fact]
     public void AroundMiddleware_SingleBehavior_WrapsHandler()
     {
@@ -511,11 +522,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -524,9 +535,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Around:Before|Handler:5|Around:After:10|Final:10", result);
+        ScenarioExpect.Equal("Around:Before|Handler:5|Around:After:10|Final:10", result);
     }
 
+    [Scenario("AroundMiddleware MultipleBehaviors ComposesInOrder")]
     [Fact]
     public void AroundMiddleware_MultipleBehaviors_ComposesInOrder()
     {
@@ -588,11 +600,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -603,9 +615,10 @@ public class DispatcherGeneratorTests
 
         // Order: 1 (outer) wraps 2 (inner)
         // Execution: Around1:Before -> Around2:Before -> Handler -> Around2:After -> Around1:After
-        Assert.Equal("Around1:Before|Around2:Before|Handler|Around2:After|Around1:After", result);
+        ScenarioExpect.Equal("Around1:Before|Around2:Before|Handler|Around2:After|Around1:After", result);
     }
 
+    [Scenario("AroundMiddleware ModifiesRequestAndResponse VerifiesNesting")]
     [Fact]
     public void AroundMiddleware_ModifiesRequestAndResponse_VerifiesNesting()
     {
@@ -658,11 +671,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -672,9 +685,10 @@ public class DispatcherGeneratorTests
         var result = task.Result;
 
         // Flow: 5 -> handler(5) -> inner(*2=10) -> outer(+10=20)
-        Assert.Equal(20, result);
+        ScenarioExpect.Equal(20, result);
     }
 
+    [Scenario("AroundMiddleware WithPreAndPost ExecutesInCorrectOrder")]
     [Fact]
     public void AroundMiddleware_WithPreAndPost_ExecutesInCorrectOrder()
     {
@@ -731,11 +745,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -745,13 +759,14 @@ public class DispatcherGeneratorTests
         var result = task.Result;
 
         // Expected: Pre -> Around Before -> Handler -> Around After -> Post
-        Assert.Equal("Pre|Around:Before|Handler|Around:After|Post", result);
+        ScenarioExpect.Equal("Pre|Around:Before|Handler|Around:After|Post", result);
     }
 
     #endregion
 
     #region OnError Handling Tests
 
+    [Scenario("OnError HandlerThrows ExecutesErrorHandler")]
     [Fact]
     public void OnError_HandlerThrows_ExecutesErrorHandler()
     {
@@ -813,11 +828,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -826,9 +841,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Handler:Throwing|OnError:TestError|Caught", result);
+        ScenarioExpect.Equal("Handler:Throwing|OnError:TestError|Caught", result);
     }
 
+    [Scenario("OnError PrePostAndOnError ExecutesCorrectly")]
     [Fact]
     public void OnError_PrePostAndOnError_ExecutesCorrectly()
     {
@@ -884,11 +900,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -898,13 +914,14 @@ public class DispatcherGeneratorTests
         var result = task.Result;
 
         // Pre runs, handler throws, OnError runs, Post does NOT run
-        Assert.Equal("Pre|OnError|Caught", result);
+        ScenarioExpect.Equal("Pre|OnError|Caught", result);
     }
 
     #endregion
 
     #region Stream Pipeline Tests
 
+    [Scenario("StreamPipeline PreHook ExecutesBeforeStream")]
     [Fact]
     public void StreamPipeline_PreHook_ExecutesBeforeStream()
     {
@@ -962,11 +979,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -975,13 +992,14 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("PreStream|Item:1|Item:2|Item:3", result);
+        ScenarioExpect.Equal("PreStream|Item:1|Item:2|Item:3", result);
     }
 
     #endregion
 
     #region Object Overload Tests
 
+    [Scenario("ObjectOverloads Send DispatchesCorrectly")]
     [Fact]
     public void ObjectOverloads_Send_DispatchesCorrectly()
     {
@@ -1030,11 +1048,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -1043,9 +1061,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Result:50", result);
+        ScenarioExpect.Equal("Result:50", result);
     }
 
+    [Scenario("ObjectOverloads Publish DispatchesCorrectly")]
     [Fact]
     public void ObjectOverloads_Publish_DispatchesCorrectly()
     {
@@ -1097,11 +1116,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -1110,9 +1129,10 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Handler:Test", result);
+        ScenarioExpect.Equal("Handler:Test", result);
     }
 
+    [Scenario("ObjectOverloads Stream DispatchesCorrectly")]
     [Fact]
     public void ObjectOverloads_Stream_DispatchesCorrectly()
     {
@@ -1180,11 +1200,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -1196,15 +1216,16 @@ public class DispatcherGeneratorTests
         // Should either be the expected result or an error message
         if (result.StartsWith("ERROR:"))
         {
-            Assert.Fail($"Test threw exception: {result}");
+            ScenarioExpect.Fail($"Test threw exception: {result}");
         }
-        Assert.Equal("10,11,12,13,14", result);
+        ScenarioExpect.Equal("10,11,12,13,14", result);
     }
 
     #endregion
 
     #region Module System Tests
 
+    [Scenario("ModuleSystem AddModule RegistersHandlers")]
     [Fact]
     public void ModuleSystem_AddModule_RegistersHandlers()
     {
@@ -1253,11 +1274,11 @@ public class DispatcherGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success);
+        ScenarioExpect.True(emitResult.Success);
 
         pe.Seek(0, SeekOrigin.Begin);
         var asm = System.Reflection.Assembly.Load(pe.ToArray());
@@ -1266,7 +1287,7 @@ public class DispatcherGeneratorTests
         var task = (Task<string>)run!.Invoke(null, null)!;
         var result = task.Result;
 
-        Assert.Equal("Module:Hello", result);
+        ScenarioExpect.Equal("Module:Hello", result);
     }
 
     #endregion

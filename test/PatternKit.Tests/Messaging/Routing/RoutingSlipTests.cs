@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Routing;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Routing;
 
 public sealed class RoutingSlipTests
 {
+    [Scenario("Execute RunsStepsInOrderAndReturnsFinalMessage")]
     [Fact]
     public void Execute_RunsStepsInOrderAndReturnsFinalMessage()
     {
@@ -24,12 +26,13 @@ public sealed class RoutingSlipTests
 
         var result = slip.Execute(Message<Order>.Create(new Order("order-1", "new")));
 
-        Assert.Equal("validated,reserved", result.Message.Payload.Status);
-        Assert.Equal(["0:validate", "1:reserve"], log);
-        Assert.Equal(["validate", "reserve"], result.CompletedSteps);
-        Assert.Equal(2, result.Count);
+        ScenarioExpect.Equal("validated,reserved", result.Message.Payload.Status);
+        ScenarioExpect.Equal(["0:validate", "1:reserve"], log);
+        ScenarioExpect.Equal(["validate", "reserve"], result.CompletedSteps);
+        ScenarioExpect.Equal(2, result.Count);
     }
 
+    [Scenario("Execute WritesItineraryProgressAndCompletedHeaders")]
     [Fact]
     public void Execute_WritesItineraryProgressAndCompletedHeaders()
     {
@@ -40,13 +43,14 @@ public sealed class RoutingSlipTests
 
         var result = slip.Execute(Message<Order>.Create(new Order("order-1", "new")));
 
-        Assert.True(result.Message.Headers.TryGet<string[]>(MessageHeaderNames.RoutingSlip, out var itinerary));
-        Assert.True(result.Message.Headers.TryGet<string[]>(MessageHeaderNames.RoutingSlipCompleted, out var completed));
-        Assert.Equal(["validate", "ship"], itinerary!);
-        Assert.Equal(["validate", "ship"], completed!);
-        Assert.Equal(2, result.Message.Headers[MessageHeaderNames.RoutingSlipIndex]);
+        ScenarioExpect.True(result.Message.Headers.TryGet<string[]>(MessageHeaderNames.RoutingSlip, out var itinerary));
+        ScenarioExpect.True(result.Message.Headers.TryGet<string[]>(MessageHeaderNames.RoutingSlipCompleted, out var completed));
+        ScenarioExpect.Equal(["validate", "ship"], itinerary!);
+        ScenarioExpect.Equal(["validate", "ship"], completed!);
+        ScenarioExpect.Equal(2, result.Message.Headers[MessageHeaderNames.RoutingSlipIndex]);
     }
 
+    [Scenario("Execute ClearsPreviousCompletedHeader")]
     [Fact]
     public void Execute_ClearsPreviousCompletedHeader()
     {
@@ -59,28 +63,31 @@ public sealed class RoutingSlipTests
 
         var result = slip.Execute(message);
 
-        Assert.Equal(["validate"], Assert.IsType<string[]>(result.Message.Headers[MessageHeaderNames.RoutingSlipCompleted]));
+        ScenarioExpect.Equal(["validate"], ScenarioExpect.IsType<string[]>(result.Message.Headers[MessageHeaderNames.RoutingSlipCompleted]));
     }
 
+    [Scenario("Execute AllowsEmptyItinerary")]
     [Fact]
     public void Execute_AllowsEmptyItinerary()
     {
         var message = Message<Order>.Create(new Order("order-1", "new"));
         var result = RoutingSlip<Order>.Create().Build().Execute(message);
 
-        Assert.Same(message.Payload, result.Message.Payload);
-        Assert.Empty(result.CompletedSteps);
-        Assert.Equal(0, result.Message.Headers[MessageHeaderNames.RoutingSlipIndex]);
+        ScenarioExpect.Same(message.Payload, result.Message.Payload);
+        ScenarioExpect.Empty(result.CompletedSteps);
+        ScenarioExpect.Equal(0, result.Message.Headers[MessageHeaderNames.RoutingSlipIndex]);
     }
 
+    [Scenario("Execute RejectsNullMessage")]
     [Fact]
     public void Execute_RejectsNullMessage()
     {
         var slip = RoutingSlip<Order>.Create().Build();
 
-        Assert.Throws<ArgumentNullException>(() => slip.Execute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => slip.Execute(null!));
     }
 
+    [Scenario("Execute RejectsNullStepResult")]
     [Fact]
     public void Execute_RejectsNullStepResult()
     {
@@ -88,18 +95,20 @@ public sealed class RoutingSlipTests
             .Step("bad", (_, _) => null!)
             .Build();
 
-        Assert.Throws<InvalidOperationException>(() => slip.Execute(Message<Order>.Create(new Order("order-1", "new"))));
+        ScenarioExpect.Throws<InvalidOperationException>(() => slip.Execute(Message<Order>.Create(new Order("order-1", "new"))));
     }
 
+    [Scenario("Builder RejectsInvalidArguments")]
     [Fact]
     public void Builder_RejectsInvalidArguments()
     {
         var builder = RoutingSlip<Order>.Create();
 
-        Assert.Throws<ArgumentException>(() => builder.Step("", (m, _) => m));
-        Assert.Throws<ArgumentNullException>(() => builder.Step("validate", null!));
+        ScenarioExpect.Throws<ArgumentException>(() => builder.Step("", (m, _) => m));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.Step("validate", null!));
     }
 
+    [Scenario("RoutingSlipResult RejectsInvalidArgumentsAndCopiesSteps")]
     [Fact]
     public void RoutingSlipResult_RejectsInvalidArgumentsAndCopiesSteps()
     {
@@ -108,11 +117,12 @@ public sealed class RoutingSlipTests
 
         steps.Add("ship");
 
-        Assert.Equal(["validate"], result.CompletedSteps);
-        Assert.Throws<ArgumentNullException>(() => new RoutingSlipResult<Order>(null!, steps));
-        Assert.Throws<ArgumentNullException>(() => new RoutingSlipResult<Order>(Message<Order>.Create(new Order("order-1", "new")), null!));
+        ScenarioExpect.Equal(["validate"], result.CompletedSteps);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new RoutingSlipResult<Order>(null!, steps));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new RoutingSlipResult<Order>(Message<Order>.Create(new Order("order-1", "new")), null!));
     }
 
+    [Scenario("AsyncExecute RunsStepsInOrder")]
     [Fact]
     public async Task AsyncExecute_RunsStepsInOrder()
     {
@@ -132,11 +142,12 @@ public sealed class RoutingSlipTests
 
         var result = await slip.ExecuteAsync(Message<Order>.Create(new Order("order-1", "new")));
 
-        Assert.Equal(["validate", "ship"], log);
-        Assert.Equal("validated,shipped", result.Message.Payload.Status);
-        Assert.Equal(["validate", "ship"], result.CompletedSteps);
+        ScenarioExpect.Equal(["validate", "ship"], log);
+        ScenarioExpect.Equal("validated,shipped", result.Message.Payload.Status);
+        ScenarioExpect.Equal(["validate", "ship"], result.CompletedSteps);
     }
 
+    [Scenario("AsyncExecute ObservesCancellation")]
     [Fact]
     public async Task AsyncExecute_ObservesCancellation()
     {
@@ -146,10 +157,11 @@ public sealed class RoutingSlipTests
             .Step("validate", (m, _, _) => new ValueTask<Message<Order>>(m))
             .Build();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await slip.ExecuteAsync(Message<Order>.Create(new Order("order-1", "new")), cancellationToken: cts.Token));
     }
 
+    [Scenario("AsyncExecute PreservesProvidedContextCancellationWhenNoTokenIsSupplied")]
     [Fact]
     public async Task AsyncExecute_PreservesProvidedContextCancellationWhenNoTokenIsSupplied()
     {
@@ -159,7 +171,7 @@ public sealed class RoutingSlipTests
             .Step("validate", (m, ctx, token) =>
             {
                 seenToken = ctx.CancellationToken;
-                Assert.Equal(CancellationToken.None, token);
+                ScenarioExpect.Equal(CancellationToken.None, token);
                 return new ValueTask<Message<Order>>(m);
             })
             .Build();
@@ -167,9 +179,10 @@ public sealed class RoutingSlipTests
 
         await slip.ExecuteAsync(Message<Order>.Create(new Order("order-1", "new")), context);
 
-        Assert.Equal(cts.Token, seenToken);
+        ScenarioExpect.Equal(cts.Token, seenToken);
     }
 
+    [Scenario("AsyncExecute UsesExplicitCancellationTokenOverProvidedContext")]
     [Fact]
     public async Task AsyncExecute_UsesExplicitCancellationTokenOverProvidedContext()
     {
@@ -187,30 +200,32 @@ public sealed class RoutingSlipTests
 
         await slip.ExecuteAsync(Message<Order>.Create(new Order("order-1", "new")), context, callCts.Token);
 
-        Assert.Equal(callCts.Token, seenToken);
+        ScenarioExpect.Equal(callCts.Token, seenToken);
     }
 
+    [Scenario("AsyncExecute RejectsNullMessageAndStepResult")]
     [Fact]
     public async Task AsyncExecute_RejectsNullMessageAndStepResult()
     {
         var valid = AsyncRoutingSlip<Order>.Create().Build();
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await valid.ExecuteAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await valid.ExecuteAsync(null!));
 
         var invalid = AsyncRoutingSlip<Order>.Create()
             .Step("bad", (_, _, _) => new ValueTask<Message<Order>>((Message<Order>)null!))
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
             await invalid.ExecuteAsync(Message<Order>.Create(new Order("order-1", "new"))));
     }
 
+    [Scenario("AsyncBuilder RejectsInvalidArguments")]
     [Fact]
     public void AsyncBuilder_RejectsInvalidArguments()
     {
         var builder = AsyncRoutingSlip<Order>.Create();
 
-        Assert.Throws<ArgumentException>(() => builder.Step("", (m, _, _) => new ValueTask<Message<Order>>(m)));
-        Assert.Throws<ArgumentNullException>(() => builder.Step("validate", null!));
+        ScenarioExpect.Throws<ArgumentException>(() => builder.Step("", (m, _, _) => new ValueTask<Message<Order>>(m)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.Step("validate", null!));
     }
 
     private sealed record Order(string Id, string Status);

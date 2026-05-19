@@ -72,7 +72,7 @@ public sealed class CompositeTests(ITestOutputHelper output) : TinyBddXunitBase(
     [Fact]
     public Task Build_Misuse_Throws()
         => Given("a builder-like misuse simulation", () => (Composite<int, int>.Builder?)null)
-            .When("calling Node with nulls is impossible at compile time; instead simulate by reflection? skip; assert leaf works", _ =>
+            .When("calling Node with nulls is impossible at compile time; instead simulate by reflection? skip; verify leaf works", _ =>
             {
                 var ex = Record.Exception(() => Composite<int, int>.Leaf(static (in x) => x).Build());
                 return ex;

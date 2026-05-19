@@ -150,6 +150,7 @@ public sealed class MediatorDemoTests(ITestOutputHelper output) : TinyBddXunitBa
             })
             .AssertPassed();
 
+    [Scenario("LoggingBehavior Runs Before And After")]
     [Fact]
     public Task LoggingBehavior_Runs_Before_And_After()
         => Given("a mediator with logging whole behavior", () =>
@@ -180,6 +181,7 @@ public sealed class MediatorDemoTests(ITestOutputHelper output) : TinyBddXunitBa
             .Then("log contains before and after", t => t.Item2.Contains("before") && t.Item2.Contains("after"))
             .AssertPassed();
 
+    [Scenario("ExceptionBehavior Catches And Logs")]
     [Fact]
     public Task ExceptionBehavior_Catches_And_Logs()
         => Given("a mediator with exception-catching whole behavior", () =>
@@ -219,6 +221,7 @@ public sealed class MediatorDemoTests(ITestOutputHelper output) : TinyBddXunitBa
             .Then("log contains caught", log => log.Exists(l => l.StartsWith("caught:")))
             .AssertPassed();
 
+    [Scenario("ValidationBehavior ShortCircuits On Invalid")]
     [Fact]
     public Task ValidationBehavior_ShortCircuits_On_Invalid()
         => Given("a mediator with validation pre behavior", () =>
@@ -250,6 +253,7 @@ public sealed class MediatorDemoTests(ITestOutputHelper output) : TinyBddXunitBa
             .Then("throws ArgumentException", ex => ex is ArgumentException)
             .AssertPassed();
 
+    [Scenario("MultipleBehaviors Compose In Order")]
     [Fact]
     public Task MultipleBehaviors_Compose_In_Order()
         => Given("a mediator with multiple behaviors", () =>

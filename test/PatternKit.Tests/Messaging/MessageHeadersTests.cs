@@ -1,47 +1,53 @@
 using System.Collections;
 using PatternKit.Messaging;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging;
 
 public sealed class MessageHeadersTests
 {
+    [Scenario("Empty HasNoValues")]
     [Fact]
     public void Empty_HasNoValues()
     {
-        Assert.Empty(MessageHeaders.Empty);
-        Assert.Null(MessageHeaders.Empty.MessageId);
+        ScenarioExpect.Empty(MessageHeaders.Empty);
+        ScenarioExpect.Null(MessageHeaders.Empty.MessageId);
     }
 
+    [Scenario("Constructor CreatesEmptyCollection")]
     [Fact]
     public void Constructor_CreatesEmptyCollection()
     {
         var headers = new MessageHeaders();
 
-        Assert.True(headers.Count == 0);
-        Assert.Empty(headers.Keys);
-        Assert.Empty(headers.Values);
+        ScenarioExpect.True(headers.Count == 0);
+        ScenarioExpect.Empty(headers.Keys);
+        ScenarioExpect.Empty(headers.Values);
     }
 
+    [Scenario("With ReturnsNewCollection WithoutMutatingOriginal")]
     [Fact]
     public void With_ReturnsNewCollection_WithoutMutatingOriginal()
     {
         var original = MessageHeaders.Empty;
         var updated = original.With("tenant", "north");
 
-        Assert.False(original.ContainsKey("tenant"));
-        Assert.True(updated.ContainsKey("tenant"));
-        Assert.Equal("north", updated.GetString("tenant"));
+        ScenarioExpect.False(original.ContainsKey("tenant"));
+        ScenarioExpect.True(updated.ContainsKey("tenant"));
+        ScenarioExpect.Equal("north", updated.GetString("tenant"));
     }
 
+    [Scenario("Headers AreCaseInsensitive")]
     [Fact]
     public void Headers_AreCaseInsensitive()
     {
         var headers = MessageHeaders.Empty.With("Correlation-Id", "corr-1");
 
-        Assert.True(headers.ContainsKey("correlation-id"));
-        Assert.Equal("corr-1", headers.CorrelationId);
+        ScenarioExpect.True(headers.ContainsKey("correlation-id"));
+        ScenarioExpect.Equal("corr-1", headers.CorrelationId);
     }
 
+    [Scenario("WellKnownHeaders AreExposedAsProperties")]
     [Fact]
     public void WellKnownHeaders_AreExposedAsProperties()
     {
@@ -56,44 +62,48 @@ public sealed class MessageHeadersTests
             .WithReplyTo("queue:reply")
             .WithTimestamp(timestamp);
 
-        Assert.Equal("msg-1", headers.MessageId);
-        Assert.Equal("corr-1", headers.CorrelationId);
-        Assert.Equal("cause-1", headers.CausationId);
-        Assert.Equal("idem-1", headers.IdempotencyKey);
-        Assert.Equal("application/json", headers.ContentType);
-        Assert.Equal("queue:reply", headers.ReplyTo);
-        Assert.Equal(timestamp, headers.Timestamp);
+        ScenarioExpect.Equal("msg-1", headers.MessageId);
+        ScenarioExpect.Equal("corr-1", headers.CorrelationId);
+        ScenarioExpect.Equal("cause-1", headers.CausationId);
+        ScenarioExpect.Equal("idem-1", headers.IdempotencyKey);
+        ScenarioExpect.Equal("application/json", headers.ContentType);
+        ScenarioExpect.Equal("queue:reply", headers.ReplyTo);
+        ScenarioExpect.Equal(timestamp, headers.Timestamp);
     }
 
+    [Scenario("Indexer And TryGetValue ReadExistingValue")]
     [Fact]
     public void Indexer_And_TryGetValue_ReadExistingValue()
     {
         var headers = MessageHeaders.Empty.With("tenant", "north");
 
-        Assert.Equal("north", headers["tenant"]);
-        Assert.True(headers.TryGetValue("tenant", out var value));
-        Assert.Equal("north", value);
+        ScenarioExpect.Equal("north", headers["tenant"]);
+        ScenarioExpect.True(headers.TryGetValue("tenant", out var value));
+        ScenarioExpect.Equal("north", value);
     }
 
+    [Scenario("Without RemovesExistingValue WithoutMutatingOriginal")]
     [Fact]
     public void Without_RemovesExistingValue_WithoutMutatingOriginal()
     {
         var original = MessageHeaders.Empty.With("tenant", "north");
         var updated = original.Without("tenant");
 
-        Assert.True(original.ContainsKey("tenant"));
-        Assert.False(updated.ContainsKey("tenant"));
-        Assert.Same(MessageHeaders.Empty, updated);
+        ScenarioExpect.True(original.ContainsKey("tenant"));
+        ScenarioExpect.False(updated.ContainsKey("tenant"));
+        ScenarioExpect.Same(MessageHeaders.Empty, updated);
     }
 
+    [Scenario("Without MissingValue ReturnsSameInstance")]
     [Fact]
     public void Without_MissingValue_ReturnsSameInstance()
     {
         var headers = MessageHeaders.Empty.With("tenant", "north");
 
-        Assert.Same(headers, headers.Without("missing"));
+        ScenarioExpect.Same(headers, headers.Without("missing"));
     }
 
+    [Scenario("Constructor CopiesInputDictionary")]
     [Fact]
     public void Constructor_CopiesInputDictionary()
     {
@@ -102,15 +112,17 @@ public sealed class MessageHeadersTests
 
         source["tenant"] = "south";
 
-        Assert.Equal("north", headers.GetString("tenant"));
+        ScenarioExpect.Equal("north", headers.GetString("tenant"));
     }
 
+    [Scenario("Constructor RejectsNullInput")]
     [Fact]
     public void Constructor_RejectsNullInput()
     {
-        Assert.Throws<ArgumentNullException>(() => new MessageHeaders(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new MessageHeaders(null!));
     }
 
+    [Scenario("Constructor RejectsInvalidHeaderNames")]
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
@@ -118,36 +130,40 @@ public sealed class MessageHeadersTests
     {
         var values = new[] { new KeyValuePair<string, object?>(name, "value") };
 
-        Assert.Throws<ArgumentException>(() => new MessageHeaders(values));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageHeaders(values));
     }
 
+    [Scenario("TryGet ReadsTypedValues")]
     [Fact]
     public void TryGet_ReadsTypedValues()
     {
         var headers = MessageHeaders.Empty.With("attempt", 3);
 
-        Assert.True(headers.TryGet<int>("attempt", out var attempt));
-        Assert.Equal(3, attempt);
-        Assert.False(headers.TryGet<string>("attempt", out _));
+        ScenarioExpect.True(headers.TryGet<int>("attempt", out var attempt));
+        ScenarioExpect.Equal(3, attempt);
+        ScenarioExpect.False(headers.TryGet<string>("attempt", out _));
     }
 
+    [Scenario("GetString ConvertsNonStringValues")]
     [Fact]
     public void GetString_ConvertsNonStringValues()
     {
         var headers = MessageHeaders.Empty.With("attempt", 3);
 
-        Assert.Equal("3", headers.GetString("attempt"));
+        ScenarioExpect.Equal("3", headers.GetString("attempt"));
     }
 
+    [Scenario("GetString ReturnsNullForMissingOrNullValues")]
     [Fact]
     public void GetString_ReturnsNullForMissingOrNullValues()
     {
         var headers = MessageHeaders.Empty.With("empty", null);
 
-        Assert.Null(headers.GetString("missing"));
-        Assert.Null(headers.GetString("empty"));
+        ScenarioExpect.Null(headers.GetString("missing"));
+        ScenarioExpect.Null(headers.GetString("empty"));
     }
 
+    [Scenario("TryGetGuid ReadsGuidAndStringValues")]
     [Fact]
     public void TryGetGuid_ReadsGuidAndStringValues()
     {
@@ -156,23 +172,25 @@ public sealed class MessageHeadersTests
             .With("typed", id)
             .With("text", id.ToString("D"));
 
-        Assert.True(headers.TryGetGuid("typed", out var typed));
-        Assert.True(headers.TryGetGuid("text", out var text));
-        Assert.Equal(id, typed);
-        Assert.Equal(id, text);
+        ScenarioExpect.True(headers.TryGetGuid("typed", out var typed));
+        ScenarioExpect.True(headers.TryGetGuid("text", out var text));
+        ScenarioExpect.Equal(id, typed);
+        ScenarioExpect.Equal(id, text);
     }
 
+    [Scenario("TryGetGuid ReturnsFalseForMissingOrInvalidValues")]
     [Fact]
     public void TryGetGuid_ReturnsFalseForMissingOrInvalidValues()
     {
         var headers = MessageHeaders.Empty.With("operation-id", "not-a-guid");
 
-        Assert.False(headers.TryGetGuid("missing", out var missing));
-        Assert.False(headers.TryGetGuid("operation-id", out var invalid));
-        Assert.Equal(Guid.Empty, missing);
-        Assert.Equal(Guid.Empty, invalid);
+        ScenarioExpect.False(headers.TryGetGuid("missing", out var missing));
+        ScenarioExpect.False(headers.TryGetGuid("operation-id", out var invalid));
+        ScenarioExpect.Equal(Guid.Empty, missing);
+        ScenarioExpect.Equal(Guid.Empty, invalid);
     }
 
+    [Scenario("TryGetDateTimeOffset ReadsDateTimeOffsetDateTimeAndStringValues")]
     [Fact]
     public void TryGetDateTimeOffset_ReadsDateTimeOffsetDateTimeAndStringValues()
     {
@@ -183,59 +201,64 @@ public sealed class MessageHeadersTests
             .With("date", dateTime)
             .With("text", timestamp.ToString("O"));
 
-        Assert.True(headers.TryGetDateTimeOffset("dto", out var dto));
-        Assert.True(headers.TryGetDateTimeOffset("date", out var date));
-        Assert.True(headers.TryGetDateTimeOffset("text", out var text));
-        Assert.Equal(timestamp, dto);
-        Assert.Equal(new DateTimeOffset(dateTime), date);
-        Assert.Equal(timestamp, text);
+        ScenarioExpect.True(headers.TryGetDateTimeOffset("dto", out var dto));
+        ScenarioExpect.True(headers.TryGetDateTimeOffset("date", out var date));
+        ScenarioExpect.True(headers.TryGetDateTimeOffset("text", out var text));
+        ScenarioExpect.Equal(timestamp, dto);
+        ScenarioExpect.Equal(new DateTimeOffset(dateTime), date);
+        ScenarioExpect.Equal(timestamp, text);
     }
 
+    [Scenario("Timestamp ReturnsNullWhenHeaderIsMissingOrInvalid")]
     [Fact]
     public void Timestamp_ReturnsNullWhenHeaderIsMissingOrInvalid()
     {
-        Assert.Null(MessageHeaders.Empty.Timestamp);
-        Assert.Null(MessageHeaders.Empty.With(MessageHeaderNames.Timestamp, "not-a-date").Timestamp);
+        ScenarioExpect.Null(MessageHeaders.Empty.Timestamp);
+        ScenarioExpect.Null(MessageHeaders.Empty.With(MessageHeaderNames.Timestamp, "not-a-date").Timestamp);
     }
 
+    [Scenario("TryGetDateTimeOffset ReturnsFalseForMissingOrInvalidValues")]
     [Fact]
     public void TryGetDateTimeOffset_ReturnsFalseForMissingOrInvalidValues()
     {
         var headers = MessageHeaders.Empty.With("accepted-at", "not-a-date");
 
-        Assert.False(headers.TryGetDateTimeOffset("missing", out var missing));
-        Assert.False(headers.TryGetDateTimeOffset("accepted-at", out var invalid));
-        Assert.Equal(default, missing);
-        Assert.Equal(default, invalid);
+        ScenarioExpect.False(headers.TryGetDateTimeOffset("missing", out var missing));
+        ScenarioExpect.False(headers.TryGetDateTimeOffset("accepted-at", out var invalid));
+        ScenarioExpect.Equal(default, missing);
+        ScenarioExpect.Equal(default, invalid);
     }
 
+    [Scenario("Enumerators ReturnHeaderPairs")]
     [Fact]
     public void Enumerators_ReturnHeaderPairs()
     {
         var headers = MessageHeaders.Empty.With("tenant", "north");
 
-        Assert.Contains(headers, pair => pair.Key == "tenant" && (string?)pair.Value == "north");
+        ScenarioExpect.Contains(headers, pair => pair.Key == "tenant" && (string?)pair.Value == "north");
 
         var enumerator = ((IEnumerable)headers).GetEnumerator();
-        Assert.True(enumerator.MoveNext());
-        var pair = Assert.IsType<KeyValuePair<string, object?>>(enumerator.Current);
-        Assert.Equal("tenant", pair.Key);
-        Assert.Equal("north", pair.Value);
+        ScenarioExpect.True(enumerator.MoveNext());
+        var pair = ScenarioExpect.IsType<KeyValuePair<string, object?>>(enumerator.Current);
+        ScenarioExpect.Equal("tenant", pair.Key);
+        ScenarioExpect.Equal("north", pair.Value);
     }
 
+    [Scenario("With RejectsInvalidHeaderNames")]
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
     public void With_RejectsInvalidHeaderNames(string name)
     {
-        Assert.Throws<ArgumentException>(() => MessageHeaders.Empty.With(name, "value"));
+        ScenarioExpect.Throws<ArgumentException>(() => MessageHeaders.Empty.With(name, "value"));
     }
 
+    [Scenario("WellKnownStringHeaders RejectInvalidValues")]
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
     public void WellKnownStringHeaders_RejectInvalidValues(string value)
     {
-        Assert.Throws<ArgumentException>(() => MessageHeaders.Empty.WithCorrelationId(value));
+        ScenarioExpect.Throws<ArgumentException>(() => MessageHeaders.Empty.WithCorrelationId(value));
     }
 }

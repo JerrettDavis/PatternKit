@@ -9,6 +9,7 @@ namespace PatternKit.Examples.Tests.ObserverGeneratorDemo;
 [Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
 public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("TemperatureChanged PublishesToSubscribersInOrder")]
     [Fact]
     public void TemperatureChanged_PublishesToSubscribersInOrder()
     {
@@ -20,9 +21,10 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
 
         changed.Publish(new TemperatureReading("sensor-a", 21.5, DateTime.UtcNow));
 
-        Assert.Equal(["first:sensor-a:21.5", "second:sensor-a:21.5"], received);
+        ScenarioExpect.Equal(["first:sensor-a:21.5", "second:sensor-a:21.5"], received);
     }
 
+    [Scenario("TemperatureChanged DisposedSubscription IsNotInvoked")]
     [Fact]
     public void TemperatureChanged_DisposedSubscription_IsNotInvoked()
     {
@@ -34,9 +36,10 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
         subscription.Dispose();
         changed.Publish(new TemperatureReading("sensor-a", 21, DateTime.UtcNow));
 
-        Assert.Equal(1, count);
+        ScenarioExpect.Equal(1, count);
     }
 
+    [Scenario("TemperatureAlertRaised StopPolicy DoesNotStopSubsequentGeneratedSubscribers")]
     [Fact]
     public void TemperatureAlertRaised_StopPolicy_DoesNotStopSubsequentGeneratedSubscribers()
     {
@@ -47,9 +50,10 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
 
         alertRaised.Publish(new TemperatureAlert("sensor-a", 30, 25));
 
-        Assert.True(handled);
+        ScenarioExpect.True(handled);
     }
 
+    [Scenario("NotificationPublished AwaitsAsyncSubscribers")]
     [Fact]
     public async Task NotificationPublished_AwaitsAsyncSubscribers()
     {
@@ -64,9 +68,10 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
 
         await published.PublishAsync(new Notification("user-1", "hello", 1));
 
-        Assert.Equal(["user-1"], received);
+        ScenarioExpect.Equal(["user-1"], received);
     }
 
+    [Scenario("NotificationSent ContinuesAfterSubscriberExceptions")]
     [Fact]
     public void NotificationSent_ContinuesAfterSubscriberExceptions()
     {
@@ -78,9 +83,10 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
 
         sent.Publish(new NotificationResult(true, "Email"));
 
-        Assert.True(handled);
+        ScenarioExpect.True(handled);
     }
 
+    [Scenario("NotificationSystem SendsThroughRegisteredAsyncHandlers")]
     [Fact]
     public async Task NotificationSystem_SendsThroughRegisteredAsyncHandlers()
     {
@@ -96,9 +102,9 @@ public sealed class ObserverGeneratorDemoTests(ITestOutputHelper output) : TinyB
 
         await system.SendAsync(new Notification("user-1", "hello", 1));
 
-        var result = Assert.Single(results);
-        Assert.True(result.Success);
-        Assert.Equal("Push", result.Channel);
+        var result = ScenarioExpect.Single(results);
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.Equal("Push", result.Channel);
     }
 
     [Scenario("Temperature monitor publishes readings, alerts, subscriber failures, and lifecycle disposal")]

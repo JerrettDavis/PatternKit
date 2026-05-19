@@ -1,11 +1,13 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using PatternKit.Generators.Messaging;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public sealed class ContentRouterGeneratorTests
 {
+    [Scenario("GeneratesContentRouterFactory")]
     [Fact]
     public void GeneratesContentRouterFactory()
     {
@@ -47,19 +49,20 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, result => Assert.Empty(result.Diagnostics));
-        var generated = Assert.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        Assert.Equal("OrderRouter.ContentRouter.g.cs", generated.HintName);
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        ScenarioExpect.Equal("OrderRouter.ContentRouter.g.cs", generated.HintName);
         var text = generated.SourceText.ToString();
-        Assert.Contains(".When(IsWholesale).Then(Wholesale)", text);
-        Assert.Contains(".When(IsRetail).Then(Retail)", text);
-        Assert.Contains(".Default(Default)", text);
-        Assert.True(text.IndexOf("IsWholesale", StringComparison.Ordinal) < text.IndexOf("IsRetail", StringComparison.Ordinal));
+        ScenarioExpect.Contains(".When(IsWholesale).Then(Wholesale)", text);
+        ScenarioExpect.Contains(".When(IsRetail).Then(Retail)", text);
+        ScenarioExpect.Contains(".Default(Default)", text);
+        ScenarioExpect.True(text.IndexOf("IsWholesale", StringComparison.Ordinal) < text.IndexOf("IsRetail", StringComparison.Ordinal));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsDiagnosticForNonPartialRouter")]
     [Fact]
     public void ReportsDiagnosticForNonPartialRouter()
     {
@@ -85,10 +88,11 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKCR001", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKCR001", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForMissingRoutes")]
     [Fact]
     public void ReportsDiagnosticForMissingRoutes()
     {
@@ -107,10 +111,11 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKCR002", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKCR002", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidRouteSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidRouteSignature()
     {
@@ -136,10 +141,11 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKCR003", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKCR003", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidDefaultSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidDefaultSignature()
     {
@@ -168,10 +174,11 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKCR004", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKCR004", diagnostic.Id);
     }
 
+    [Scenario("ReportsDiagnosticForDuplicateRouteNameOrOrder")]
     [Fact]
     public void ReportsDiagnosticForDuplicateRouteNameOrOrder()
     {
@@ -201,8 +208,8 @@ public sealed class ContentRouterGeneratorTests
         var gen = new ContentRouterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = Assert.Single(run.Results.SelectMany(result => result.Diagnostics));
-        Assert.Equal("PKCR005", diagnostic.Id);
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKCR005", diagnostic.Id);
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

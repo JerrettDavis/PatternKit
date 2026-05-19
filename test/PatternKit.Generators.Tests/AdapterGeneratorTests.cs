@@ -1,10 +1,12 @@
 using Microsoft.CodeAnalysis;
 using PatternKit.Generators.Adapter;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class AdapterGeneratorTests
 {
+    [Scenario("GenerateSimpleAdapter")]
     [Fact]
     public void GenerateSimpleAdapter()
     {
@@ -36,11 +38,11 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Adapter file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.LegacyClockToIClockAdapter.Adapter.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.LegacyClockToIClockAdapter.Adapter.g.cs", names);
 
         // Generated code contains expected shape
         var generatedSource = result.Results
@@ -48,15 +50,16 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.LegacyClockToIClockAdapter.Adapter.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public sealed partial class LegacyClockToIClockAdapter : global::TestNamespace.IClock", generatedSource);
-        Assert.Contains("private readonly global::TestNamespace.LegacyClock _adaptee;", generatedSource);
-        Assert.Contains("public LegacyClockToIClockAdapter(global::TestNamespace.LegacyClock adaptee)", generatedSource);
+        ScenarioExpect.Contains("public sealed partial class LegacyClockToIClockAdapter : global::TestNamespace.IClock", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNamespace.LegacyClock _adaptee;", generatedSource);
+        ScenarioExpect.Contains("public LegacyClockToIClockAdapter(global::TestNamespace.LegacyClock adaptee)", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAdapterWithMethods")]
     [Fact]
     public void GenerateAdapterWithMethods()
     {
@@ -97,7 +100,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code contains method
         var generatedSource = result.Results
@@ -105,13 +108,14 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("LegacyClockToIClockAdapter"))
             .SourceText.ToString();
 
-        Assert.Contains("public global::System.Threading.Tasks.ValueTask DelayAsync", generatedSource);
+        ScenarioExpect.Contains("public global::System.Threading.Tasks.ValueTask DelayAsync", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAdapterWithCustomName")]
     [Fact]
     public void GenerateAdapterWithCustomName()
     {
@@ -143,16 +147,17 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Custom named adapter file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.ClockAdapter.Adapter.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.ClockAdapter.Adapter.g.cs", names);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenHostNotStaticPartial")]
     [Fact]
     public void ErrorWhenHostNotStaticPartial()
     {
@@ -180,9 +185,10 @@ public class AdapterGeneratorTests
 
         // PKADP001 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP001");
     }
 
+    [Scenario("ErrorWhenTargetNotInterfaceOrAbstract")]
     [Fact]
     public void ErrorWhenTargetNotInterfaceOrAbstract()
     {
@@ -208,9 +214,10 @@ public class AdapterGeneratorTests
 
         // PKADP002 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP002");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP002");
     }
 
+    [Scenario("ErrorWhenMissingMapping")]
     [Fact]
     public void ErrorWhenMissingMapping()
     {
@@ -242,9 +249,10 @@ public class AdapterGeneratorTests
 
         // PKADP003 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP003");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP003");
     }
 
+    [Scenario("ErrorWhenDuplicateMapping")]
     [Fact]
     public void ErrorWhenDuplicateMapping()
     {
@@ -277,9 +285,10 @@ public class AdapterGeneratorTests
 
         // PKADP004 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP004");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP004");
     }
 
+    [Scenario("ErrorWhenSignatureMismatch")]
     [Fact]
     public void ErrorWhenSignatureMismatch()
     {
@@ -309,9 +318,10 @@ public class AdapterGeneratorTests
 
         // PKADP005 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP005");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP005");
     }
 
+    [Scenario("GenerateThrowingStubWhenPolicySet")]
     [Fact]
     public void GenerateThrowingStubWhenPolicySet()
     {
@@ -342,7 +352,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics (ThrowingStub policy allows missing maps)
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code contains throwing stub
         var generatedSource = result.Results
@@ -350,13 +360,14 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.Contains("throw new global::System.NotImplementedException", generatedSource);
+        ScenarioExpect.Contains("throw new global::System.NotImplementedException", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAdapterWithAbstractClassTarget")]
     [Fact]
     public void GenerateAdapterWithAbstractClassTarget()
     {
@@ -388,7 +399,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Adapter inherits from abstract class
         var generatedSource = result.Results
@@ -396,12 +407,13 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.Contains(": global::TestNamespace.ClockBase", generatedSource);
+        ScenarioExpect.Contains(": global::TestNamespace.ClockBase", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateMultipleAdaptersFromSameHost")]
     [Fact]
     public void GenerateMultipleAdaptersFromSameHost()
     {
@@ -440,17 +452,18 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Both adapters are generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains(names, n => n.Contains("LegacyClockToIClockAdapter"));
-        Assert.Contains(names, n => n.Contains("LegacyTimerToITimerAdapter"));
+        ScenarioExpect.Contains(names, n => n.Contains("LegacyClockToIClockAdapter"));
+        ScenarioExpect.Contains(names, n => n.Contains("LegacyTimerToITimerAdapter"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAdapterInGlobalNamespace")]
     [Fact]
     public void GenerateAdapterInGlobalNamespace()
     {
@@ -473,7 +486,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Adapter is generated without namespace
         var generatedSource = result.Results
@@ -481,12 +494,13 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.DoesNotContain("namespace", generatedSource);
+        ScenarioExpect.DoesNotContain("namespace", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateNonSealedAdapter")]
     [Fact]
     public void GenerateNonSealedAdapter()
     {
@@ -515,13 +529,14 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.DoesNotContain("sealed", generatedSource);
-        Assert.Contains("public partial class", generatedSource);
+        ScenarioExpect.DoesNotContain("sealed", generatedSource);
+        ScenarioExpect.Contains("public partial class", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAdapterWithMethodParameters")]
     [Fact]
     public void GenerateAdapterWithMethodParameters()
     {
@@ -558,20 +573,21 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.Contains("public int Add(int a, int b)", generatedSource);
-        Assert.Contains("public int Multiply(int x, int y)", generatedSource);
+        ScenarioExpect.Contains("public int Add(int a, int b)", generatedSource);
+        ScenarioExpect.Contains("public int Multiply(int x, int y)", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenAdapteeIsAbstract")]
     [Fact]
     public void ErrorWhenAdapteeIsAbstract()
     {
@@ -597,9 +613,10 @@ public class AdapterGeneratorTests
 
         // PKADP007 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP007");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP007");
     }
 
+    [Scenario("ErrorWhenMappingMethodNotStatic")]
     [Fact]
     public void ErrorWhenMappingMethodNotStatic()
     {
@@ -629,9 +646,10 @@ public class AdapterGeneratorTests
 
         // PKADP008 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP008");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP008");
     }
 
+    [Scenario("MultipleAdaptersWithOverlappingMemberNames")]
     [Fact]
     public void MultipleAdaptersWithOverlappingMemberNames()
     {
@@ -664,17 +682,18 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics (mappings are distinguished by adaptee type)
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Both adapters generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains(names, n => n.Contains("LegacyClockToIClockAdapter"));
-        Assert.Contains(names, n => n.Contains("LegacyTimerToITimerAdapter"));
+        ScenarioExpect.Contains(names, n => n.Contains("LegacyClockToIClockAdapter"));
+        ScenarioExpect.Contains(names, n => n.Contains("LegacyTimerToITimerAdapter"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("InterfaceDiamondDeduplication")]
     [Fact]
     public void InterfaceDiamondDeduplication()
     {
@@ -711,7 +730,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Should only have one DoWork method in generated code, not duplicates
         var generatedSource = result.Results
@@ -720,12 +739,13 @@ public class AdapterGeneratorTests
             .SourceText.ToString();
 
         var doWorkCount = generatedSource.Split("public void DoWork()").Length - 1;
-        Assert.Equal(1, doWorkCount);
+        ScenarioExpect.Equal(1, doWorkCount);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("RefParameterValidation")]
     [Fact]
     public void RefParameterValidation()
     {
@@ -755,9 +775,10 @@ public class AdapterGeneratorTests
 
         // PKADP005 diagnostic is reported for ref kind mismatch
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind"));
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind"));
     }
 
+    [Scenario("ErrorWhenTargetHasEvents")]
     [Fact]
     public void ErrorWhenTargetHasEvents()
     {
@@ -784,9 +805,10 @@ public class AdapterGeneratorTests
 
         // PKADP009 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP009");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP009");
     }
 
+    [Scenario("ErrorWhenTargetHasGenericMethods")]
     [Fact]
     public void ErrorWhenTargetHasGenericMethods()
     {
@@ -812,9 +834,10 @@ public class AdapterGeneratorTests
 
         // PKADP010 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP010");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP010");
     }
 
+    [Scenario("ErrorWhenTargetHasOverloadedMethods")]
     [Fact]
     public void ErrorWhenTargetHasOverloadedMethods()
     {
@@ -841,9 +864,10 @@ public class AdapterGeneratorTests
 
         // PKADP011 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP011");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP011");
     }
 
+    [Scenario("ErrorWhenAbstractClassHasNoParameterlessCtor")]
     [Fact]
     public void ErrorWhenAbstractClassHasNoParameterlessCtor()
     {
@@ -874,9 +898,10 @@ public class AdapterGeneratorTests
 
         // PKADP012 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP012");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP012");
     }
 
+    [Scenario("ErrorWhenAdapterTypeNameConflicts")]
     [Fact]
     public void ErrorWhenAdapterTypeNameConflicts()
     {
@@ -909,9 +934,10 @@ public class AdapterGeneratorTests
 
         // PKADP006 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP006");
     }
 
+    [Scenario("StructAdapteeNoNullCheck")]
     [Fact]
     public void StructAdapteeNoNullCheck()
     {
@@ -943,7 +969,7 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code should NOT have null check for struct
         var generatedSource = result.Results
@@ -951,13 +977,14 @@ public class AdapterGeneratorTests
             .First(gs => gs.HintName.Contains("Adapter"))
             .SourceText.ToString();
 
-        Assert.DoesNotContain("throw new global::System.ArgumentNullException", generatedSource);
-        Assert.Contains("_adaptee = adaptee;", generatedSource);
+        ScenarioExpect.DoesNotContain("throw new global::System.ArgumentNullException", generatedSource);
+        ScenarioExpect.Contains("_adaptee = adaptee;", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenTargetHasSettableProperty")]
     [Fact]
     public void ErrorWhenTargetHasSettableProperty()
     {
@@ -983,9 +1010,10 @@ public class AdapterGeneratorTests
 
         // PKADP013 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP013");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP013");
     }
 
+    [Scenario("ReadOnlyPropertyIsSupported")]
     [Fact]
     public void ReadOnlyPropertyIsSupported()
     {
@@ -1017,12 +1045,13 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics (read-only properties are fine)
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenHostIsNested")]
     [Fact]
     public void ErrorWhenHostIsNested()
     {
@@ -1051,9 +1080,10 @@ public class AdapterGeneratorTests
 
         // PKADP014 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP014");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP014");
     }
 
+    [Scenario("ErrorWhenHostIsGeneric")]
     [Fact]
     public void ErrorWhenHostIsGeneric()
     {
@@ -1079,9 +1109,10 @@ public class AdapterGeneratorTests
 
         // PKADP014 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP014");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP014");
     }
 
+    [Scenario("ErrorWhenMappingMethodNotAccessible")]
     [Fact]
     public void ErrorWhenMappingMethodNotAccessible()
     {
@@ -1111,9 +1142,10 @@ public class AdapterGeneratorTests
 
         // PKADP015 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP015");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP015");
     }
 
+    [Scenario("ErrorWhenTargetHasStaticMembers")]
     [Fact]
     public void ErrorWhenTargetHasStaticMembers()
     {
@@ -1144,9 +1176,10 @@ public class AdapterGeneratorTests
 
         // PKADP016 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP016");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP016");
     }
 
+    [Scenario("ErrorWhenTargetHasRefReturnProperty")]
     [Fact]
     public void ErrorWhenTargetHasRefReturnProperty()
     {
@@ -1172,9 +1205,10 @@ public class AdapterGeneratorTests
 
         // PKADP017 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP017");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP017");
     }
 
+    [Scenario("ErrorWhenTargetHasRefReturnMethod")]
     [Fact]
     public void ErrorWhenTargetHasRefReturnMethod()
     {
@@ -1200,9 +1234,10 @@ public class AdapterGeneratorTests
 
         // PKADP017 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP017");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP017");
     }
 
+    [Scenario("ErrorWhenTargetHasIndexer")]
     [Fact]
     public void ErrorWhenTargetHasIndexer()
     {
@@ -1228,9 +1263,10 @@ public class AdapterGeneratorTests
 
         // PKADP018 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP018");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP018");
     }
 
+    [Scenario("ErrorWhenTwoHostsGenerateSameAdapterTypeName")]
     [Fact]
     public void ErrorWhenTwoHostsGenerateSameAdapterTypeName()
     {
@@ -1275,9 +1311,10 @@ public class AdapterGeneratorTests
 
         // PKADP006 diagnostic is reported (at least once, possibly twice)
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKADP006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKADP006");
     }
 
+    [Scenario("GenerateAdapter ThrowingStubWithDefaultsRefsAndCustomNamespace")]
     [Fact]
     public void GenerateAdapter_ThrowingStubWithDefaultsRefsAndCustomNamespace()
     {
@@ -1313,28 +1350,29 @@ public class AdapterGeneratorTests
         var gen = new AdapterGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .Single(gs => gs.HintName == "Generated.ServiceAdapter.Adapter.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("namespace Generated;", generatedSource);
-        Assert.Contains("public partial class ServiceAdapter : global::TestNamespace.IService", generatedSource);
-        Assert.Contains("Name", generatedSource);
-        Assert.Contains("get => throw new global::System.NotImplementedException", generatedSource);
-        Assert.Contains("ref int source", generatedSource);
-        Assert.Contains("out int destination", generatedSource);
-        Assert.Contains("in bool enabled", generatedSource);
-        Assert.Contains("string? label = null", generatedSource);
-        Assert.Contains("global::TestNamespace.Mode mode = global::TestNamespace.Mode.Fast", generatedSource);
-        Assert.Contains("int count = 3", generatedSource);
+        ScenarioExpect.Contains("namespace Generated;", generatedSource);
+        ScenarioExpect.Contains("public partial class ServiceAdapter : global::TestNamespace.IService", generatedSource);
+        ScenarioExpect.Contains("Name", generatedSource);
+        ScenarioExpect.Contains("get => throw new global::System.NotImplementedException", generatedSource);
+        ScenarioExpect.Contains("ref int source", generatedSource);
+        ScenarioExpect.Contains("out int destination", generatedSource);
+        ScenarioExpect.Contains("in bool enabled", generatedSource);
+        ScenarioExpect.Contains("string? label = null", generatedSource);
+        ScenarioExpect.Contains("global::TestNamespace.Mode mode = global::TestNamespace.Mode.Fast", generatedSource);
+        ScenarioExpect.Contains("int count = 3", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AdapterDiagnostics OpenGenericAbstractCtorAndBadMapSignatures")]
     [Fact]
     public void AdapterDiagnostics_OpenGenericAbstractCtorAndBadMapSignatures()
     {
@@ -1388,10 +1426,10 @@ public class AdapterGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKADP002" && d.GetMessage().Contains("IGeneric"));
-        Assert.Contains(diagnostics, d => d.Id == "PKADP007" && d.GetMessage().Contains("AbstractAdaptee"));
-        Assert.Contains(diagnostics, d => d.Id == "PKADP012" && d.GetMessage().Contains("TargetWithoutDefaultCtor"));
-        Assert.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Return type"));
-        Assert.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind mismatch"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP002" && d.GetMessage().Contains("IGeneric"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP007" && d.GetMessage().Contains("AbstractAdaptee"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP012" && d.GetMessage().Contains("TargetWithoutDefaultCtor"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Return type"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind mismatch"));
     }
 }

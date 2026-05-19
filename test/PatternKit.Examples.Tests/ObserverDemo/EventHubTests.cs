@@ -1,17 +1,20 @@
 using PatternKit.Examples.ObserverDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.ObserverDemoTests;
 
 public sealed class EventHubTests
 {
+    [Scenario("CreateDefault Returns NonNull")]
     [Fact]
     public void CreateDefault_Returns_NonNull()
     {
         var hub = EventHub<int>.CreateDefault();
 
-        Assert.NotNull(hub);
+        ScenarioExpect.NotNull(hub);
     }
 
+    [Scenario("Publish Invokes Subscriber")]
     [Fact]
     public void Publish_Invokes_Subscriber()
     {
@@ -21,10 +24,11 @@ public sealed class EventHubTests
 
         hub.Publish(42);
 
-        Assert.Single(received);
-        Assert.Equal(42, received[0]);
+        ScenarioExpect.Single(received);
+        ScenarioExpect.Equal(42, received[0]);
     }
 
+    [Scenario("Publish Invokes Multiple Subscribers")]
     [Fact]
     public void Publish_Invokes_Multiple_Subscribers()
     {
@@ -36,12 +40,13 @@ public sealed class EventHubTests
 
         hub.Publish("hello");
 
-        Assert.Single(log1);
-        Assert.Single(log2);
-        Assert.Equal("hello", log1[0]);
-        Assert.Equal("hello", log2[0]);
+        ScenarioExpect.Single(log1);
+        ScenarioExpect.Single(log2);
+        ScenarioExpect.Equal("hello", log1[0]);
+        ScenarioExpect.Equal("hello", log2[0]);
     }
 
+    [Scenario("Dispose Removes Subscription")]
     [Fact]
     public void Dispose_Removes_Subscription()
     {
@@ -53,10 +58,11 @@ public sealed class EventHubTests
         sub.Dispose();
         hub.Publish(2);
 
-        Assert.Single(received);
-        Assert.Equal(1, received[0]);
+        ScenarioExpect.Single(received);
+        ScenarioExpect.Equal(1, received[0]);
     }
 
+    [Scenario("On With Predicate Filters Events")]
     [Fact]
     public void On_With_Predicate_Filters_Events()
     {
@@ -69,11 +75,12 @@ public sealed class EventHubTests
         hub.Publish(8);
         hub.Publish(20);
 
-        Assert.Equal(2, received.Count);
-        Assert.Equal(15, received[0]);
-        Assert.Equal(20, received[1]);
+        ScenarioExpect.Equal(2, received.Count);
+        ScenarioExpect.Equal(15, received[0]);
+        ScenarioExpect.Equal(20, received[1]);
     }
 
+    [Scenario("Multiple Subscriptions With Different Predicates")]
     [Fact]
     public void Multiple_Subscriptions_With_Different_Predicates()
     {
@@ -87,22 +94,24 @@ public sealed class EventHubTests
         hub.Publish(3);
         hub.Publish(4);
 
-        Assert.Equal(2, evens.Count); // -2 and 4
-        Assert.Equal(2, positives.Count); // 3 and 4
+        ScenarioExpect.Equal(2, evens.Count); // -2 and 4
+        ScenarioExpect.Equal(2, positives.Count); // 3 and 4
     }
 }
 
 public sealed class UserEventTests
 {
+    [Scenario("UserEvent Record Works")]
     [Fact]
     public void UserEvent_Record_Works()
     {
         var evt = new UserEvent(123, "login");
 
-        Assert.Equal(123, evt.Id);
-        Assert.Equal("login", evt.Action);
+        ScenarioExpect.Equal(123, evt.Id);
+        ScenarioExpect.Equal("login", evt.Action);
     }
 
+    [Scenario("EventHub With UserEvent")]
     [Fact]
     public void EventHub_With_UserEvent()
     {
@@ -113,11 +122,12 @@ public sealed class UserEventTests
         hub.Publish(new UserEvent(1, "login"));
         hub.Publish(new UserEvent(2, "logout"));
 
-        Assert.Equal(2, received.Count);
-        Assert.Equal("login", received[0].Action);
-        Assert.Equal("logout", received[1].Action);
+        ScenarioExpect.Equal(2, received.Count);
+        ScenarioExpect.Equal("login", received[0].Action);
+        ScenarioExpect.Equal("logout", received[1].Action);
     }
 
+    [Scenario("EventHub UserEvent Filtered By Action")]
     [Fact]
     public void EventHub_UserEvent_Filtered_By_Action()
     {
@@ -129,10 +139,11 @@ public sealed class UserEventTests
         hub.Publish(new UserEvent(2, "logout"));
         hub.Publish(new UserEvent(3, "login"));
 
-        Assert.Equal(2, logins.Count);
-        Assert.All(logins, e => Assert.Equal("login", e.Action));
+        ScenarioExpect.Equal(2, logins.Count);
+        ScenarioExpect.All(logins, e => ScenarioExpect.Equal("login", e.Action));
     }
 
+    [Scenario("EventHub UserEvent Filtered By Id")]
     [Fact]
     public void EventHub_UserEvent_Filtered_By_Id()
     {
@@ -144,7 +155,7 @@ public sealed class UserEventTests
         hub.Publish(new UserEvent(2, "login"));
         hub.Publish(new UserEvent(1, "logout"));
 
-        Assert.Equal(2, user1Events.Count);
-        Assert.All(user1Events, e => Assert.Equal(1, e.Id));
+        ScenarioExpect.Equal(2, user1Events.Count);
+        ScenarioExpect.All(user1Events, e => ScenarioExpect.Equal(1, e.Id));
     }
 }

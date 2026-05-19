@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.Generators.Factories;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.GeneratorTests;
 
 public sealed class ServiceModulesTests
 {
+    [Scenario("ConfigureModule Metrics Adds MetricsSink")]
     [Fact]
     public void ConfigureModule_Metrics_Adds_MetricsSink()
     {
@@ -13,9 +15,10 @@ public sealed class ServiceModulesTests
         ServiceModules.ConfigureModule("metrics", services);
         var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetService<IMetricsSink>());
+        ScenarioExpect.NotNull(provider.GetService<IMetricsSink>());
     }
 
+    [Scenario("ConfigureModule Caching Adds CacheProvider")]
     [Fact]
     public void ConfigureModule_Caching_Adds_CacheProvider()
     {
@@ -24,9 +27,10 @@ public sealed class ServiceModulesTests
         ServiceModules.ConfigureModule("caching", services);
         var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetService<ICacheProvider>());
+        ScenarioExpect.NotNull(provider.GetService<ICacheProvider>());
     }
 
+    [Scenario("ConfigureModule Workers Adds Worker")]
     [Fact]
     public void ConfigureModule_Workers_Adds_Worker()
     {
@@ -35,9 +39,10 @@ public sealed class ServiceModulesTests
         ServiceModules.ConfigureModule("workers", services);
         var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetService<IWorker>());
+        ScenarioExpect.NotNull(provider.GetService<IWorker>());
     }
 
+    [Scenario("ConfigureModule Unknown Uses Defaults")]
     [Fact]
     public void ConfigureModule_Unknown_Uses_Defaults()
     {
@@ -47,42 +52,46 @@ public sealed class ServiceModulesTests
         var provider = services.BuildServiceProvider();
 
         // Defaults add MetricsSink and Worker
-        Assert.NotNull(provider.GetService<IMetricsSink>());
-        Assert.NotNull(provider.GetService<IWorker>());
+        ScenarioExpect.NotNull(provider.GetService<IMetricsSink>());
+        ScenarioExpect.NotNull(provider.GetService<IWorker>());
     }
 }
 
 public sealed class ServiceModuleBootstrapTests
 {
+    [Scenario("Build With Metrics Module")]
     [Fact]
     public void Build_With_Metrics_Module()
     {
         var provider = ServiceModuleBootstrap.Build(["metrics"]);
 
-        Assert.NotNull(provider.GetService<IMetricsSink>());
+        ScenarioExpect.NotNull(provider.GetService<IMetricsSink>());
     }
 
+    [Scenario("Build With Multiple Modules")]
     [Fact]
     public void Build_With_Multiple_Modules()
     {
         var provider = ServiceModuleBootstrap.Build(["metrics", "caching", "workers"]);
 
-        Assert.NotNull(provider.GetService<IMetricsSink>());
-        Assert.NotNull(provider.GetService<ICacheProvider>());
-        Assert.NotNull(provider.GetService<IWorker>());
+        ScenarioExpect.NotNull(provider.GetService<IMetricsSink>());
+        ScenarioExpect.NotNull(provider.GetService<ICacheProvider>());
+        ScenarioExpect.NotNull(provider.GetService<IWorker>());
     }
 
+    [Scenario("Build With Empty Modules")]
     [Fact]
     public void Build_With_Empty_Modules()
     {
         var provider = ServiceModuleBootstrap.Build([]);
 
-        Assert.NotNull(provider);
+        ScenarioExpect.NotNull(provider);
     }
 }
 
 public sealed class ConsoleMetricsSinkTests
 {
+    [Scenario("Write Does Not Throw")]
     [Fact]
     public void Write_Does_Not_Throw()
     {
@@ -94,6 +103,7 @@ public sealed class ConsoleMetricsSinkTests
 
 public sealed class MemoryCacheProviderTests
 {
+    [Scenario("PrimeAsync Completes Successfully")]
     [Fact]
     public async Task PrimeAsync_Completes_Successfully()
     {
@@ -102,6 +112,7 @@ public sealed class MemoryCacheProviderTests
         await cache.PrimeAsync(CancellationToken.None);
     }
 
+    [Scenario("PrimeAsync With Cancellation")]
     [Fact]
     public async Task PrimeAsync_With_Cancellation()
     {
@@ -114,6 +125,7 @@ public sealed class MemoryCacheProviderTests
 
 public sealed class BackgroundWorkerTests
 {
+    [Scenario("Start Does Not Throw")]
     [Fact]
     public void Start_Does_Not_Throw()
     {
@@ -125,6 +137,7 @@ public sealed class BackgroundWorkerTests
 
 public sealed class OrchestratorStepFactoryTests
 {
+    [Scenario("CreateFromKey Seed Returns SeedDataStep")]
     [Fact]
     public void CreateFromKey_Seed_Returns_SeedDataStep()
     {
@@ -133,9 +146,10 @@ public sealed class OrchestratorStepFactoryTests
 
         var step = factory.CreateFromKey("seed");
 
-        Assert.IsType<SeedDataStep>(step);
+        ScenarioExpect.IsType<SeedDataStep>(step);
     }
 
+    [Scenario("CreateFromKey WarmCache Returns WarmCacheStep")]
     [Fact]
     public void CreateFromKey_WarmCache_Returns_WarmCacheStep()
     {
@@ -144,9 +158,10 @@ public sealed class OrchestratorStepFactoryTests
 
         var step = factory.CreateFromKey("warm-cache");
 
-        Assert.IsType<WarmCacheStep>(step);
+        ScenarioExpect.IsType<WarmCacheStep>(step);
     }
 
+    [Scenario("CreateFromKey StartWorkers Returns StartWorkersStep")]
     [Fact]
     public void CreateFromKey_StartWorkers_Returns_StartWorkersStep()
     {
@@ -155,9 +170,10 @@ public sealed class OrchestratorStepFactoryTests
 
         var step = factory.CreateFromKey("start-workers");
 
-        Assert.IsType<StartWorkersStep>(step);
+        ScenarioExpect.IsType<StartWorkersStep>(step);
     }
 
+    [Scenario("CreateFromKey CaseInsensitive")]
     [Fact]
     public void CreateFromKey_CaseInsensitive()
     {
@@ -168,35 +184,39 @@ public sealed class OrchestratorStepFactoryTests
         var step2 = factory.CreateFromKey("Seed");
         var step3 = factory.CreateFromKey("seed");
 
-        Assert.IsType<SeedDataStep>(step1);
-        Assert.IsType<SeedDataStep>(step2);
-        Assert.IsType<SeedDataStep>(step3);
+        ScenarioExpect.IsType<SeedDataStep>(step1);
+        ScenarioExpect.IsType<SeedDataStep>(step2);
+        ScenarioExpect.IsType<SeedDataStep>(step3);
     }
 
+    [Scenario("CreateFromKey UnknownKey Throws")]
     [Fact]
     public void CreateFromKey_UnknownKey_Throws()
     {
         var services = new ServiceCollection().BuildServiceProvider();
         var factory = new OrchestratorStepFactory(services);
 
-        Assert.Throws<KeyNotFoundException>(() => factory.CreateFromKey("unknown"));
+        ScenarioExpect.Throws<KeyNotFoundException>(() => factory.CreateFromKey("unknown"));
     }
 
+    [Scenario("Constructor Null Services Throws")]
     [Fact]
     public void Constructor_Null_Services_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => new OrchestratorStepFactory(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new OrchestratorStepFactory(null!));
     }
 
+    [Scenario("CreateFromKey Null Key Throws")]
     [Fact]
     public void CreateFromKey_Null_Key_Throws()
     {
         var services = new ServiceCollection().BuildServiceProvider();
         var factory = new OrchestratorStepFactory(services);
 
-        Assert.Throws<ArgumentNullException>(() => factory.CreateFromKey(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => factory.CreateFromKey(null!));
     }
 
+    [Scenario("ApplicationOrchestrator RunsConfiguredStepsAgainstServices")]
     [Fact]
     public async Task ApplicationOrchestrator_RunsConfiguredStepsAgainstServices()
     {
@@ -211,8 +231,8 @@ public sealed class OrchestratorStepFactoryTests
 
         await orchestrator.RunAsync(["seed", "warm-cache", "start-workers"]);
 
-        Assert.True(seeder.WasSeeded);
-        Assert.True(worker.WasStarted);
+        ScenarioExpect.True(seeder.WasSeeded);
+        ScenarioExpect.True(worker.WasStarted);
     }
 
     private sealed class TestSeeder : ISeeder
@@ -230,6 +250,7 @@ public sealed class OrchestratorStepFactoryTests
 
 public sealed class SeedDataStepTests
 {
+    [Scenario("ExecuteAsync Without Seeder")]
     [Fact]
     public async Task ExecuteAsync_Without_Seeder()
     {
@@ -239,6 +260,7 @@ public sealed class SeedDataStepTests
         await step.ExecuteAsync(services);
     }
 
+    [Scenario("ExecuteAsync With Seeder")]
     [Fact]
     public async Task ExecuteAsync_With_Seeder()
     {
@@ -250,7 +272,7 @@ public sealed class SeedDataStepTests
 
         await step.ExecuteAsync(services);
 
-        Assert.True(seeder.WasSeeded);
+        ScenarioExpect.True(seeder.WasSeeded);
     }
 
     private sealed class TestSeeder : ISeeder
@@ -262,6 +284,7 @@ public sealed class SeedDataStepTests
 
 public sealed class WarmCacheStepTests
 {
+    [Scenario("ExecuteAsync Without CacheProvider")]
     [Fact]
     public async Task ExecuteAsync_Without_CacheProvider()
     {
@@ -271,6 +294,7 @@ public sealed class WarmCacheStepTests
         await step.ExecuteAsync(services);
     }
 
+    [Scenario("ExecuteAsync With CacheProvider")]
     [Fact]
     public async Task ExecuteAsync_With_CacheProvider()
     {
@@ -285,6 +309,7 @@ public sealed class WarmCacheStepTests
 
 public sealed class StartWorkersStepTests
 {
+    [Scenario("ExecuteAsync Without Worker")]
     [Fact]
     public async Task ExecuteAsync_Without_Worker()
     {
@@ -294,6 +319,7 @@ public sealed class StartWorkersStepTests
         await step.ExecuteAsync(services);
     }
 
+    [Scenario("ExecuteAsync With Worker")]
     [Fact]
     public async Task ExecuteAsync_With_Worker()
     {
@@ -305,7 +331,7 @@ public sealed class StartWorkersStepTests
 
         await step.ExecuteAsync(services);
 
-        Assert.True(worker.WasStarted);
+        ScenarioExpect.True(worker.WasStarted);
     }
 
     private sealed class TestWorker : IWorker

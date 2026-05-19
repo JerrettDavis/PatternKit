@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Mailboxes;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Mailboxes;
 
 public sealed class MailboxTests
 {
+    [Scenario("PostAsync ProcessesMessagesInOrder")]
     [Fact]
     public async Task PostAsync_ProcessesMessagesInOrder()
     {
@@ -21,13 +23,14 @@ public sealed class MailboxTests
         var second = await mailbox.PostAsync(Message<int>.Create(2));
         await mailbox.StopAsync();
 
-        Assert.True(first.Accepted);
-        Assert.True(second.Accepted);
-        Assert.Equal([1, 2], processed);
-        Assert.Equal(1, first.Sequence);
-        Assert.Equal(2, second.Sequence);
+        ScenarioExpect.True(first.Accepted);
+        ScenarioExpect.True(second.Accepted);
+        ScenarioExpect.Equal([1, 2], processed);
+        ScenarioExpect.Equal(1, first.Sequence);
+        ScenarioExpect.Equal(2, second.Sequence);
     }
 
+    [Scenario("PostAsync SerializesConcurrentPosts")]
     [Fact]
     public async Task PostAsync_SerializesConcurrentPosts()
     {
@@ -51,11 +54,12 @@ public sealed class MailboxTests
         var results = await Task.WhenAll(posts);
         await mailbox.StopAsync();
 
-        Assert.All(results, result => Assert.True(result.Accepted));
-        Assert.Equal(50, processed);
-        Assert.Equal(1, maxActive);
+        ScenarioExpect.All(results, result => ScenarioExpect.True(result.Accepted));
+        ScenarioExpect.Equal(50, processed);
+        ScenarioExpect.Equal(1, maxActive);
     }
 
+    [Scenario("BoundedRejectPolicy RejectsWhenFull")]
     [Fact]
     public async Task BoundedRejectPolicy_RejectsWhenFull()
     {
@@ -80,12 +84,13 @@ public sealed class MailboxTests
         release.SetResult(null);
         await mailbox.StopAsync();
 
-        Assert.True(first.Accepted);
-        Assert.True(second.Accepted);
-        Assert.Equal(MailboxPostStatus.Rejected, third.Status);
-        Assert.Equal("mailbox-full", third.Reason);
+        ScenarioExpect.True(first.Accepted);
+        ScenarioExpect.True(second.Accepted);
+        ScenarioExpect.Equal(MailboxPostStatus.Rejected, third.Status);
+        ScenarioExpect.Equal("mailbox-full", third.Reason);
     }
 
+    [Scenario("BoundedDropNewestPolicy DropsIncomingWhenFull")]
     [Fact]
     public async Task BoundedDropNewestPolicy_DropsIncomingWhenFull()
     {
@@ -112,12 +117,13 @@ public sealed class MailboxTests
         release.SetResult(null);
         await mailbox.StopAsync();
 
-        Assert.True(first.Accepted);
-        Assert.True(second.Accepted);
-        Assert.Equal(MailboxPostStatus.Dropped, third.Status);
-        Assert.Equal([1, 2], processed);
+        ScenarioExpect.True(first.Accepted);
+        ScenarioExpect.True(second.Accepted);
+        ScenarioExpect.Equal(MailboxPostStatus.Dropped, third.Status);
+        ScenarioExpect.Equal([1, 2], processed);
     }
 
+    [Scenario("BoundedDropOldestPolicy DropsOldestQueuedMessage")]
     [Fact]
     public async Task BoundedDropOldestPolicy_DropsOldestQueuedMessage()
     {
@@ -144,12 +150,13 @@ public sealed class MailboxTests
         release.SetResult(null);
         await mailbox.StopAsync();
 
-        Assert.True(first.Accepted);
-        Assert.True(second.Accepted);
-        Assert.True(third.Accepted);
-        Assert.Equal([1, 3], processed);
+        ScenarioExpect.True(first.Accepted);
+        ScenarioExpect.True(second.Accepted);
+        ScenarioExpect.True(third.Accepted);
+        ScenarioExpect.Equal([1, 3], processed);
     }
 
+    [Scenario("BoundedWaitPolicy WaitsForQueueSpace")]
     [Fact]
     public async Task BoundedWaitPolicy_WaitsForQueueSpace()
     {
@@ -172,15 +179,16 @@ public sealed class MailboxTests
         await mailbox.PostAsync(Message<int>.Create(2));
         var third = mailbox.PostAsync(Message<int>.Create(3)).AsTask();
 
-        Assert.False(third.IsCompleted);
+        ScenarioExpect.False(third.IsCompleted);
 
         release.SetResult(null);
         var result = await third;
         await mailbox.StopAsync();
 
-        Assert.True(result.Accepted);
+        ScenarioExpect.True(result.Accepted);
     }
 
+    [Scenario("StopAsync WhenDrainFalse DropsQueuedMessages")]
     [Fact]
     public async Task StopAsync_WhenDrainFalse_DropsQueuedMessages()
     {
@@ -205,9 +213,10 @@ public sealed class MailboxTests
         await mailbox.PostAsync(Message<int>.Create(3));
         await mailbox.StopAsync(drain: false);
 
-        Assert.Equal([1], processed);
+        ScenarioExpect.Equal([1], processed);
     }
 
+    [Scenario("ErrorPolicyContinue RoutesFailureAndContinues")]
     [Fact]
     public async Task ErrorPolicyContinue_RoutesFailureAndContinues()
     {
@@ -235,10 +244,11 @@ public sealed class MailboxTests
         await mailbox.PostAsync(Message<int>.Create(2));
         await mailbox.StopAsync();
 
-        Assert.Equal(["boom"], errors);
-        Assert.Equal([1, 2], processed);
+        ScenarioExpect.Equal(["boom"], errors);
+        ScenarioExpect.Equal([1, 2], processed);
     }
 
+    [Scenario("ErrorPolicyStop StopsAcceptingAndDropsQueuedMessages")]
     [Fact]
     public async Task ErrorPolicyStop_StopsAcceptingAndDropsQueuedMessages()
     {
@@ -260,10 +270,11 @@ public sealed class MailboxTests
 
         var afterFailure = await mailbox.PostAsync(Message<int>.Create(3));
 
-        Assert.Equal(MailboxPostStatus.Rejected, afterFailure.Status);
-        Assert.False(mailbox.IsAccepting);
+        ScenarioExpect.Equal(MailboxPostStatus.Rejected, afterFailure.Status);
+        ScenarioExpect.False(mailbox.IsAccepting);
     }
 
+    [Scenario("PostAsync PassesMessageContextAndCancellation")]
     [Fact]
     public async Task PostAsync_PassesMessageContextAndCancellation()
     {
@@ -283,10 +294,11 @@ public sealed class MailboxTests
         await mailbox.PostAsync(Message<int>.Create(1), context);
         await mailbox.StopAsync();
 
-        Assert.Equal("north", tenant);
-        Assert.True(observed.CanBeCanceled);
+        ScenarioExpect.Equal("north", tenant);
+        ScenarioExpect.True(observed.CanBeCanceled);
     }
 
+    [Scenario("OnEvent ReceivesLifecycleAndProcessingEvents")]
     [Fact]
     public async Task OnEvent_ReceivesLifecycleAndProcessingEvents()
     {
@@ -299,13 +311,14 @@ public sealed class MailboxTests
         await mailbox.PostAsync(Message<int>.Create(1));
         await mailbox.StopAsync();
 
-        Assert.Contains(events, evt => evt.Kind == MailboxEventKind.Started);
-        Assert.Contains(events, evt => evt.Kind == MailboxEventKind.Accepted && evt.Sequence == 1);
-        Assert.Contains(events, evt => evt.Kind == MailboxEventKind.ProcessingStarted && evt.QueuedCount >= 0);
-        Assert.Contains(events, evt => evt.Kind == MailboxEventKind.ProcessingCompleted && evt.Exception is null);
-        Assert.Contains(events, evt => evt.Kind == MailboxEventKind.Stopped);
+        ScenarioExpect.Contains(events, evt => evt.Kind == MailboxEventKind.Started);
+        ScenarioExpect.Contains(events, evt => evt.Kind == MailboxEventKind.Accepted && evt.Sequence == 1);
+        ScenarioExpect.Contains(events, evt => evt.Kind == MailboxEventKind.ProcessingStarted && evt.QueuedCount >= 0);
+        ScenarioExpect.Contains(events, evt => evt.Kind == MailboxEventKind.ProcessingCompleted && evt.Exception is null);
+        ScenarioExpect.Contains(events, evt => evt.Kind == MailboxEventKind.Stopped);
     }
 
+    [Scenario("StartAsync WhenAlreadyStarted IsNoOp")]
     [Fact]
     public async Task StartAsync_WhenAlreadyStarted_IsNoOp()
     {
@@ -316,9 +329,10 @@ public sealed class MailboxTests
         var result = await mailbox.PostAsync(Message<int>.Create(1));
         await mailbox.StopAsync();
 
-        Assert.True(result.Accepted);
+        ScenarioExpect.True(result.Accepted);
     }
 
+    [Scenario("OnEvent WhenSinkThrows DoesNotAffectProcessing")]
     [Fact]
     public async Task OnEvent_WhenSinkThrows_DoesNotAffectProcessing()
     {
@@ -339,10 +353,11 @@ public sealed class MailboxTests
         var second = await mailbox.PostAsync(Message<int>.Create(2));
         await mailbox.StopAsync();
 
-        Assert.True(first.Accepted);
-        Assert.True(second.Accepted);
+        ScenarioExpect.True(first.Accepted);
+        ScenarioExpect.True(second.Accepted);
     }
 
+    [Scenario("BoundedWaitPolicy RejectsAfterStop")]
     [Fact]
     public async Task BoundedWaitPolicy_RejectsAfterStop()
     {
@@ -354,10 +369,11 @@ public sealed class MailboxTests
         await mailbox.StopAsync();
         var result = await mailbox.PostAsync(Message<int>.Create(1));
 
-        Assert.Equal(MailboxPostStatus.Rejected, result.Status);
-        Assert.Equal("mailbox-not-accepting", result.Reason);
+        ScenarioExpect.Equal(MailboxPostStatus.Rejected, result.Status);
+        ScenarioExpect.Equal("mailbox-not-accepting", result.Reason);
     }
 
+    [Scenario("StopAsync ObservesStopCancellation")]
     [Fact]
     public async Task StopAsync_ObservesStopCancellation()
     {
@@ -376,12 +392,13 @@ public sealed class MailboxTests
         await started.Task;
         source.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () => await mailbox.StopAsync(cancellationToken: source.Token));
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () => await mailbox.StopAsync(cancellationToken: source.Token));
 
         release.SetResult(null);
         await mailbox.StopAsync();
     }
 
+    [Scenario("Properties ReportCapacityAndQueuedCount")]
     [Fact]
     public async Task Properties_ReportCapacityAndQueuedCount()
     {
@@ -403,13 +420,14 @@ public sealed class MailboxTests
         await started.Task;
         await mailbox.PostAsync(Message<int>.Create(2));
 
-        Assert.Equal(2, mailbox.Capacity);
-        Assert.Equal(1, mailbox.QueuedCount);
+        ScenarioExpect.Equal(2, mailbox.Capacity);
+        ScenarioExpect.Equal(1, mailbox.QueuedCount);
 
         release.SetResult(null);
         await mailbox.StopAsync();
     }
 
+    [Scenario("Dispose IsIdempotentAndRejectsLaterUse")]
     [Fact]
     public void Dispose_IsIdempotentAndRejectsLaterUse()
     {
@@ -418,9 +436,10 @@ public sealed class MailboxTests
         mailbox.Dispose();
         mailbox.Dispose();
 
-        Assert.Throws<ObjectDisposedException>(() => { _ = mailbox.StartAsync(); });
+        ScenarioExpect.Throws<ObjectDisposedException>(() => { _ = mailbox.StartAsync(); });
     }
 
+    [Scenario("PostAsync ObservesCanceledEnqueueToken")]
     [Fact]
     public async Task PostAsync_ObservesCanceledEnqueueToken()
     {
@@ -430,28 +449,30 @@ public sealed class MailboxTests
 
         await mailbox.StartAsync();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await mailbox.PostAsync(Message<int>.Create(1), cancellationToken: source.Token));
 
         await mailbox.StopAsync();
     }
 
+    [Scenario("Builder RejectsInvalidArguments")]
     [Fact]
     public void Builder_RejectsInvalidArguments()
     {
-        Assert.Throws<ArgumentNullException>(() => Mailbox<int>.Create(null!));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Mailbox<int>.Create((_, _, _) => default).Bounded(0));
-        Assert.Throws<ArgumentNullException>(() => Mailbox<int>.Create((_, _, _) => default).OnEvent(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => Mailbox<int>.Create(null!));
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() => Mailbox<int>.Create((_, _, _) => default).Bounded(0));
+        ScenarioExpect.Throws<ArgumentNullException>(() => Mailbox<int>.Create((_, _, _) => default).OnEvent(null!));
 
         var mailbox = Mailbox<int>.Create((_, _, _) => default).Unbounded().Build();
-        Assert.Null(mailbox.Capacity);
+        ScenarioExpect.Null(mailbox.Capacity);
     }
 
+    [Scenario("PostAsync RejectsNullMessage")]
     [Fact]
     public async Task PostAsync_RejectsNullMessage()
     {
         using var mailbox = Mailbox<int>.Create((_, _, _) => default).Build();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await mailbox.PostAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await mailbox.PostAsync(null!));
     }
 }

@@ -2,6 +2,7 @@ using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using PatternKit.Common;
 using PatternKit.Creational.Builder;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -29,6 +30,7 @@ public class StrategyGeneratorTests
                                  }
                                  """;
 
+    [Scenario("Generates All Strategies Without Diagnostics")]
     [Fact]
     public void Generates_All_Strategies_Without_Diagnostics()
     {
@@ -46,19 +48,20 @@ public class StrategyGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.Length == 0));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.Length == 0));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("OrderRouter.g.cs", names);
-        Assert.Contains("ScoreLabeler.g.cs", names);
-        Assert.Contains("IntParser.g.cs", names);
+        ScenarioExpect.Contains("OrderRouter.g.cs", names);
+        ScenarioExpect.Contains("ScoreLabeler.g.cs", names);
+        ScenarioExpect.Contains("IntParser.g.cs", names);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("OrderRouter Wires Predicate And Action")]
     [Fact]
     public void OrderRouter_Wires_Predicate_And_Action()
     {
@@ -92,13 +95,13 @@ public class StrategyGeneratorTests
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
-        // (Optional) load & invoke Demo.Run via reflection to assert behavior
+        // (Optional) load & invoke Demo.Run via reflection to verify behavior
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -106,9 +109,10 @@ public class StrategyGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("L:A|D:7|O:@", run);
+        ScenarioExpect.Equal("L:A|D:7|O:@", run);
     }
 
+    [Scenario("IntParser Try Handler Signature Works")]
     [Fact]
     public void IntParser_Try_Handler_Signature_Works()
     {
@@ -136,21 +140,22 @@ public class StrategyGeneratorTests
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var parse = asm.GetType("PatternKit.Examples.Generators.ParseDemo")!
             .GetMethod("Parse")!;
-        Assert.Equal((true, 42), (ValueTuple<bool, int>)parse.Invoke(null, ["42"])!);
-        Assert.Equal((true, 0), (ValueTuple<bool, int>)parse.Invoke(null, ["x"])!);
+        ScenarioExpect.Equal((true, 42), (ValueTuple<bool, int>)parse.Invoke(null, ["42"])!);
+        ScenarioExpect.Equal((true, 0), (ValueTuple<bool, int>)parse.Invoke(null, ["x"])!);
     }
 
+    [Scenario("ScoreLabeler Result Strategy Works")]
     [Fact]
     public void ScoreLabeler_Result_Strategy_Works()
     {
@@ -180,12 +185,12 @@ public class StrategyGeneratorTests
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -193,9 +198,10 @@ public class StrategyGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("A,B,C,F", run);
+        ScenarioExpect.Equal("A,B,C,F", run);
     }
 
+    [Scenario("TryExecute Returns False When No Match")]
     [Fact]
     public void TryExecute_Returns_False_When_No_Match()
     {
@@ -225,12 +231,12 @@ public class StrategyGeneratorTests
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -238,9 +244,10 @@ public class StrategyGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("True,False", run);
+        ScenarioExpect.Equal("True,False", run);
     }
 
+    [Scenario("Simple Namespace Strategy Works")]
     [Fact]
     public void Simple_Namespace_Strategy_Works()
     {
@@ -278,15 +285,15 @@ public class StrategyGeneratorTests
             extra: [coreRef, commonRef]);
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -294,9 +301,10 @@ public class StrategyGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("+5|=0", result);
+        ScenarioExpect.Equal("+5|=0", result);
     }
 
+    [Scenario("TryStrategy When Conditional Chain Works")]
     [Fact]
     public void TryStrategy_When_Conditional_Chain_Works()
     {
@@ -326,12 +334,12 @@ public class StrategyGeneratorTests
         var gen = new StrategyGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -340,13 +348,14 @@ public class StrategyGeneratorTests
 
         // With fallback enabled
         var withFallback = run.Invoke(null, [true]) as string;
-        Assert.Equal("-1", withFallback);
+        ScenarioExpect.Equal("-1", withFallback);
 
         // Without fallback - returns default (null result)
         var withoutFallback = run.Invoke(null, [false]) as string;
-        Assert.Equal("null", withoutFallback);
+        ScenarioExpect.Equal("null", withoutFallback);
     }
 
+    [Scenario("Strategies On Separate Classes Work")]
     [Fact]
     public void Strategies_On_Separate_Classes_Work()
     {
@@ -397,16 +406,16 @@ public class StrategyGeneratorTests
 
         // Should generate both ProcessInt.g.cs and ProcessString.g.cs
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("ProcessInt.g.cs", names);
-        Assert.Contains("ProcessString.g.cs", names);
+        ScenarioExpect.Contains("ProcessInt.g.cs", names);
+        ScenarioExpect.Contains("ProcessString.g.cs", names);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -414,6 +423,6 @@ public class StrategyGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("int:42|str:hello", result);
+        ScenarioExpect.Equal("int:42|str:hello", result);
     }
 }

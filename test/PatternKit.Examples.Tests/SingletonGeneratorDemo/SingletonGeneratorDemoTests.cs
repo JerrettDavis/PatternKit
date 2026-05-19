@@ -1,9 +1,11 @@
 using PatternKit.Examples.SingletonGeneratorDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.SingletonGeneratorDemo;
 
 public class SingletonGeneratorDemoTests
 {
+    [Scenario("AppClock ReturnsSameInstance")]
     [Fact]
     public void AppClock_ReturnsSameInstance()
     {
@@ -11,10 +13,11 @@ public class SingletonGeneratorDemoTests
         var clock1 = AppClock.Instance;
         var clock2 = AppClock.Instance;
 
-        // Assert
-        Assert.Same(clock1, clock2);
+        // Then
+        ScenarioExpect.Same(clock1, clock2);
     }
 
+    [Scenario("AppClock ProvidesCurrentTime")]
     [Fact]
     public void AppClock_ProvidesCurrentTime()
     {
@@ -23,10 +26,11 @@ public class SingletonGeneratorDemoTests
         var clockTime = AppClock.Instance.UtcNow;
         var after = DateTime.UtcNow;
 
-        // Assert
-        Assert.InRange(clockTime, before, after);
+        // Then
+        ScenarioExpect.InRange(clockTime, before, after);
     }
 
+    [Scenario("AppClock ProvidesUnixTimestamp")]
     [Fact]
     public void AppClock_ProvidesUnixTimestamp()
     {
@@ -37,11 +41,12 @@ public class SingletonGeneratorDemoTests
         var timestamp = AppClock.Instance.UnixTimestamp;
         var afterTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        // Assert
-        Assert.True(timestamp > 0);
-        Assert.InRange(timestamp, beforeTimestamp, afterTimestamp);
+        // Then
+        ScenarioExpect.True(timestamp > 0);
+        ScenarioExpect.InRange(timestamp, beforeTimestamp, afterTimestamp);
     }
 
+    [Scenario("AppClock ProvidesLocalTimeAndCurrentDate")]
     [Fact]
     public void AppClock_ProvidesLocalTimeAndCurrentDate()
     {
@@ -50,10 +55,11 @@ public class SingletonGeneratorDemoTests
         var after = DateTimeOffset.Now.AddSeconds(1);
         var today = AppClock.Instance.Today;
 
-        Assert.InRange(now, before, after);
-        Assert.InRange(today.DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)).DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)).DayNumber);
+        ScenarioExpect.InRange(now, before, after);
+        ScenarioExpect.InRange(today.DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)).DayNumber, DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)).DayNumber);
     }
 
+    [Scenario("ConfigManager ReturnsSameInstance")]
     [Fact]
     public void ConfigManager_ReturnsSameInstance()
     {
@@ -61,34 +67,37 @@ public class SingletonGeneratorDemoTests
         var config1 = ConfigManager.Instance;
         var config2 = ConfigManager.Instance;
 
-        // Assert
-        Assert.Same(config1, config2);
+        // Then
+        ScenarioExpect.Same(config1, config2);
     }
 
+    [Scenario("ConfigManager HasDefaultValues")]
     [Fact]
     public void ConfigManager_HasDefaultValues()
     {
         // Act
         var config = ConfigManager.Instance;
 
-        // Assert
-        Assert.NotNull(config.AppName);
-        Assert.NotNull(config.Environment);
-        Assert.NotNull(config.ConnectionString);
-        Assert.False(config.DebugLogging);
-        Assert.Contains($"App={config.AppName}", config.ToString(), StringComparison.Ordinal);
+        // Then
+        ScenarioExpect.NotNull(config.AppName);
+        ScenarioExpect.NotNull(config.Environment);
+        ScenarioExpect.NotNull(config.ConnectionString);
+        ScenarioExpect.False(config.DebugLogging);
+        ScenarioExpect.Contains($"App={config.AppName}", config.ToString(), StringComparison.Ordinal);
     }
 
+    [Scenario("ConfigManager LoadedAtIsInPast")]
     [Fact]
     public void ConfigManager_LoadedAtIsInPast()
     {
         // Act
         var config = ConfigManager.Instance;
 
-        // Assert
-        Assert.True(config.LoadedAt <= DateTime.UtcNow);
+        // Then
+        ScenarioExpect.True(config.LoadedAt <= DateTime.UtcNow);
     }
 
+    [Scenario("ServiceRegistry ReturnsSameInstance")]
     [Fact]
     public void ServiceRegistry_ReturnsSameInstance()
     {
@@ -96,10 +105,11 @@ public class SingletonGeneratorDemoTests
         var registry1 = ServiceRegistry.Instance;
         var registry2 = ServiceRegistry.Instance;
 
-        // Assert
-        Assert.Same(registry1, registry2);
+        // Then
+        ScenarioExpect.Same(registry1, registry2);
     }
 
+    [Scenario("ServiceRegistry RegisterAndResolve")]
     [Fact]
     public void ServiceRegistry_RegisterAndResolve()
     {
@@ -112,10 +122,11 @@ public class SingletonGeneratorDemoTests
         registry.Register<ITestService>(service);
         var resolved = registry.Resolve<ITestService>();
 
-        // Assert
-        Assert.Same(service, resolved);
+        // Then
+        ScenarioExpect.Same(service, resolved);
     }
 
+    [Scenario("ServiceRegistry RegisterFactory")]
     [Fact]
     public void ServiceRegistry_RegisterFactory()
     {
@@ -134,11 +145,12 @@ public class SingletonGeneratorDemoTests
         var first = registry.Resolve<ITestService>();
         var second = registry.Resolve<ITestService>();
 
-        // Assert
-        Assert.Same(first, second); // Factory result is cached
-        Assert.Equal(1, callCount); // Factory only called once
+        // Then
+        ScenarioExpect.Same(first, second); // Factory result is cached
+        ScenarioExpect.Equal(1, callCount); // Factory only called once
     }
 
+    [Scenario("ServiceRegistry TryResolve ReturnsNullWhenNotFound")]
     [Fact]
     public void ServiceRegistry_TryResolve_ReturnsNullWhenNotFound()
     {
@@ -149,10 +161,11 @@ public class SingletonGeneratorDemoTests
         // Act
         var result = registry.TryResolve<IUnregisteredService>();
 
-        // Assert
-        Assert.Null(result);
+        // Then
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("ServiceRegistry Resolve ThrowsWhenNotFound")]
     [Fact]
     public void ServiceRegistry_Resolve_ThrowsWhenNotFound()
     {
@@ -160,11 +173,12 @@ public class SingletonGeneratorDemoTests
         var registry = ServiceRegistry.Instance;
         registry.Clear();
 
-        // Act & Assert
-        Assert.Throws<InvalidOperationException>(() =>
+        // Act and verify
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             registry.Resolve<IUnregisteredService>());
     }
 
+    [Scenario("ServiceRegistry IsRegistered")]
     [Fact]
     public void ServiceRegistry_IsRegistered()
     {
@@ -173,11 +187,12 @@ public class SingletonGeneratorDemoTests
         registry.Clear();
         registry.Register<ITestService>(new TestService("test"));
 
-        // Assert
-        Assert.True(registry.IsRegistered<ITestService>());
-        Assert.False(registry.IsRegistered<IUnregisteredService>());
+        // Then
+        ScenarioExpect.True(registry.IsRegistered<ITestService>());
+        ScenarioExpect.False(registry.IsRegistered<IUnregisteredService>());
     }
 
+    [Scenario("ServiceRegistry ThreadSafe ParallelAccess")]
     [Fact]
     public void ServiceRegistry_ThreadSafe_ParallelAccess()
     {
@@ -200,11 +215,11 @@ public class SingletonGeneratorDemoTests
             results[i] = registry.Resolve<ITestService>();
         });
 
-        // Assert - all should get the same instance
+        // Then - all should get the same instance
         var first = results[0];
-        Assert.All(results, r => Assert.Same(first, r));
+        ScenarioExpect.All(results, r => ScenarioExpect.Same(first, r));
         // Factory is invoked exactly once due to Lazy<T> ensuring single execution
-        Assert.Equal(1, creationCount);
+        ScenarioExpect.Equal(1, creationCount);
     }
 
     // Test service interface

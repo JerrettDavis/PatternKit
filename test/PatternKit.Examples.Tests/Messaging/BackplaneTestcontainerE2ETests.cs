@@ -13,11 +13,13 @@ using PatternKit.Messaging.Reliability;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using Testcontainers.RabbitMq;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.Messaging;
 
 public sealed class BackplaneTestcontainerE2ETests
 {
+    [Scenario("RabbitMqBackplane RunsRequestReplyAndPublishSubscribeThroughContainer")]
     [Fact]
     [Trait("Category", "E2E")]
     public async Task RabbitMqBackplane_RunsRequestReplyAndPublishSubscribeThroughContainer()
@@ -34,6 +36,7 @@ public sealed class BackplaneTestcontainerE2ETests
         await AssertBackplaneAsync(transport);
     }
 
+    [Scenario("MqttBackplane RunsRequestReplyAndPublishSubscribeThroughContainer")]
     [Fact]
     [Trait("Category", "E2E")]
     public async Task MqttBackplane_RunsRequestReplyAndPublishSubscribeThroughContainer()
@@ -105,14 +108,14 @@ public sealed class BackplaneTestcontainerE2ETests
 
         var notification = await observed.Task.WaitAsync(TimeSpan.FromSeconds(20));
 
-        Assert.Equal(new BackplaneOrderAccepted("container-order", "orders.standard", "corr-container-order"), accepted);
-        Assert.Equal(new CustomerNotification("container-order", "order-submitted", "corr-container-order"), notification);
-        Assert.Single(outbox.Records);
-        Assert.Equal("orders.submitted", outbox.Records[0].Address);
-        Assert.True(outbox.Records[0].Dispatched);
-        Assert.Equal(1, outbox.Records[0].Delivered);
-        Assert.True(idempotency.TryGet("idem-container-order", out var claim));
-        Assert.Equal(IdempotencyEntryStatus.Completed, claim!.Status);
+        ScenarioExpect.Equal(new BackplaneOrderAccepted("container-order", "orders.standard", "corr-container-order"), accepted);
+        ScenarioExpect.Equal(new CustomerNotification("container-order", "order-submitted", "corr-container-order"), notification);
+        ScenarioExpect.Single(outbox.Records);
+        ScenarioExpect.Equal("orders.submitted", outbox.Records[0].Address);
+        ScenarioExpect.True(outbox.Records[0].Dispatched);
+        ScenarioExpect.Equal(1, outbox.Records[0].Delivered);
+        ScenarioExpect.True(idempotency.TryGet("idem-container-order", out var claim));
+        ScenarioExpect.Equal(IdempotencyEntryStatus.Completed, claim!.Status);
     }
 }
 

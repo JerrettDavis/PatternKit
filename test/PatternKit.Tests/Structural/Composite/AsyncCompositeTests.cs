@@ -1,4 +1,5 @@
 using PatternKit.Structural.Composite;
+using TinyBDD;
 
 namespace PatternKit.Tests.Structural.Composite;
 
@@ -6,6 +7,7 @@ public sealed class AsyncCompositeTests
 {
     #region AsyncComposite<TIn, TOut> Tests
 
+    [Scenario("AsyncComposite Leaf Executes")]
     [Fact]
     public async Task AsyncComposite_Leaf_Executes()
     {
@@ -18,9 +20,10 @@ public sealed class AsyncCompositeTests
 
         var result = await leaf.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncComposite Leaf Sync Executes")]
     [Fact]
     public async Task AsyncComposite_Leaf_Sync_Executes()
     {
@@ -29,9 +32,10 @@ public sealed class AsyncCompositeTests
 
         var result = await leaf.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncComposite Node Aggregates Results")]
     [Fact]
     public async Task AsyncComposite_Node_Aggregates_Results()
     {
@@ -44,9 +48,10 @@ public sealed class AsyncCompositeTests
 
         var result = await composite.ExecuteAsync(5);
 
-        Assert.Equal(25, result); // 10 + 15
+        ScenarioExpect.Equal(25, result); // 10 + 15
     }
 
+    [Scenario("AsyncComposite Node Sync Aggregates")]
     [Fact]
     public async Task AsyncComposite_Node_Sync_Aggregates()
     {
@@ -59,9 +64,10 @@ public sealed class AsyncCompositeTests
 
         var result = await composite.ExecuteAsync(5);
 
-        Assert.Equal(10, result); // 5 + 5
+        ScenarioExpect.Equal(10, result); // 5 + 5
     }
 
+    [Scenario("AsyncComposite Nested Composites")]
     [Fact]
     public async Task AsyncComposite_Nested_Composites()
     {
@@ -82,9 +88,10 @@ public sealed class AsyncCompositeTests
         // Note: This test shows composition but uses sync approach for inner
         var result = await outerComposite.ExecuteAsync(5);
 
-        Assert.Equal(60, result); // 10 + 50
+        ScenarioExpect.Equal(60, result); // 10 + 50
     }
 
+    [Scenario("AsyncComposite Empty Node Returns Seed")]
     [Fact]
     public async Task AsyncComposite_Empty_Node_Returns_Seed()
     {
@@ -95,9 +102,10 @@ public sealed class AsyncCompositeTests
 
         var result = await composite.ExecuteAsync(5);
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("AsyncComposite AddChildren Multiple")]
     [Fact]
     public async Task AsyncComposite_AddChildren_Multiple()
     {
@@ -112,9 +120,10 @@ public sealed class AsyncCompositeTests
 
         var result = await composite.ExecuteAsync(0);
 
-        Assert.Equal(24, result); // 1 * 2 * 3 * 4
+        ScenarioExpect.Equal(24, result); // 1 * 2 * 3 * 4
     }
 
+    [Scenario("AsyncComposite AddChild Ignored On Leaf")]
     [Fact]
     public async Task AsyncComposite_AddChild_Ignored_On_Leaf()
     {
@@ -124,13 +133,14 @@ public sealed class AsyncCompositeTests
 
         var result = await leaf.ExecuteAsync(5);
 
-        Assert.Equal(10, result); // Child is ignored
+        ScenarioExpect.Equal(10, result); // Child is ignored
     }
 
     #endregion
 
     #region ActionComposite<TIn> Tests
 
+    [Scenario("ActionComposite Leaf Executes")]
     [Fact]
     public void ActionComposite_Leaf_Executes()
     {
@@ -140,9 +150,10 @@ public sealed class AsyncCompositeTests
 
         leaf.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionComposite Node Executes All Children")]
     [Fact]
     public void ActionComposite_Node_Executes_All_Children()
     {
@@ -154,11 +165,12 @@ public sealed class AsyncCompositeTests
 
         composite.Execute(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("leaf1-5", log[0]);
-        Assert.Equal("leaf2-5", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("leaf1-5", log[0]);
+        ScenarioExpect.Equal("leaf2-5", log[1]);
     }
 
+    [Scenario("ActionComposite Node With Pre Post")]
     [Fact]
     public void ActionComposite_Node_With_Pre_Post()
     {
@@ -171,12 +183,13 @@ public sealed class AsyncCompositeTests
 
         composite.Execute(5);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("pre", log[0]);
-        Assert.Equal("child", log[1]);
-        Assert.Equal("post", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("pre", log[0]);
+        ScenarioExpect.Equal("child", log[1]);
+        ScenarioExpect.Equal("post", log[2]);
     }
 
+    [Scenario("ActionComposite Nested")]
     [Fact]
     public void ActionComposite_Nested()
     {
@@ -192,11 +205,12 @@ public sealed class AsyncCompositeTests
 
         outer.Execute(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("inner", log[0]);
-        Assert.Equal("outer", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("inner", log[0]);
+        ScenarioExpect.Equal("outer", log[1]);
     }
 
+    [Scenario("ActionComposite AddChildren Multiple")]
     [Fact]
     public void ActionComposite_AddChildren_Multiple()
     {
@@ -210,9 +224,10 @@ public sealed class AsyncCompositeTests
 
         composite.Execute(0);
 
-        Assert.Equal([1, 2, 3], log);
+        ScenarioExpect.Equal([1, 2, 3], log);
     }
 
+    [Scenario("ActionComposite Empty Node Executes")]
     [Fact]
     public void ActionComposite_Empty_Node_Executes()
     {
@@ -225,14 +240,15 @@ public sealed class AsyncCompositeTests
 
         composite.Execute(5);
 
-        Assert.True(preExecuted);
-        Assert.True(postExecuted);
+        ScenarioExpect.True(preExecuted);
+        ScenarioExpect.True(postExecuted);
     }
 
     #endregion
 
     #region AsyncActionComposite<TIn> Tests
 
+    [Scenario("AsyncActionComposite Leaf Executes")]
     [Fact]
     public async Task AsyncActionComposite_Leaf_Executes()
     {
@@ -246,9 +262,10 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionComposite Leaf Sync Executes")]
     [Fact]
     public async Task AsyncActionComposite_Leaf_Sync_Executes()
     {
@@ -258,9 +275,10 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionComposite Node Executes Children Sequentially")]
     [Fact]
     public async Task AsyncActionComposite_Node_Executes_Children_Sequentially()
     {
@@ -280,11 +298,12 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("child1", log[0]);
-        Assert.Equal("child2", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("child1", log[0]);
+        ScenarioExpect.Equal("child2", log[1]);
     }
 
+    [Scenario("AsyncActionComposite ParallelNode Executes Children Concurrently")]
     [Fact]
     public async Task AsyncActionComposite_ParallelNode_Executes_Children_Concurrently()
     {
@@ -305,12 +324,13 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
+        ScenarioExpect.Equal(2, log.Count);
         // Fast should complete before slow because parallel execution
-        Assert.Equal("fast", log[0]);
-        Assert.Equal("slow", log[1]);
+        ScenarioExpect.Equal("fast", log[0]);
+        ScenarioExpect.Equal("slow", log[1]);
     }
 
+    [Scenario("AsyncActionComposite Node With PrePost Hooks")]
     [Fact]
     public async Task AsyncActionComposite_Node_With_PrePost_Hooks()
     {
@@ -323,12 +343,13 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("pre", log[0]);
-        Assert.Equal("child", log[1]);
-        Assert.Equal("post", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("pre", log[0]);
+        ScenarioExpect.Equal("child", log[1]);
+        ScenarioExpect.Equal("post", log[2]);
     }
 
+    [Scenario("AsyncActionComposite AddChildren Multiple")]
     [Fact]
     public async Task AsyncActionComposite_AddChildren_Multiple()
     {
@@ -342,9 +363,10 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.Equal(3, count);
+        ScenarioExpect.Equal(3, count);
     }
 
+    [Scenario("AsyncActionComposite Nested Structure")]
     [Fact]
     public async Task AsyncActionComposite_Nested_Structure()
     {
@@ -358,12 +380,13 @@ public sealed class AsyncCompositeTests
 
         await composite.ExecuteAsync(5);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("inner-pre", log[0]);
-        Assert.Equal("inner-leaf", log[1]);
-        Assert.Equal("outer-leaf", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("inner-pre", log[0]);
+        ScenarioExpect.Equal("inner-leaf", log[1]);
+        ScenarioExpect.Equal("outer-leaf", log[2]);
     }
 
+    [Scenario("AsyncActionComposite AddChild Ignored For Leaf")]
     [Fact]
     public void AsyncActionComposite_AddChild_Ignored_For_Leaf()
     {
@@ -373,13 +396,14 @@ public sealed class AsyncCompositeTests
 
         // Should still build successfully as a leaf
         var composite = builder.Build();
-        Assert.NotNull(composite);
+        ScenarioExpect.NotNull(composite);
     }
 
+    [Scenario("AsyncActionComposite Leaf Null Throws")]
     [Fact]
     public void AsyncActionComposite_Leaf_Null_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionComposite<int>.Leaf((AsyncActionComposite<int>.LeafAction)null!).Build());
     }
 
@@ -387,19 +411,21 @@ public sealed class AsyncCompositeTests
 
     #region Null Argument Tests
 
+    [Scenario("AsyncComposite Leaf Null Throws")]
     [Fact]
     public void AsyncComposite_Leaf_Null_Throws()
     {
         // Build() validates that leaf operation is set and throws InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncComposite<int, int>.Leaf((AsyncComposite<int, int>.LeafOp)null!).Build());
     }
 
+    [Scenario("ActionComposite Leaf Null Throws")]
     [Fact]
     public void ActionComposite_Leaf_Null_Throws()
     {
         // Build() validates that leaf operation is set and throws InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             ActionComposite<int>.Leaf(null!).Build());
     }
 

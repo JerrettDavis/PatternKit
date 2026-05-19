@@ -98,6 +98,7 @@ public sealed class AsyncStateMachineBuilderTests
     private enum S { A, B, C, D }
     private readonly record struct E(string Kind);
 
+    [Scenario("CustomComparer Works")]
     [Fact]
     public async Task CustomComparer_Works()
     {
@@ -114,11 +115,12 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync("IDLE", new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal("ACTIVE", state);
-        Assert.Contains("entered", log);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal("ACTIVE", state);
+        ScenarioExpect.Contains("entered", log);
     }
 
+    [Scenario("ThenBuilder End Without Effect")]
     [Fact]
     public async Task ThenBuilder_End_Without_Effect()
     {
@@ -130,10 +132,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal(S.B, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.B, state);
     }
 
+    [Scenario("ThenBuilder Stay End")]
     [Fact]
     public async Task ThenBuilder_Stay_End()
     {
@@ -145,10 +148,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("stay"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
     }
 
+    [Scenario("ThenBuilder AsDefault Stay")]
     [Fact]
     public async Task ThenBuilder_AsDefault_Stay()
     {
@@ -161,11 +165,12 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
-        Assert.Equal("default", log[0]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Equal("default", log[0]);
     }
 
+    [Scenario("ThenBuilder AsDefault Permit")]
     [Fact]
     public async Task ThenBuilder_AsDefault_Permit()
     {
@@ -182,13 +187,14 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.C, state);
-        Assert.Equal("exit:A", log[0]);
-        Assert.Equal("default:go-to-C", log[1]);
-        Assert.Equal("enter:C", log[2]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.C, state);
+        ScenarioExpect.Equal("exit:A", log[0]);
+        ScenarioExpect.Equal("default:go-to-C", log[1]);
+        ScenarioExpect.Equal("enter:C", log[2]);
     }
 
+    [Scenario("MultipleOnEnterOnExit Hooks")]
     [Fact]
     public async Task MultipleOnEnterOnExit_Hooks()
     {
@@ -207,13 +213,14 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("go"));
 
-        Assert.Equal(4, log.Count);
-        Assert.Equal("exit:A:1", log[0]);
-        Assert.Equal("exit:A:2", log[1]);
-        Assert.Equal("enter:B:1", log[2]);
-        Assert.Equal("enter:B:2", log[3]);
+        ScenarioExpect.Equal(4, log.Count);
+        ScenarioExpect.Equal("exit:A:1", log[0]);
+        ScenarioExpect.Equal("exit:A:2", log[1]);
+        ScenarioExpect.Equal("enter:B:1", log[2]);
+        ScenarioExpect.Equal("enter:B:2", log[3]);
     }
 
+    [Scenario("StateBuilder Direct Access")]
     [Fact]
     public async Task StateBuilder_Direct_Access()
     {
@@ -233,9 +240,10 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("go"));
 
-        Assert.Contains("enter:B", log);
+        ScenarioExpect.Contains("enter:B", log);
     }
 
+    [Scenario("UnknownState Returns False")]
     [Fact]
     public async Task UnknownState_Returns_False()
     {
@@ -247,10 +255,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.C, new E("go"));
 
-        Assert.False(handled);
-        Assert.Equal(S.C, state);
+        ScenarioExpect.False(handled);
+        ScenarioExpect.Equal(S.C, state);
     }
 
+    [Scenario("Transition To Self State No Exit Enter")]
     [Fact]
     public async Task Transition_To_Self_State_No_Exit_Enter()
     {
@@ -265,10 +274,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("self"));
 
-        Assert.Single(log);
-        Assert.Equal("effect", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("effect", log[0]);
     }
 
+    [Scenario("Cancellation Token Propagates")]
     [Fact]
     public async Task Cancellation_Token_Propagates()
     {
@@ -287,9 +297,10 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("go"), cts.Token);
 
-        Assert.True(tokenReceived);
+        ScenarioExpect.True(tokenReceived);
     }
 
+    [Scenario("WhenBuilder Permit Then Stay Override")]
     [Fact]
     public async Task WhenBuilder_Permit_Then_Stay_Override()
     {
@@ -302,10 +313,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (_, state) = await m.TryTransitionAsync(S.A, new E("test"));
 
-        Assert.Equal(S.A, state);
-        Assert.Equal("stayed", log[0]);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Equal("stayed", log[0]);
     }
 
+    [Scenario("Default Effect Only On Stay")]
     [Fact]
     public async Task Default_Effect_Only_On_Stay()
     {
@@ -319,10 +331,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("any"));
 
-        Assert.Single(log);
-        Assert.Equal("default-effect", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default-effect", log[0]);
     }
 
+    [Scenario("Null Hook Is Ignored")]
     [Fact]
     public async Task Null_Hook_Is_Ignored()
     {
@@ -340,9 +353,10 @@ public sealed class AsyncStateMachineBuilderTests
 
         await m.TryTransitionAsync(S.A, new E("go"));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("NoDefault NoMatch Returns False")]
     [Fact]
     public async Task NoDefault_NoMatch_Returns_False()
     {
@@ -354,9 +368,10 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, _) = await m.TryTransitionAsync(S.A, new E("other"));
 
-        Assert.False(handled);
+        ScenarioExpect.False(handled);
     }
 
+    [Scenario("AsDefault Without Effect")]
     [Fact]
     public async Task AsDefault_Without_Effect()
     {
@@ -368,10 +383,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("any"));
 
-        Assert.True(handled);
-        Assert.Equal(S.B, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.B, state);
     }
 
+    [Scenario("Transition To Unconfigured State Works")]
     [Fact]
     public async Task Transition_To_Unconfigured_State_Works()
     {
@@ -386,14 +402,15 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal(S.D, state);
-        Assert.Equal(2, log.Count);
-        Assert.Equal("exit:A", log[0]);
-        Assert.Equal("effect:go", log[1]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.D, state);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("exit:A", log[0]);
+        ScenarioExpect.Equal("effect:go", log[1]);
         // No OnEnter for S.D since it's not configured
     }
 
+    [Scenario("Default Transition To Unconfigured State")]
     [Fact]
     public async Task Default_Transition_To_Unconfigured_State()
     {
@@ -408,13 +425,14 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.D, state);
-        Assert.Equal(2, log.Count);
-        Assert.Equal("exit:A", log[0]);
-        Assert.Equal("default:go-to-D", log[1]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.D, state);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("exit:A", log[0]);
+        ScenarioExpect.Equal("default:go-to-D", log[1]);
     }
 
+    [Scenario("Default Transition Without Effect")]
     [Fact]
     public async Task Default_Transition_Without_Effect()
     {
@@ -429,10 +447,11 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("any"));
 
-        Assert.True(handled);
-        Assert.Equal(S.B, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.B, state);
     }
 
+    [Scenario("Default Stay Without Effect")]
     [Fact]
     public async Task Default_Stay_Without_Effect()
     {
@@ -446,11 +465,12 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("any"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
-        Assert.Empty(log); // No exit because we stayed
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Empty(log); // No exit because we stayed
     }
 
+    [Scenario("Edge Effect Only On Stay")]
     [Fact]
     public async Task Edge_Effect_Only_On_Stay()
     {
@@ -463,10 +483,10 @@ public sealed class AsyncStateMachineBuilderTests
 
         var (handled, state) = await m.TryTransitionAsync(S.A, new E("stay"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
-        Assert.Single(log);
-        Assert.Equal("stayed", log[0]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("stayed", log[0]);
     }
 }
 

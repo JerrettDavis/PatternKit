@@ -1,60 +1,66 @@
 using PatternKit.Examples.AbstractFactoryDemo;
 using static PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.AbstractFactoryDemoTests;
 
 public sealed class AbstractFactoryDemoTests
 {
+    [Scenario("CreateUIFactory Creates All Platform Families")]
     [Fact]
     public void CreateUIFactory_Creates_All_Platform_Families()
     {
         var factory = CreateUIFactory();
 
-        Assert.True(factory.TryGetFamily(Platform.Windows, out var winFamily));
-        Assert.True(factory.TryGetFamily(Platform.MacOS, out var macFamily));
-        Assert.True(factory.TryGetFamily(Platform.Linux, out var linuxFamily));
+        ScenarioExpect.True(factory.TryGetFamily(Platform.Windows, out var winFamily));
+        ScenarioExpect.True(factory.TryGetFamily(Platform.MacOS, out var macFamily));
+        ScenarioExpect.True(factory.TryGetFamily(Platform.Linux, out var linuxFamily));
 
-        Assert.NotNull(winFamily);
-        Assert.NotNull(macFamily);
-        Assert.NotNull(linuxFamily);
+        ScenarioExpect.NotNull(winFamily);
+        ScenarioExpect.NotNull(macFamily);
+        ScenarioExpect.NotNull(linuxFamily);
     }
 
+    [Scenario("Windows Family Creates All Widget Types")]
     [Fact]
     public void Windows_Family_Creates_All_Widget_Types()
     {
         var factory = CreateUIFactory();
         var family = factory.GetFamily(Platform.Windows);
 
-        Assert.True(family.CanCreate<IButton>());
-        Assert.True(family.CanCreate<ITextBox>());
-        Assert.True(family.CanCreate<ICheckBox>());
-        Assert.True(family.CanCreate<IDialog>());
+        ScenarioExpect.True(family.CanCreate<IButton>());
+        ScenarioExpect.True(family.CanCreate<ITextBox>());
+        ScenarioExpect.True(family.CanCreate<ICheckBox>());
+        ScenarioExpect.True(family.CanCreate<IDialog>());
     }
 
+    [Scenario("MacOS Family Creates All Widget Types")]
     [Fact]
     public void MacOS_Family_Creates_All_Widget_Types()
     {
         var factory = CreateUIFactory();
         var family = factory.GetFamily(Platform.MacOS);
 
-        Assert.True(family.CanCreate<IButton>());
-        Assert.True(family.CanCreate<ITextBox>());
-        Assert.True(family.CanCreate<ICheckBox>());
-        Assert.True(family.CanCreate<IDialog>());
+        ScenarioExpect.True(family.CanCreate<IButton>());
+        ScenarioExpect.True(family.CanCreate<ITextBox>());
+        ScenarioExpect.True(family.CanCreate<ICheckBox>());
+        ScenarioExpect.True(family.CanCreate<IDialog>());
     }
 
+    [Scenario("Linux Family Creates All Widget Types")]
     [Fact]
     public void Linux_Family_Creates_All_Widget_Types()
     {
         var factory = CreateUIFactory();
         var family = factory.GetFamily(Platform.Linux);
 
-        Assert.True(family.CanCreate<IButton>());
-        Assert.True(family.CanCreate<ITextBox>());
-        Assert.True(family.CanCreate<ICheckBox>());
-        Assert.True(family.CanCreate<IDialog>());
+        ScenarioExpect.True(family.CanCreate<IButton>());
+        ScenarioExpect.True(family.CanCreate<ITextBox>());
+        ScenarioExpect.True(family.CanCreate<ICheckBox>());
+        ScenarioExpect.True(family.CanCreate<IDialog>());
     }
 
+    [Scenario("WindowsButton Renders And Clicks")]
     [Fact]
     public void WindowsButton_Renders_And_Clicks()
     {
@@ -62,9 +68,10 @@ public sealed class AbstractFactoryDemoTests
 
         var render = button.Render();
 
-        Assert.Contains("Windows Button", render);
+        ScenarioExpect.Contains("Windows Button", render);
     }
 
+    [Scenario("WindowsTextBox SetText And GetText")]
     [Fact]
     public void WindowsTextBox_SetText_And_GetText()
     {
@@ -74,21 +81,23 @@ public sealed class AbstractFactoryDemoTests
         var text = textBox.GetText();
         var render = textBox.Render();
 
-        Assert.Equal("Hello", text);
-        Assert.Contains("Hello", render);
+        ScenarioExpect.Equal("Hello", text);
+        ScenarioExpect.Contains("Hello", render);
     }
 
+    [Scenario("WindowsCheckBox Toggle Changes State")]
     [Fact]
     public void WindowsCheckBox_Toggle_Changes_State()
     {
         var checkBox = new WindowsCheckBox();
 
-        Assert.False(checkBox.IsChecked);
+        ScenarioExpect.False(checkBox.IsChecked);
         checkBox.Toggle();
-        Assert.True(checkBox.IsChecked);
-        Assert.Contains("[X]", checkBox.Render());
+        ScenarioExpect.True(checkBox.IsChecked);
+        ScenarioExpect.Contains("[X]", checkBox.Render());
     }
 
+    [Scenario("MacButton Renders And Clicks")]
     [Fact]
     public void MacButton_Renders_And_Clicks()
     {
@@ -96,9 +105,10 @@ public sealed class AbstractFactoryDemoTests
 
         var render = button.Render();
 
-        Assert.Contains("macOS Button", render);
+        ScenarioExpect.Contains("macOS Button", render);
     }
 
+    [Scenario("MacTextBox SetText And GetText")]
     [Fact]
     public void MacTextBox_SetText_And_GetText()
     {
@@ -107,23 +117,25 @@ public sealed class AbstractFactoryDemoTests
         textBox.SetText("World");
         var render = textBox.Render();
 
-        Assert.Contains("World", render);
-        Assert.Contains("NSTextField", render);
+        ScenarioExpect.Contains("World", render);
+        ScenarioExpect.Contains("NSTextField", render);
     }
 
+    [Scenario("MacCheckBox Toggle Changes State")]
     [Fact]
     public void MacCheckBox_Toggle_Changes_State()
     {
         var checkBox = new MacCheckBox();
 
-        Assert.False(checkBox.IsChecked);
-        Assert.Contains("○", checkBox.Render());
+        ScenarioExpect.False(checkBox.IsChecked);
+        ScenarioExpect.Contains("○", checkBox.Render());
 
         checkBox.Toggle();
-        Assert.True(checkBox.IsChecked);
-        Assert.Contains("◉", checkBox.Render());
+        ScenarioExpect.True(checkBox.IsChecked);
+        ScenarioExpect.Contains("◉", checkBox.Render());
     }
 
+    [Scenario("LinuxButton Renders And Clicks")]
     [Fact]
     public void LinuxButton_Renders_And_Clicks()
     {
@@ -131,9 +143,10 @@ public sealed class AbstractFactoryDemoTests
 
         var render = button.Render();
 
-        Assert.Contains("GTK Button", render);
+        ScenarioExpect.Contains("GTK Button", render);
     }
 
+    [Scenario("LinuxTextBox SetText And GetText")]
     [Fact]
     public void LinuxTextBox_SetText_And_GetText()
     {
@@ -142,21 +155,23 @@ public sealed class AbstractFactoryDemoTests
         textBox.SetText("GTK Text");
         var render = textBox.Render();
 
-        Assert.Contains("GTK Text", render);
-        Assert.Contains("GtkEntry", render);
+        ScenarioExpect.Contains("GTK Text", render);
+        ScenarioExpect.Contains("GtkEntry", render);
     }
 
+    [Scenario("LinuxCheckBox Toggle Changes State")]
     [Fact]
     public void LinuxCheckBox_Toggle_Changes_State()
     {
         var checkBox = new LinuxCheckBox();
 
-        Assert.False(checkBox.IsChecked);
+        ScenarioExpect.False(checkBox.IsChecked);
         checkBox.Toggle();
-        Assert.True(checkBox.IsChecked);
-        Assert.Contains("[✓]", checkBox.Render());
+        ScenarioExpect.True(checkBox.IsChecked);
+        ScenarioExpect.Contains("[✓]", checkBox.Render());
     }
 
+    [Scenario("WindowsDialog Renders")]
     [Fact]
     public void WindowsDialog_Renders()
     {
@@ -164,9 +179,10 @@ public sealed class AbstractFactoryDemoTests
 
         var render = dialog.Render();
 
-        Assert.Contains("Windows Dialog", render);
+        ScenarioExpect.Contains("Windows Dialog", render);
     }
 
+    [Scenario("MacDialog Renders")]
     [Fact]
     public void MacDialog_Renders()
     {
@@ -174,9 +190,10 @@ public sealed class AbstractFactoryDemoTests
 
         var render = dialog.Render();
 
-        Assert.Contains("macOS Sheet", render);
+        ScenarioExpect.Contains("macOS Sheet", render);
     }
 
+    [Scenario("LinuxDialog Renders")]
     [Fact]
     public void LinuxDialog_Renders()
     {
@@ -184,19 +201,21 @@ public sealed class AbstractFactoryDemoTests
 
         var render = dialog.Render();
 
-        Assert.Contains("GTK Dialog", render);
+        ScenarioExpect.Contains("GTK Dialog", render);
     }
 
+    [Scenario("DetectPlatform Returns Valid Platform")]
     [Fact]
     public void DetectPlatform_Returns_Valid_Platform()
     {
         var platform = DetectPlatform();
 
-        Assert.True(platform == Platform.Windows ||
+        ScenarioExpect.True(platform == Platform.Windows ||
                     platform == Platform.MacOS ||
                     platform == Platform.Linux);
     }
 
+    [Scenario("RenderLoginForm Does Not Throw")]
     [Fact]
     public void RenderLoginForm_Does_Not_Throw()
     {
@@ -207,6 +226,7 @@ public sealed class AbstractFactoryDemoTests
         RenderLoginForm(widgets);
     }
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {

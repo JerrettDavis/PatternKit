@@ -109,6 +109,7 @@ public sealed class TemplateFluentTests(ITestOutputHelper output) : TinyBddXunit
 
 public sealed class ActionTemplateTests
 {
+    [Scenario("ActionTemplate Execute NoHooks")]
     [Fact]
     public void ActionTemplate_Execute_NoHooks()
     {
@@ -117,9 +118,10 @@ public sealed class ActionTemplateTests
 
         tpl.Execute(42);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionTemplate Execute WithBefore")]
     [Fact]
     public void ActionTemplate_Execute_WithBefore()
     {
@@ -130,9 +132,10 @@ public sealed class ActionTemplateTests
 
         tpl.Execute(1);
 
-        Assert.Equal(new[] { "before", "step" }, log);
+        ScenarioExpect.Equal(new[] { "before", "step" }, log);
     }
 
+    [Scenario("ActionTemplate Execute WithAfter")]
     [Fact]
     public void ActionTemplate_Execute_WithAfter()
     {
@@ -143,9 +146,10 @@ public sealed class ActionTemplateTests
 
         tpl.Execute(1);
 
-        Assert.Equal(new[] { "step", "after" }, log);
+        ScenarioExpect.Equal(new[] { "step", "after" }, log);
     }
 
+    [Scenario("ActionTemplate Execute WithAllHooks")]
     [Fact]
     public void ActionTemplate_Execute_WithAllHooks()
     {
@@ -157,9 +161,10 @@ public sealed class ActionTemplateTests
 
         tpl.Execute(42);
 
-        Assert.Equal(new[] { "before:42", "step:42", "after:42" }, log);
+        ScenarioExpect.Equal(new[] { "before:42", "step:42", "after:42" }, log);
     }
 
+    [Scenario("ActionTemplate TryExecute Success")]
     [Fact]
     public void ActionTemplate_TryExecute_Success()
     {
@@ -168,11 +173,12 @@ public sealed class ActionTemplateTests
 
         var ok = tpl.TryExecute(42, out var error);
 
-        Assert.True(ok);
-        Assert.Null(error);
-        Assert.True(executed);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Null(error);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionTemplate TryExecute Error")]
     [Fact]
     public void ActionTemplate_TryExecute_Error()
     {
@@ -183,11 +189,12 @@ public sealed class ActionTemplateTests
 
         var ok = tpl.TryExecute(42, out var error);
 
-        Assert.False(ok);
-        Assert.Equal("boom", error);
-        Assert.Equal("boom", observedError);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Equal("boom", error);
+        ScenarioExpect.Equal("boom", observedError);
     }
 
+    [Scenario("ActionTemplate Synchronized")]
     [Fact]
     public void ActionTemplate_Synchronized()
     {
@@ -204,9 +211,10 @@ public sealed class ActionTemplateTests
         var tasks = Enumerable.Range(0, 4).Select(_ => Task.Run(() => tpl.Execute(1))).ToArray();
         Task.WaitAll(tasks);
 
-        Assert.Equal(1, maxConcurrent);
+        ScenarioExpect.Equal(1, maxConcurrent);
     }
 
+    [Scenario("ActionTemplate MultipleHooks Compose")]
     [Fact]
     public void ActionTemplate_MultipleHooks_Compose()
     {
@@ -222,12 +230,13 @@ public sealed class ActionTemplateTests
 
         tpl.Execute(1);
 
-        Assert.Equal(4, count); // 2 before + 2 after
+        ScenarioExpect.Equal(4, count); // 2 before + 2 after
     }
 }
 
 public sealed class AsyncTemplateTests
 {
+    [Scenario("AsyncTemplate Execute Simple")]
     [Fact]
     public async Task AsyncTemplate_Execute_Simple()
     {
@@ -239,9 +248,10 @@ public sealed class AsyncTemplateTests
 
         var result = await tpl.ExecuteAsync(42);
 
-        Assert.Equal("42", result);
+        ScenarioExpect.Equal("42", result);
     }
 
+    [Scenario("AsyncTemplate Execute WithHooks")]
     [Fact]
     public async Task AsyncTemplate_Execute_WithHooks()
     {
@@ -258,10 +268,11 @@ public sealed class AsyncTemplateTests
 
         var result = await tpl.ExecuteAsync(42);
 
-        Assert.Equal("42", result);
-        Assert.Equal(new[] { "before:42", "step:42", "after:42:42" }, log);
+        ScenarioExpect.Equal("42", result);
+        ScenarioExpect.Equal(new[] { "before:42", "step:42", "after:42:42" }, log);
     }
 
+    [Scenario("AsyncTemplate TryExecuteAsync Success")]
     [Fact]
     public async Task AsyncTemplate_TryExecuteAsync_Success()
     {
@@ -273,11 +284,12 @@ public sealed class AsyncTemplateTests
 
         var (ok, result, error) = await tpl.TryExecuteAsync(42);
 
-        Assert.True(ok);
-        Assert.Equal("42", result);
-        Assert.Null(error);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Equal("42", result);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncTemplate TryExecuteAsync Error")]
     [Fact]
     public async Task AsyncTemplate_TryExecuteAsync_Error()
     {
@@ -292,11 +304,12 @@ public sealed class AsyncTemplateTests
 
         var (ok, result, error) = await tpl.TryExecuteAsync(42);
 
-        Assert.False(ok);
-        Assert.Equal("boom", error);
-        Assert.Equal("boom", observedError);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Equal("boom", error);
+        ScenarioExpect.Equal("boom", observedError);
     }
 
+    [Scenario("AsyncTemplate Synchronized")]
     [Fact]
     public async Task AsyncTemplate_Synchronized()
     {
@@ -314,12 +327,13 @@ public sealed class AsyncTemplateTests
         var tasks = Enumerable.Range(0, 4).Select(_ => tpl.ExecuteAsync(1)).ToArray();
         await Task.WhenAll(tasks);
 
-        Assert.Equal(1, maxConcurrent);
+        ScenarioExpect.Equal(1, maxConcurrent);
     }
 }
 
 public sealed class AsyncActionTemplateTests
 {
+    [Scenario("AsyncActionTemplate Execute Simple")]
     [Fact]
     public async Task AsyncActionTemplate_Execute_Simple()
     {
@@ -332,9 +346,10 @@ public sealed class AsyncActionTemplateTests
 
         await tpl.ExecuteAsync(42);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionTemplate Execute WithHooks")]
     [Fact]
     public async Task AsyncActionTemplate_Execute_WithHooks()
     {
@@ -350,9 +365,10 @@ public sealed class AsyncActionTemplateTests
 
         await tpl.ExecuteAsync(42);
 
-        Assert.Equal(new[] { "before:42", "step:42", "after:42" }, log);
+        ScenarioExpect.Equal(new[] { "before:42", "step:42", "after:42" }, log);
     }
 
+    [Scenario("AsyncActionTemplate TryExecuteAsync Success")]
     [Fact]
     public async Task AsyncActionTemplate_TryExecuteAsync_Success()
     {
@@ -365,11 +381,12 @@ public sealed class AsyncActionTemplateTests
 
         var (ok, error) = await tpl.TryExecuteAsync(42);
 
-        Assert.True(ok);
-        Assert.Null(error);
-        Assert.True(executed);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Null(error);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionTemplate TryExecuteAsync Error")]
     [Fact]
     public async Task AsyncActionTemplate_TryExecuteAsync_Error()
     {
@@ -384,11 +401,12 @@ public sealed class AsyncActionTemplateTests
 
         var (ok, error) = await tpl.TryExecuteAsync(42);
 
-        Assert.False(ok);
-        Assert.Equal("boom", error);
-        Assert.Equal("boom", observedError);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Equal("boom", error);
+        ScenarioExpect.Equal("boom", observedError);
     }
 
+    [Scenario("AsyncActionTemplate Synchronized")]
     [Fact]
     public async Task AsyncActionTemplate_Synchronized()
     {
@@ -405,9 +423,10 @@ public sealed class AsyncActionTemplateTests
         var tasks = Enumerable.Range(0, 4).Select(_ => tpl.ExecuteAsync(1)).ToArray();
         await Task.WhenAll(tasks);
 
-        Assert.Equal(1, maxConcurrent);
+        ScenarioExpect.Equal(1, maxConcurrent);
     }
 
+    [Scenario("AsyncActionTemplate MultipleHooks Compose")]
     [Fact]
     public async Task AsyncActionTemplate_MultipleHooks_Compose()
     {
@@ -421,9 +440,10 @@ public sealed class AsyncActionTemplateTests
 
         await tpl.ExecuteAsync(1);
 
-        Assert.Equal(4, count);
+        ScenarioExpect.Equal(4, count);
     }
 
+    [Scenario("AsyncActionTemplate Cancellation")]
     [Fact]
     public async Task AsyncActionTemplate_Cancellation()
     {
@@ -437,19 +457,21 @@ public sealed class AsyncActionTemplateTests
 
         await tpl.ExecuteAsync(1, cts.Token);
 
-        Assert.True(tokenReceived);
+        ScenarioExpect.True(tokenReceived);
     }
 }
 
 public sealed class TemplateBuilderTests
 {
+    [Scenario("Template Create NullStep Throws")]
     [Fact]
     public void Template_Create_NullStep_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Template<int, int>.Create(null!));
     }
 
+    [Scenario("Template TryExecute Synchronized Success")]
     [Fact]
     public void Template_TryExecute_Synchronized_Success()
     {
@@ -459,11 +481,12 @@ public sealed class TemplateBuilderTests
 
         var ok = tpl.TryExecute(21, out var result, out var error);
 
-        Assert.True(ok);
-        Assert.Equal(42, result);
-        Assert.Null(error);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Equal(42, result);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("Template TryExecute Synchronized Error")]
     [Fact]
     public void Template_TryExecute_Synchronized_Error()
     {
@@ -475,18 +498,20 @@ public sealed class TemplateBuilderTests
 
         var ok = tpl.TryExecute(1, out var result, out var error);
 
-        Assert.False(ok);
-        Assert.NotNull(error);
-        Assert.True(errorObserved);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.NotNull(error);
+        ScenarioExpect.True(errorObserved);
     }
 
+    [Scenario("ActionTemplate Create NullStep Throws")]
     [Fact]
     public void ActionTemplate_Create_NullStep_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionTemplate<int>.Create(null!));
     }
 
+    [Scenario("ActionTemplate TryExecute Synchronized Success")]
     [Fact]
     public void ActionTemplate_TryExecute_Synchronized_Success()
     {
@@ -497,11 +522,12 @@ public sealed class TemplateBuilderTests
 
         var ok = tpl.TryExecute(1, out var error);
 
-        Assert.True(ok);
-        Assert.Null(error);
-        Assert.True(executed);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Null(error);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionTemplate TryExecute Synchronized Error")]
     [Fact]
     public void ActionTemplate_TryExecute_Synchronized_Error()
     {
@@ -513,9 +539,9 @@ public sealed class TemplateBuilderTests
 
         var ok = tpl.TryExecute(1, out var error);
 
-        Assert.False(ok);
-        Assert.NotNull(error);
-        Assert.True(errorObserved);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.NotNull(error);
+        ScenarioExpect.True(errorObserved);
     }
 }
 

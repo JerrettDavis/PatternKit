@@ -40,6 +40,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="Structural\" />
     </ItemGroup>
 

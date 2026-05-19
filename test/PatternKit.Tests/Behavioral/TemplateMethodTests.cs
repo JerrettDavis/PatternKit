@@ -84,6 +84,7 @@ public sealed class TemplateMethodBuilderTests
         protected override void OnAfter(int context, string result) => Log.Add($"after:{context}:{result}");
     }
 
+    [Scenario("Synchronized Enforces Mutual Exclusion")]
     [Fact]
     public void Synchronized_Enforces_Mutual_Exclusion()
     {
@@ -92,9 +93,10 @@ public sealed class TemplateMethodBuilderTests
         var tasks = Enumerable.Range(0, 8).Select(_ => Task.Run(() => template.Execute(1))).ToArray();
         Task.WaitAll(tasks);
 
-        Assert.Equal(1, template.MaxConcurrent);
+        ScenarioExpect.Equal(1, template.MaxConcurrent);
     }
 
+    [Scenario("Synchronized Returns Correct Results")]
     [Fact]
     public void Synchronized_Returns_Correct_Results()
     {
@@ -102,9 +104,10 @@ public sealed class TemplateMethodBuilderTests
 
         var result = template.Execute(21);
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("Minimal Template Works")]
     [Fact]
     public void Minimal_Template_Works()
     {
@@ -112,9 +115,10 @@ public sealed class TemplateMethodBuilderTests
 
         var result = template.Execute("hello");
 
-        Assert.Equal(5, result);
+        ScenarioExpect.Equal(5, result);
     }
 
+    [Scenario("Hooks Called In Order")]
     [Fact]
     public void Hooks_Called_In_Order()
     {
@@ -122,12 +126,13 @@ public sealed class TemplateMethodBuilderTests
 
         var result = template.Execute(42);
 
-        Assert.Equal("result:42", result);
-        Assert.Equal(2, template.Log.Count);
-        Assert.Equal("before:42", template.Log[0]);
-        Assert.Equal("after:42:result:42", template.Log[1]);
+        ScenarioExpect.Equal("result:42", result);
+        ScenarioExpect.Equal(2, template.Log.Count);
+        ScenarioExpect.Equal("before:42", template.Log[0]);
+        ScenarioExpect.Equal("after:42:result:42", template.Log[1]);
     }
 
+    [Scenario("Multiple Executions Independent")]
     [Fact]
     public void Multiple_Executions_Independent()
     {
@@ -137,7 +142,7 @@ public sealed class TemplateMethodBuilderTests
         template.Execute(2);
         template.Execute(3);
 
-        Assert.Equal(6, template.Log.Count);
+        ScenarioExpect.Equal(6, template.Log.Count);
     }
 }
 

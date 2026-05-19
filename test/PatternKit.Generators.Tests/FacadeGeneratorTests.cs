@@ -2,6 +2,7 @@ using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using PatternKit.Common;
 using PatternKit.Creational.Builder;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -12,6 +13,7 @@ public class FacadeGeneratorTests
 
     #region Contract-First Tests
 
+    [Scenario("ContractFirst Interface Generates Implementation")]
     [Fact]
     public void ContractFirst_Interface_Generates_Implementation()
     {
@@ -51,14 +53,15 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        ScenarioExpect.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("BillingFacadeImpl"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ContractFirst PartialClass Generates Implementation")]
     [Fact]
     public void ContractFirst_PartialClass_Generates_Implementation()
     {
@@ -98,11 +101,12 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ContractFirst AsyncMethods WithValueTask")]
     [Fact]
     public void ContractFirst_AsyncMethods_WithValueTask()
     {
@@ -137,11 +141,12 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ContractFirst CancellationToken Support")]
     [Fact]
     public void ContractFirst_CancellationToken_Support()
     {
@@ -177,11 +182,12 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ContractFirst MultipleSubsystemDependencies")]
     [Fact]
     public void ContractFirst_MultipleSubsystemDependencies()
     {
@@ -234,29 +240,30 @@ public class FacadeGeneratorTests
         // Note: Generator may report PKFCD004 for dependency-injected methods
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
-        Assert.False(hasFatalErrors);
+        ScenarioExpect.False(hasFatalErrors);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify the generated facade has a constructor with dependencies
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var facadeType = asm.GetType("PatternKit.Examples.OrderFacadeImpl");
-        Assert.NotNull(facadeType);
+        ScenarioExpect.NotNull(facadeType);
 
         var ctor = facadeType!.GetConstructors()[0];
         var parameters = ctor.GetParameters();
-        Assert.Equal(2, parameters.Length);
-        Assert.Contains(parameters, p => p.ParameterType.Name == "InventoryService");
-        Assert.Contains(parameters, p => p.ParameterType.Name == "PaymentService");
+        ScenarioExpect.Equal(2, parameters.Length);
+        ScenarioExpect.Contains(parameters, p => p.ParameterType.Name == "InventoryService");
+        ScenarioExpect.Contains(parameters, p => p.ParameterType.Name == "PaymentService");
     }
 
+    [Scenario("ContractFirst ExecutionRouting Works")]
     [Fact]
     public void ContractFirst_ExecutionRouting_Works()
     {
@@ -298,12 +305,12 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -311,13 +318,14 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null);
 
-        Assert.True((bool)result!);
+        ScenarioExpect.True((bool)result!);
     }
 
     #endregion
 
     #region Host-First Tests
 
+    [Scenario("HostFirst StaticClass WithFacadeExpose")]
     [Fact]
     public void HostFirst_StaticClass_WithFacadeExpose()
     {
@@ -351,14 +359,15 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        ScenarioExpect.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("ShippingFacade"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("HostFirst GeneratedFacadeTypeName")]
     [Fact]
     public void HostFirst_GeneratedFacadeTypeName()
     {
@@ -386,16 +395,17 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Default name should be ProductCatalogFacade
-        Assert.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
+        ScenarioExpect.Contains(run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName),
             name => name.Contains("ProductCatalogFacade"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("HostFirst DependencyInjection InConstructor")]
     [Fact]
     public void HostFirst_DependencyInjection_InConstructor()
     {
@@ -428,26 +438,27 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var facadeType = asm.GetType("PatternKit.Examples.DataFacade");
-        Assert.NotNull(facadeType);
+        ScenarioExpect.NotNull(facadeType);
 
         // Verify constructor takes DatabaseService
         var ctor = facadeType!.GetConstructors()[0];
-        Assert.Single(ctor.GetParameters());
-        Assert.Equal("DatabaseService", ctor.GetParameters()[0].ParameterType.Name);
+        ScenarioExpect.Single(ctor.GetParameters());
+        ScenarioExpect.Equal("DatabaseService", ctor.GetParameters()[0].ParameterType.Name);
     }
 
+    [Scenario("HostFirst PreservesNullableReturnAnnotations")]
     [Fact]
     public void HostFirst_PreservesNullableReturnAnnotations()
     {
@@ -482,16 +493,17 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
-        var generatedSource = Assert.Single(
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        var generatedSource = ScenarioExpect.Single(
             run.Results.SelectMany(r => r.GeneratedSources),
             gs => gs.HintName.Contains("BillingFacade")).SourceText.ToString();
-        Assert.Contains("public global::PatternKit.Examples.Invoice? GetInvoice", generatedSource);
+        ScenarioExpect.Contains("public global::PatternKit.Examples.Invoice? GetInvoice", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("HostFirst StaticToInstance Transformation")]
     [Fact]
     public void HostFirst_StaticToInstance_Transformation()
     {
@@ -538,12 +550,12 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -551,13 +563,14 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("OK", result);
+        ScenarioExpect.Equal("OK", result);
     }
 
     #endregion
 
     #region Diagnostics Tests
 
+    [Scenario("Diagnostic PKFCD001 NonPartialType")]
     [Fact]
     public void Diagnostic_PKFCD001_NonPartialType()
     {
@@ -582,10 +595,11 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD001");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("must be declared as partial"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD001");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("must be declared as partial"));
     }
 
+    [Scenario("Diagnostic PKFCD002 MissingMapping")]
     [Fact]
     public void Diagnostic_PKFCD002_MissingMapping()
     {
@@ -610,10 +624,11 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD002");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("has no corresponding method marked with [FacadeMap]"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD002");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("has no corresponding method marked with [FacadeMap]"));
     }
 
+    [Scenario("Diagnostic PKFCD004 SignatureMismatch")]
     [Fact]
     public void Diagnostic_PKFCD004_SignatureMismatch()
     {
@@ -644,10 +659,11 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD004");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("signature does not match"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD004");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("signature does not match"));
     }
 
+    [Scenario("Diagnostic PKFCD006 AsyncGenerationDisabled")]
     [Fact]
     public void Diagnostic_PKFCD006_AsyncGenerationDisabled()
     {
@@ -683,14 +699,15 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD006");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("GenerateAsync is disabled"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD006");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("GenerateAsync is disabled"));
     }
 
     #endregion
 
     #region Integration Tests
 
+    [Scenario("Integration BillingFacade ContractFirst FullScenario")]
     [Fact]
     public void Integration_BillingFacade_ContractFirst_FullScenario()
     {
@@ -753,27 +770,28 @@ public class FacadeGeneratorTests
         // Note: Generator may report PKFCD004 for dependency-injected methods
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
-        Assert.False(hasFatalErrors);
+        ScenarioExpect.False(hasFatalErrors);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify the facade compiles and has the expected structure
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var facadeType = asm.GetType("PatternKit.Examples.Billing.BillingFacadeImpl");
-        Assert.NotNull(facadeType);
+        ScenarioExpect.NotNull(facadeType);
 
         // Verify it has a constructor with the three dependencies
         var ctor = facadeType!.GetConstructors()[0];
-        Assert.Equal(3, ctor.GetParameters().Length);
+        ScenarioExpect.Equal(3, ctor.GetParameters().Length);
     }
 
+    [Scenario("Integration ShippingFacade HostFirst FullScenario")]
     [Fact]
     public void Integration_ShippingFacade_HostFirst_FullScenario()
     {
@@ -838,14 +856,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -853,9 +871,10 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("37.5,1-2 days", result);
+        ScenarioExpect.Equal("37.5,1-2 days", result);
     }
 
+    [Scenario("Integration DeterministicOrdering")]
     [Fact]
     public void Integration_DeterministicOrdering()
     {
@@ -897,10 +916,10 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSources = run.Results.SelectMany(r => r.GeneratedSources).ToList();
-        Assert.NotEmpty(generatedSources);
+        ScenarioExpect.NotEmpty(generatedSources);
 
         var generatedSource = generatedSources.First().SourceText.ToString();
 
@@ -910,15 +929,16 @@ public class FacadeGeneratorTests
         var mikeIndex = generatedSource.IndexOf("void Mike()");
         var zebraIndex = generatedSource.IndexOf("void Zebra()");
 
-        Assert.True(alphaIndex < charlieIndex);
-        Assert.True(charlieIndex < mikeIndex);
-        Assert.True(mikeIndex < zebraIndex);
+        ScenarioExpect.True(alphaIndex < charlieIndex);
+        ScenarioExpect.True(charlieIndex < mikeIndex);
+        ScenarioExpect.True(mikeIndex < zebraIndex);
     }
 
     #endregion
 
     #region Edge Cases Tests
 
+    [Scenario("EdgeCase EmptyFacade")]
     [Fact]
     public void EdgeCase_EmptyFacade()
     {
@@ -942,11 +962,12 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // Should generate successfully with no diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("EdgeCase FacadeIgnore Attribute")]
     [Fact]
     public void EdgeCase_FacadeIgnore_Attribute()
     {
@@ -981,12 +1002,13 @@ public class FacadeGeneratorTests
 
         // Should not report missing mapping for IgnoredMethod (using Ignore policy)
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("IgnoredMethod"));
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("IgnoredMethod"));
 
         // Note: Interface will fail compilation since method isn't implemented
         // This is expected behavior - FacadeIgnore skips generation but doesn't affect the interface contract
     }
 
+    [Scenario("EdgeCase OptionalMethodNames")]
     [Fact]
     public void EdgeCase_OptionalMethodNames()
     {
@@ -1023,14 +1045,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -1038,9 +1060,10 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("default,custom", result);
+        ScenarioExpect.Equal("default,custom", result);
     }
 
+    [Scenario("EdgeCase ComplexReturnTypes")]
     [Fact]
     public void EdgeCase_ComplexReturnTypes()
     {
@@ -1087,14 +1110,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -1102,9 +1125,10 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null);
 
-        Assert.True((bool)result!);
+        ScenarioExpect.True((bool)result!);
     }
 
+    [Scenario("EdgeCase RefParameters")]
     [Fact]
     public void EdgeCase_RefParameters()
     {
@@ -1147,14 +1171,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -1162,9 +1186,10 @@ public class FacadeGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null);
 
-        Assert.True((bool)result!);
+        ScenarioExpect.True((bool)result!);
     }
 
+    [Scenario("EdgeCase SignatureMatching WithoutExplicitMemberName")]
     [Fact]
     public void EdgeCase_SignatureMatching_WithoutExplicitMemberName()
     {
@@ -1197,7 +1222,7 @@ public class FacadeGeneratorTests
 
         // Note: Signature auto-matching may have issues in the generator
         // Just verify it compiles without errors in generator diagnostics
-        Assert.All(run.Results, r => Assert.True(
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(
             r.Diagnostics.Length == 0 ||
             r.Diagnostics.All(d => d.Id != "PKFCD002"))); // No missing mapping error if it matched
 
@@ -1206,9 +1231,10 @@ public class FacadeGeneratorTests
         var hasCompileErrors = emit.Diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error);
 
         // Test passes if either: no generator diagnostics (matched) or compile succeeds
-        Assert.True(run.Results.All(r => r.Diagnostics.Length == 0) || !hasCompileErrors);
+        ScenarioExpect.True(run.Results.All(r => r.Diagnostics.Length == 0) || !hasCompileErrors);
     }
 
+    [Scenario("EdgeCase MultipleNamespaces")]
     [Fact]
     public void EdgeCase_MultipleNamespaces()
     {
@@ -1252,23 +1278,24 @@ public class FacadeGeneratorTests
         // Note: Generator may report PKFCD004 for dependency-injected methods
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
         var hasFatalErrors = diagnostics.Any(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error && d.Id != "PKFCD004");
-        Assert.False(hasFatalErrors);
+        ScenarioExpect.False(hasFatalErrors);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify the facade type was generated in the correct namespace
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var facadeType = asm.GetType("PatternKit.Examples.Facades.MultiNsFacadeImpl");
-        Assert.NotNull(facadeType);
+        ScenarioExpect.NotNull(facadeType);
     }
 
+    [Scenario("Diagnostic PKFCD003 DuplicateMappings")]
     [Fact]
     public void Diagnostic_PKFCD003_DuplicateMappings()
     {
@@ -1302,10 +1329,11 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD003");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("has multiple methods marked with [FacadeMap]"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD003");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("has multiple methods marked with [FacadeMap]"));
     }
 
+    [Scenario("Diagnostic PKFCD005 TypeNameConflict")]
     [Fact]
     public void Diagnostic_PKFCD005_TypeNameConflict()
     {
@@ -1337,14 +1365,15 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKFCD005");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("conflicts with an existing type"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD005");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("conflicts with an existing type"));
     }
 
     #endregion
 
     #region Auto-Facade Mode Tests
 
+    [Scenario("AutoFacade SimpleExternalType GeneratesAllMembers")]
     [Fact]
     public void AutoFacade_SimpleExternalType_GeneratesAllMembers()
     {
@@ -1371,15 +1400,16 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void Method1()", generatedSource);
-        Assert.Contains("int Method2(string arg)", generatedSource);
-        Assert.Contains("_target.Method1()", generatedSource);
-        Assert.Contains("return _target.Method2(arg)", generatedSource);
+        ScenarioExpect.Contains("void Method1()", generatedSource);
+        ScenarioExpect.Contains("int Method2(string arg)", generatedSource);
+        ScenarioExpect.Contains("_target.Method1()", generatedSource);
+        ScenarioExpect.Contains("return _target.Method2(arg)", generatedSource);
     }
 
+    [Scenario("AutoFacade WithInclude OnlyGeneratesSpecifiedMembers")]
     [Fact]
     public void AutoFacade_WithInclude_OnlyGeneratesSpecifiedMembers()
     {
@@ -1407,14 +1437,15 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void Method1()", generatedSource);
-        Assert.Contains("void Method3()", generatedSource);
-        Assert.DoesNotContain("void Method2()", generatedSource);
+        ScenarioExpect.Contains("void Method1()", generatedSource);
+        ScenarioExpect.Contains("void Method3()", generatedSource);
+        ScenarioExpect.DoesNotContain("void Method2()", generatedSource);
     }
 
+    [Scenario("AutoFacade WithExclude GeneratesAllExceptExcluded")]
     [Fact]
     public void AutoFacade_WithExclude_GeneratesAllExceptExcluded()
     {
@@ -1442,14 +1473,15 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void Method1()", generatedSource);
-        Assert.Contains("void Method3()", generatedSource);
-        Assert.DoesNotContain("void Method2()", generatedSource);
+        ScenarioExpect.Contains("void Method1()", generatedSource);
+        ScenarioExpect.Contains("void Method3()", generatedSource);
+        ScenarioExpect.DoesNotContain("void Method2()", generatedSource);
     }
 
+    [Scenario("AutoFacade WithMemberPrefix AppliesPrefix")]
     [Fact]
     public void AutoFacade_WithMemberPrefix_AppliesPrefix()
     {
@@ -1475,13 +1507,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void ExternalLog(string message)", generatedSource);
-        Assert.DoesNotContain("void Log(string message)", generatedSource);
+        ScenarioExpect.Contains("void ExternalLog(string message)", generatedSource);
+        ScenarioExpect.DoesNotContain("void Log(string message)", generatedSource);
     }
 
+    [Scenario("AutoFacade MultipleAttributes GeneratesComposite")]
     [Fact]
     public void AutoFacade_MultipleAttributes_GeneratesComposite()
     {
@@ -1514,12 +1547,13 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void L1Log1(string msg)", generatedSource);
-        Assert.Contains("void L2Log2(string msg)", generatedSource);
-        Assert.Contains("_logger1.Log1(msg)", generatedSource);
-        Assert.Contains("_logger2.Log2(msg)", generatedSource);
+        ScenarioExpect.Contains("void L1Log1(string msg)", generatedSource);
+        ScenarioExpect.Contains("void L2Log2(string msg)", generatedSource);
+        ScenarioExpect.Contains("_logger1.Log1(msg)", generatedSource);
+        ScenarioExpect.Contains("_logger2.Log2(msg)", generatedSource);
     }
 
+    [Scenario("AutoFacade GenericMethods PreservesTypeParameters")]
     [Fact]
     public void AutoFacade_GenericMethods_PreservesTypeParameters()
     {
@@ -1546,10 +1580,11 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void Log<TState>(TState state)", generatedSource);
-        Assert.Contains("where TState : class", generatedSource);
+        ScenarioExpect.Contains("void Log<TState>(TState state)", generatedSource);
+        ScenarioExpect.Contains("where TState : class", generatedSource);
     }
 
+    [Scenario("AutoFacade InvalidTargetType ReportsDiagnostic")]
     [Fact]
     public void AutoFacade_InvalidTargetType_ReportsDiagnostic()
     {
@@ -1571,9 +1606,10 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var diagnostics = run.Results[0].Diagnostics;
-        Assert.Contains(diagnostics, d => d.Id == "PKFAC001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFAC001");
     }
 
+    [Scenario("AutoFacade BothIncludeAndExclude ReportsDiagnostic")]
     [Fact]
     public void AutoFacade_BothIncludeAndExclude_ReportsDiagnostic()
     {
@@ -1604,9 +1640,10 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var diagnostics = run.Results[0].Diagnostics;
-        Assert.Contains(diagnostics, d => d.Id == "PKFAC002");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFAC002");
     }
 
+    [Scenario("AutoFacade IncludeNonExistentMember ReportsDiagnostic")]
     [Fact]
     public void AutoFacade_IncludeNonExistentMember_ReportsDiagnostic()
     {
@@ -1634,9 +1671,10 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var diagnostics = run.Results[0].Diagnostics;
-        Assert.Contains(diagnostics, d => d.Id == "PKFAC004" && d.GetMessage().Contains("NonExistent"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFAC004" && d.GetMessage().Contains("NonExistent"));
     }
 
+    [Scenario("AutoFacade RefOutInParameters ForwardsCorrectly")]
     [Fact]
     public void AutoFacade_RefOutInParameters_ForwardsCorrectly()
     {
@@ -1664,17 +1702,18 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("void MethodWithRef(ref int value)", generatedSource);
-        Assert.Contains("void MethodWithOut(out string result)", generatedSource);
-        Assert.Contains("void MethodWithIn(in double value)", generatedSource);
-        Assert.Contains("_target.MethodWithRef(ref value)", generatedSource);
-        Assert.Contains("_target.MethodWithOut(out result)", generatedSource);
-        Assert.Contains("_target.MethodWithIn(in value)", generatedSource);
+        ScenarioExpect.Contains("void MethodWithRef(ref int value)", generatedSource);
+        ScenarioExpect.Contains("void MethodWithOut(out string result)", generatedSource);
+        ScenarioExpect.Contains("void MethodWithIn(in double value)", generatedSource);
+        ScenarioExpect.Contains("_target.MethodWithRef(ref value)", generatedSource);
+        ScenarioExpect.Contains("_target.MethodWithOut(out result)", generatedSource);
+        ScenarioExpect.Contains("_target.MethodWithIn(in value)", generatedSource);
     }
 
+    [Scenario("AutoFacade OnNonInterface ReportsDiagnostic")]
     [Fact]
     public void AutoFacade_OnNonInterface_ReportsDiagnostic()
     {
@@ -1701,9 +1740,10 @@ public class FacadeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         var diagnostics = run.Results[0].Diagnostics;
-        Assert.Contains(diagnostics, d => d.Id == "PKFAC005");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFAC005");
     }
 
+    [Scenario("AutoFacade InterfaceWithMultipleLeadingI OnlyRemovesFirstI")]
     [Fact]
     public void AutoFacade_InterfaceWithMultipleLeadingI_OnlyRemovesFirstI()
     {
@@ -1729,13 +1769,14 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Should generate IIMyFacadeImpl (only first I removed from IIMyFacade)
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
+        ScenarioExpect.Contains("public sealed class IMyFacadeImpl : IIMyFacade", generatedSource);
     }
 
+    [Scenario("AutoFacade FieldNameWithoutUnderscore UsesThisQualifier")]
     [Fact]
     public void AutoFacade_FieldNameWithoutUnderscore_UsesThisQualifier()
     {
@@ -1761,15 +1802,16 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results[0].GeneratedSources[0].SourceText.ToString();
         // Field name is "myTarget", parameter name is also "myTarget", so should use "this." qualifier
-        Assert.Contains("private readonly global::TestNs.IExternal myTarget;", generatedSource);
-        Assert.Contains("public MyFacadeImpl(global::TestNs.IExternal myTarget)", generatedSource);
-        Assert.Contains("this.myTarget = myTarget ?? throw new System.ArgumentNullException(nameof(myTarget));", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.IExternal myTarget;", generatedSource);
+        ScenarioExpect.Contains("public MyFacadeImpl(global::TestNs.IExternal myTarget)", generatedSource);
+        ScenarioExpect.Contains("this.myTarget = myTarget ?? throw new System.ArgumentNullException(nameof(myTarget));", generatedSource);
     }
 
+    [Scenario("ContractFirst MissingMapIgnore CoversAsyncDefaultReturnBranches")]
     [Fact]
     public void ContractFirst_MissingMapIgnore_CoversAsyncDefaultReturnBranches()
     {
@@ -1799,19 +1841,20 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
-        Assert.Contains("ValueTask.FromResult<string>(default!)", generatedSource);
-        Assert.Contains("Task.FromResult<int>(default!)", generatedSource);
-        Assert.Contains("ValueTask.CompletedTask", generatedSource);
-        Assert.Contains("Task.CompletedTask", generatedSource);
-        Assert.Contains("return default!;", generatedSource);
+        ScenarioExpect.Contains("ValueTask.FromResult<string>(default!)", generatedSource);
+        ScenarioExpect.Contains("Task.FromResult<int>(default!)", generatedSource);
+        ScenarioExpect.Contains("ValueTask.CompletedTask", generatedSource);
+        ScenarioExpect.Contains("Task.CompletedTask", generatedSource);
+        ScenarioExpect.Contains("return default!;", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("HostFirst GenericConstraintsAndDependencyNameCollisions GenerateCompilableFacade")]
     [Fact]
     public void HostFirst_GenericConstraintsAndDependencyNameCollisions_GenerateCompilableFacade()
     {
@@ -1866,24 +1909,25 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
-        Assert.Contains("where T : class, new()", generatedSource);
-        Assert.Contains("where T : notnull, global::System.IComparable<T>", generatedSource);
-        Assert.Contains("where TNumber : unmanaged", generatedSource);
-        Assert.Contains("private readonly global::TestNs.IService _service;", generatedSource);
-        Assert.Contains("private readonly global::TestNs.Request _request;", generatedSource);
-        Assert.Contains("private readonly global::TestNs.Alpha.IClient _client;", generatedSource);
-        Assert.Contains("private readonly global::TestNs.Beta.IClient _client1;", generatedSource);
-        Assert.Contains("T value", generatedSource);
-        Assert.Contains("TNumber value", generatedSource);
-        Assert.Contains("Choose", generatedSource);
+        ScenarioExpect.Contains("where T : class, new()", generatedSource);
+        ScenarioExpect.Contains("where T : notnull, global::System.IComparable<T>", generatedSource);
+        ScenarioExpect.Contains("where TNumber : unmanaged", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.IService _service;", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.Request _request;", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.Alpha.IClient _client;", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.Beta.IClient _client1;", generatedSource);
+        ScenarioExpect.Contains("T value", generatedSource);
+        ScenarioExpect.Contains("TNumber value", generatedSource);
+        ScenarioExpect.Contains("Choose", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AutoFacade NoPublicMethods ReportsDiagnostic")]
     [Fact]
     public void AutoFacade_NoPublicMethods_ReportsDiagnostic()
     {
@@ -1909,7 +1953,7 @@ public class FacadeGeneratorTests
         var gen = new FacadeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        Assert.Contains(run.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKFAC003");
+        ScenarioExpect.Contains(run.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKFAC003");
     }
 
     #endregion

@@ -142,14 +142,16 @@ public sealed class PatternShowcaseTests(ITestOutputHelper output) : TinyBddXuni
 
 public sealed class PatternShowcaseUnitTests
 {
+    [Scenario("Build ReturnsNonNull")]
     [Fact]
     public void Build_ReturnsNonNull()
     {
         var facade = Showcase.Build();
 
-        Assert.NotNull(facade);
+        ScenarioExpect.NotNull(facade);
     }
 
+    [Scenario("SandboxGateway ChargeAsync Completes")]
     [Fact]
     public void SandboxGateway_ChargeAsync_Completes()
     {
@@ -157,9 +159,10 @@ public sealed class PatternShowcaseUnitTests
 
         var task = gateway.ChargeAsync(100m, CancellationToken.None);
 
-        Assert.True(task.IsCompleted);
+        ScenarioExpect.True(task.IsCompleted);
     }
 
+    [Scenario("SandboxGateway RefundAsync Completes")]
     [Fact]
     public void SandboxGateway_RefundAsync_Completes()
     {
@@ -167,9 +170,10 @@ public sealed class PatternShowcaseUnitTests
 
         var task = gateway.RefundAsync(100m, CancellationToken.None);
 
-        Assert.True(task.IsCompleted);
+        ScenarioExpect.True(task.IsCompleted);
     }
 
+    [Scenario("StripeGateway ChargeAsync Completes")]
     [Fact]
     public void StripeGateway_ChargeAsync_Completes()
     {
@@ -177,9 +181,10 @@ public sealed class PatternShowcaseUnitTests
 
         var task = gateway.ChargeAsync(100m, CancellationToken.None);
 
-        Assert.True(task.IsCompleted);
+        ScenarioExpect.True(task.IsCompleted);
     }
 
+    [Scenario("StripeGateway RefundAsync Completes")]
     [Fact]
     public void StripeGateway_RefundAsync_Completes()
     {
@@ -187,71 +192,78 @@ public sealed class PatternShowcaseUnitTests
 
         var task = gateway.RefundAsync(100m, CancellationToken.None);
 
-        Assert.True(task.IsCompleted);
+        ScenarioExpect.True(task.IsCompleted);
     }
 
+    [Scenario("OrderDto Record Works")]
     [Fact]
     public void OrderDto_Record_Works()
     {
         var dto = new Showcase.OrderDto("ORD-1", "C-1", "card",
             [new Showcase.OrderItemDto("SKU", "Name", 10m, 1)]);
 
-        Assert.Equal("ORD-1", dto.OrderId);
-        Assert.Equal("C-1", dto.CustomerId);
-        Assert.Equal("card", dto.PaymentKind);
-        Assert.Single(dto.Items);
+        ScenarioExpect.Equal("ORD-1", dto.OrderId);
+        ScenarioExpect.Equal("C-1", dto.CustomerId);
+        ScenarioExpect.Equal("card", dto.PaymentKind);
+        ScenarioExpect.Single(dto.Items);
     }
 
+    [Scenario("OrderItemDto Record Works")]
     [Fact]
     public void OrderItemDto_Record_Works()
     {
         var item = new Showcase.OrderItemDto("SKU-1", "Widget", 25.99m, 3, "Electronics");
 
-        Assert.Equal("SKU-1", item.Sku);
-        Assert.Equal("Widget", item.Name);
-        Assert.Equal(25.99m, item.Price);
-        Assert.Equal(3, item.Qty);
-        Assert.Equal("Electronics", item.Category);
+        ScenarioExpect.Equal("SKU-1", item.Sku);
+        ScenarioExpect.Equal("Widget", item.Name);
+        ScenarioExpect.Equal(25.99m, item.Price);
+        ScenarioExpect.Equal(3, item.Qty);
+        ScenarioExpect.Equal("Electronics", item.Category);
     }
 
+    [Scenario("OrderItemDto DefaultCategory IsNull")]
     [Fact]
     public void OrderItemDto_DefaultCategory_IsNull()
     {
         var item = new Showcase.OrderItemDto("SKU-1", "Widget", 25.99m, 3);
 
-        Assert.Null(item.Category);
+        ScenarioExpect.Null(item.Category);
     }
 
+    [Scenario("Cash Record Works")]
     [Fact]
     public void Cash_Record_Works()
     {
         var cash = new Showcase.Cash(50.00m);
 
-        Assert.Equal(50.00m, cash.Amount);
+        ScenarioExpect.Equal(50.00m, cash.Amount);
     }
 
+    [Scenario("Card Record Works")]
     [Fact]
     public void Card_Record_Works()
     {
         var card = new Showcase.Card("VISA", "4242", 100.00m);
 
-        Assert.Equal("VISA", card.Brand);
-        Assert.Equal("4242", card.Last4);
-        Assert.Equal(100.00m, card.Amount);
+        ScenarioExpect.Equal("VISA", card.Brand);
+        ScenarioExpect.Equal("4242", card.Last4);
+        ScenarioExpect.Equal(100.00m, card.Amount);
     }
 
+    [Scenario("OrderItem Record Works")]
     [Fact]
     public void OrderItem_Record_Works()
     {
         var item = new Showcase.OrderItem("SKU-1", "Widget", 10m, 5, "Promo");
 
-        Assert.Equal("SKU-1", item.Sku);
-        Assert.Equal("Widget", item.Name);
-        Assert.Equal(10m, item.UnitPrice);
-        Assert.Equal(5, item.Quantity);
-        Assert.Equal("Promo", item.Category);
+        ScenarioExpect.Equal("SKU-1", item.Sku);
+        ScenarioExpect.Equal("Widget", item.Name);
+        ScenarioExpect.Equal(10m, item.UnitPrice);
+        ScenarioExpect.Equal(5, item.Quantity);
+        ScenarioExpect.Equal("Promo", item.Category);
     }
 
+    [Scenario("OrderContext Total Computation")]
     [Fact]
     public void OrderContext_Total_Computation()
     {
@@ -272,24 +284,26 @@ public sealed class PatternShowcaseUnitTests
         ctx.Discount = 10m;
         ctx.Fees = 5m;
 
-        Assert.Equal(95m, ctx.Total); // 100 - 10 + 5 = 95
+        ScenarioExpect.Equal(95m, ctx.Total); // 100 - 10 + 5 = 95
     }
 
+    [Scenario("OrderPlaced Record Works")]
     [Fact]
     public void OrderPlaced_Record_Works()
     {
         var evt = new Showcase.OrderPlaced("ORD-123");
 
-        Assert.Equal("ORD-123", evt.OrderId);
+        ScenarioExpect.Equal("ORD-123", evt.OrderId);
     }
 
+    [Scenario("GenerateReceipt Record Works")]
     [Fact]
     public void GenerateReceipt_Record_Works()
     {
         var cmd = new Showcase.GenerateReceipt("ORD-456", 123.45m);
 
-        Assert.Equal("ORD-456", cmd.OrderId);
-        Assert.Equal(123.45m, cmd.Total);
+        ScenarioExpect.Equal("ORD-456", cmd.OrderId);
+        ScenarioExpect.Equal(123.45m, cmd.Total);
     }
 }
 

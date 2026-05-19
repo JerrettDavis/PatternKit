@@ -1,44 +1,48 @@
 using PatternKit.Examples.BridgeDemo;
 using static PatternKit.Examples.BridgeDemo.BridgeDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.BridgeDemoTests;
 
 public sealed class BridgeDemoTests
 {
+    [Scenario("EmailChannel Connect And Send")]
     [Fact]
     public void EmailChannel_Connect_And_Send()
     {
         var channel = new EmailChannel();
 
-        Assert.Equal("Email (SMTP)", channel.Name);
-        Assert.False(channel.IsAvailable);
-        Assert.Equal(50000, channel.MaxMessageLength);
+        ScenarioExpect.Equal("Email (SMTP)", channel.Name);
+        ScenarioExpect.False(channel.IsAvailable);
+        ScenarioExpect.Equal(50000, channel.MaxMessageLength);
 
         channel.Connect();
-        Assert.True(channel.IsAvailable);
+        ScenarioExpect.True(channel.IsAvailable);
 
         var result = channel.Send("test@example.com", "Subject", "Body");
-        Assert.True(result);
+        ScenarioExpect.True(result);
 
         channel.Disconnect();
-        Assert.False(channel.IsAvailable);
+        ScenarioExpect.False(channel.IsAvailable);
     }
 
+    [Scenario("SmsChannel Connect And Send")]
     [Fact]
     public void SmsChannel_Connect_And_Send()
     {
         var channel = new SmsChannel();
 
-        Assert.Equal("SMS (Twilio)", channel.Name);
-        Assert.Equal(160, channel.MaxMessageLength);
+        ScenarioExpect.Equal("SMS (Twilio)", channel.Name);
+        ScenarioExpect.Equal(160, channel.MaxMessageLength);
 
         channel.Connect();
-        Assert.True(channel.IsAvailable);
+        ScenarioExpect.True(channel.IsAvailable);
 
         var result = channel.Send("+1555123456", "Alert", "Short message");
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("SmsChannel Truncates Long Messages")]
     [Fact]
     public void SmsChannel_Truncates_Long_Messages()
     {
@@ -47,42 +51,45 @@ public sealed class BridgeDemoTests
 
         var longMessage = new string('x', 200);
         var result = channel.Send("+1555123456", "Test", longMessage);
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("PushNotificationChannel Connect And Send")]
     [Fact]
     public void PushNotificationChannel_Connect_And_Send()
     {
         var channel = new PushNotificationChannel();
 
-        Assert.Equal("Push (Firebase)", channel.Name);
-        Assert.Equal(4096, channel.MaxMessageLength);
+        ScenarioExpect.Equal("Push (Firebase)", channel.Name);
+        ScenarioExpect.Equal(4096, channel.MaxMessageLength);
 
         channel.Connect();
-        Assert.True(channel.IsAvailable);
+        ScenarioExpect.True(channel.IsAvailable);
 
         var result = channel.Send("device123", "Push Title", "Push body message here");
-        Assert.True(result);
+        ScenarioExpect.True(result);
 
         channel.Disconnect();
-        Assert.False(channel.IsAvailable);
+        ScenarioExpect.False(channel.IsAvailable);
     }
 
+    [Scenario("SlackChannel Connect And Send")]
     [Fact]
     public void SlackChannel_Connect_And_Send()
     {
         var channel = new SlackChannel();
 
-        Assert.Equal("Slack (Webhook)", channel.Name);
-        Assert.Equal(40000, channel.MaxMessageLength);
+        ScenarioExpect.Equal("Slack (Webhook)", channel.Name);
+        ScenarioExpect.Equal(40000, channel.MaxMessageLength);
 
         channel.Connect();
-        Assert.True(channel.IsAvailable);
+        ScenarioExpect.True(channel.IsAvailable);
 
         var result = channel.Send("#general", "Slack Title", "Slack message content that is longer than typical");
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("NotificationMessage Record Works")]
     [Fact]
     public void NotificationMessage_Record_Works()
     {
@@ -92,12 +99,13 @@ public sealed class BridgeDemoTests
             Body: "Test Body",
             Priority: NotificationPriority.High);
 
-        Assert.Equal("user@example.com", msg.Recipient);
-        Assert.Equal("Test Subject", msg.Subject);
-        Assert.Equal("Test Body", msg.Body);
-        Assert.Equal(NotificationPriority.High, msg.Priority);
+        ScenarioExpect.Equal("user@example.com", msg.Recipient);
+        ScenarioExpect.Equal("Test Subject", msg.Subject);
+        ScenarioExpect.Equal("Test Body", msg.Body);
+        ScenarioExpect.Equal(NotificationPriority.High, msg.Priority);
     }
 
+    [Scenario("CreateNotificationBridge Email Success")]
     [Fact]
     public void CreateNotificationBridge_Email_Success()
     {
@@ -111,9 +119,10 @@ public sealed class BridgeDemoTests
 
         var result = bridge.Execute(msg);
 
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("CreateNotificationBridge Validation Fails Empty Recipient")]
     [Fact]
     public void CreateNotificationBridge_Validation_Fails_Empty_Recipient()
     {
@@ -127,10 +136,11 @@ public sealed class BridgeDemoTests
 
         var success = bridge.TryExecute(msg, out var result, out var error);
 
-        Assert.False(success);
-        Assert.Contains("Recipient", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Contains("Recipient", error);
     }
 
+    [Scenario("CreateNotificationBridge Validation Fails Empty Body")]
     [Fact]
     public void CreateNotificationBridge_Validation_Fails_Empty_Body()
     {
@@ -144,10 +154,11 @@ public sealed class BridgeDemoTests
 
         var success = bridge.TryExecute(msg, out var result, out var error);
 
-        Assert.False(success);
-        Assert.Contains("body", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Contains("body", error);
     }
 
+    [Scenario("CreateNotificationBridge Validation Fails Message Too Long")]
     [Fact]
     public void CreateNotificationBridge_Validation_Fails_Message_Too_Long()
     {
@@ -161,10 +172,11 @@ public sealed class BridgeDemoTests
 
         var success = bridge.TryExecute(msg, out var result, out var error);
 
-        Assert.False(success);
-        Assert.Contains("too long", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Contains("too long", error);
     }
 
+    [Scenario("CreateAsyncNotificationBridge Success")]
     [Fact]
     public async Task CreateAsyncNotificationBridge_Success()
     {
@@ -178,9 +190,10 @@ public sealed class BridgeDemoTests
 
         var result = await bridge.ExecuteAsync(msg);
 
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 
+    [Scenario("CreateAsyncNotificationBridge Validation Fails")]
     [Fact]
     public async Task CreateAsyncNotificationBridge_Validation_Fails()
     {
@@ -194,16 +207,18 @@ public sealed class BridgeDemoTests
 
         var (success, _, error) = await bridge.TryExecuteAsync(msg);
 
-        Assert.False(success);
-        Assert.Contains("Recipient", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Contains("Recipient", error);
     }
 
+    [Scenario("RunAsync Executes Without Errors")]
     [Fact]
     public async Task RunAsync_Executes_Without_Errors()
     {
         await PatternKit.Examples.BridgeDemo.BridgeDemo.RunAsync();
     }
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {

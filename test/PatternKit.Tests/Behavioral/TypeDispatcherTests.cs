@@ -150,6 +150,7 @@ public sealed class TypeDispatcherBuilderTests
     private sealed record Add(Node Left, Node Right) : Node;
     private sealed record Neg(Node Inner) : Node;
 
+    [Scenario("Default Func Overload Works")]
     [Fact]
     public void Default_Func_Overload_Works()
     {
@@ -161,10 +162,11 @@ public sealed class TypeDispatcherBuilderTests
         var result1 = dispatcher.Dispatch(new Number(5));
         var result2 = dispatcher.Dispatch(new Neg(new Number(1)));
 
-        Assert.Equal("num:5", result1);
-        Assert.Equal("default:Neg", result2);
+        ScenarioExpect.Equal("num:5", result1);
+        ScenarioExpect.Equal("default:Neg", result2);
     }
 
+    [Scenario("Default Handler Delegate Works")]
     [Fact]
     public void Default_Handler_Delegate_Works()
     {
@@ -175,9 +177,10 @@ public sealed class TypeDispatcherBuilderTests
 
         var result = dispatcher.Dispatch(new Add(new Number(1), new Number(2)));
 
-        Assert.Equal("handler:Add", result);
+        ScenarioExpect.Equal("handler:Add", result);
     }
 
+    [Scenario("TryDispatch WithDefault ReturnsTrue")]
     [Fact]
     public void TryDispatch_WithDefault_ReturnsTrue()
     {
@@ -187,10 +190,11 @@ public sealed class TypeDispatcherBuilderTests
 
         var success = dispatcher.TryDispatch(new Neg(new Number(1)), out var result);
 
-        Assert.True(success);
-        Assert.Equal("fallback", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("fallback", result);
     }
 
+    [Scenario("TryDispatch MatchesHandler ReturnsTrue")]
     [Fact]
     public void TryDispatch_MatchesHandler_ReturnsTrue()
     {
@@ -200,10 +204,11 @@ public sealed class TypeDispatcherBuilderTests
 
         var success = dispatcher.TryDispatch(new Number(42), out var result);
 
-        Assert.True(success);
-        Assert.Equal("matched:42", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("matched:42", result);
     }
 
+    [Scenario("TryDispatch NoMatchNoDefault ReturnsFalse")]
     [Fact]
     public void TryDispatch_NoMatchNoDefault_ReturnsFalse()
     {
@@ -213,10 +218,11 @@ public sealed class TypeDispatcherBuilderTests
 
         var success = dispatcher.TryDispatch(new Neg(new Number(1)), out var result);
 
-        Assert.False(success);
-        Assert.Null(result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("Multiple Handlers FirstMatchWins")]
     [Fact]
     public void Multiple_Handlers_FirstMatchWins()
     {
@@ -228,11 +234,12 @@ public sealed class TypeDispatcherBuilderTests
 
         var result = dispatcher.Dispatch(new Number(5));
 
-        Assert.Equal("number", result);
-        Assert.Single(log);
-        Assert.Equal("number", log[0]);
+        ScenarioExpect.Equal("number", result);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("number", log[0]);
     }
 
+    [Scenario("Empty Dispatcher TryDispatch ReturnsFalse")]
     [Fact]
     public void Empty_Dispatcher_TryDispatch_ReturnsFalse()
     {
@@ -240,17 +247,19 @@ public sealed class TypeDispatcherBuilderTests
 
         var success = dispatcher.TryDispatch(new Number(1), out _);
 
-        Assert.False(success);
+        ScenarioExpect.False(success);
     }
 
+    [Scenario("Empty Dispatcher Dispatch Throws")]
     [Fact]
     public void Empty_Dispatcher_Dispatch_Throws()
     {
         var dispatcher = TypeDispatcher<Node, string>.Create().Build();
 
-        Assert.Throws<InvalidOperationException>(() => dispatcher.Dispatch(new Number(1)));
+        ScenarioExpect.Throws<InvalidOperationException>(() => dispatcher.Dispatch(new Number(1)));
     }
 
+    [Scenario("Constant On Multiple Types")]
     [Fact]
     public void Constant_On_Multiple_Types()
     {
@@ -260,11 +269,12 @@ public sealed class TypeDispatcherBuilderTests
             .On<Neg>(3)
             .Build();
 
-        Assert.Equal(1, dispatcher.Dispatch(new Number(100)));
-        Assert.Equal(2, dispatcher.Dispatch(new Add(new Number(1), new Number(2))));
-        Assert.Equal(3, dispatcher.Dispatch(new Neg(new Number(1))));
+        ScenarioExpect.Equal(1, dispatcher.Dispatch(new Number(100)));
+        ScenarioExpect.Equal(2, dispatcher.Dispatch(new Add(new Number(1), new Number(2))));
+        ScenarioExpect.Equal(3, dispatcher.Dispatch(new Neg(new Number(1))));
     }
 
+    [Scenario("Handler Receives Correct Type")]
     [Fact]
     public void Handler_Receives_Correct_Type()
     {
@@ -275,11 +285,12 @@ public sealed class TypeDispatcherBuilderTests
 
         dispatcher.Dispatch(new Number(42));
 
-        Assert.NotNull(captured);
-        Assert.IsType<Number>(captured);
-        Assert.Equal(42, ((Number)captured).Value);
+        ScenarioExpect.NotNull(captured);
+        ScenarioExpect.IsType<Number>(captured);
+        ScenarioExpect.Equal(42, ((Number)captured).Value);
     }
 
+    [Scenario("Null Node Works With Default")]
     [Fact]
     public void Null_Node_Works_With_Default()
     {
@@ -289,7 +300,7 @@ public sealed class TypeDispatcherBuilderTests
 
         var result = dispatcher.Dispatch(null);
 
-        Assert.Equal("null", result);
+        ScenarioExpect.Equal("null", result);
     }
 }
 

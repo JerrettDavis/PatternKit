@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class DecoratorGeneratorTests
 {
+    [Scenario("GenerateDecoratorForInterface BasicContract")]
     [Fact]
     public void GenerateDecoratorForInterface_BasicContract()
     {
@@ -25,11 +27,11 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Decorator class is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace_IStorage.Decorator.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace_IStorage.Decorator.g.cs", names);
 
         // Verify generated content contains expected elements
         var generatedSource = result.Results
@@ -37,23 +39,24 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.True(generatedSource.Length > 100, $"Generated source is too short ({generatedSource.Length} chars): {generatedSource}");
+        ScenarioExpect.True(generatedSource.Length > 100, $"Generated source is too short ({generatedSource.Length} chars): {generatedSource}");
 
         // The Inner property will use fully qualified names
-        Assert.Contains("StorageDecoratorBase", generatedSource);
-        Assert.Contains("protected", generatedSource);
-        Assert.Contains(" Inner ", generatedSource);
-        Assert.Contains("public virtual", generatedSource);
-        Assert.Contains("ReadFile", generatedSource);
-        Assert.Contains("WriteFile", generatedSource);
-        Assert.Contains("StorageDecorators", generatedSource);
-        Assert.Contains("Compose", generatedSource);
+        ScenarioExpect.Contains("StorageDecoratorBase", generatedSource);
+        ScenarioExpect.Contains("protected", generatedSource);
+        ScenarioExpect.Contains(" Inner ", generatedSource);
+        ScenarioExpect.Contains("public virtual", generatedSource);
+        ScenarioExpect.Contains("ReadFile", generatedSource);
+        ScenarioExpect.Contains("WriteFile", generatedSource);
+        ScenarioExpect.Contains("StorageDecorators", generatedSource);
+        ScenarioExpect.Contains("Compose", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface WithAsyncMethods")]
     [Fact]
     public void GenerateDecoratorForInterface_WithAsyncMethods()
     {
@@ -77,7 +80,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content contains async method forwarding (direct forwarding without async/await)
         var generatedSource = result.Results
@@ -85,18 +88,19 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IAsyncStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public", generatedSource);
-        Assert.Contains("virtual", generatedSource);
-        Assert.Contains("ReadFileAsync", generatedSource);
-        Assert.Contains("=> Inner.ReadFileAsync", generatedSource);
-        Assert.Contains("WriteFileAsync", generatedSource);
-        Assert.Contains("=> Inner.WriteFileAsync", generatedSource);
+        ScenarioExpect.Contains("public", generatedSource);
+        ScenarioExpect.Contains("virtual", generatedSource);
+        ScenarioExpect.Contains("ReadFileAsync", generatedSource);
+        ScenarioExpect.Contains("=> Inner.ReadFileAsync", generatedSource);
+        ScenarioExpect.Contains("WriteFileAsync", generatedSource);
+        ScenarioExpect.Contains("=> Inner.WriteFileAsync", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface WithProperties")]
     [Fact]
     public void GenerateDecoratorForInterface_WithProperties()
     {
@@ -119,7 +123,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content contains properties
         var generatedSource = result.Results
@@ -127,17 +131,18 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IConfiguration.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public virtual string ApiKey", generatedSource);
-        Assert.Contains("get => Inner.ApiKey", generatedSource);
-        Assert.Contains("set => Inner.ApiKey = value", generatedSource);
-        Assert.Contains("public virtual int Timeout => Inner.Timeout", generatedSource);
-        Assert.Contains("public virtual bool IsEnabled", generatedSource);
+        ScenarioExpect.Contains("public virtual string ApiKey", generatedSource);
+        ScenarioExpect.Contains("get => Inner.ApiKey", generatedSource);
+        ScenarioExpect.Contains("set => Inner.ApiKey = value", generatedSource);
+        ScenarioExpect.Contains("public virtual int Timeout => Inner.Timeout", generatedSource);
+        ScenarioExpect.Contains("public virtual bool IsEnabled", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface WithDecoratorIgnore")]
     [Fact]
     public void GenerateDecoratorForInterface_WithDecoratorIgnore()
     {
@@ -161,7 +166,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content - ignored methods are still forwarded but not virtual
         var generatedSource = result.Results
@@ -169,9 +174,9 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IRepository.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("void Save", generatedSource);
-        Assert.Contains("virtual", generatedSource); // Save should be virtual
-        Assert.Contains("InternalMethod", generatedSource); // Still present, forwarded to Inner
+        ScenarioExpect.Contains("void Save", generatedSource);
+        ScenarioExpect.Contains("virtual", generatedSource); // Save should be virtual
+        ScenarioExpect.Contains("InternalMethod", generatedSource); // Still present, forwarded to Inner
 
         // InternalMethod should be present and non-virtual (i.e., not declared as virtual)
         // We can't easily check "public void InternalMethod" vs "public virtual void InternalMethod"
@@ -179,9 +184,10 @@ public class DecoratorGeneratorTests
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface CustomNames")]
     [Fact]
     public void GenerateDecoratorForInterface_CustomNames()
     {
@@ -202,7 +208,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify custom names are used
         var generatedSource = result.Results
@@ -210,14 +216,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("class CustomStorageDecorator", generatedSource);
-        Assert.Contains("class CustomHelpers", generatedSource);
+        ScenarioExpect.Contains("class CustomStorageDecorator", generatedSource);
+        ScenarioExpect.Contains("class CustomHelpers", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface NoCompositionHelpers")]
     [Fact]
     public void GenerateDecoratorForInterface_NoCompositionHelpers()
     {
@@ -238,7 +245,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify composition helpers are NOT generated
         var generatedSource = result.Results
@@ -246,15 +253,16 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("class StorageDecoratorBase", generatedSource);
-        Assert.DoesNotContain("class StorageDecorators", generatedSource);
-        Assert.DoesNotContain("public static IStorage Compose", generatedSource);
+        ScenarioExpect.Contains("class StorageDecoratorBase", generatedSource);
+        ScenarioExpect.DoesNotContain("class StorageDecorators", generatedSource);
+        ScenarioExpect.DoesNotContain("public static IStorage Compose", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForAbstractClass VirtualMembersOnly")]
     [Fact]
     public void GenerateDecoratorForAbstractClass_VirtualMembersOnly()
     {
@@ -277,7 +285,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify only virtual/abstract members are included
         var generatedSource = result.Results
@@ -286,16 +294,17 @@ public class DecoratorGeneratorTests
             .SourceText.ToString();
 
         // For abstract classes, methods use "override" not "virtual"
-        Assert.Contains("public override", generatedSource);
-        Assert.Contains("ReadFile", generatedSource);
-        Assert.Contains("WriteFile", generatedSource);
-        Assert.DoesNotContain("NonVirtualMethod", generatedSource);
+        ScenarioExpect.Contains("public override", generatedSource);
+        ScenarioExpect.Contains("ReadFile", generatedSource);
+        ScenarioExpect.Contains("WriteFile", generatedSource);
+        ScenarioExpect.DoesNotContain("NonVirtualMethod", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface WithDefaultParameters")]
     [Fact]
     public void GenerateDecoratorForInterface_WithDefaultParameters()
     {
@@ -318,7 +327,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify default parameters are preserved
         var generatedSource = result.Results
@@ -326,14 +335,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("int bufferSize = 4096", generatedSource);
-        Assert.Contains("bool append = false", generatedSource);
+        ScenarioExpect.Contains("int bufferSize = 4096", generatedSource);
+        ScenarioExpect.Contains("bool append = false", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface DeterministicOrdering")]
     [Fact]
     public void GenerateDecoratorForInterface_DeterministicOrdering()
     {
@@ -357,7 +367,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify members are ordered alphabetically
         var generatedSource = result.Results
@@ -370,15 +380,16 @@ public class DecoratorGeneratorTests
         var mangoIndex = generatedSource.IndexOf("void Mango");
         var zebraIndex = generatedSource.IndexOf("void Zebra");
 
-        Assert.True(appleIndex < bananaIndex);
-        Assert.True(bananaIndex < mangoIndex);
-        Assert.True(mangoIndex < zebraIndex);
+        ScenarioExpect.True(appleIndex < bananaIndex);
+        ScenarioExpect.True(bananaIndex < mangoIndex);
+        ScenarioExpect.True(mangoIndex < zebraIndex);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface WithRefParameters")]
     [Fact]
     public void GenerateDecoratorForInterface_WithRefParameters()
     {
@@ -401,7 +412,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify ref/out/in parameters are preserved
         var generatedSource = result.Results
@@ -409,15 +420,16 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_ICalculator.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("ref int value", generatedSource);
-        Assert.Contains("out int result", generatedSource);
-        Assert.Contains("in int value", generatedSource);
+        ScenarioExpect.Contains("ref int value", generatedSource);
+        ScenarioExpect.Contains("out int result", generatedSource);
+        ScenarioExpect.Contains("in int value", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface ComplexExample")]
     [Fact]
     public void GenerateDecoratorForInterface_ComplexExample()
     {
@@ -446,7 +458,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify all methods are generated correctly
         var generatedSource = result.Results
@@ -454,20 +466,21 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("OpenRead", generatedSource);
-        Assert.Contains("OpenReadAsync", generatedSource);
-        Assert.Contains("Write", generatedSource);
-        Assert.Contains("WriteAsync", generatedSource);
-        Assert.Contains("Exists", generatedSource);
-        Assert.Contains("Delete", generatedSource);
-        Assert.Contains("virtual", generatedSource);
+        ScenarioExpect.Contains("OpenRead", generatedSource);
+        ScenarioExpect.Contains("OpenReadAsync", generatedSource);
+        ScenarioExpect.Contains("Write", generatedSource);
+        ScenarioExpect.Contains("WriteAsync", generatedSource);
+        ScenarioExpect.Contains("Exists", generatedSource);
+        ScenarioExpect.Contains("Delete", generatedSource);
+        ScenarioExpect.Contains("virtual", generatedSource);
         // Async methods use direct forwarding (no async/await keywords)
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface InheritedMembers")]
     [Fact]
     public void GenerateDecoratorForInterface_InheritedMembers()
     {
@@ -493,7 +506,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify inherited members are included
         var generatedSource = result.Results
@@ -501,14 +514,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public virtual string Read", generatedSource);
-        Assert.Contains("public virtual void Write", generatedSource);
+        ScenarioExpect.Contains("public virtual string Read", generatedSource);
+        ScenarioExpect.Contains("public virtual void Write", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("DecoratorComposition AppliesInCorrectOrder")]
     [Fact]
     public void DecoratorComposition_AppliesInCorrectOrder()
     {
@@ -568,13 +582,14 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Diagnostic PKDEC001 UnsupportedTargetType")]
     [Fact]
     public void Diagnostic_PKDEC001_UnsupportedTargetType()
     {
@@ -596,10 +611,11 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC001 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC001");
-        Assert.Contains(diagnostics, d => d.GetMessage().Contains("ConcreteClass"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC001");
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("ConcreteClass"));
     }
 
+    [Scenario("Diagnostic PKDEC002 UnsupportedMemberKind Event")]
     [Fact]
     public void Diagnostic_PKDEC002_UnsupportedMemberKind_Event()
     {
@@ -622,13 +638,14 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC002 diagnostic for the event
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
 
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Empty(generatedSources);
+        ScenarioExpect.Empty(generatedSources);
     }
 
+    [Scenario("Diagnostic PKDEC003 NameConflict BaseType")]
     [Fact]
     public void Diagnostic_PKDEC003_NameConflict_BaseType()
     {
@@ -655,9 +672,10 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC003 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecoratorBase"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecoratorBase"));
     }
 
+    [Scenario("Diagnostic PKDEC003 NameConflict HelpersType")]
     [Fact]
     public void Diagnostic_PKDEC003_NameConflict_HelpersType()
     {
@@ -684,9 +702,10 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC003 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecorators"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC003" && d.GetMessage().Contains("ServiceDecorators"));
     }
 
+    [Scenario("Diagnostic PKDEC002 Indexer")]
     [Fact]
     public void Diagnostic_PKDEC002_Indexer()
     {
@@ -708,13 +727,14 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC002 diagnostic for the indexer
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
 
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Empty(generatedSources);
+        ScenarioExpect.Empty(generatedSources);
     }
 
+    [Scenario("Diagnostic PKDEC005 GenericContract")]
     [Fact]
     public void Diagnostic_PKDEC005_GenericContract()
     {
@@ -736,9 +756,10 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC005 diagnostic for the generic contract
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC005" && d.GetMessage().Contains("IGenericService"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC005" && d.GetMessage().Contains("IGenericService"));
     }
 
+    [Scenario("Diagnostic PKDEC002 InitOnlyProperty")]
     [Fact]
     public void Diagnostic_PKDEC002_InitOnlyProperty()
     {
@@ -762,13 +783,14 @@ public class DecoratorGeneratorTests
         // Should have PKDEC002 diagnostic for the init-only property
         // Init setters are incompatible with the decorator pattern
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Name"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Name"));
 
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Empty(generatedSources);
+        ScenarioExpect.Empty(generatedSources);
     }
 
+    [Scenario("GenerateDecoratorForAbstractClass WithInternalProtectedMembers")]
     [Fact]
     public void GenerateDecoratorForAbstractClass_WithInternalProtectedMembers()
     {
@@ -790,7 +812,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content contains correct accessibility
         var generatedSource = result.Results
@@ -798,16 +820,17 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_ServiceBase.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public override", generatedSource);
-        Assert.Contains("PublicMethod", generatedSource);
-        Assert.Contains("protected internal override", generatedSource);
-        Assert.Contains("ProtectedInternalMethod", generatedSource);
+        ScenarioExpect.Contains("public override", generatedSource);
+        ScenarioExpect.Contains("PublicMethod", generatedSource);
+        ScenarioExpect.Contains("protected internal override", generatedSource);
+        ScenarioExpect.Contains("ProtectedInternalMethod", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Diagnostic PKDEC002 GenericMethod")]
     [Fact]
     public void Diagnostic_PKDEC002_GenericMethod()
     {
@@ -829,13 +852,14 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC002 diagnostic for the generic method
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Generic method"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Generic method"));
 
         // Generation should be skipped when PKDEC002 (error) is reported
         var generatedSources = result.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Empty(generatedSources);
+        ScenarioExpect.Empty(generatedSources);
     }
 
+    [Scenario("GenerateDecoratorForInterface IgnoresStaticMembers")]
     [Fact]
     public void GenerateDecoratorForInterface_IgnoresStaticMembers()
     {
@@ -859,7 +883,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics for static members
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content contains only instance members
         var generatedSource = result.Results
@@ -867,16 +891,17 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IService.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("InstanceMethod", generatedSource);
-        Assert.Contains("InstanceProperty", generatedSource);
-        Assert.DoesNotContain("StaticMethod", generatedSource);
-        Assert.DoesNotContain("StaticProperty", generatedSource);
+        ScenarioExpect.Contains("InstanceMethod", generatedSource);
+        ScenarioExpect.Contains("InstanceProperty", generatedSource);
+        ScenarioExpect.DoesNotContain("StaticMethod", generatedSource);
+        ScenarioExpect.DoesNotContain("StaticProperty", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Diagnostic PKDEC004 PropertyWithProtectedSetter")]
     [Fact]
     public void Diagnostic_PKDEC004_PropertyWithProtectedSetter()
     {
@@ -898,9 +923,10 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC004 diagnostic for the property with protected setter
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC004" && d.GetMessage().Contains("Name"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC004" && d.GetMessage().Contains("Name"));
     }
 
+    [Scenario("GenerateDecoratorForInterface SupportsParamsModifier")]
     [Fact]
     public void GenerateDecoratorForInterface_SupportsParamsModifier()
     {
@@ -921,7 +947,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content preserves params modifier
         var generatedSource = result.Results
@@ -929,14 +955,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IService.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("params", generatedSource);
-        Assert.Contains("params string[] items", generatedSource);
+        ScenarioExpect.Contains("params", generatedSource);
+        ScenarioExpect.Contains("params string[] items", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForAbstractClass InheritsVirtualMembers")]
     [Fact]
     public void GenerateDecoratorForAbstractClass_InheritsVirtualMembers()
     {
@@ -962,7 +989,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content includes both base and derived methods
         var generatedSource = result.Results
@@ -970,14 +997,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_DerivedClass.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("BaseMethod", generatedSource);
-        Assert.Contains("DerivedMethod", generatedSource);
+        ScenarioExpect.Contains("BaseMethod", generatedSource);
+        ScenarioExpect.Contains("DerivedMethod", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Diagnostic PKDEC006 NestedType")]
     [Fact]
     public void Diagnostic_PKDEC006_NestedType()
     {
@@ -1002,9 +1030,10 @@ public class DecoratorGeneratorTests
 
         // Should have PKDEC006 diagnostic for nested type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC006");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC006");
     }
 
+    [Scenario("GenerateDecoratorForInterface SupportsRefReturns")]
     [Fact]
     public void GenerateDecoratorForInterface_SupportsRefReturns()
     {
@@ -1026,7 +1055,7 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify generated content includes ref/ref readonly modifiers
         var generatedSource = result.Results
@@ -1034,14 +1063,15 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IRefService.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("ref int GetRef()", generatedSource);
-        Assert.Contains("ref readonly int GetRefReadonly()", generatedSource);
+        ScenarioExpect.Contains("ref int GetRef()", generatedSource);
+        ScenarioExpect.Contains("ref readonly int GetRefReadonly()", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForAbstractClass PreservesAccessibilityRefsAndAccessors")]
     [Fact]
     public void GenerateDecoratorForAbstractClass_PreservesAccessibilityRefsAndAccessors()
     {
@@ -1070,30 +1100,31 @@ public class DecoratorGeneratorTests
         var gen = new DecoratorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKDEC004" && d.GetMessage().Contains("ProtectedOperation"));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKDEC004" && d.GetMessage().Contains("ProtectedOperation"));
 
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "TestNamespace_RepositoryBase.Decorator.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public abstract partial class RepositoryBaseDecoratorBase", generatedSource);
-        Assert.Contains("override string Name", generatedSource);
-        Assert.Contains("internal set => Inner.Name = value;", generatedSource);
-        Assert.Contains("override int Version", generatedSource);
-        Assert.Contains("set => Inner.Version = value;", generatedSource);
-        Assert.Contains("public override void Copy(ref int source, out int destination, in bool enabled)", generatedSource);
-        Assert.Contains("Inner.Copy(ref source, out destination, in enabled);", generatedSource);
-        Assert.Contains("public override ref int GetCurrent()", generatedSource);
-        Assert.Contains("=> ref Inner.GetCurrent();", generatedSource);
-        Assert.Contains("public sealed override string Snapshot()", generatedSource);
-        Assert.Contains("RepositoryBaseDecorators", generatedSource);
+        ScenarioExpect.Contains("public abstract partial class RepositoryBaseDecoratorBase", generatedSource);
+        ScenarioExpect.Contains("override string Name", generatedSource);
+        ScenarioExpect.Contains("internal set => Inner.Name = value;", generatedSource);
+        ScenarioExpect.Contains("override int Version", generatedSource);
+        ScenarioExpect.Contains("set => Inner.Version = value;", generatedSource);
+        ScenarioExpect.Contains("public override void Copy(ref int source, out int destination, in bool enabled)", generatedSource);
+        ScenarioExpect.Contains("Inner.Copy(ref source, out destination, in enabled);", generatedSource);
+        ScenarioExpect.Contains("public override ref int GetCurrent()", generatedSource);
+        ScenarioExpect.Contains("=> ref Inner.GetCurrent();", generatedSource);
+        ScenarioExpect.Contains("public sealed override string Snapshot()", generatedSource);
+        ScenarioExpect.Contains("RepositoryBaseDecorators", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("DecoratorDiagnostics ForIndexerInitPropertyFieldAndNestedType")]
     [Fact]
     public void DecoratorDiagnostics_ForIndexerInitPropertyFieldAndNestedType()
     {
@@ -1123,10 +1154,10 @@ public class DecoratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Init-only property"));
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Field"));
-        Assert.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("NestedType"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Indexer"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Init-only property"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Changed"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Field"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("NestedType"));
     }
 }

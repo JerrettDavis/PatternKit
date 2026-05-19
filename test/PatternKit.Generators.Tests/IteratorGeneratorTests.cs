@@ -1,9 +1,11 @@
 using PatternKit.Generators.Iterator;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class IteratorGeneratorTests
 {
+    [Scenario("GeneratesIteratorMembers")]
     [Fact]
     public void GeneratesIteratorMembers()
     {
@@ -30,15 +32,16 @@ public class IteratorGeneratorTests
         var gen = new IteratorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Counter.Iterator.g.cs").SourceText.ToString();
-        Assert.Contains("public bool TryMoveNext(out int item)", generated);
-        Assert.Contains("public struct Enumerator", generated);
+        ScenarioExpect.Contains("public bool TryMoveNext(out int item)", generated);
+        ScenarioExpect.Contains("public struct Enumerator", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsMissingStep")]
     [Fact]
     public void ReportsMissingStep()
     {
@@ -56,9 +59,10 @@ public class IteratorGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReportsMissingStep));
         var gen = new IteratorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKIT002");
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKIT002");
     }
 
+    [Scenario("ReportsNonPartialAndBadStepSignature")]
     [Fact]
     public void ReportsNonPartialAndBadStepSignature()
     {
@@ -91,7 +95,7 @@ public class IteratorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKIT001");
-        Assert.Contains(diagnostics, d => d.Id == "PKIT004");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKIT001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKIT004");
     }
 }

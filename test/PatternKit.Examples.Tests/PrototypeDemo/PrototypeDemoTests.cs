@@ -1,10 +1,12 @@
 using PatternKit.Examples.PrototypeDemo;
 using static PatternKit.Examples.PrototypeDemo.PrototypeDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.PrototypeDemoTests;
 
 public sealed class PrototypeDemoTests
 {
+    [Scenario("CharacterStats Clone Creates Independent Copy")]
     [Fact]
     public void CharacterStats_Clone_Creates_Independent_Copy()
     {
@@ -19,13 +21,14 @@ public sealed class PrototypeDemoTests
 
         var clone = original.Clone();
 
-        Assert.NotSame(original, clone);
-        Assert.Equal(original.Health, clone.Health);
+        ScenarioExpect.NotSame(original, clone);
+        ScenarioExpect.Equal(original.Health, clone.Health);
 
         clone.Health = 200;
-        Assert.Equal(100, original.Health);
+        ScenarioExpect.Equal(100, original.Health);
     }
 
+    [Scenario("Equipment Clone Creates Independent Copy")]
     [Fact]
     public void Equipment_Clone_Creates_Independent_Copy()
     {
@@ -38,15 +41,16 @@ public sealed class PrototypeDemoTests
 
         var clone = original.Clone();
 
-        Assert.NotSame(original, clone);
-        Assert.NotSame(original.Accessories, clone.Accessories);
-        Assert.Equal(original.Weapon, clone.Weapon);
-        Assert.Equal(original.Accessories.Count, clone.Accessories.Count);
+        ScenarioExpect.NotSame(original, clone);
+        ScenarioExpect.NotSame(original.Accessories, clone.Accessories);
+        ScenarioExpect.Equal(original.Weapon, clone.Weapon);
+        ScenarioExpect.Equal(original.Accessories.Count, clone.Accessories.Count);
 
         clone.Accessories.Add("Cape");
-        Assert.Equal(2, original.Accessories.Count);
+        ScenarioExpect.Equal(2, original.Accessories.Count);
     }
 
+    [Scenario("GameCharacter DeepClone Creates Independent Copy")]
     [Fact]
     public void GameCharacter_DeepClone_Creates_Independent_Copy()
     {
@@ -54,53 +58,57 @@ public sealed class PrototypeDemoTests
 
         var clone = GameCharacter.DeepClone(original);
 
-        Assert.NotSame(original, clone);
-        Assert.NotEqual(original.Id, clone.Id);
-        Assert.NotSame(original.Stats, clone.Stats);
-        Assert.NotSame(original.Equipment, clone.Equipment);
-        Assert.NotSame(original.Abilities, clone.Abilities);
-        Assert.NotSame(original.Resistances, clone.Resistances);
+        ScenarioExpect.NotSame(original, clone);
+        ScenarioExpect.NotEqual(original.Id, clone.Id);
+        ScenarioExpect.NotSame(original.Stats, clone.Stats);
+        ScenarioExpect.NotSame(original.Equipment, clone.Equipment);
+        ScenarioExpect.NotSame(original.Abilities, clone.Abilities);
+        ScenarioExpect.NotSame(original.Resistances, clone.Resistances);
     }
 
+    [Scenario("CreateWarriorPrototype Has Correct Stats")]
     [Fact]
     public void CreateWarriorPrototype_Has_Correct_Stats()
     {
         var warrior = CreateWarriorPrototype();
 
-        Assert.Equal("Warrior", warrior.Name);
-        Assert.Equal("Warrior", warrior.Class);
-        Assert.Equal(150, warrior.Stats.Health);
-        Assert.Equal(30, warrior.Stats.Mana);
-        Assert.Equal(15, warrior.Stats.Strength);
-        Assert.Equal("Iron Sword", warrior.Equipment.Weapon);
+        ScenarioExpect.Equal("Warrior", warrior.Name);
+        ScenarioExpect.Equal("Warrior", warrior.Class);
+        ScenarioExpect.Equal(150, warrior.Stats.Health);
+        ScenarioExpect.Equal(30, warrior.Stats.Mana);
+        ScenarioExpect.Equal(15, warrior.Stats.Strength);
+        ScenarioExpect.Equal("Iron Sword", warrior.Equipment.Weapon);
     }
 
+    [Scenario("CreateMagePrototype Has Correct Stats")]
     [Fact]
     public void CreateMagePrototype_Has_Correct_Stats()
     {
         var mage = CreateMagePrototype();
 
-        Assert.Equal("Mage", mage.Name);
-        Assert.Equal("Mage", mage.Class);
-        Assert.Equal(80, mage.Stats.Health);
-        Assert.Equal(150, mage.Stats.Mana);
-        Assert.Equal(18, mage.Stats.Intelligence);
-        Assert.Equal("Oak Staff", mage.Equipment.Weapon);
+        ScenarioExpect.Equal("Mage", mage.Name);
+        ScenarioExpect.Equal("Mage", mage.Class);
+        ScenarioExpect.Equal(80, mage.Stats.Health);
+        ScenarioExpect.Equal(150, mage.Stats.Mana);
+        ScenarioExpect.Equal(18, mage.Stats.Intelligence);
+        ScenarioExpect.Equal("Oak Staff", mage.Equipment.Weapon);
     }
 
+    [Scenario("CreateRoguePrototype Has Correct Stats")]
     [Fact]
     public void CreateRoguePrototype_Has_Correct_Stats()
     {
         var rogue = CreateRoguePrototype();
 
-        Assert.Equal("Rogue", rogue.Name);
-        Assert.Equal("Rogue", rogue.Class);
-        Assert.Equal(100, rogue.Stats.Health);
-        Assert.Equal(16, rogue.Stats.Agility);
-        Assert.Equal("Twin Daggers", rogue.Equipment.Weapon);
-        Assert.Equal(50, rogue.Resistances["Poison"]);
+        ScenarioExpect.Equal("Rogue", rogue.Name);
+        ScenarioExpect.Equal("Rogue", rogue.Class);
+        ScenarioExpect.Equal(100, rogue.Stats.Health);
+        ScenarioExpect.Equal(16, rogue.Stats.Agility);
+        ScenarioExpect.Equal("Twin Daggers", rogue.Equipment.Weapon);
+        ScenarioExpect.Equal(50, rogue.Resistances["Poison"]);
     }
 
+    [Scenario("CreateCharacterFactory Clones Warrior")]
     [Fact]
     public void CreateCharacterFactory_Clones_Warrior()
     {
@@ -108,10 +116,11 @@ public sealed class PrototypeDemoTests
 
         var warrior = factory.Create("warrior");
 
-        Assert.Equal("Warrior", warrior.Name);
-        Assert.Equal("Warrior", warrior.Class);
+        ScenarioExpect.Equal("Warrior", warrior.Name);
+        ScenarioExpect.Equal("Warrior", warrior.Class);
     }
 
+    [Scenario("CreateCharacterFactory Clones Mage")]
     [Fact]
     public void CreateCharacterFactory_Clones_Mage()
     {
@@ -119,10 +128,11 @@ public sealed class PrototypeDemoTests
 
         var mage = factory.Create("mage");
 
-        Assert.Equal("Mage", mage.Name);
-        Assert.Equal("Mage", mage.Class);
+        ScenarioExpect.Equal("Mage", mage.Name);
+        ScenarioExpect.Equal("Mage", mage.Class);
     }
 
+    [Scenario("CreateCharacterFactory Clones Rogue")]
     [Fact]
     public void CreateCharacterFactory_Clones_Rogue()
     {
@@ -130,10 +140,11 @@ public sealed class PrototypeDemoTests
 
         var rogue = factory.Create("rogue");
 
-        Assert.Equal("Rogue", rogue.Name);
-        Assert.Equal("Rogue", rogue.Class);
+        ScenarioExpect.Equal("Rogue", rogue.Name);
+        ScenarioExpect.Equal("Rogue", rogue.Class);
     }
 
+    [Scenario("CreateCharacterFactory Clones EliteWarrior")]
     [Fact]
     public void CreateCharacterFactory_Clones_EliteWarrior()
     {
@@ -141,11 +152,12 @@ public sealed class PrototypeDemoTests
 
         var elite = factory.Create("elite-warrior");
 
-        Assert.Equal("Elite Warrior", elite.Name);
-        Assert.Equal(10, elite.Level);
-        Assert.Equal(300, elite.Stats.Health); // 150 * 2
+        ScenarioExpect.Equal("Elite Warrior", elite.Name);
+        ScenarioExpect.Equal(10, elite.Level);
+        ScenarioExpect.Equal(300, elite.Stats.Health); // 150 * 2
     }
 
+    [Scenario("CreateCharacterFactory Clones EliteMage")]
     [Fact]
     public void CreateCharacterFactory_Clones_EliteMage()
     {
@@ -153,11 +165,12 @@ public sealed class PrototypeDemoTests
 
         var elite = factory.Create("elite-mage");
 
-        Assert.Equal("Archmage", elite.Name);
-        Assert.Equal(15, elite.Level);
-        Assert.Equal(450, elite.Stats.Mana); // 150 * 3
+        ScenarioExpect.Equal("Archmage", elite.Name);
+        ScenarioExpect.Equal(15, elite.Level);
+        ScenarioExpect.Equal(450, elite.Stats.Mana); // 150 * 3
     }
 
+    [Scenario("CreateCharacterFactory Clones Boss")]
     [Fact]
     public void CreateCharacterFactory_Clones_Boss()
     {
@@ -165,14 +178,15 @@ public sealed class PrototypeDemoTests
 
         var boss = factory.Create("boss-dragon-knight");
 
-        Assert.Equal("Dragon Knight", boss.Name);
-        Assert.Equal(50, boss.Level);
-        Assert.Equal(5000, boss.Stats.Health);
-        Assert.Equal(80, boss.Stats.Strength);
-        Assert.Equal("Dragonbone Greatsword", boss.Equipment.Weapon);
-        Assert.Equal(100, boss.Resistances["Fire"]);
+        ScenarioExpect.Equal("Dragon Knight", boss.Name);
+        ScenarioExpect.Equal(50, boss.Level);
+        ScenarioExpect.Equal(5000, boss.Stats.Health);
+        ScenarioExpect.Equal(80, boss.Stats.Strength);
+        ScenarioExpect.Equal("Dragonbone Greatsword", boss.Equipment.Weapon);
+        ScenarioExpect.Equal(100, boss.Resistances["Fire"]);
     }
 
+    [Scenario("CreateCharacterFactory With Mutation")]
     [Fact]
     public void CreateCharacterFactory_With_Mutation()
     {
@@ -184,10 +198,11 @@ public sealed class PrototypeDemoTests
             c.Level = 25;
         });
 
-        Assert.Equal("Sir Galahad", custom.Name);
-        Assert.Equal(25, custom.Level);
+        ScenarioExpect.Equal("Sir Galahad", custom.Name);
+        ScenarioExpect.Equal(25, custom.Level);
     }
 
+    [Scenario("CreateCharacterFactory Default Returns Warrior")]
     [Fact]
     public void CreateCharacterFactory_Default_Returns_Warrior()
     {
@@ -195,9 +210,10 @@ public sealed class PrototypeDemoTests
 
         var unknown = factory.Create("unknown-key");
 
-        Assert.Equal("Warrior", unknown.Class);
+        ScenarioExpect.Equal("Warrior", unknown.Class);
     }
 
+    [Scenario("CreateNpcSpawner Creates Clones")]
     [Fact]
     public void CreateNpcSpawner_Creates_Clones()
     {
@@ -215,11 +231,12 @@ public sealed class PrototypeDemoTests
         var spawn1 = spawner.Create();
         var spawn2 = spawner.Create();
 
-        Assert.NotSame(spawn1, spawn2);
-        Assert.Equal("Goblin", spawn1.Name);
-        Assert.Equal("Goblin", spawn2.Name);
+        ScenarioExpect.NotSame(spawn1, spawn2);
+        ScenarioExpect.Equal("Goblin", spawn1.Name);
+        ScenarioExpect.Equal("Goblin", spawn2.Name);
     }
 
+    [Scenario("CreateNpcSpawner With Mutation")]
     [Fact]
     public void CreateNpcSpawner_With_Mutation()
     {
@@ -236,9 +253,10 @@ public sealed class PrototypeDemoTests
 
         var spawn = spawner.Create(g => g.Name = "Elite Goblin");
 
-        Assert.Equal("Elite Goblin", spawn.Name);
+        ScenarioExpect.Equal("Elite Goblin", spawn.Name);
     }
 
+    [Scenario("GameCharacter ToString Works")]
     [Fact]
     public void GameCharacter_ToString_Works()
     {
@@ -246,11 +264,12 @@ public sealed class PrototypeDemoTests
 
         var str = warrior.ToString();
 
-        Assert.Contains("Warrior", str);
-        Assert.Contains("HP:150", str);
-        Assert.Contains("STR:15", str);
+        ScenarioExpect.Contains("Warrior", str);
+        ScenarioExpect.Contains("HP:150", str);
+        ScenarioExpect.Contains("STR:15", str);
     }
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {

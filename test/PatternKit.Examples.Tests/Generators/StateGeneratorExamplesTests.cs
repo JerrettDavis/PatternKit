@@ -9,16 +9,18 @@ namespace PatternKit.Examples.Tests.GeneratorTests;
 [Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
 public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("OrderFlow StartsInDraftAndExposesAvailableTriggers")]
     [Fact]
     public void OrderFlow_StartsInDraftAndExposesAvailableTriggers()
     {
         var order = new OrderFlow("ORD-TEST", 25m);
 
-        Assert.Equal(OrderState.Draft, order.State);
-        Assert.Equal("Order is being prepared", order.GetStateDescription());
-        Assert.Equal([OrderTrigger.Submit, OrderTrigger.Cancel], order.GetAvailableTriggers().ToArray());
+        ScenarioExpect.Equal(OrderState.Draft, order.State);
+        ScenarioExpect.Equal("Order is being prepared", order.GetStateDescription());
+        ScenarioExpect.Equal([OrderTrigger.Submit, OrderTrigger.Cancel], order.GetAvailableTriggers().ToArray());
     }
 
+    [Scenario("OrderFlow CompletesHappyPath")]
     [Fact]
     public async Task OrderFlow_CompletesHappyPath()
     {
@@ -28,10 +30,11 @@ public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : Tiny
         await order.FireAsync(OrderTrigger.Pay, CancellationToken.None);
         order.Fire(OrderTrigger.Ship);
 
-        Assert.Equal(OrderState.Shipped, order.State);
-        Assert.Equal("Order is on its way to you", order.GetStateDescription());
+        ScenarioExpect.Equal(OrderState.Shipped, order.State);
+        ScenarioExpect.Equal("Order is on its way to you", order.GetStateDescription());
     }
 
+    [Scenario("OrderFlow GuardBlocksInvalidPayment")]
     [Fact]
     public void OrderFlow_GuardBlocksInvalidPayment()
     {
@@ -39,10 +42,11 @@ public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : Tiny
 
         order.Fire(OrderTrigger.Submit);
 
-        Assert.False(order.CanFire(OrderTrigger.Pay));
-        Assert.Equal(OrderState.Submitted, order.State);
+        ScenarioExpect.False(order.CanFire(OrderTrigger.Pay));
+        ScenarioExpect.Equal(OrderState.Submitted, order.State);
     }
 
+    [Scenario("OrderFlow CanCancelBeforePayment")]
     [Fact]
     public void OrderFlow_CanCancelBeforePayment()
     {
@@ -51,10 +55,11 @@ public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : Tiny
         order.Fire(OrderTrigger.Submit);
         order.Fire(OrderTrigger.Cancel);
 
-        Assert.Equal(OrderState.Cancelled, order.State);
-        Assert.Equal("Order has been cancelled", order.GetStateDescription());
+        ScenarioExpect.Equal(OrderState.Cancelled, order.State);
+        ScenarioExpect.Equal("Order has been cancelled", order.GetStateDescription());
     }
 
+    [Scenario("DocumentWorkflow RequiresReviewCommentBeforeApproval")]
     [Fact]
     public async Task DocumentWorkflow_RequiresReviewCommentBeforeApproval()
     {
@@ -62,17 +67,18 @@ public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : Tiny
 
         workflow.Fire(DocumentAction.SubmitForReview);
 
-        Assert.Equal(DocumentState.PendingReview, workflow.State);
-        Assert.False(workflow.CanFire(DocumentAction.Approve));
+        ScenarioExpect.Equal(DocumentState.PendingReview, workflow.State);
+        ScenarioExpect.False(workflow.CanFire(DocumentAction.Approve));
 
         workflow.ReviewComments.Add("Looks good.");
         workflow.Fire(DocumentAction.Approve);
         await workflow.FireAsync(DocumentAction.Publish, CancellationToken.None);
         workflow.Fire(DocumentAction.Archive);
 
-        Assert.Equal(DocumentState.Archived, workflow.State);
+        ScenarioExpect.Equal(DocumentState.Archived, workflow.State);
     }
 
+    [Scenario("DocumentWorkflow RejectionCanReturnToDraft")]
     [Fact]
     public void DocumentWorkflow_RejectionCanReturnToDraft()
     {
@@ -83,8 +89,8 @@ public sealed class StateGeneratorExamplesTests(ITestOutputHelper output) : Tiny
         workflow.Fire(DocumentAction.Reject);
         workflow.Fire(DocumentAction.Revise);
 
-        Assert.Equal(DocumentState.Draft, workflow.State);
-        Assert.Empty(workflow.ReviewComments);
+        ScenarioExpect.Equal(DocumentState.Draft, workflow.State);
+        ScenarioExpect.Empty(workflow.ReviewComments);
     }
 
     [Scenario("Order flow demo suite covers happy path, cancellation, guard failure, and state-based logic")]

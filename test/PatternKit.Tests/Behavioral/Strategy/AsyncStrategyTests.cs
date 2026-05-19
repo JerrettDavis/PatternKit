@@ -198,6 +198,7 @@ public sealed class AsyncStrategyTests(ITestOutputHelper output) : TinyBddXunitB
 
 public sealed class AsyncStrategyEdgeCaseTests
 {
+    [Scenario("SyncPredicate WithCancellationToken Adapter")]
     [Fact]
     public async Task SyncPredicate_WithCancellationToken_Adapter()
     {
@@ -214,10 +215,11 @@ public sealed class AsyncStrategyEdgeCaseTests
         var cts = new CancellationTokenSource();
         var result = await strategy.ExecuteAsync(5, cts.Token);
 
-        Assert.Equal("positive", result);
-        Assert.Equal(cts.Token, tokenReceived);
+        ScenarioExpect.Equal("positive", result);
+        ScenarioExpect.Equal(cts.Token, tokenReceived);
     }
 
+    [Scenario("SyncPredicate Without CancellationToken Adapter")]
     [Fact]
     public async Task SyncPredicate_Without_CancellationToken_Adapter()
     {
@@ -227,10 +229,11 @@ public sealed class AsyncStrategyEdgeCaseTests
             .Default(_ => "odd")
             .Build();
 
-        Assert.Equal("even", await strategy.ExecuteAsync(4));
-        Assert.Equal("odd", await strategy.ExecuteAsync(5));
+        ScenarioExpect.Equal("even", await strategy.ExecuteAsync(4));
+        ScenarioExpect.Equal("odd", await strategy.ExecuteAsync(5));
     }
 
+    [Scenario("SyncDefault Adapter")]
     [Fact]
     public async Task SyncDefault_Adapter()
     {
@@ -242,18 +245,20 @@ public sealed class AsyncStrategyEdgeCaseTests
 
         var result = await strategy.ExecuteAsync(42);
 
-        Assert.Equal("default:42", result);
+        ScenarioExpect.Equal("default:42", result);
     }
 
+    [Scenario("Empty Strategy Throws")]
     [Fact]
     public async Task Empty_Strategy_Throws()
     {
         var strategy = AsyncStrategy<int, string>.Create().Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => strategy.ExecuteAsync(1).AsTask());
     }
 
+    [Scenario("Multiple Predicates First Match Wins")]
     [Fact]
     public async Task Multiple_Predicates_First_Match_Wins()
     {
@@ -275,11 +280,12 @@ public sealed class AsyncStrategyEdgeCaseTests
 
         var result = await strategy.ExecuteAsync(5);
 
-        Assert.Equal("first", result);
-        Assert.Single(log); // Only first predicate evaluated
-        Assert.Equal("pred1", log[0]);
+        ScenarioExpect.Equal("first", result);
+        ScenarioExpect.Single(log); // Only first predicate evaluated
+        ScenarioExpect.Equal("pred1", log[0]);
     }
 
+    [Scenario("All Predicates Evaluated Until Match")]
     [Fact]
     public async Task All_Predicates_Evaluated_Until_Match()
     {
@@ -307,10 +313,11 @@ public sealed class AsyncStrategyEdgeCaseTests
 
         var result = await strategy.ExecuteAsync(5);
 
-        Assert.Equal("third", result);
-        Assert.Equal(3, log.Count);
+        ScenarioExpect.Equal("third", result);
+        ScenarioExpect.Equal(3, log.Count);
     }
 
+    [Scenario("Handler Receives Input And Token")]
     [Fact]
     public async Task Handler_Receives_Input_And_Token()
     {
@@ -330,10 +337,11 @@ public sealed class AsyncStrategyEdgeCaseTests
         var cts = new CancellationTokenSource();
         await strategy.ExecuteAsync(42, cts.Token);
 
-        Assert.Equal(42, capturedInput);
-        Assert.Equal(cts.Token, capturedToken);
+        ScenarioExpect.Equal(42, capturedInput);
+        ScenarioExpect.Equal(cts.Token, capturedToken);
     }
 
+    [Scenario("Default Only Strategy")]
     [Fact]
     public async Task Default_Only_Strategy()
     {
@@ -343,9 +351,10 @@ public sealed class AsyncStrategyEdgeCaseTests
 
         var result = await strategy.ExecuteAsync(99);
 
-        Assert.Equal("default:99", result);
+        ScenarioExpect.Equal("default:99", result);
     }
 
+    [Scenario("AsyncPredicate And Handler")]
     [Fact]
     public async Task AsyncPredicate_And_Handler()
     {
@@ -364,7 +373,7 @@ public sealed class AsyncStrategyEdgeCaseTests
 
         var result = await strategy.ExecuteAsync(5);
 
-        Assert.Equal("async:5", result);
+        ScenarioExpect.Equal("async:5", result);
     }
 }
 
