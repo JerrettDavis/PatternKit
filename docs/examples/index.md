@@ -17,6 +17,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Source-generated application wiring** for builders, factories, facades, proxies, observers, visitors, state machines, strategies, mementos, template methods, and messaging factories.
 * **Enterprise messaging workflows** for envelopes, routers, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, and outboxes.
 * **Messaging backplane facade** for host-style setup, typed request/reply, and publish/subscribe over an application-owned transport boundary.
+* **Production-readiness catalog** for DI, generic host, and ASP.NET Core diagnostics that maps every documented example to its source, TinyBDD tests, docs page, integration surfaces, and production checks.
 
 ## Demos in this section
 
@@ -71,6 +72,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Messaging Backplane Facade**
   Demonstrates how PatternKit can sit behind a MassTransit- or MediatR-style host builder and typed client while RabbitMQ, Azure Service Bus, Postgres, MQTT, or another adapter remains infrastructure-owned. See [Messaging Backplane Facade](messaging-backplane-facade.md).
 
+* **Production-Ready Example Integrations**
+  Importable catalog and validation tooling for every documented example. Register it through `IServiceCollection`, validate it during generic host startup, or expose it through ASP.NET Core minimal API endpoints. See [Production-Ready Example Integrations](production-ready-integrations.md).
+
 ## How to run
 
 From the repo root:
@@ -117,6 +121,7 @@ dotnet test PatternKit.slnx -c Release
 * **Resilient Checkout:** `ResilientCheckoutDemo` (+ `ResilientCheckoutDemoTests`) — fallback checkout routes with compensation.
 * **Collaborating Mailboxes:** `ServiceCollaborationMailboxDemo` (+ `ServiceCollaborationMailboxDemoTests`) — inventory, payment, shipping, and notification services collaborating through serialized mailboxes.
 * **Messaging Backplane Facade:** `BackplaneFacadeDemo` (+ `BackplaneFacadeDemoTests`) — host setup, request/reply, pub/sub, outbox, idempotency, and mailbox-backed transport subscribers.
+* **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist
