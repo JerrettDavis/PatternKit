@@ -1,6 +1,9 @@
 - name: Examples & Demos
   href: index.md
 
+- name: Production-Ready Example Integrations
+  href: production-ready-integrations.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 
