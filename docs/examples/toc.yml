@@ -16,6 +16,9 @@
 - name: Configuration-Driven Transaction Pipeline
   href: config-driven-transaction-pipeline.md
 
+- name: Enterprise Feature Slices with .NET DI
+  href: enterprise-feature-slices.md
+
 - name: Minimal Web Request Router
   href: mini-router.md
 

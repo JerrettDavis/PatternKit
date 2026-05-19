@@ -9,6 +9,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Fluent decorators** for layering functionality (tax, discounts, rounding, logging) without inheritance.
 * **Pipelines** built declaratively and tested end-to-end.
 * **Config-driven composition** (DI + `IOptions`) so ops can re-order rules without redeploys.
+* **Enterprise feature slices** wired through the standard .NET DI container with PatternKit artifacts registered as singletons.
 * **Strategy-based coercion** for turning "whatever came in" into the types you actually want.
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
 * **Flyweight identity sharing** to eliminate duplicate immutable objects (glyphs, styles, tokens).
@@ -33,6 +34,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Configuration-Driven Transaction Pipeline**
   Same business shape as above, but wired via DI + `IOptions<PipelineOptions>`. Discounts/rounding/tenders are discovered and **ordered from config**, making the pipeline operationally tunable.
+
+* **Enterprise Feature Slices with .NET DI**
+  A checkout feature slice registered with `Microsoft.Extensions.DependencyInjection`, exposing a typed `IEnterpriseCheckout` facade while the container owns Flyweight, Factory, Prototype, Chain, Strategy, Decorator, Abstract Factory, Proxy, TypeDispatcher, State Machine, Memento, Observer, and Flow artifacts. See [Enterprise Feature Slices with .NET DI](enterprise-feature-slices.md).
 
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
@@ -101,6 +105,7 @@ dotnet test PatternKit.slnx -c Release
 * **Mini Router:** `MiniRouter` + `Demo.Run` — middleware/auth/negotiation in console output.
 * **Mediated Pipeline:** `TransactionPipelineBuilder` + `MediatedTransactionPipelineDemo.Run`.
 * **Config-Driven Pipeline:** `ConfigDrivenPipelineDemo.AddPaymentPipeline` + `PipelineOptions`.
+* **Enterprise Feature Slices:** `EnterpriseFeatureSlicesDemo.AddEnterpriseFeatureSlices` (+ `EnterpriseFeatureSlicesDemoTests`) — standard .NET DI owns PatternKit artifacts behind a typed checkout facade.
 * **Payment Processor Decorators:** `PaymentProcessor*` + related tests.
 * **Flyweight Glyph Cache:** `FlyweightDemo` (+ `FlyweightDemoTests`) — glyph width layout & style sharing.
 * **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
