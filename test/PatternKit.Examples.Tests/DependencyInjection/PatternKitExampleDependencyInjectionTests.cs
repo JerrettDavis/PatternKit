@@ -1,6 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.ApiGateway;
-using PatternKit.Examples.Chain;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
@@ -80,7 +79,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
 
-        auth.Chain.Execute(new HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
+        auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
         var json = router.Router.Handle(new Request("GET", "/orders", new Dictionary<string, string>()));
         var receipt = payment.Processor.Execute(CreateOrder());
