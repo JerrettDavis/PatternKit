@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.ApiGateway;
+using PatternKit.Examples.Chain;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
