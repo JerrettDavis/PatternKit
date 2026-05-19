@@ -1,11 +1,13 @@
 using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
 using PatternKit.Generators.Factories;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class FactoriesGeneratorTests
 {
+    [Scenario("FactoryMethod Generates Sync Create And TryCreate")]
     [Fact]
     public void FactoryMethod_Generates_Sync_Create_And_TryCreate()
     {
@@ -42,21 +44,22 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
-        Assert.Contains("MimeFactory.FactoryMethod.g.cs",
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.Contains("MimeFactory.FactoryMethod.g.cs",
             run.Results.SelectMany(r => r.GeneratedSources).Select(g => g.HintName));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var emit = updated.Emit(pe, pdb);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
         pe.Position = 0;
         pdb.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var runResult = asm.GetType("Demo.Runner")!.GetMethod("Run")!.Invoke(null, null);
-        Assert.Equal("application/json|True|application/json|False|application/octet-stream", runResult);
+        ScenarioExpect.Equal("application/json|True|application/json|False|application/octet-stream", runResult);
     }
 
+    [Scenario("FactoryMethod Async Methods Use ValueTask")]
     [Fact]
     public async Task FactoryMethod_Async_Methods_Use_ValueTask()
     {
@@ -84,13 +87,13 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
         var hintNames = run.Results.SelectMany(r => r.GeneratedSources).Select(g => g.HintName).ToArray();
-        Assert.Contains("NumberNames.FactoryMethod.g.cs", hintNames);
+        ScenarioExpect.Contains("NumberNames.FactoryMethod.g.cs", hintNames);
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
@@ -99,13 +102,14 @@ public class FactoriesGeneratorTests
         var tryCreateAsync = type.GetMethod("TryCreateAsync")!;
 
         var task = (ValueTask<string>)createAsync.Invoke(null, new object?[] { 1 })!;
-        Assert.Equal("one", await task);
+        ScenarioExpect.Equal("one", await task);
 
         var tuple = await ((ValueTask<(bool Success, string Result)>)tryCreateAsync.Invoke(null, [2])!);
-        Assert.False(tuple.Success);
-        Assert.Equal("other", tuple.Result);
+        ScenarioExpect.False(tuple.Success);
+        ScenarioExpect.Equal("other", tuple.Result);
     }
 
+    [Scenario("FactoryClass Generates Create And TryCreate")]
     [Fact]
     public void FactoryClass_Generates_Create_And_TryCreate()
     {
@@ -131,14 +135,14 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
-        Assert.Contains("MessageFactory.FactoryClass.g.cs",
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.Contains("MessageFactory.FactoryClass.g.cs",
             run.Results.SelectMany(r => r.GeneratedSources).Select(g => g.HintName));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var emit = updated.Emit(pe, pdb);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         pdb.Position = 0;
@@ -147,14 +151,15 @@ public class FactoriesGeneratorTests
         dynamic factory = Activator.CreateInstance(factoryType)!;
 
         var email = factoryType.GetMethod("Create")!.Invoke(factory, new object?[] { "email" });
-        Assert.Equal("Demo.Email", email!.GetType().FullName);
+        ScenarioExpect.Equal("Demo.Email", email!.GetType().FullName);
 
         var args = new object?[] { "sms", null };
         var success = (bool)factoryType.GetMethod("TryCreate")!.Invoke(factory, args)!;
-        Assert.True(success);
-        Assert.Equal("Demo.Sms", args[1]!.GetType().FullName);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("Demo.Sms", args[1]!.GetType().FullName);
     }
 
+    [Scenario("FactoryClass Emits Enum Keys And Overloads")]
     [Fact]
     public void FactoryClass_Emits_Enum_Keys_And_Overloads()
     {
@@ -180,12 +185,12 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var emit = updated.Emit(pe, pdb);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         pdb.Position = 0;
@@ -200,16 +205,17 @@ public class FactoriesGeneratorTests
 
         var createEnum = factoryType.GetMethod("Create", new[] { enumType })!;
         var email = createEnum.Invoke(factory, new[] { emailKey });
-        Assert.Equal("Demo.Email", email!.GetType().FullName);
+        ScenarioExpect.Equal("Demo.Email", email!.GetType().FullName);
 
         var tryCreateEnum = factoryType.GetMethods()
             .Single(m => m.Name == "TryCreate" && m.GetParameters()[0].ParameterType == enumType);
         object?[] args = [smsKey, null];
         var success = (bool)tryCreateEnum.Invoke(factory, args)!;
-        Assert.True(success);
-        Assert.Equal("Demo.Sms", args[1]!.GetType().FullName);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("Demo.Sms", args[1]!.GetType().FullName);
     }
 
+    [Scenario("FactoryMethod Requires Static Partial")]
     [Fact]
     public void FactoryMethod_Requires_Static_Partial()
     {
@@ -234,9 +240,10 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKKF001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF001");
     }
 
+    [Scenario("FactoryMethod Detects Signature Mismatch And Duplicate Keys")]
     [Fact]
     public void FactoryMethod_Detects_Signature_Mismatch_And_Duplicate_Keys()
     {
@@ -267,10 +274,11 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKKF002");
-        Assert.Contains(diags, d => d.Id == "PKKF003");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF002");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF003");
     }
 
+    [Scenario("FactoryMethod Rejects NonStatic Methods")]
     [Fact]
     public void FactoryMethod_Rejects_NonStatic_Methods()
     {
@@ -295,9 +303,10 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKKF006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF006");
     }
 
+    [Scenario("FactoryMethod Honors String Case Sensitivity")]
     [Fact]
     public void FactoryMethod_Honors_String_Case_Sensitivity()
     {
@@ -330,18 +339,19 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var runResult = asm.GetType("Demo.Runner")!.GetMethod("Run")!.Invoke(null, null);
-        Assert.Equal("False|<null>", runResult);
+        ScenarioExpect.Equal("False|<null>", runResult);
     }
 
+    [Scenario("FactoryClass Requires Interface Or Abstract Base")]
     [Fact]
     public void FactoryClass_Requires_Interface_Or_Abstract_Base()
     {
@@ -362,9 +372,10 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKCF001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF001");
     }
 
+    [Scenario("FactoryClass Detects Duplicate Keys And Invalid Types")]
     [Fact]
     public void FactoryClass_Detects_Duplicate_Keys_And_Invalid_Types()
     {
@@ -394,10 +405,11 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKCF004");
-        Assert.Contains(diags, d => d.Id == "PKCF005");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF004");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF005");
     }
 
+    [Scenario("FactoryClass Flags Missing Ctor")]
     [Fact]
     public void FactoryClass_Flags_Missing_Ctor()
     {
@@ -424,9 +436,10 @@ public class FactoriesGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diags = run.Results.Single().Diagnostics;
-        Assert.Contains(diags, d => d.Id == "PKCF006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF006");
     }
 
+    [Scenario("FactoryClass Respects GenerateTryCreate Flag")]
     [Fact]
     public void FactoryClass_Respects_GenerateTryCreate_Flag()
     {
@@ -449,20 +462,21 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var factoryType = asm.GetType("Demo.CommandFactory")!;
         var commandType = asm.GetType("Demo.ICommand")!;
-        Assert.NotNull(factoryType.GetMethod("Create", new[] { typeof(string) }));
-        Assert.Null(factoryType.GetMethod("TryCreate", new[] { typeof(string), commandType.MakeByRefType() }));
+        ScenarioExpect.NotNull(factoryType.GetMethod("Create", new[] { typeof(string) }));
+        ScenarioExpect.Null(factoryType.GetMethod("TryCreate", new[] { typeof(string), commandType.MakeByRefType() }));
     }
 
+    [Scenario("FactoryClass Uses CreateAsync When Available")]
     [Fact]
     public void FactoryClass_Uses_CreateAsync_When_Available()
     {
@@ -492,11 +506,11 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
@@ -505,14 +519,15 @@ public class FactoriesGeneratorTests
 
         var sync = factoryType.GetMethod("Create")!;
         var asyncResult = sync.Invoke(factory, new object?[] { "async" });
-        Assert.Equal("Demo.AsyncService", asyncResult!.GetType().FullName);
+        ScenarioExpect.Equal("Demo.AsyncService", asyncResult!.GetType().FullName);
 
         var createAsync = factoryType.GetMethod("CreateAsync", new[] { typeof(string) })!;
         var vtObj = createAsync.Invoke(factory, new object?[] { "sync" })!;
         var awaited = vtObj.GetAwaiter().GetResult();
-        Assert.Equal("Demo.SyncService", ((object)awaited).GetType().FullName);
+        ScenarioExpect.Equal("Demo.SyncService", ((object)awaited).GetType().FullName);
     }
 
+    [Scenario("FactoryGenerators Work In DI Orchestrator Scenario")]
     [Fact]
     public void FactoryGenerators_Work_In_DI_Orchestrator_Scenario()
     {
@@ -576,13 +591,14 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryMethod Async String NoDefault WithParameters EmitsNullAndCaseBranches")]
     [Fact]
     public void FactoryMethod_Async_String_NoDefault_WithParameters_EmitsNullAndCaseBranches()
     {
@@ -607,22 +623,23 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
         var generated = run.Results.SelectMany(r => r.GeneratedSources)
             .Single(g => g.HintName == "FormatterFactory.FactoryMethod.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("if (key is null) throw new global::System.ArgumentNullException", generated);
-        Assert.Contains("StringComparison.OrdinalIgnoreCase", generated);
-        Assert.Contains("ResolveAsync", generated);
-        Assert.Contains("return (false, default!);", generated);
-        Assert.Contains("JsonAsync(payload, indent)", generated);
-        Assert.Contains("XmlAsync(payload, indent)", generated);
+        ScenarioExpect.Contains("if (key is null) throw new global::System.ArgumentNullException", generated);
+        ScenarioExpect.Contains("StringComparison.OrdinalIgnoreCase", generated);
+        ScenarioExpect.Contains("ResolveAsync", generated);
+        ScenarioExpect.Contains("return (false, default!);", generated);
+        ScenarioExpect.Contains("JsonAsync(payload, indent)", generated);
+        ScenarioExpect.Contains("XmlAsync(payload, indent)", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryMethod Async Numeric NoDefault EmitsSwitchBranches")]
     [Fact]
     public void FactoryMethod_Async_Numeric_NoDefault_EmitsSwitchBranches()
     {
@@ -647,21 +664,22 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
         var generated = run.Results.SelectMany(r => r.GeneratedSources)
             .Single(g => g.HintName == "NumberFactory.FactoryMethod.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("switch (key)", generated);
-        Assert.Contains("case 1:", generated);
-        Assert.Contains("default:", generated);
-        Assert.Contains("throw new global::System.ArgumentOutOfRangeException(nameof(key));", generated);
-        Assert.Contains("return (false, default!);", generated);
+        ScenarioExpect.Contains("switch (key)", generated);
+        ScenarioExpect.Contains("case 1:", generated);
+        ScenarioExpect.Contains("default:", generated);
+        ScenarioExpect.Contains("throw new global::System.ArgumentOutOfRangeException(nameof(key));", generated);
+        ScenarioExpect.Contains("return (false, default!);", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryClass AsyncEnumKeysAndFactoryMethods CoverCreationBranches")]
     [Fact]
     public void FactoryClass_AsyncEnumKeysAndFactoryMethods_CoverCreationBranches()
     {
@@ -693,22 +711,23 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
         var generated = run.Results.SelectMany(r => r.GeneratedSources)
             .Single(g => g.HintName == "ChannelFactory.FactoryClass.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler> CreateAsync(Keys key)", generated);
-        Assert.Contains("TryCreateAsync(Keys key)", generated);
-        Assert.Contains("return CreateAsync(MapKey(key));", generated);
-        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler>", generated);
-        Assert.Contains("SmsHandler.CreateAsync", generated);
-        Assert.Contains("PushHandler.CreateAsync", generated);
+        ScenarioExpect.Contains("public global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler> CreateAsync(Keys key)", generated);
+        ScenarioExpect.Contains("TryCreateAsync(Keys key)", generated);
+        ScenarioExpect.Contains("return CreateAsync(MapKey(key));", generated);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Demo.ChannelHandler>", generated);
+        ScenarioExpect.Contains("SmsHandler.CreateAsync", generated);
+        ScenarioExpect.Contains("PushHandler.CreateAsync", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryClass StringKeysGenerateStableEnumNamesAndNullComparers")]
     [Fact]
     public void FactoryClass_StringKeysGenerateStableEnumNamesAndNullComparers()
     {
@@ -734,20 +753,21 @@ public class FactoriesGeneratorTests
         var gen = new FactoriesGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
         var generated = run.Results.SelectMany(r => r.GeneratedSources)
             .Single(g => g.HintName == "TransportFactory.FactoryClass.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("Key1Http", generated);
-        Assert.Contains("Key1Http2", generated);
-        Assert.Contains("Key", generated);
-        Assert.Contains("MapKey", generated);
+        ScenarioExpect.Contains("Key1Http", generated);
+        ScenarioExpect.Contains("Key1Http2", generated);
+        ScenarioExpect.Contains("Key", generated);
+        ScenarioExpect.Contains("MapKey", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("InternalHelpers FormatKeysAsyncReturnsAndArguments")]
     [Fact]
     public void InternalHelpers_FormatKeysAsyncReturnsAndArguments()
     {
@@ -804,51 +824,51 @@ public class FactoriesGeneratorTests
                 static method => method.Name,
                 static method => method.GetAttributes().Single().ConstructorArguments.Single());
 
-        Assert.Equal("\"hello-world\"", InvokeFactoryHelper<string>("ToLiteral", constants["StringKey"]));
-        Assert.Equal("true", InvokeFactoryHelper<string>("ToLiteral", constants["BoolKey"]));
-        Assert.Equal("42", InvokeFactoryHelper<string>("ToLiteral", constants["NumberKey"]));
-        Assert.Equal("global::Demo.Channel.Email", InvokeFactoryHelper<string>("ToLiteral", constants["EnumKey"]));
+        ScenarioExpect.Equal("\"hello-world\"", InvokeFactoryHelper<string>("ToLiteral", constants["StringKey"]));
+        ScenarioExpect.Equal("true", InvokeFactoryHelper<string>("ToLiteral", constants["BoolKey"]));
+        ScenarioExpect.Equal("42", InvokeFactoryHelper<string>("ToLiteral", constants["NumberKey"]));
+        ScenarioExpect.Equal("global::Demo.Channel.Email", InvokeFactoryHelper<string>("ToLiteral", constants["EnumKey"]));
 
-        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["StringKey"]));
-        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, boolType, constants["BoolKey"]));
-        Assert.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, intType, constants["NumberKey"]));
-        Assert.False(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["NumberKey"]));
-        Assert.True(InvokeFactoryHelper<bool>("NeedsNullCheck", stringType));
-        Assert.False(InvokeFactoryHelper<bool>("NeedsNullCheck", intType));
-        Assert.True(InvokeFactoryHelper<bool>("IsStringType", stringType));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["StringKey"]));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, boolType, constants["BoolKey"]));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, intType, constants["NumberKey"]));
+        ScenarioExpect.False(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["NumberKey"]));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("NeedsNullCheck", stringType));
+        ScenarioExpect.False(InvokeFactoryHelper<bool>("NeedsNullCheck", intType));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("IsStringType", stringType));
 
         var existing = new HashSet<string>(StringComparer.Ordinal);
-        Assert.Equal("HelloWorld", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
-        Assert.Equal("True", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["BoolKey"], boolType, existing));
-        Assert.Equal("Key42", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["NumberKey"], intType, existing));
-        Assert.Equal("Email", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["EnumKey"], constants["EnumKey"].Type!, existing));
-        Assert.Equal("HelloWorld2", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
+        ScenarioExpect.Equal("HelloWorld", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
+        ScenarioExpect.Equal("True", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["BoolKey"], boolType, existing));
+        ScenarioExpect.Equal("Key42", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["NumberKey"], intType, existing));
+        ScenarioExpect.Equal("Email", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["EnumKey"], constants["EnumKey"].Type!, existing));
+        ScenarioExpect.Equal("HelloWorld2", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
 
-        Assert.True(InvokeFactoryHelper<bool>("Implements", email, message));
-        Assert.True(InvokeFactoryHelper<bool>("Implements", email, messageBase));
-        Assert.False(InvokeFactoryHelper<bool>("Implements", other, message));
-        Assert.Equal("MessageFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", message));
-        Assert.Equal("MessageBaseFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", messageBase));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("Implements", email, message));
+        ScenarioExpect.True(InvokeFactoryHelper<bool>("Implements", email, messageBase));
+        ScenarioExpect.False(InvokeFactoryHelper<bool>("Implements", other, message));
+        ScenarioExpect.Equal("MessageFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", message));
+        ScenarioExpect.Equal("MessageBaseFactory", InvokeFactoryHelper<string>("BuildDefaultFactoryName", messageBase));
 
         var taskMethod = (IMethodSymbol)signatureSamples.GetMembers("TaskResult").Single();
         var taskSignature = InvokeFactoryHelper<object>("BuildSignature", taskMethod, compilation);
         var parameterArray = (System.Collections.Immutable.ImmutableArray<IParameterSymbol>)taskSignature.GetType().GetProperty("Parameters")!.GetValue(taskSignature)!;
-        Assert.Contains("ref int count", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
-        Assert.Contains("in string name", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
-        Assert.Contains("out bool ok", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
-        Assert.Equal("ref count, in name, out ok", InvokeFactoryHelper<string>("BuildArgumentList", parameterArray));
+        ScenarioExpect.Contains("ref int count", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        ScenarioExpect.Contains("in string name", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        ScenarioExpect.Contains("out bool ok", InvokeFactoryHelper<string>("BuildParameterList", parameterArray));
+        ScenarioExpect.Equal("ref count, in name, out ok", InvokeFactoryHelper<string>("BuildArgumentList", parameterArray));
 
         var asyncKindType = typeof(FactoriesGenerator).GetNestedType("AsyncKind", System.Reflection.BindingFlags.NonPublic)!;
         var sync = Enum.Parse(asyncKindType, "Sync");
         var task = Enum.Parse(asyncKindType, "Task");
         var valueTask = Enum.Parse(asyncKindType, "ValueTask");
-        Assert.Equal("return invocation();", InvokeFactoryHelper<string>("BuildAsyncReturn", valueTask, "string", "invocation()"));
-        Assert.Equal("return new global::System.Threading.Tasks.ValueTask<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", task, "string", "invocation()"));
-        Assert.Equal("return global::System.Threading.Tasks.ValueTask.FromResult<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", sync, "string", "invocation()"));
-        Assert.Equal("invocation()", InvokeFactoryHelper<string>("BuildSyncValue", sync, "invocation()"));
-        Assert.Equal("invocation().GetAwaiter().GetResult()", InvokeFactoryHelper<string>("BuildSyncValue", task, "invocation()"));
-        Assert.Equal("invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", sync, "invocation()"));
-        Assert.Equal("await invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", valueTask, "invocation()"));
+        ScenarioExpect.Equal("return invocation();", InvokeFactoryHelper<string>("BuildAsyncReturn", valueTask, "string", "invocation()"));
+        ScenarioExpect.Equal("return new global::System.Threading.Tasks.ValueTask<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", task, "string", "invocation()"));
+        ScenarioExpect.Equal("return global::System.Threading.Tasks.ValueTask.FromResult<string>(invocation());", InvokeFactoryHelper<string>("BuildAsyncReturn", sync, "string", "invocation()"));
+        ScenarioExpect.Equal("invocation()", InvokeFactoryHelper<string>("BuildSyncValue", sync, "invocation()"));
+        ScenarioExpect.Equal("invocation().GetAwaiter().GetResult()", InvokeFactoryHelper<string>("BuildSyncValue", task, "invocation()"));
+        ScenarioExpect.Equal("invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", sync, "invocation()"));
+        ScenarioExpect.Equal("await invocation()", InvokeFactoryHelper<string>("BuildAwaitedValue", valueTask, "invocation()"));
     }
 
     private static T InvokeFactoryHelper<T>(string name, params object?[] args)

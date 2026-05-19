@@ -189,12 +189,14 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
                 r.TransactionId != null && r.ShipmentId != null)
             .AssertPassed();
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {
         PatternKit.Examples.FacadeDemo.FacadeDemo.Run();
     }
 
+    [Scenario("CancelOrder NonExistent ReturnsError")]
     [Fact]
     public void CancelOrder_NonExistent_ReturnsError()
     {
@@ -203,10 +205,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var result = facade.Execute("cancel-order", request);
 
-        Assert.False(result.Success);
-        Assert.Contains("not found", result.ErrorMessage!);
+        ScenarioExpect.False(result.Success);
+        ScenarioExpect.Contains("not found", result.ErrorMessage!);
     }
 
+    [Scenario("ProcessReturn NonExistent ReturnsError")]
     [Fact]
     public void ProcessReturn_NonExistent_ReturnsError()
     {
@@ -215,10 +218,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var result = facade.Execute("process-return", request);
 
-        Assert.False(result.Success);
-        Assert.Contains("not found", result.ErrorMessage!);
+        ScenarioExpect.False(result.Success);
+        ScenarioExpect.Contains("not found", result.ErrorMessage!);
     }
 
+    [Scenario("PlaceOrder ZeroPrice PaymentFails")]
     [Fact]
     public void PlaceOrder_ZeroPrice_PaymentFails()
     {
@@ -227,10 +231,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var result = facade.Execute("place-order", request);
 
-        Assert.False(result.Success);
-        Assert.Contains("Payment", result.ErrorMessage!);
+        ScenarioExpect.False(result.Success);
+        ScenarioExpect.Contains("Payment", result.ErrorMessage!);
     }
 
+    [Scenario("InventoryService Reserve UnknownProduct Fails")]
     [Fact]
     public void InventoryService_Reserve_UnknownProduct_Fails()
     {
@@ -238,10 +243,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var success = inventory.Reserve("UNKNOWN-PRODUCT", 1, out var reservationId);
 
-        Assert.False(success);
-        Assert.Empty(reservationId);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Empty(reservationId);
     }
 
+    [Scenario("InventoryService Reserve TooMuchQuantity Fails")]
     [Fact]
     public void InventoryService_Reserve_TooMuchQuantity_Fails()
     {
@@ -249,10 +255,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var success = inventory.Reserve("WIDGET-001", 9999, out var reservationId);
 
-        Assert.False(success);
-        Assert.Empty(reservationId);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Empty(reservationId);
     }
 
+    [Scenario("InventoryService Reserve Success")]
     [Fact]
     public void InventoryService_Reserve_Success()
     {
@@ -260,10 +267,11 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
 
         var success = inventory.Reserve("WIDGET-001", 10, out var reservationId);
 
-        Assert.True(success);
-        Assert.StartsWith("RES-", reservationId);
+        ScenarioExpect.True(success);
+        ScenarioExpect.StartsWith("RES-", reservationId);
     }
 
+    [Scenario("InventoryService Release DoesNotThrow")]
     [Fact]
     public void InventoryService_Release_DoesNotThrow()
     {
@@ -272,6 +280,7 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
         inventory.Release("RES-12345");
     }
 
+    [Scenario("InventoryService Restock IncreasesStock")]
     [Fact]
     public void InventoryService_Restock_IncreasesStock()
     {
@@ -282,82 +291,93 @@ public sealed class FacadeDemoTests(ITestOutputHelper output) : TinyBddXunitBase
         // Now should be able to reserve again
         var success = inventory.Reserve("WIDGET-001", 40, out _);
 
-        Assert.True(success);
+        ScenarioExpect.True(success);
     }
 
+    [Scenario("PaymentService Charge NegativeAmount Fails")]
     [Fact]
     public void PaymentService_Charge_NegativeAmount_Fails()
     {
         var success = PaymentService.Charge("VISA", -10m, out var transactionId);
 
-        Assert.False(success);
-        Assert.Empty(transactionId);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Empty(transactionId);
     }
 
+    [Scenario("PaymentService Charge ZeroAmount Fails")]
     [Fact]
     public void PaymentService_Charge_ZeroAmount_Fails()
     {
         var success = PaymentService.Charge("VISA", 0m, out var transactionId);
 
-        Assert.False(success);
-        Assert.Empty(transactionId);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Empty(transactionId);
     }
 
+    [Scenario("PaymentService Charge Success")]
     [Fact]
     public void PaymentService_Charge_Success()
     {
         var success = PaymentService.Charge("VISA", 100m, out var transactionId);
 
-        Assert.True(success);
-        Assert.StartsWith("TX-", transactionId);
+        ScenarioExpect.True(success);
+        ScenarioExpect.StartsWith("TX-", transactionId);
     }
 
+    [Scenario("PaymentService Refund DoesNotThrow")]
     [Fact]
     public void PaymentService_Refund_DoesNotThrow()
     {
         PaymentService.Refund("TX-12345");
     }
 
+    [Scenario("PaymentService Void DoesNotThrow")]
     [Fact]
     public void PaymentService_Void_DoesNotThrow()
     {
         PaymentService.Void("TX-12345");
     }
 
+    [Scenario("ShippingService Schedule ReturnsShipmentId")]
     [Fact]
     public void ShippingService_Schedule_ReturnsShipmentId()
     {
         var shipmentId = ShippingService.Schedule("123 Main St", "WIDGET-001", 5);
 
-        Assert.StartsWith("SHIP-", shipmentId);
+        ScenarioExpect.StartsWith("SHIP-", shipmentId);
     }
 
+    [Scenario("ShippingService Cancel DoesNotThrow")]
     [Fact]
     public void ShippingService_Cancel_DoesNotThrow()
     {
         ShippingService.Cancel("SHIP-12345");
     }
 
+    [Scenario("ShippingService InitiateReturn ReturnsReturnId")]
     [Fact]
     public void ShippingService_InitiateReturn_ReturnsReturnId()
     {
         var returnId = ShippingService.InitiateReturn("SHIP-12345");
 
-        Assert.StartsWith("RET-", returnId);
+        ScenarioExpect.StartsWith("RET-", returnId);
     }
 
+    [Scenario("NotificationService SendOrderConfirmation DoesNotThrow")]
     [Fact]
     public void NotificationService_SendOrderConfirmation_DoesNotThrow()
     {
         NotificationService.SendOrderConfirmation("test@test.com", "ORD-12345");
     }
 
+    [Scenario("NotificationService SendCancellation DoesNotThrow")]
     [Fact]
     public void NotificationService_SendCancellation_DoesNotThrow()
     {
         NotificationService.SendCancellation("test@test.com", "ORD-12345");
     }
 
+    [Scenario("NotificationService SendRefundNotice DoesNotThrow")]
     [Fact]
     public void NotificationService_SendRefundNotice_DoesNotThrow()
     {

@@ -11,6 +11,7 @@ namespace PatternKit.Examples.Tests.Messaging;
 [Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
 public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("DispatcherUsageExamples RunWithoutThrowing")]
     [Fact]
     public async Task DispatcherUsageExamples_RunWithoutThrowing()
     {
@@ -20,6 +21,7 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
         await DispatcherUsageExamples.PipelineExample();
     }
 
+    [Scenario("CommandHandlers ReturnExpectedResponsesAndLogOperations")]
     [Fact]
     public async Task CommandHandlers_ReturnExpectedResponsesAndLogOperations()
     {
@@ -34,14 +36,15 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
             default);
         var paymentSuccess = await paymentHandler.Handle(new ProcessPaymentCommand(order.Id, order.Total), default);
 
-        Assert.Equal("Ada", customer.Name);
-        Assert.Equal(100m, order.Total);
-        Assert.True(paymentSuccess);
-        Assert.Contains(logger.GetLogs(), log => log.Contains("Creating customer", StringComparison.Ordinal));
-        Assert.Contains(logger.GetLogs(), log => log.Contains("Placing order", StringComparison.Ordinal));
-        Assert.Contains(logger.GetLogs(), log => log.Contains("Processing payment", StringComparison.Ordinal));
+        ScenarioExpect.Equal("Ada", customer.Name);
+        ScenarioExpect.Equal(100m, order.Total);
+        ScenarioExpect.True(paymentSuccess);
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("Creating customer", StringComparison.Ordinal));
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("Placing order", StringComparison.Ordinal));
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("Processing payment", StringComparison.Ordinal));
     }
 
+    [Scenario("QueryAndStreamHandlers ReadFromRepositories")]
     [Fact]
     public async Task QueryAndStreamHandlers_ReadFromRepositories()
     {
@@ -59,13 +62,14 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
             productResults.Add(product);
         }
 
-        Assert.NotNull(customer);
-        Assert.Equal("Ada", customer.Name);
-        Assert.Single(customerOrders);
-        Assert.Equal(2, productResults.Count);
-        Assert.All(productResults, product => Assert.Contains("o", product.Name, StringComparison.OrdinalIgnoreCase));
+        ScenarioExpect.NotNull(customer);
+        ScenarioExpect.Equal("Ada", customer.Name);
+        ScenarioExpect.Single(customerOrders);
+        ScenarioExpect.Equal(2, productResults.Count);
+        ScenarioExpect.All(productResults, product => ScenarioExpect.Contains("o", product.Name, StringComparison.OrdinalIgnoreCase));
     }
 
+    [Scenario("NotificationHandlers LogMessages")]
     [Fact]
     public async Task NotificationHandlers_LogMessages()
     {
@@ -77,9 +81,10 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
         await new SendOrderConfirmationHandler(logger).Handle(new OrderPlacedEvent(5, 1, 125m), default);
         await new RecordPaymentAuditHandler(logger).Handle(new PaymentProcessedEvent(5, 125m, true), default);
 
-        Assert.Equal(5, logger.GetLogs().Count);
+        ScenarioExpect.Equal(5, logger.GetLogs().Count);
     }
 
+    [Scenario("PipelineBehaviors InvokeNextAndLogCrossCuttingSteps")]
     [Fact]
     public async Task PipelineBehaviors_InvokeNextAndLogCrossCuttingSteps()
     {
@@ -96,16 +101,17 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
         var transacted = await new TransactionBehavior<CreateCustomerCommand, Customer>(logger)
             .Handle(request, default, () => ValueTask.FromResult(expected));
 
-        Assert.Same(expected, logged);
-        Assert.Same(expected, validated);
-        Assert.Same(expected, measured);
-        Assert.Same(expected, transacted);
-        Assert.Contains(logger.GetLogs(), log => log.Contains("[Logging]", StringComparison.Ordinal));
-        Assert.Contains(logger.GetLogs(), log => log.Contains("[Validation]", StringComparison.Ordinal));
-        Assert.Contains(logger.GetLogs(), log => log.Contains("[Performance]", StringComparison.Ordinal));
-        Assert.Contains(logger.GetLogs(), log => log.Contains("[Transaction] Committing", StringComparison.Ordinal));
+        ScenarioExpect.Same(expected, logged);
+        ScenarioExpect.Same(expected, validated);
+        ScenarioExpect.Same(expected, measured);
+        ScenarioExpect.Same(expected, transacted);
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("[Logging]", StringComparison.Ordinal));
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("[Validation]", StringComparison.Ordinal));
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("[Performance]", StringComparison.Ordinal));
+        ScenarioExpect.Contains(logger.GetLogs(), log => log.Contains("[Transaction] Committing", StringComparison.Ordinal));
     }
 
+    [Scenario("ServiceCollectionExtensions RegisterGeneratedDispatcherAndHandlers")]
     [Fact]
     public void ServiceCollectionExtensions_RegisterGeneratedDispatcherAndHandlers()
     {
@@ -121,11 +127,11 @@ public sealed class DispatcherExampleTests(ITestOutputHelper output) : TinyBddXu
 
         using var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetRequiredService<ProductionDispatcher>());
-        Assert.NotNull(provider.GetRequiredService<ICommandHandler<CreateCustomerCommand, Customer>>());
-        Assert.NotEmpty(provider.GetServices<INotificationHandler<CustomerCreatedEvent>>());
-        Assert.NotNull(provider.GetRequiredService<IStreamHandler<SearchProductsQuery, ProductSearchResult>>());
-        Assert.NotNull(provider.GetRequiredService<IPipelineBehavior<CreateCustomerCommand, Customer>>());
+        ScenarioExpect.NotNull(provider.GetRequiredService<ProductionDispatcher>());
+        ScenarioExpect.NotNull(provider.GetRequiredService<ICommandHandler<CreateCustomerCommand, Customer>>());
+        ScenarioExpect.NotEmpty(provider.GetServices<INotificationHandler<CustomerCreatedEvent>>());
+        ScenarioExpect.NotNull(provider.GetRequiredService<IStreamHandler<SearchProductsQuery, ProductSearchResult>>());
+        ScenarioExpect.NotNull(provider.GetRequiredService<IPipelineBehavior<CreateCustomerCommand, Customer>>());
     }
 
     [Scenario("Comprehensive mediator demo runs a production-style CQRS and notification workflow")]

@@ -7,15 +7,17 @@ namespace PatternKit.Examples.Tests.Chain;
 
 public sealed class CashTenderStrategyTests
 {
+    [Scenario("Kind Is Cash")]
     [Fact]
     public void Kind_Is_Cash()
     {
         var devices = new DeviceBus();
         var strategy = new CashTenderStrategy(devices);
 
-        Assert.Equal(PaymentKind.Cash, strategy.Kind);
+        ScenarioExpect.Equal(PaymentKind.Cash, strategy.Kind);
     }
 
+    [Scenario("TryApply Applies Payment")]
     [Fact]
     public void TryApply_Applies_Payment()
     {
@@ -26,10 +28,11 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Equal(10m, ctx.CashChange);
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Equal(10m, ctx.CashChange);
     }
 
+    [Scenario("TryApply Exact Payment No Change")]
     [Fact]
     public void TryApply_Exact_Payment_No_Change()
     {
@@ -40,10 +43,11 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Null(ctx.CashChange);
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Null(ctx.CashChange);
     }
 
+    [Scenario("TryApply Returns Null When NoDue")]
     [Fact]
     public void TryApply_Returns_Null_When_NoDue()
     {
@@ -55,7 +59,7 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
     private static TransactionContext CreateContext(decimal price)
@@ -72,6 +76,7 @@ public sealed class CashTenderStrategyTests
 
 public sealed class CardTenderStrategyTests
 {
+    [Scenario("Kind Is Card")]
     [Fact]
     public void Kind_Is_Card()
     {
@@ -81,9 +86,10 @@ public sealed class CardTenderStrategyTests
         });
         var strategy = new CardTenderStrategy(processors);
 
-        Assert.Equal(PaymentKind.Card, strategy.Kind);
+        ScenarioExpect.Equal(PaymentKind.Card, strategy.Kind);
     }
 
+    [Scenario("TryApply Authorizes And Captures")]
     [Fact]
     public void TryApply_Authorizes_And_Captures()
     {
@@ -98,10 +104,11 @@ public sealed class CardTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Contains(ctx.Log, l => l.Contains("captured"));
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Contains(ctx.Log, l => l.Contains("captured"));
     }
 
+    [Scenario("TryApply Returns Null When NoDue")]
     [Fact]
     public void TryApply_Returns_Null_When_NoDue()
     {
@@ -116,7 +123,7 @@ public sealed class CardTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
     private static TransactionContext CreateContext(decimal price)
@@ -133,6 +140,7 @@ public sealed class CardTenderStrategyTests
 
 public sealed class NoopCharityTrackerTests
 {
+    [Scenario("Track Does Not Throw")]
     [Fact]
     public void Track_Does_Not_Throw()
     {
@@ -144,14 +152,16 @@ public sealed class NoopCharityTrackerTests
 
 public sealed class CharityRoundUpRuleTests
 {
+    [Scenario("Reason Is Set")]
     [Fact]
     public void Reason_Is_Set()
     {
         var rule = new CharityRoundUpRule(new NoopCharityTracker());
 
-        Assert.Equal("charity round-up", rule.Reason);
+        ScenarioExpect.Equal("charity round-up", rule.Reason);
     }
 
+    [Scenario("ShouldApply Returns True When CharitySku Present")]
     [Fact]
     public void ShouldApply_Returns_True_When_CharitySku_Present()
     {
@@ -162,9 +172,10 @@ public sealed class CharityRoundUpRuleTests
             Items = [new LineItem("CHARITY:UNICEF", 1m, 1)]
         };
 
-        Assert.True(rule.ShouldApply(ctx));
+        ScenarioExpect.True(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False When No CharitySku")]
     [Fact]
     public void ShouldApply_Returns_False_When_No_CharitySku()
     {
@@ -175,9 +186,10 @@ public sealed class CharityRoundUpRuleTests
             Items = [new LineItem("REGULAR", 10m, 1)]
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ComputeDelta Rounds Up To Dollar")]
     [Fact]
     public void ComputeDelta_Rounds_Up_To_Dollar()
     {
@@ -191,20 +203,22 @@ public sealed class CharityRoundUpRuleTests
 
         var delta = rule.ComputeDelta(ctx);
 
-        Assert.Equal(0.75m, delta); // 10.25 -> 11.00
+        ScenarioExpect.Equal(0.75m, delta); // 10.25 -> 11.00
     }
 }
 
 public sealed class NickelCashOnlyRuleTests
 {
+    [Scenario("Reason Is Set")]
     [Fact]
     public void Reason_Is_Set()
     {
         var rule = new NickelCashOnlyRule();
 
-        Assert.Equal("nickel (cash-only)", rule.Reason);
+        ScenarioExpect.Equal("nickel (cash-only)", rule.Reason);
     }
 
+    [Scenario("ShouldApply Returns True For Cash With NickelSku")]
     [Fact]
     public void ShouldApply_Returns_True_For_Cash_With_NickelSku()
     {
@@ -216,9 +230,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Cash)
         };
 
-        Assert.True(rule.ShouldApply(ctx));
+        ScenarioExpect.True(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False For Card")]
     [Fact]
     public void ShouldApply_Returns_False_For_Card()
     {
@@ -230,9 +245,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Card)
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False Without NickelSku")]
     [Fact]
     public void ShouldApply_Returns_False_Without_NickelSku()
     {
@@ -244,9 +260,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Cash)
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ComputeDelta Rounds To Nearest Nickel")]
     [Fact]
     public void ComputeDelta_Rounds_To_Nearest_Nickel()
     {
@@ -260,7 +277,7 @@ public sealed class NickelCashOnlyRuleTests
 
         var delta = rule.ComputeDelta(ctx);
 
-        Assert.Equal(0.02m, delta); // 10.03 -> 10.05
+        ScenarioExpect.Equal(0.02m, delta); // 10.03 -> 10.05
     }
 }
 

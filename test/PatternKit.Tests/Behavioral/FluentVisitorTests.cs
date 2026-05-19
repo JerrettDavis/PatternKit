@@ -203,6 +203,7 @@ public sealed class FluentActionVisitorTests
         }
     }
 
+    [Scenario("FluentActionVisitor Dispatches To Handlers")]
     [Fact]
     public void FluentActionVisitor_Dispatches_To_Handlers()
     {
@@ -215,11 +216,12 @@ public sealed class FluentActionVisitorTests
         visitor.Visit(new LogEntry("Test message"));
         visitor.Visit(new ErrorEntry("Something went wrong"));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("LOG: Test message", log[0]);
-        Assert.Equal("ERROR: Something went wrong", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("LOG: Test message", log[0]);
+        ScenarioExpect.Equal("ERROR: Something went wrong", log[1]);
     }
 
+    [Scenario("FluentActionVisitor Uses Default Handler")]
     [Fact]
     public void FluentActionVisitor_Uses_Default_Handler()
     {
@@ -232,11 +234,12 @@ public sealed class FluentActionVisitorTests
         visitor.Visit(new LogEntry("Hello"));
         visitor.Visit(new ErrorEntry("Oops"));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("LOG: Hello", log[0]);
-        Assert.Equal("DEFAULT: ErrorEntry", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("LOG: Hello", log[0]);
+        ScenarioExpect.Equal("DEFAULT: ErrorEntry", log[1]);
     }
 
+    [Scenario("FluentActionVisitor Throws When No Handler")]
     [Fact]
     public void FluentActionVisitor_Throws_When_No_Handler()
     {
@@ -244,10 +247,11 @@ public sealed class FluentActionVisitorTests
             .When<LogEntry>(e => { })
             .Build();
 
-        Assert.Throws<NotSupportedException>(() =>
+        ScenarioExpect.Throws<NotSupportedException>(() =>
             visitor.Visit(new ErrorEntry("No handler")));
     }
 
+    [Scenario("FluentActionVisitor VisitDefault With Default Handler")]
     [Fact]
     public void FluentActionVisitor_VisitDefault_With_Default_Handler()
     {
@@ -259,10 +263,11 @@ public sealed class FluentActionVisitorTests
         // Call VisitDefault directly through interface
         ((IActionVisitor)visitor).VisitDefault(new LogEntry("test"));
 
-        Assert.Single(log);
-        Assert.Equal("default:LogEntry", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default:LogEntry", log[0]);
     }
 
+    [Scenario("FluentActionVisitor VisitDefault Without Default Throws")]
     [Fact]
     public void FluentActionVisitor_VisitDefault_Without_Default_Throws()
     {
@@ -270,10 +275,11 @@ public sealed class FluentActionVisitorTests
             .When<LogEntry>(_ => { })
             .Build();
 
-        Assert.Throws<NotSupportedException>(() =>
+        ScenarioExpect.Throws<NotSupportedException>(() =>
             ((IActionVisitor)visitor).VisitDefault(new ErrorEntry("test")));
     }
 
+    [Scenario("FluentActionVisitor AllTypes Handled")]
     [Fact]
     public void FluentActionVisitor_AllTypes_Handled()
     {
@@ -288,10 +294,10 @@ public sealed class FluentActionVisitorTests
         visitor.Visit(new ErrorEntry("oops"));
         visitor.Visit(new MetricEntry("cpu", 0.5));
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("LOG:hello", log[0]);
-        Assert.Equal("ERR:oops", log[1]);
-        Assert.Equal("METRIC:cpu=0.5", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("LOG:hello", log[0]);
+        ScenarioExpect.Equal("ERR:oops", log[1]);
+        ScenarioExpect.Equal("METRIC:cpu=0.5", log[2]);
     }
 }
 
@@ -319,6 +325,7 @@ public sealed class AsyncFluentVisitorTests
                 : visitor.VisitDefaultAsync(this, ct);
     }
 
+    [Scenario("AsyncFluentVisitor Evaluates Expression")]
     [Fact]
     public async Task AsyncFluentVisitor_Evaluates_Expression()
     {
@@ -333,9 +340,10 @@ public sealed class AsyncFluentVisitorTests
         var expr = new AsyncAdd(new AsyncNumber(10), new AsyncNumber(20));
         var result = await evaluator.VisitAsync(expr);
 
-        Assert.Equal(30, result);
+        ScenarioExpect.Equal(30, result);
     }
 
+    [Scenario("AsyncFluentVisitor Async Handler")]
     [Fact]
     public async Task AsyncFluentVisitor_Async_Handler()
     {
@@ -350,9 +358,10 @@ public sealed class AsyncFluentVisitorTests
 
         var result = await visitor.VisitAsync(new AsyncNumber(42));
 
-        Assert.Equal("Number: 42", result);
+        ScenarioExpect.Equal("Number: 42", result);
     }
 
+    [Scenario("AsyncFluentVisitor Uses Default")]
     [Fact]
     public async Task AsyncFluentVisitor_Uses_Default()
     {
@@ -363,9 +372,10 @@ public sealed class AsyncFluentVisitorTests
 
         var result = await visitor.VisitAsync(new AsyncAdd(new AsyncNumber(1), new AsyncNumber(2)));
 
-        Assert.Equal("default", result);
+        ScenarioExpect.Equal("default", result);
     }
 
+    [Scenario("AsyncFluentVisitor Constant Handler")]
     [Fact]
     public async Task AsyncFluentVisitor_Constant_Handler()
     {
@@ -376,9 +386,10 @@ public sealed class AsyncFluentVisitorTests
 
         var result = await visitor.VisitAsync(new AsyncNumber(100));
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("AsyncFluentVisitor Throws When No Handler")]
     [Fact]
     public async Task AsyncFluentVisitor_Throws_When_No_Handler()
     {
@@ -386,10 +397,11 @@ public sealed class AsyncFluentVisitorTests
             .When<AsyncNumber>(n => n.Value)
             .Build();
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
+        await ScenarioExpect.ThrowsAsync<NotSupportedException>(() =>
             visitor.VisitAsync(new AsyncAdd(new AsyncNumber(1), new AsyncNumber(2))).AsTask());
     }
 
+    [Scenario("AsyncFluentVisitor Async Default")]
     [Fact]
     public async Task AsyncFluentVisitor_Async_Default()
     {
@@ -403,7 +415,7 @@ public sealed class AsyncFluentVisitorTests
 
         var result = await visitor.VisitAsync(new AsyncNumber(1));
 
-        Assert.Equal("async-default-AsyncNumber", result);
+        ScenarioExpect.Equal("async-default-AsyncNumber", result);
     }
 }
 
@@ -431,6 +443,7 @@ public sealed class AsyncFluentActionVisitorTests
                 : visitor.VisitDefaultAsync(this, ct);
     }
 
+    [Scenario("AsyncFluentActionVisitor Dispatches")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Dispatches()
     {
@@ -443,11 +456,12 @@ public sealed class AsyncFluentActionVisitorTests
         await visitor.VisitAsync(new AsyncLogEntry("Hello"));
         await visitor.VisitAsync(new AsyncErrorEntry("Oops"));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("LOG: Hello", log[0]);
-        Assert.Equal("ERROR: Oops", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("LOG: Hello", log[0]);
+        ScenarioExpect.Equal("ERROR: Oops", log[1]);
     }
 
+    [Scenario("AsyncFluentActionVisitor Async Handler")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Async_Handler()
     {
@@ -462,10 +476,11 @@ public sealed class AsyncFluentActionVisitorTests
 
         await visitor.VisitAsync(new AsyncLogEntry("Test"));
 
-        Assert.Single(log);
-        Assert.Equal("ASYNC-LOG: Test", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("ASYNC-LOG: Test", log[0]);
     }
 
+    [Scenario("AsyncFluentActionVisitor Uses Default")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Uses_Default()
     {
@@ -478,11 +493,12 @@ public sealed class AsyncFluentActionVisitorTests
         await visitor.VisitAsync(new AsyncLogEntry("Hi"));
         await visitor.VisitAsync(new AsyncErrorEntry("Err"));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("log", log[0]);
-        Assert.Equal("default-AsyncErrorEntry", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("log", log[0]);
+        ScenarioExpect.Equal("default-AsyncErrorEntry", log[1]);
     }
 
+    [Scenario("AsyncFluentActionVisitor Async Default")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Async_Default()
     {
@@ -497,10 +513,11 @@ public sealed class AsyncFluentActionVisitorTests
 
         await visitor.VisitAsync(new AsyncLogEntry("Test"));
 
-        Assert.Single(log);
-        Assert.Equal("async-default-AsyncLogEntry", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-default-AsyncLogEntry", log[0]);
     }
 
+    [Scenario("AsyncFluentActionVisitor Throws When No Handler")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Throws_When_No_Handler()
     {
@@ -508,7 +525,7 @@ public sealed class AsyncFluentActionVisitorTests
             .When<AsyncLogEntry>(e => { })
             .Build();
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
+        await ScenarioExpect.ThrowsAsync<NotSupportedException>(() =>
             visitor.VisitAsync(new AsyncErrorEntry("No handler")).AsTask());
     }
 }
@@ -536,6 +553,7 @@ public sealed class FluentVisitorCoverageTests
                 : visitor.VisitDefault(this);
     }
 
+    [Scenario("FluentVisitor When Constant Handler")]
     [Fact]
     public void FluentVisitor_When_Constant_Handler()
     {
@@ -545,9 +563,10 @@ public sealed class FluentVisitorCoverageTests
 
         var result = visitor.Visit(new ElemA("test"));
 
-        Assert.Equal("constant-result", result);
+        ScenarioExpect.Equal("constant-result", result);
     }
 
+    [Scenario("FluentVisitor Default Constant")]
     [Fact]
     public void FluentVisitor_Default_Constant()
     {
@@ -557,9 +576,10 @@ public sealed class FluentVisitorCoverageTests
 
         var result = visitor.Visit(new ElemA("test"));
 
-        Assert.Equal("default-constant", result);
+        ScenarioExpect.Equal("default-constant", result);
     }
 
+    [Scenario("FluentVisitor VisitDefault With Default Returns Result")]
     [Fact]
     public void FluentVisitor_VisitDefault_With_Default_Returns_Result()
     {
@@ -569,9 +589,10 @@ public sealed class FluentVisitorCoverageTests
 
         var result = ((IVisitor<string>)visitor).VisitDefault(new ElemA("test"));
 
-        Assert.Equal("from-default", result);
+        ScenarioExpect.Equal("from-default", result);
     }
 
+    [Scenario("FluentVisitor VisitDefault Without Default Throws")]
     [Fact]
     public void FluentVisitor_VisitDefault_Without_Default_Throws()
     {
@@ -579,10 +600,11 @@ public sealed class FluentVisitorCoverageTests
             .When<ElemA>(e => e.Value)
             .Build();
 
-        Assert.Throws<NotSupportedException>(() =>
+        ScenarioExpect.Throws<NotSupportedException>(() =>
             ((IVisitor<string>)visitor).VisitDefault(new ElemB(42)));
     }
 
+    [Scenario("FluentVisitor Multiple Handlers Work")]
     [Fact]
     public void FluentVisitor_Multiple_Handlers_Work()
     {
@@ -591,10 +613,11 @@ public sealed class FluentVisitorCoverageTests
             .When<ElemB>(e => $"B:{e.Value}")
             .Build();
 
-        Assert.Equal("A:hello", visitor.Visit(new ElemA("hello")));
-        Assert.Equal("B:42", visitor.Visit(new ElemB(42)));
+        ScenarioExpect.Equal("A:hello", visitor.Visit(new ElemA("hello")));
+        ScenarioExpect.Equal("B:42", visitor.Visit(new ElemB(42)));
     }
 
+    [Scenario("FluentVisitor Handler Override Works")]
     [Fact]
     public void FluentVisitor_Handler_Override_Works()
     {
@@ -603,7 +626,7 @@ public sealed class FluentVisitorCoverageTests
             .When<ElemA>(_ => "second")
             .Build();
 
-        Assert.Equal("second", visitor.Visit(new ElemA("test")));
+        ScenarioExpect.Equal("second", visitor.Visit(new ElemA("test")));
     }
 }
 
@@ -630,6 +653,7 @@ public sealed class AsyncFluentVisitorCoverageTests
                 : visitor.VisitDefaultAsync(this, ct);
     }
 
+    [Scenario("AsyncFluentVisitor VisitDefaultAsync With Default")]
     [Fact]
     public async Task AsyncFluentVisitor_VisitDefaultAsync_With_Default()
     {
@@ -639,9 +663,10 @@ public sealed class AsyncFluentVisitorCoverageTests
 
         var result = await ((IAsyncVisitor<string>)visitor).VisitDefaultAsync(new AsyncNumberElement(42), CancellationToken.None);
 
-        Assert.Equal("default-handler", result);
+        ScenarioExpect.Equal("default-handler", result);
     }
 
+    [Scenario("AsyncFluentVisitor VisitDefaultAsync Without Default Throws")]
     [Fact]
     public async Task AsyncFluentVisitor_VisitDefaultAsync_Without_Default_Throws()
     {
@@ -649,10 +674,11 @@ public sealed class AsyncFluentVisitorCoverageTests
             .When<AsyncNumberElement>(e => e.Value.ToString())
             .Build();
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
+        await ScenarioExpect.ThrowsAsync<NotSupportedException>(() =>
             ((IAsyncVisitor<string>)visitor).VisitDefaultAsync(new AsyncTextElement("test"), CancellationToken.None).AsTask());
     }
 
+    [Scenario("AsyncFluentVisitor Async Handler With Cancellation")]
     [Fact]
     public async Task AsyncFluentVisitor_Async_Handler_With_Cancellation()
     {
@@ -667,9 +693,10 @@ public sealed class AsyncFluentVisitorCoverageTests
 
         var result = await visitor.VisitAsync(new AsyncNumberElement(42), cts.Token);
 
-        Assert.Equal("42", result);
+        ScenarioExpect.Equal("42", result);
     }
 
+    [Scenario("AsyncFluentVisitor Sync Handler Ignores CancellationToken")]
     [Fact]
     public async Task AsyncFluentVisitor_Sync_Handler_Ignores_CancellationToken()
     {
@@ -680,7 +707,7 @@ public sealed class AsyncFluentVisitorCoverageTests
 
         var result = await visitor.VisitAsync(new AsyncNumberElement(99), cts.Token);
 
-        Assert.Equal("99", result);
+        ScenarioExpect.Equal("99", result);
     }
 }
 
@@ -707,6 +734,7 @@ public sealed class AsyncFluentActionVisitorCoverageTests
                 : visitor.VisitDefaultAsync(this, ct);
     }
 
+    [Scenario("AsyncFluentActionVisitor VisitDefaultAsync With Default")]
     [Fact]
     public async Task AsyncFluentActionVisitor_VisitDefaultAsync_With_Default()
     {
@@ -717,10 +745,11 @@ public sealed class AsyncFluentActionVisitorCoverageTests
 
         await ((IAsyncActionVisitor)visitor).VisitDefaultAsync(new AsyncLogElement("test"), CancellationToken.None);
 
-        Assert.Single(log);
-        Assert.Equal("default", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default", log[0]);
     }
 
+    [Scenario("AsyncFluentActionVisitor VisitDefaultAsync Without Default Throws")]
     [Fact]
     public async Task AsyncFluentActionVisitor_VisitDefaultAsync_Without_Default_Throws()
     {
@@ -728,10 +757,11 @@ public sealed class AsyncFluentActionVisitorCoverageTests
             .When<AsyncLogElement>(e => { })
             .Build();
 
-        await Assert.ThrowsAsync<NotSupportedException>(() =>
+        await ScenarioExpect.ThrowsAsync<NotSupportedException>(() =>
             ((IAsyncActionVisitor)visitor).VisitDefaultAsync(new AsyncErrorElement("err"), CancellationToken.None).AsTask());
     }
 
+    [Scenario("AsyncFluentActionVisitor Async Handler With Cancellation")]
     [Fact]
     public async Task AsyncFluentActionVisitor_Async_Handler_With_Cancellation()
     {
@@ -747,7 +777,7 @@ public sealed class AsyncFluentActionVisitorCoverageTests
 
         await visitor.VisitAsync(new AsyncLogElement("hello"), cts.Token);
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 }
 

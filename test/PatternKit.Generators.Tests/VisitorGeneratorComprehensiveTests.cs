@@ -1,5 +1,6 @@
 using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -40,6 +41,7 @@ public class VisitorGeneratorComprehensiveTests
 
     #region Double-Dispatch Behavioral Tests
 
+    [Scenario("Behavior Accept Performs Double Dispatch To Visit")]
     [Fact]
     public void Behavior_Accept_Performs_Double_Dispatch_To_Visit()
     {
@@ -80,9 +82,10 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.DoubleDispatchTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Visit(Dog)|Visit(Cat)", result);
+        ScenarioExpect.Equal("Visit(Dog)|Visit(Cat)", result);
     }
 
+    [Scenario("Behavior Most Specific Handler Is Chosen First")]
     [Fact]
     public void Behavior_Most_Specific_Handler_Is_Chosen_First()
     {
@@ -115,9 +118,10 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.PriorityTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("SpecificDog", result);
+        ScenarioExpect.Equal("SpecificDog", result);
     }
 
+    [Scenario("Behavior Default Handler Used When No Specific Match")]
     [Fact]
     public void Behavior_Default_Handler_Used_When_No_Specific_Match()
     {
@@ -149,9 +153,10 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.DefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Default:Unknown", result);
+        ScenarioExpect.Equal("Default:Unknown", result);
     }
 
+    [Scenario("Behavior Throws Exception When No Handler And No Default")]
     [Fact]
     public void Behavior_Throws_Exception_When_No_Handler_And_No_Default()
     {
@@ -180,17 +185,18 @@ public class VisitorGeneratorComprehensiveTests
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
-        var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() =>
+        var ex = ScenarioExpect.Throws<System.Reflection.TargetInvocationException>(() =>
             asm.GetType("Test.NoHandlerTest")!
                 .GetMethod("Run")!.Invoke(null, null));
 
-        Assert.Contains("No handler registered", ex.InnerException!.Message);
+        ScenarioExpect.Contains("No handler registered", ex.InnerException!.Message);
     }
 
     #endregion
 
     #region Action Visitor Behavioral Tests
 
+    [Scenario("Behavior Action Visitor Executes Side Effects Without Return")]
     [Fact]
     public void Behavior_Action_Visitor_Executes_Side_Effects_Without_Return()
     {
@@ -229,9 +235,10 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.ActionTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Dog:Lab|Cat:False|Animal:Generic", result);
+        ScenarioExpect.Equal("Dog:Lab|Cat:False|Animal:Generic", result);
     }
 
+    [Scenario("Behavior Action Visitor Default Handler Works")]
     [Fact]
     public void Behavior_Action_Visitor_Default_Handler_Works()
     {
@@ -267,13 +274,14 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.ActionDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Default:Dog|Default:Cat", result);
+        ScenarioExpect.Equal("Default:Dog|Default:Cat", result);
     }
 
     #endregion
 
     #region Async Visitor Behavioral Tests
 
+    [Scenario("Behavior Async Visitor Supports ValueTask Return Type")]
     [Fact]
     public void Behavior_Async_Visitor_Supports_ValueTask_Return_Type()
     {
@@ -319,9 +327,10 @@ public class VisitorGeneratorComprehensiveTests
         var task = asm.GetType("Test.AsyncTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
 
-        Assert.Equal("AsyncDog:Poodle|AsyncCat:True", task!.Result);
+        ScenarioExpect.Equal("AsyncDog:Poodle|AsyncCat:True", task!.Result);
     }
 
+    [Scenario("Behavior Async Action Visitor Performs Async Side Effects")]
     [Fact]
     public void Behavior_Async_Action_Visitor_Performs_Async_Side_Effects()
     {
@@ -366,9 +375,10 @@ public class VisitorGeneratorComprehensiveTests
         var task = asm.GetType("Test.AsyncActionTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
 
-        Assert.Equal("AsyncDog:Husky|AsyncCat:False", task!.Result);
+        ScenarioExpect.Equal("AsyncDog:Husky|AsyncCat:False", task!.Result);
     }
 
+    [Scenario("Behavior CancellationToken Propagates Through Async Visitor")]
     [Fact]
     public void Behavior_CancellationToken_Propagates_Through_Async_Visitor()
     {
@@ -415,9 +425,10 @@ public class VisitorGeneratorComprehensiveTests
         var task = asm.GetType("Test.CancellationTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
 
-        Assert.Equal("Cancelled", task!.Result);
+        ScenarioExpect.Equal("Cancelled", task!.Result);
     }
 
+    [Scenario("Behavior Async Default Handler Works Correctly")]
     [Fact]
     public void Behavior_Async_Default_Handler_Works_Correctly()
     {
@@ -455,13 +466,14 @@ public class VisitorGeneratorComprehensiveTests
         var task = asm.GetType("Test.AsyncDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as Task<string>;
 
-        Assert.Equal("DefaultAsync:Dog|DefaultAsync:Cat", task!.Result);
+        ScenarioExpect.Equal("DefaultAsync:Dog|DefaultAsync:Cat", task!.Result);
     }
 
     #endregion
 
     #region Complex Hierarchy Behavioral Tests
 
+    [Scenario("Behavior Deep Hierarchy Three Levels Handled Correctly")]
     [Fact]
     public void Behavior_Deep_Hierarchy_Three_Levels_Handled_Correctly()
     {
@@ -501,16 +513,17 @@ public class VisitorGeneratorComprehensiveTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, string.Join("\n", emitResult.Diagnostics));
+        ScenarioExpect.True(emitResult.Success, string.Join("\n", emitResult.Diagnostics));
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("Test.DeepTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Twig|Branch|Root", result);
+        ScenarioExpect.Equal("Twig|Branch|Root", result);
     }
 
+    [Scenario("Behavior Multiple Siblings In Hierarchy All Visitable")]
     [Fact]
     public void Behavior_Multiple_Siblings_In_Hierarchy_All_Visitable()
     {
@@ -557,13 +570,14 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.SiblingTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Circle|Square|Triangle", result);
+        ScenarioExpect.Equal("Circle|Square|Triangle", result);
     }
 
     #endregion
 
     #region Type Safety Behavioral Tests
 
+    [Scenario("Behavior Generic When Enforces Type Safety At Compile Time")]
     [Fact]
     public void Behavior_Generic_When_Enforces_Type_Safety_At_Compile_Time()
     {
@@ -588,7 +602,7 @@ public class VisitorGeneratorComprehensiveTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, "Type-safe code should compile");
+        ScenarioExpect.True(emit.Success, "Type-safe code should compile");
 
         using var pe = new MemoryStream();
         updated.Emit(pe);
@@ -597,13 +611,14 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.TypeSafetyTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("TypeSafe", result);
+        ScenarioExpect.Equal("TypeSafe", result);
     }
 
     #endregion
 
     #region Builder Fluency Behavioral Tests
 
+    [Scenario("Behavior Builder Supports Method Chaining")]
     [Fact]
     public void Behavior_Builder_Supports_Method_Chaining()
     {
@@ -630,9 +645,10 @@ public class VisitorGeneratorComprehensiveTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, "Chaining code should compile");
+        ScenarioExpect.True(emit.Success, "Chaining code should compile");
     }
 
+    [Scenario("Behavior Multiple Handlers Can Be Registered")]
     [Fact]
     public void Behavior_Multiple_Handlers_Can_Be_Registered()
     {
@@ -671,13 +687,14 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.MultiHandlerTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("3", result);
+        ScenarioExpect.Equal("3", result);
     }
 
     #endregion
 
     #region Edge Cases and Error Behavioral Tests
 
+    [Scenario("Behavior Empty Visitor With Default Only Works")]
     [Fact]
     public void Behavior_Empty_Visitor_With_Default_Only_Works()
     {
@@ -708,9 +725,10 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.EmptyWithDefaultTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("AllDefault", result);
+        ScenarioExpect.Equal("AllDefault", result);
     }
 
+    [Scenario("Behavior Same Type Registered Multiple Times Last Wins")]
     [Fact]
     public void Behavior_Same_Type_Registered_Multiple_Times_Last_Wins()
     {
@@ -742,7 +760,7 @@ public class VisitorGeneratorComprehensiveTests
         var result = asm.GetType("Test.DuplicateTest")!
             .GetMethod("Run")!.Invoke(null, null) as string;
 
-        Assert.Equal("Second", result);
+        ScenarioExpect.Equal("Second", result);
     }
 
     #endregion

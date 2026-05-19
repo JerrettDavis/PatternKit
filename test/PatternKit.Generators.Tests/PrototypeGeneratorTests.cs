@@ -1,10 +1,12 @@
 using Microsoft.CodeAnalysis;
 using PatternKit.Common;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class PrototypeGeneratorTests
 {
+    [Scenario("GenerateCloneForClass")]
     [Fact]
     public void GenerateCloneForClass()
     {
@@ -26,17 +28,18 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Clone method is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Person.Prototype.g.cs", names);
+        ScenarioExpect.Contains("Person.Prototype.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateCloneForRecordClass")]
     [Fact]
     public void GenerateCloneForRecordClass()
     {
@@ -54,24 +57,25 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Clone method is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Person.Prototype.g.cs", names);
+        ScenarioExpect.Contains("Person.Prototype.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Records get "Duplicate" method by default
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Person.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Duplicate()", generatedSource);
+        ScenarioExpect.Contains("Duplicate()", generatedSource);
     }
 
+    [Scenario("GenerateCloneForRecordStruct")]
     [Fact]
     public void GenerateCloneForRecordStruct()
     {
@@ -89,24 +93,25 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Clone method is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Point.Prototype.g.cs", names);
+        ScenarioExpect.Contains("Point.Prototype.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Records get "Duplicate" method by default
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Point.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Duplicate()", generatedSource);
+        ScenarioExpect.Contains("Duplicate()", generatedSource);
     }
 
+    [Scenario("GenerateCloneForStruct")]
     [Fact]
     public void GenerateCloneForStruct()
     {
@@ -129,17 +134,18 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Clone method is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Vector.Prototype.g.cs", names);
+        ScenarioExpect.Contains("Vector.Prototype.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorIfNotPartial")]
     [Fact]
     public void ErrorIfNotPartial()
     {
@@ -161,9 +167,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO001 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO001");
     }
 
+    [Scenario("GenerateCloneWithCustomMethodName")]
     [Fact]
     public void GenerateCloneWithCustomMethodName()
     {
@@ -184,25 +191,26 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Clone method is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Item.Prototype.g.cs", names);
+        ScenarioExpect.Contains("Item.Prototype.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that the custom method name is used
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Item.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Duplicate()", generatedSource);
-        Assert.DoesNotContain("Clone()", generatedSource);
+        ScenarioExpect.Contains("Duplicate()", generatedSource);
+        ScenarioExpect.DoesNotContain("Clone()", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithIgnoreAttribute")]
     [Fact]
     public void GenerateCloneWithIgnoreAttribute()
     {
@@ -226,21 +234,22 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that Password is not cloned
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "User.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Username", generatedSource);
-        Assert.DoesNotContain("Password", generatedSource);
+        ScenarioExpect.Contains("Username", generatedSource);
+        ScenarioExpect.DoesNotContain("Password", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithExplicitInclude")]
     [Fact]
     public void GenerateCloneWithExplicitInclude()
     {
@@ -264,21 +273,22 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that only ApiKey is cloned
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Config.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("ApiKey", generatedSource);
-        Assert.DoesNotContain("Internal", generatedSource);
+        ScenarioExpect.Contains("ApiKey", generatedSource);
+        ScenarioExpect.DoesNotContain("Internal", generatedSource);
     }
 
+    [Scenario("WarnOnMutableReferenceType")]
     [Fact]
     public void WarnOnMutableReferenceType()
     {
@@ -301,9 +311,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO003 warning for mutable reference type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO003" && d.Severity == DiagnosticSeverity.Warning);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO003" && d.Severity == DiagnosticSeverity.Warning);
     }
 
+    [Scenario("ErrorOnCloneStrategyWithoutMechanism")]
     [Fact]
     public void ErrorOnCloneStrategyWithoutMechanism()
     {
@@ -331,9 +342,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO004 error for missing clone mechanism
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("ErrorOnCustomStrategyWithoutPartialMethod")]
     [Fact]
     public void ErrorOnCustomStrategyWithoutPartialMethod()
     {
@@ -361,9 +373,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO005 error for missing custom hook
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO005" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO005" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("WarnOnAttributeMisuseIncludeInIncludeAllMode")]
     [Fact]
     public void WarnOnAttributeMisuseIncludeInIncludeAllMode()
     {
@@ -386,9 +399,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO006 warning for attribute misuse
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
     }
 
+    [Scenario("WarnOnAttributeMisuseIgnoreInExplicitMode")]
     [Fact]
     public void WarnOnAttributeMisuseIgnoreInExplicitMode()
     {
@@ -411,9 +425,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO006 warning for attribute misuse
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO006" && d.Severity == DiagnosticSeverity.Warning);
     }
 
+    [Scenario("ErrorOnDeepCopyStrategy")]
     [Fact]
     public void ErrorOnDeepCopyStrategy()
     {
@@ -441,9 +456,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO007 error for DeepCopy not implemented
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO007" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO007" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("GenerateCloneWithShallowCopyStrategy")]
     [Fact]
     public void GenerateCloneWithShallowCopyStrategy()
     {
@@ -466,20 +482,21 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No errors
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that new List<string> is created (using fully qualified name)
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
+        ScenarioExpect.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithCloneStrategyUsingICloneable")]
     [Fact]
     public void GenerateCloneWithCloneStrategyUsingICloneable()
     {
@@ -508,20 +525,21 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No errors
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that Clone() is called
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Clone()", generatedSource);
+        ScenarioExpect.Contains("Clone()", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithCloneStrategyUsingCloneMethod")]
     [Fact]
     public void GenerateCloneWithCloneStrategyUsingCloneMethod()
     {
@@ -549,20 +567,21 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No errors
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that Clone() is called
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Clone()", generatedSource);
+        ScenarioExpect.Contains("Clone()", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithCloneStrategyUsingCopyConstructor")]
     [Fact]
     public void GenerateCloneWithCloneStrategyUsingCopyConstructor()
     {
@@ -595,20 +614,21 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No errors
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that copy constructor is called
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("new global::TestNamespace.DataWithCopyCtor(this.Data)", generatedSource);
+        ScenarioExpect.Contains("new global::TestNamespace.DataWithCopyCtor(this.Data)", generatedSource);
     }
 
+    [Scenario("GenerateCloneWithCloneStrategyForListCollection")]
     [Fact]
     public void GenerateCloneWithCloneStrategyForListCollection()
     {
@@ -631,20 +651,21 @@ public class PrototypeGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No errors
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error)));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Check that List copy constructor is used (using fully qualified name)
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
+        ScenarioExpect.Contains("new global::System.Collections.Generic.List<string>(this.Items)", generatedSource);
     }
 
+    [Scenario("ErrorOnNoConstructionPath")]
     [Fact]
     public void ErrorOnNoConstructionPath()
     {
@@ -671,9 +692,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO002 error for no construction path
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO002" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO002" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("ErrorOnGenericType")]
     [Fact]
     public void ErrorOnGenericType()
     {
@@ -695,9 +717,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO008 error for generic type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO008" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO008" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("ErrorOnNestedType")]
     [Fact]
     public void ErrorOnNestedType()
     {
@@ -722,9 +745,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO009 error for nested type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO009" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO009" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("ErrorOnStaticCloneMethod")]
     [Fact]
     public void ErrorOnStaticCloneMethod()
     {
@@ -758,9 +782,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO004 error because static Clone() is not a valid mechanism
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO004" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("SucceedWithPrivateParameterlessConstructor")]
     [Fact]
     public void SucceedWithPrivateParameterlessConstructor()
     {
@@ -788,13 +813,14 @@ public class PrototypeGeneratorTests
 
         // Should succeed - private parameterless constructor is accessible from generated code
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO002");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKPRO002");
 
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("SucceedWithInitOnlyPropertiesOnClass")]
     [Fact]
     public void SucceedWithInitOnlyPropertiesOnClass()
     {
@@ -817,21 +843,22 @@ public class PrototypeGeneratorTests
 
         // Should succeed - init-only properties can be set in object initializers
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
 
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify init-only properties are cloned
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "ImmutableData.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Name = this.Name", generatedSource);
-        Assert.Contains("Value = this.Value", generatedSource);
+        ScenarioExpect.Contains("Name = this.Name", generatedSource);
+        ScenarioExpect.Contains("Value = this.Value", generatedSource);
     }
 
+    [Scenario("SucceedWithInitOnlyPropertiesWithCopyConstructor")]
     [Fact]
     public void SucceedWithInitOnlyPropertiesWithCopyConstructor()
     {
@@ -862,20 +889,21 @@ public class PrototypeGeneratorTests
 
         // Should succeed - copy constructor handles init-only properties
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
 
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify copy constructor is used
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "DataWithCtor.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("new global::TestNamespace.DataWithCtor(this)", generatedSource);
+        ScenarioExpect.Contains("new global::TestNamespace.DataWithCtor(this)", generatedSource);
     }
 
+    [Scenario("ErrorOnAbstractClass")]
     [Fact]
     public void ErrorOnAbstractClass()
     {
@@ -897,9 +925,10 @@ public class PrototypeGeneratorTests
 
         // Should have PKPRO010 error for abstract type
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKPRO010" && d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO010" && d.Severity == DiagnosticSeverity.Error);
     }
 
+    [Scenario("SucceedWithCustomStrategy")]
     [Fact]
     public void SucceedWithCustomStrategy()
     {
@@ -937,21 +966,22 @@ public class PrototypeGeneratorTests
 
         // Should succeed - custom partial method is provided
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO005");
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKPRO005");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
 
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify custom method is called
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("CloneData(this.Data)", generatedSource);
+        ScenarioExpect.Contains("CloneData(this.Data)", generatedSource);
     }
 
+    [Scenario("SucceedWithDeepWhenPossibleMode")]
     [Fact]
     public void SucceedWithDeepWhenPossibleMode()
     {
@@ -989,20 +1019,20 @@ public class PrototypeGeneratorTests
 
         // Should succeed - DeepWhenPossible mode clones what it can
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
         // No warnings in DeepWhenPossible mode
-        Assert.DoesNotContain(diagnostics, d => d.Id == "PKPRO003");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKPRO003");
 
         // Compilation should succeed
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify cloneable uses Clone() and non-cloneable uses by-reference
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
             .First(gs => gs.HintName == "Container.Prototype.g.cs")
             .SourceText.ToString();
-        Assert.Contains("Cloneable.Clone()", generatedSource);
-        Assert.Contains("this.NonCloneable", generatedSource);
+        ScenarioExpect.Contains("Cloneable.Clone()", generatedSource);
+        ScenarioExpect.Contains("this.NonCloneable", generatedSource);
     }
 }

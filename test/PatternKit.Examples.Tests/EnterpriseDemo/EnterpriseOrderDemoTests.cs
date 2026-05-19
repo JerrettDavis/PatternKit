@@ -1,10 +1,12 @@
 using PatternKit.Examples.EnterpriseDemo;
 using static PatternKit.Examples.EnterpriseDemo.EnterpriseOrderDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.EnterpriseDemoTests;
 
 public sealed class EnterpriseOrderDemoTests
 {
+    [Scenario("CreateOrderItemFactory Creates Physical Items")]
     [Fact]
     public void CreateOrderItemFactory_Creates_Physical_Items()
     {
@@ -12,10 +14,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var item = factory.Create("physical");
 
-        Assert.NotNull(item);
-        Assert.IsType<PhysicalItem>(item);
+        ScenarioExpect.NotNull(item);
+        ScenarioExpect.IsType<PhysicalItem>(item);
     }
 
+    [Scenario("CreateOrderItemFactory Creates Digital Items")]
     [Fact]
     public void CreateOrderItemFactory_Creates_Digital_Items()
     {
@@ -23,10 +26,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var item = factory.Create("digital");
 
-        Assert.NotNull(item);
-        Assert.IsType<DigitalItem>(item);
+        ScenarioExpect.NotNull(item);
+        ScenarioExpect.IsType<DigitalItem>(item);
     }
 
+    [Scenario("CreateOrderItemFactory Creates Subscription Items")]
     [Fact]
     public void CreateOrderItemFactory_Creates_Subscription_Items()
     {
@@ -34,20 +38,22 @@ public sealed class EnterpriseOrderDemoTests
 
         var item = factory.Create("subscription");
 
-        Assert.NotNull(item);
-        Assert.IsType<SubscriptionItem>(item);
+        ScenarioExpect.NotNull(item);
+        ScenarioExpect.IsType<SubscriptionItem>(item);
     }
 
+    [Scenario("CreatePaymentFactory Creates All Regions")]
     [Fact]
     public void CreatePaymentFactory_Creates_All_Regions()
     {
         var factory = CreatePaymentFactory();
 
-        Assert.True(factory.TryGetFamily(Region.NorthAmerica, out _));
-        Assert.True(factory.TryGetFamily(Region.Europe, out _));
-        Assert.True(factory.TryGetFamily(Region.Asia, out _));
+        ScenarioExpect.True(factory.TryGetFamily(Region.NorthAmerica, out _));
+        ScenarioExpect.True(factory.TryGetFamily(Region.Europe, out _));
+        ScenarioExpect.True(factory.TryGetFamily(Region.Asia, out _));
     }
 
+    [Scenario("NorthAmerica Uses Stripe")]
     [Fact]
     public void NorthAmerica_Uses_Stripe()
     {
@@ -56,10 +62,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var processor = family.Create<IPaymentProcessor>();
 
-        Assert.Equal("Stripe", processor.Name);
-        Assert.True(processor.ProcessPayment(100m));
+        ScenarioExpect.Equal("Stripe", processor.Name);
+        ScenarioExpect.True(processor.ProcessPayment(100m));
     }
 
+    [Scenario("Europe Uses PayPal")]
     [Fact]
     public void Europe_Uses_PayPal()
     {
@@ -68,10 +75,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var processor = family.Create<IPaymentProcessor>();
 
-        Assert.Equal("PayPal", processor.Name);
-        Assert.True(processor.ProcessPayment(100m));
+        ScenarioExpect.Equal("PayPal", processor.Name);
+        ScenarioExpect.True(processor.ProcessPayment(100m));
     }
 
+    [Scenario("Asia Uses Alipay")]
     [Fact]
     public void Asia_Uses_Alipay()
     {
@@ -80,10 +88,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var processor = family.Create<IPaymentProcessor>();
 
-        Assert.Equal("Alipay", processor.Name);
-        Assert.True(processor.ProcessPayment(100m));
+        ScenarioExpect.Equal("Alipay", processor.Name);
+        ScenarioExpect.True(processor.ProcessPayment(100m));
     }
 
+    [Scenario("USFraudDetector Flags High Value Orders")]
     [Fact]
     public void USFraudDetector_Flags_High_Value_Orders()
     {
@@ -96,9 +105,10 @@ public sealed class EnterpriseOrderDemoTests
             Items = [new PhysicalItem("SKU", "Item", 15000m, 1, 1.0)]
         };
 
-        Assert.True(detector.IsFraudulent(highValueOrder));
+        ScenarioExpect.True(detector.IsFraudulent(highValueOrder));
     }
 
+    [Scenario("USFraudDetector Passes Normal Orders")]
     [Fact]
     public void USFraudDetector_Passes_Normal_Orders()
     {
@@ -111,9 +121,10 @@ public sealed class EnterpriseOrderDemoTests
             Items = [new PhysicalItem("SKU", "Item", 100m, 1, 1.0)]
         };
 
-        Assert.False(detector.IsFraudulent(normalOrder));
+        ScenarioExpect.False(detector.IsFraudulent(normalOrder));
     }
 
+    [Scenario("EUFraudDetector Always Passes")]
     [Fact]
     public void EUFraudDetector_Always_Passes()
     {
@@ -125,9 +136,10 @@ public sealed class EnterpriseOrderDemoTests
             Region = Region.Europe
         };
 
-        Assert.False(detector.IsFraudulent(order));
+        ScenarioExpect.False(detector.IsFraudulent(order));
     }
 
+    [Scenario("CreateOrderTemplates Creates Standard Order")]
     [Fact]
     public void CreateOrderTemplates_Creates_Standard_Order()
     {
@@ -135,10 +147,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var order = templates.Create("standard");
 
-        Assert.NotNull(order);
-        Assert.Equal(ShippingMethod.Standard, order.ShippingMethod);
+        ScenarioExpect.NotNull(order);
+        ScenarioExpect.Equal(ShippingMethod.Standard, order.ShippingMethod);
     }
 
+    [Scenario("CreateOrderTemplates Creates Express Order")]
     [Fact]
     public void CreateOrderTemplates_Creates_Express_Order()
     {
@@ -146,11 +159,12 @@ public sealed class EnterpriseOrderDemoTests
 
         var order = templates.Create("express");
 
-        Assert.NotNull(order);
-        Assert.Equal(ShippingMethod.Express, order.ShippingMethod);
-        Assert.Equal(15.00m, order.ShippingCost);
+        ScenarioExpect.NotNull(order);
+        ScenarioExpect.Equal(ShippingMethod.Express, order.ShippingMethod);
+        ScenarioExpect.Equal(15.00m, order.ShippingCost);
     }
 
+    [Scenario("CreateOrderTemplates With Mutation")]
     [Fact]
     public void CreateOrderTemplates_With_Mutation()
     {
@@ -158,9 +172,10 @@ public sealed class EnterpriseOrderDemoTests
 
         var order = templates.Create("standard", o => o.CustomerId = "CUSTOM-123");
 
-        Assert.Equal("CUSTOM-123", order.CustomerId);
+        ScenarioExpect.Equal("CUSTOM-123", order.CustomerId);
     }
 
+    [Scenario("CreateShippingStrategy Standard Shipping")]
     [Fact]
     public void CreateShippingStrategy_Standard_Shipping()
     {
@@ -177,9 +192,10 @@ public sealed class EnterpriseOrderDemoTests
         var cost = strategy.Execute(order);
 
         // (2.0 * 2.5 + 5.0) = 10.0
-        Assert.Equal(10.0m, cost);
+        ScenarioExpect.Equal(10.0m, cost);
     }
 
+    [Scenario("CreateShippingStrategy Express Shipping")]
     [Fact]
     public void CreateShippingStrategy_Express_Shipping()
     {
@@ -196,9 +212,10 @@ public sealed class EnterpriseOrderDemoTests
         var cost = strategy.Execute(order);
 
         // (2.0 * 5.0 + 15.0) = 25.0
-        Assert.Equal(25.0m, cost);
+        ScenarioExpect.Equal(25.0m, cost);
     }
 
+    [Scenario("CreateShippingStrategy NextDay Shipping")]
     [Fact]
     public void CreateShippingStrategy_NextDay_Shipping()
     {
@@ -215,9 +232,10 @@ public sealed class EnterpriseOrderDemoTests
         var cost = strategy.Execute(order);
 
         // (2.0 * 10.0 + 30.0) = 50.0
-        Assert.Equal(50.0m, cost);
+        ScenarioExpect.Equal(50.0m, cost);
     }
 
+    [Scenario("CreateValidationChain Fails Empty Order")]
     [Fact]
     public void CreateValidationChain_Fails_Empty_Order()
     {
@@ -231,11 +249,12 @@ public sealed class EnterpriseOrderDemoTests
 
         chain.Execute(order, out var result);
 
-        Assert.NotNull(result);
-        Assert.False(result.IsValid);
-        Assert.Contains("at least one item", result.Error);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.False(result.IsValid);
+        ScenarioExpect.Contains("at least one item", result.Error);
     }
 
+    [Scenario("CreateValidationChain Fails Invalid Quantity")]
     [Fact]
     public void CreateValidationChain_Fails_Invalid_Quantity()
     {
@@ -250,10 +269,11 @@ public sealed class EnterpriseOrderDemoTests
 
         chain.Execute(order, out var result);
 
-        Assert.NotNull(result);
-        Assert.False(result.IsValid);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.False(result.IsValid);
     }
 
+    [Scenario("CreateValidationChain Fails High Value")]
     [Fact]
     public void CreateValidationChain_Fails_High_Value()
     {
@@ -268,11 +288,12 @@ public sealed class EnterpriseOrderDemoTests
 
         chain.Execute(order, out var result);
 
-        Assert.NotNull(result);
-        Assert.False(result.IsValid);
-        Assert.Contains("exceeds maximum", result.Error);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.False(result.IsValid);
+        ScenarioExpect.Contains("exceeds maximum", result.Error);
     }
 
+    [Scenario("CreateValidationChain Passes Valid Order")]
     [Fact]
     public void CreateValidationChain_Passes_Valid_Order()
     {
@@ -287,19 +308,21 @@ public sealed class EnterpriseOrderDemoTests
 
         chain.Execute(order, out var result);
 
-        Assert.NotNull(result);
-        Assert.True(result.IsValid);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.True(result.IsValid);
     }
 
+    [Scenario("CreateOrderNotifications Creates Observer")]
     [Fact]
     public void CreateOrderNotifications_Creates_Observer()
     {
         var observer = CreateOrderNotifications();
 
-        Assert.NotNull(observer);
-        Assert.True(observer.SubscriberCount > 0);
+        ScenarioExpect.NotNull(observer);
+        ScenarioExpect.True(observer.SubscriberCount > 0);
     }
 
+    [Scenario("CreateOrderProcessingPipeline Filters Pending Orders")]
     [Fact]
     public void CreateOrderProcessingPipeline_Filters_Pending_Orders()
     {
@@ -313,10 +336,11 @@ public sealed class EnterpriseOrderDemoTests
         var pipeline = CreateOrderProcessingPipeline(orders);
         var result = pipeline.ToList();
 
-        Assert.Single(result);
-        Assert.Equal("1", result[0].Id);
+        ScenarioExpect.Single(result);
+        ScenarioExpect.Equal("1", result[0].Id);
     }
 
+    [Scenario("CreatePriceCalculator Applies Tax And Discount")]
     [Fact]
     public void CreatePriceCalculator_Applies_Tax_And_Discount()
     {
@@ -334,10 +358,11 @@ public sealed class EnterpriseOrderDemoTests
         var total = calculator.Execute(order);
 
         // Verify price calculation includes tax and discount
-        Assert.True(total > order.Subtotal);
-        Assert.True(total < order.Subtotal * 2);
+        ScenarioExpect.True(total > order.Subtotal);
+        ScenarioExpect.True(total < order.Subtotal * 2);
     }
 
+    [Scenario("CreateItemProcessor Dispatches Physical Items")]
     [Fact]
     public void CreateItemProcessor_Dispatches_Physical_Items()
     {
@@ -346,11 +371,12 @@ public sealed class EnterpriseOrderDemoTests
 
         var result = processor.Dispatch(item);
 
-        Assert.Contains("Physical", result);
-        Assert.Contains("Mouse", result);
-        Assert.Contains("0.5kg", result);
+        ScenarioExpect.Contains("Physical", result);
+        ScenarioExpect.Contains("Mouse", result);
+        ScenarioExpect.Contains("0.5kg", result);
     }
 
+    [Scenario("CreateItemProcessor Dispatches Digital Items")]
     [Fact]
     public void CreateItemProcessor_Dispatches_Digital_Items()
     {
@@ -359,10 +385,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var result = processor.Dispatch(item);
 
-        Assert.Contains("Digital", result);
-        Assert.Contains("Software", result);
+        ScenarioExpect.Contains("Digital", result);
+        ScenarioExpect.Contains("Software", result);
     }
 
+    [Scenario("CreateItemProcessor Dispatches Subscription Items")]
     [Fact]
     public void CreateItemProcessor_Dispatches_Subscription_Items()
     {
@@ -371,10 +398,11 @@ public sealed class EnterpriseOrderDemoTests
 
         var result = processor.Dispatch(item);
 
-        Assert.Contains("Subscription", result);
-        Assert.Contains("12 months", result);
+        ScenarioExpect.Contains("Subscription", result);
+        ScenarioExpect.Contains("12 months", result);
     }
 
+    [Scenario("Order DeepClone Creates Independent Copy")]
     [Fact]
     public void Order_DeepClone_Creates_Independent_Copy()
     {
@@ -388,11 +416,12 @@ public sealed class EnterpriseOrderDemoTests
 
         var clone = Order.DeepClone(original);
 
-        Assert.NotSame(original, clone);
-        Assert.NotEqual(original.Id, clone.Id);
-        Assert.NotSame(original.Items, clone.Items);
+        ScenarioExpect.NotSame(original, clone);
+        ScenarioExpect.NotEqual(original.Id, clone.Id);
+        ScenarioExpect.NotSame(original.Items, clone.Items);
     }
 
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {

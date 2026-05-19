@@ -1,10 +1,12 @@
 using Microsoft.CodeAnalysis;
 using PatternKit.Generators.Singleton;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class SingletonGeneratorTests
 {
+    [Scenario("GenerateEagerSingleton")]
     [Fact]
     public void GenerateEagerSingleton()
     {
@@ -25,11 +27,11 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.AppClock.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.AppClock.Singleton.g.cs", names);
 
         // Generated code contains expected shape
         var generatedSource = result.Results
@@ -37,12 +39,12 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.AppClock.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("private static readonly AppClock __PatternKit_Instance = new AppClock();", generatedSource);
-        Assert.Contains("public static AppClock Instance => __PatternKit_Instance;", generatedSource);
+        ScenarioExpect.Contains("private static readonly AppClock __PatternKit_Instance = new AppClock();", generatedSource);
+        ScenarioExpect.Contains("public static AppClock Instance => __PatternKit_Instance;", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     /// <summary>
@@ -51,6 +53,7 @@ public class SingletonGeneratorTests
     /// which validate that multiple threads accessing Instance concurrently receive
     /// the same instance. This test focuses on correct code generation.
     /// </summary>
+    [Scenario("GenerateLazyThreadSafeSingleton")]
     [Fact]
     public void GenerateLazyThreadSafeSingleton()
     {
@@ -71,11 +74,11 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.ConfigManager.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.ConfigManager.Singleton.g.cs", names);
 
         // Generated code contains Lazy<T> pattern
         var generatedSource = result.Results
@@ -83,14 +86,15 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.ConfigManager.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("System.Lazy<ConfigManager>", generatedSource);
-        Assert.Contains("__PatternKit_LazyInstance.Value", generatedSource);
+        ScenarioExpect.Contains("System.Lazy<ConfigManager>", generatedSource);
+        ScenarioExpect.Contains("__PatternKit_LazyInstance.Value", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateLazySingleThreadedSingleton")]
     [Fact]
     public void GenerateLazySingleThreadedSingleton()
     {
@@ -111,7 +115,7 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code contains non-thread-safe pattern
         var generatedSource = result.Results
@@ -119,14 +123,15 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.FastCache.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("__PatternKit_Instance ??=", generatedSource);
-        Assert.Contains("not thread-safe", generatedSource);
+        ScenarioExpect.Contains("__PatternKit_Instance ??=", generatedSource);
+        ScenarioExpect.Contains("not thread-safe", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateSingletonWithCustomFactory")]
     [Fact]
     public void GenerateSingletonWithCustomFactory()
     {
@@ -150,7 +155,7 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code uses factory method
         var generatedSource = result.Results
@@ -158,13 +163,14 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.ServiceLocator.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("Create()", generatedSource);
+        ScenarioExpect.Contains("Create()", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateSingletonForRecordClass")]
     [Fact]
     public void GenerateSingletonForRecordClass()
     {
@@ -185,11 +191,11 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Singleton file is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.AppSettings.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.AppSettings.Singleton.g.cs", names);
 
         // Uses record class keyword
         var generatedSource = result.Results
@@ -197,13 +203,14 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.AppSettings.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("partial record class AppSettings", generatedSource);
+        ScenarioExpect.Contains("partial record class AppSettings", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateSingletonWithCustomPropertyName")]
     [Fact]
     public void GenerateSingletonWithCustomPropertyName()
     {
@@ -224,7 +231,7 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code uses custom property name
         var generatedSource = result.Results
@@ -232,13 +239,14 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.Logger.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("public static Logger Default =>", generatedSource);
+        ScenarioExpect.Contains("public static Logger Default =>", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenNotPartial")]
     [Fact]
     public void ErrorWhenNotPartial()
     {
@@ -260,9 +268,10 @@ public class SingletonGeneratorTests
 
         // PKSNG001 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG001");
     }
 
+    [Scenario("ErrorWhenStruct")]
     [Fact]
     public void ErrorWhenStruct()
     {
@@ -283,9 +292,10 @@ public class SingletonGeneratorTests
 
         // PKSNG002 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG002");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG002");
     }
 
+    [Scenario("ErrorWhenNoConstructorOrFactory")]
     [Fact]
     public void ErrorWhenNoConstructorOrFactory()
     {
@@ -307,9 +317,10 @@ public class SingletonGeneratorTests
 
         // PKSNG003 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG003");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG003");
     }
 
+    [Scenario("ErrorWhenMultipleFactories")]
     [Fact]
     public void ErrorWhenMultipleFactories()
     {
@@ -337,9 +348,10 @@ public class SingletonGeneratorTests
 
         // PKSNG004 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG004");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG004");
     }
 
+    [Scenario("WarnWhenPublicConstructor")]
     [Fact]
     public void WarnWhenPublicConstructor()
     {
@@ -361,17 +373,18 @@ public class SingletonGeneratorTests
 
         // PKSNG005 diagnostic is reported (warning)
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG005" && d.Severity == DiagnosticSeverity.Warning);
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG005" && d.Severity == DiagnosticSeverity.Warning);
 
         // Still generates code despite warning
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.PublicCtorSingleton.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.PublicCtorSingleton.Singleton.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenNameConflict")]
     [Fact]
     public void ErrorWhenNameConflict()
     {
@@ -395,9 +408,10 @@ public class SingletonGeneratorTests
 
         // PKSNG006 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG006");
     }
 
+    [Scenario("GenerateSingletonInGlobalNamespace")]
     [Fact]
     public void GenerateSingletonInGlobalNamespace()
     {
@@ -416,7 +430,7 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Generated code has no namespace
         var generatedSource = result.Results
@@ -424,13 +438,14 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "GlobalSingleton.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.DoesNotContain("namespace", generatedSource);
+        ScenarioExpect.DoesNotContain("namespace", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("EagerSingleton Compiles")]
     [Fact]
     public void EagerSingleton_Compiles()
     {
@@ -463,13 +478,14 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("LazySingleton Compiles")]
     [Fact]
     public void LazySingleton_Compiles()
     {
@@ -502,13 +518,14 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenGenericType")]
     [Fact]
     public void ErrorWhenGenericType()
     {
@@ -530,9 +547,10 @@ public class SingletonGeneratorTests
 
         // PKSNG007 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG007");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG007");
     }
 
+    [Scenario("ErrorWhenNestedType")]
     [Fact]
     public void ErrorWhenNestedType()
     {
@@ -557,9 +575,10 @@ public class SingletonGeneratorTests
 
         // PKSNG008 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG008");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG008");
     }
 
+    [Scenario("ErrorWhenAbstractType")]
     [Fact]
     public void ErrorWhenAbstractType()
     {
@@ -581,9 +600,10 @@ public class SingletonGeneratorTests
 
         // PKSNG010 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG010");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG010");
     }
 
+    [Scenario("AllowAbstractTypeWithFactory")]
     [Fact]
     public void AllowAbstractTypeWithFactory()
     {
@@ -610,7 +630,7 @@ public class SingletonGeneratorTests
 
         // No PKSNG010 - abstract type is allowed with factory
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.DoesNotContain(diags, d => d.Id == "PKSNG010");
+        ScenarioExpect.DoesNotContain(diags, d => d.Id == "PKSNG010");
 
         // Generated code uses factory method
         var generatedSource = result.Results
@@ -618,13 +638,14 @@ public class SingletonGeneratorTests
             .First(gs => gs.HintName == "TestNamespace.AbstractWithFactory.Singleton.g.cs")
             .SourceText.ToString();
 
-        Assert.Contains("Create()", generatedSource);
+        ScenarioExpect.Contains("Create()", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenReservedKeywordPropertyName")]
     [Fact]
     public void ErrorWhenReservedKeywordPropertyName()
     {
@@ -646,9 +667,10 @@ public class SingletonGeneratorTests
 
         // PKSNG009 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG009");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG009");
     }
 
+    [Scenario("AllowVerbatimKeywordPropertyName")]
     [Fact]
     public void AllowVerbatimKeywordPropertyName()
     {
@@ -669,13 +691,14 @@ public class SingletonGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenInheritedMemberConflict")]
     [Fact]
     public void ErrorWhenInheritedMemberConflict()
     {
@@ -702,9 +725,10 @@ public class SingletonGeneratorTests
 
         // PKSNG006 diagnostic is reported for inherited member conflict
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG006");
     }
 
+    [Scenario("IgnoreGenericFactoryMethods")]
     [Fact]
     public void IgnoreGenericFactoryMethods()
     {
@@ -730,7 +754,7 @@ public class SingletonGeneratorTests
 
         // Should still generate using the parameterless constructor
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.GenericFactorySingleton.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.GenericFactorySingleton.Singleton.g.cs", names);
 
         var generatedSource = result.Results
             .SelectMany(r => r.GeneratedSources)
@@ -738,14 +762,15 @@ public class SingletonGeneratorTests
             .SourceText.ToString();
 
         // Should use constructor, not factory
-        Assert.Contains("new GenericFactorySingleton()", generatedSource);
-        Assert.DoesNotContain("Create()", generatedSource);
+        ScenarioExpect.Contains("new GenericFactorySingleton()", generatedSource);
+        ScenarioExpect.DoesNotContain("Create()", generatedSource);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("WarnWhenImplicitPublicConstructor")]
     [Fact]
     public void WarnWhenImplicitPublicConstructor()
     {
@@ -767,14 +792,14 @@ public class SingletonGeneratorTests
 
         // PKSNG005 diagnostic is reported (warning) for implicit public ctor
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKSNG005" && d.Severity == DiagnosticSeverity.Warning);
+        ScenarioExpect.Contains(diags, d => d.Id == "PKSNG005" && d.Severity == DiagnosticSeverity.Warning);
 
         // Still generates code despite warning
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("TestNamespace.ImplicitCtorSingleton.Singleton.g.cs", names);
+        ScenarioExpect.Contains("TestNamespace.ImplicitCtorSingleton.Singleton.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 }

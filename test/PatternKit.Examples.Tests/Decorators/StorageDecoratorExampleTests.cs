@@ -9,6 +9,7 @@ namespace PatternKit.Examples.Tests.Decorators;
 [Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
 public sealed class StorageDecoratorExampleTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("InMemoryStorage ReadWriteExistsAndDelete WorkAsExpected")]
     [Fact]
     public void InMemoryStorage_ReadWriteExistsAndDelete_WorkAsExpected()
     {
@@ -16,15 +17,16 @@ public sealed class StorageDecoratorExampleTests(ITestOutputHelper output) : Tin
 
         storage.WriteFile("readme.txt", "hello");
 
-        Assert.True(storage.FileExists("readme.txt"));
-        Assert.Equal("hello", storage.ReadFile("readme.txt"));
+        ScenarioExpect.True(storage.FileExists("readme.txt"));
+        ScenarioExpect.Equal("hello", storage.ReadFile("readme.txt"));
 
         storage.DeleteFile("readme.txt");
 
-        Assert.False(storage.FileExists("readme.txt"));
-        Assert.Throws<FileNotFoundException>(() => storage.ReadFile("readme.txt"));
+        ScenarioExpect.False(storage.FileExists("readme.txt"));
+        ScenarioExpect.Throws<FileNotFoundException>(() => storage.ReadFile("readme.txt"));
     }
 
+    [Scenario("GeneratedDecoratorChain ForwardsAndInvalidatesCache")]
     [Fact]
     public void GeneratedDecoratorChain_ForwardsAndInvalidatesCache()
     {
@@ -35,18 +37,19 @@ public sealed class StorageDecoratorExampleTests(ITestOutputHelper output) : Tin
             next => new LoggingFileStorage(next));
 
         storage.WriteFile("invoice.txt", "v1");
-        Assert.Equal("v1", storage.ReadFile("invoice.txt"));
-        Assert.Equal("v1", storage.ReadFile("invoice.txt"));
+        ScenarioExpect.Equal("v1", storage.ReadFile("invoice.txt"));
+        ScenarioExpect.Equal("v1", storage.ReadFile("invoice.txt"));
 
         storage.WriteFile("invoice.txt", "v2");
 
-        Assert.Equal("v2", storage.ReadFile("invoice.txt"));
-        Assert.True(storage.FileExists("invoice.txt"));
+        ScenarioExpect.Equal("v2", storage.ReadFile("invoice.txt"));
+        ScenarioExpect.True(storage.FileExists("invoice.txt"));
 
         storage.DeleteFile("invoice.txt");
-        Assert.False(storage.FileExists("invoice.txt"));
+        ScenarioExpect.False(storage.FileExists("invoice.txt"));
     }
 
+    [Scenario("RetryDecorator RetriesUntilOperationSucceeds")]
     [Fact]
     public void RetryDecorator_RetriesUntilOperationSucceeds()
     {
@@ -54,15 +57,16 @@ public sealed class StorageDecoratorExampleTests(ITestOutputHelper output) : Tin
 
         storage.WriteFile("data.txt", "payload");
 
-        Assert.Equal("payload", storage.ReadFile("data.txt"));
+        ScenarioExpect.Equal("payload", storage.ReadFile("data.txt"));
     }
 
+    [Scenario("RetryDecorator RethrowsAfterRetriesAreExhausted")]
     [Fact]
     public void RetryDecorator_RethrowsAfterRetriesAreExhausted()
     {
         var storage = new RetryFileStorage(new FlakyStorage(failuresBeforeSuccess: 5), maxRetries: 2, retryDelayMs: 0);
 
-        Assert.Throws<IOException>(() => storage.WriteFile("data.txt", "payload"));
+        ScenarioExpect.Throws<IOException>(() => storage.WriteFile("data.txt", "payload"));
     }
 
     [Scenario("Public storage decorator demo runs the composed logging, caching, and retry workflow")]

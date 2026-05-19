@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.Documentation;
 
@@ -6,6 +7,7 @@ public sealed class DocumentationCoverageTests
 {
     private static readonly Regex TocHrefRegex = new(@"href:\s*(?<href>[^\s#]+)", RegexOptions.Compiled);
 
+    [Scenario("Toc Hrefs Point To Existing Files")]
     [Theory]
     [InlineData("docs/generators/toc.yml")]
     [InlineData("docs/examples/toc.yml")]
@@ -26,10 +28,11 @@ public sealed class DocumentationCoverageTests
 
             var target = Path.GetFullPath(Path.Combine(tocDirectory, Normalize(href)));
 
-            Assert.True(File.Exists(target), $"{relativeTocPath} references missing file: {href}");
+            ScenarioExpect.True(File.Exists(target), $"{relativeTocPath} references missing file: {href}");
         }
     }
 
+    [Scenario("Generator Toc Includes All Generator Pages")]
     [Fact]
     public void Generator_Toc_Includes_All_Generator_Pages()
     {
@@ -44,20 +47,22 @@ public sealed class DocumentationCoverageTests
 
         foreach (var page in expectedPages)
         {
-            Assert.Contains($"href: {page}", toc, StringComparison.Ordinal);
+            ScenarioExpect.Contains($"href: {page}", toc, StringComparison.Ordinal);
         }
     }
 
+    [Scenario("Example Toc Exposes Generator And Messaging Suites")]
     [Fact]
     public void Example_Toc_Exposes_Generator_And_Messaging_Suites()
     {
         var root = FindRepoRoot();
         var toc = File.ReadAllText(Path.Combine(root, "docs", "examples", "toc.yml"));
 
-        Assert.Contains("href: source-generator-application-suite.md", toc, StringComparison.Ordinal);
-        Assert.Contains("href: enterprise-messaging-workflows.md", toc, StringComparison.Ordinal);
+        ScenarioExpect.Contains("href: source-generator-application-suite.md", toc, StringComparison.Ordinal);
+        ScenarioExpect.Contains("href: enterprise-messaging-workflows.md", toc, StringComparison.Ordinal);
     }
 
+    [Scenario("Source Generator Application Suite Maps Example Families To Tests")]
     [Fact]
     public void Source_Generator_Application_Suite_Maps_Example_Families_To_Tests()
     {
@@ -84,13 +89,14 @@ public sealed class DocumentationCoverageTests
 
         foreach (var family in expectedGeneratorFamilies)
         {
-            Assert.Contains($"| {family} |", doc, StringComparison.Ordinal);
+            ScenarioExpect.Contains($"| {family} |", doc, StringComparison.Ordinal);
         }
 
-        Assert.Contains("test/PatternKit.Examples.Tests/Generators", doc, StringComparison.Ordinal);
-        Assert.Contains("test/PatternKit.Examples.Tests/Messaging", doc, StringComparison.Ordinal);
+        ScenarioExpect.Contains("test/PatternKit.Examples.Tests/Generators", doc, StringComparison.Ordinal);
+        ScenarioExpect.Contains("test/PatternKit.Examples.Tests/Messaging", doc, StringComparison.Ordinal);
     }
 
+    [Scenario("Enterprise Messaging Workflow Suite Maps Runtime And Generated Patterns")]
     [Fact]
     public void Enterprise_Messaging_Workflow_Suite_Maps_Runtime_And_Generated_Patterns()
     {
@@ -115,7 +121,7 @@ public sealed class DocumentationCoverageTests
 
         foreach (var pattern in expectedPatterns)
         {
-            Assert.Contains($"| {pattern} |", doc, StringComparison.Ordinal);
+            ScenarioExpect.Contains($"| {pattern} |", doc, StringComparison.Ordinal);
         }
     }
 

@@ -94,8 +94,8 @@ public sealed class AsyncTemplateMethodTests(ITestOutputHelper output) : TinyBdd
         using var cts = new CancellationTokenSource();
         cts.Cancel(); // pre-cancel so cancellation is immediate and deterministic
 
-        // Assert.ThrowsAnyAsync verifies that OperationCanceledException or derived types are thrown
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        // ScenarioExpect.ThrowsAnyAsync verifies that OperationCanceledException or derived types are thrown
+        await ScenarioExpect.ThrowsAnyAsync<OperationCanceledException>(
             async () => await template.ExecuteAsync(1, cts.Token));
     }
 }
@@ -154,50 +154,55 @@ public sealed class AsyncTemplateMethodEdgeCaseTests
         }
     }
 
+    [Scenario("MinimalTemplate NoHooks Works")]
     [Fact]
     public async Task MinimalTemplate_NoHooks_Works()
     {
         var template = new MinimalAsyncTemplate();
         var result = await template.ExecuteAsync(42);
-        Assert.Equal("Result-42", result);
+        ScenarioExpect.Equal("Result-42", result);
     }
 
+    [Scenario("HooksTemplate ExecutesInOrder")]
     [Fact]
     public async Task HooksTemplate_ExecutesInOrder()
     {
         var template = new HooksAsyncTemplate();
         var result = await template.ExecuteAsync(5);
 
-        Assert.Equal("step:5", result);
-        Assert.Equal(2, template.Log.Count);
-        Assert.Equal("before:5", template.Log[0]);
-        Assert.Equal("after:step:5", template.Log[1]);
+        ScenarioExpect.Equal("step:5", result);
+        ScenarioExpect.Equal(2, template.Log.Count);
+        ScenarioExpect.Equal("before:5", template.Log[0]);
+        ScenarioExpect.Equal("after:step:5", template.Log[1]);
     }
 
+    [Scenario("ThrowingStep NotSynchronized DoesNotCallAfter")]
     [Fact]
     public async Task ThrowingStep_NotSynchronized_DoesNotCallAfter()
     {
         var template = new ThrowingStepTemplate { Sync = false };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(1));
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(1));
 
-        Assert.Equal(1, template.BeforeCount);
-        Assert.Equal(0, template.AfterCount);
+        ScenarioExpect.Equal(1, template.BeforeCount);
+        ScenarioExpect.Equal(0, template.AfterCount);
     }
 
+    [Scenario("ThrowingStep Synchronized MutexIsReleased")]
     [Fact]
     public async Task ThrowingStep_Synchronized_MutexIsReleased()
     {
         var template = new ThrowingStepTemplate { Sync = true };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(1));
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(1));
 
         // The mutex should be released, so a second call should not deadlock
-        await Assert.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(2));
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() => template.ExecuteAsync(2));
 
-        Assert.Equal(2, template.BeforeCount);
+        ScenarioExpect.Equal(2, template.BeforeCount);
     }
 
+    [Scenario("Synchronized Cancellation DuringMutexWait")]
     [Fact]
     public async Task Synchronized_Cancellation_DuringMutexWait()
     {
@@ -211,13 +216,13 @@ public sealed class AsyncTemplateMethodEdgeCaseTests
         cts.Cancel();
 
         // TaskCanceledException is a subclass of OperationCanceledException
-        var ex = await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        var ex = await ScenarioExpect.ThrowsAnyAsync<OperationCanceledException>(
             () => template.ExecuteAsync(2, cts.Token));
-        Assert.True(ex is OperationCanceledException or TaskCanceledException);
+        ScenarioExpect.True(ex is OperationCanceledException or TaskCanceledException);
 
         // First should still complete
         var result = await first;
-        Assert.Equal("slow:1", result);
+        ScenarioExpect.Equal("slow:1", result);
     }
 
     private sealed class SynchronizedSlowTemplate : AsyncTemplateMethod<int, string>

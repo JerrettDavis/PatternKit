@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 using PatternKit.Generators.Builders;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -41,6 +42,7 @@ public class BuilderGeneratorTests
         }
         """;
 
+    [Scenario("MutableBuilder Generates And Runs")]
     [Fact]
     public async Task MutableBuilder_Generates_And_Runs()
     {
@@ -91,15 +93,15 @@ public class BuilderGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(user, nameof(MutableBuilder_Generates_And_Runs));
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
         pe.Position = 0;
         pdb.Position = 0;
 
@@ -107,24 +109,25 @@ public class BuilderGeneratorTests
         var sync = asm.GetType("PatternKit.Examples.Builders.MutableDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("Ada:37", sync);
+        ScenarioExpect.Equal("Ada:37", sync);
 
         var helper = asm.GetType("PatternKit.Examples.Builders.MutableDemo")!
             .GetMethod("BuildViaHelpers")!
             .Invoke(null, null) as string;
-        Assert.Equal("Cara:25", helper);
+        ScenarioExpect.Equal("Cara:25", helper);
 
         var asyncMethod = asm.GetType("PatternKit.Examples.Builders.MutableDemo")!
             .GetMethod("RunAsync")!;
         var task = (Task<string>)asyncMethod.Invoke(null, null)!;
-        Assert.Equal("Bob:42", await task);
+        ScenarioExpect.Equal("Bob:42", await task);
 
         var helperAsync = asm.GetType("PatternKit.Examples.Builders.MutableDemo")!
             .GetMethod("BuildViaHelpersAsync")!;
         var helperTask = (Task<string>)helperAsync.Invoke(null, null)!;
-        Assert.Equal("Dan:50", await helperTask);
+        ScenarioExpect.Equal("Dan:50", await helperTask);
     }
 
+    [Scenario("ProjectionBuilder Composes State And Projector")]
     [Fact]
     public async Task ProjectionBuilder_Composes_State_And_Projector()
     {
@@ -164,15 +167,15 @@ public class BuilderGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(user, nameof(ProjectionBuilder_Composes_State_And_Projector));
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
         pe.Position = 0;
         pdb.Position = 0;
 
@@ -180,14 +183,15 @@ public class BuilderGeneratorTests
         var sync = asm.GetType("PatternKit.Examples.Builders.ProjectionDemo")!
             .GetMethod("BuildSync")!
             .Invoke(null, null) as string;
-        Assert.Equal("Lin:28", sync);
+        ScenarioExpect.Equal("Lin:28", sync);
 
         var asyncMethod = asm.GetType("PatternKit.Examples.Builders.ProjectionDemo")!
             .GetMethod("BuildAsync")!;
         var valueTask = (ValueTask<string>)asyncMethod.Invoke(null, null)!;
-        Assert.Equal("Quinn:31", await valueTask);
+        ScenarioExpect.Equal("Quinn:31", await valueTask);
     }
 
+    [Scenario("Required Member Throws When Missing")]
     [Fact]
     public void Required_Member_Throws_When_Missing()
     {
@@ -208,7 +212,7 @@ public class BuilderGeneratorTests
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join(Environment.NewLine, res.Diagnostics));
         pe.Position = 0;
         pdb.Position = 0;
 
@@ -216,11 +220,12 @@ public class BuilderGeneratorTests
         var run = asm.GetType("PatternKit.Examples.Builders.MissingRequiredDemo")!
             .GetMethod("Run")!;
 
-        var ex = Assert.Throws<TargetInvocationException>(() => run.Invoke(null, null));
-        Assert.IsType<InvalidOperationException>(ex.InnerException);
-        Assert.Equal("Name is required.", ex.InnerException?.Message);
+        var ex = ScenarioExpect.Throws<TargetInvocationException>(() => run.Invoke(null, null));
+        ScenarioExpect.IsType<InvalidOperationException>(ex.InnerException);
+        ScenarioExpect.Equal("Name is required.", ex.InnerException?.Message);
     }
 
+    [Scenario("NotPartial Type Emits Diagnostic")]
     [Fact]
     public void NotPartial_Type_Emits_Diagnostic()
     {
@@ -241,10 +246,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("B001", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("B001", diag.Id);
     }
 
+    [Scenario("Generic Type Emits Diagnostic")]
     [Fact]
     public void Generic_Type_Emits_Diagnostic()
     {
@@ -265,10 +271,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("B001", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("B001", diag.Id);
     }
 
+    [Scenario("Multiple BuilderConstructor Attributes Emit Diagnostic")]
     [Fact]
     public void Multiple_BuilderConstructor_Attributes_Emit_Diagnostic()
     {
@@ -295,10 +302,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("B004", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("B004", diag.Id);
     }
 
+    [Scenario("No Usable Constructor Emits Diagnostic")]
     [Fact]
     public void No_Usable_Constructor_Emits_Diagnostic()
     {
@@ -321,10 +329,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("B003", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("B003", diag.Id);
     }
 
+    [Scenario("Struct Builder Generates Without Errors")]
     [Fact]
     public void Struct_Builder_Generates_Without_Errors()
     {
@@ -348,23 +357,24 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         // Verify the builder type was generated
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var builderType = asm.GetType("PatternKit.Examples.Builders.PointBuilder");
-        Assert.NotNull(builderType);
-        Assert.NotNull(builderType.GetMethod("New"));
-        Assert.NotNull(builderType.GetMethod("WithX"));
-        Assert.NotNull(builderType.GetMethod("WithY"));
-        Assert.NotNull(builderType.GetMethod("Build"));
+        ScenarioExpect.NotNull(builderType);
+        ScenarioExpect.NotNull(builderType.GetMethod("New"));
+        ScenarioExpect.NotNull(builderType.GetMethod("WithX"));
+        ScenarioExpect.NotNull(builderType.GetMethod("WithY"));
+        ScenarioExpect.NotNull(builderType.GetMethod("Build"));
     }
 
+    [Scenario("IncludeFields Generates Field Setters")]
     [Fact]
     public void IncludeFields_Generates_Field_Setters()
     {
@@ -397,20 +407,21 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("PatternKit.Examples.Builders.FieldDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("Test:42", result);
+        ScenarioExpect.Equal("Test:42", result);
     }
 
+    [Scenario("BuilderIgnore Skips Property")]
     [Fact]
     public void BuilderIgnore_Skips_Property()
     {
@@ -444,20 +455,21 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("PatternKit.Examples.Builders.IgnoreDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("test:TEST", result);
+        ScenarioExpect.Equal("test:TEST", result);
     }
 
+    [Scenario("Custom Method Names Work")]
     [Fact]
     public void Custom_Method_Names_Work()
     {
@@ -488,20 +500,21 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("PatternKit.Examples.Builders.CustomNamesDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("Hello", result);
+        ScenarioExpect.Equal("Hello", result);
     }
 
+    [Scenario("Projection Missing Seed Emits Diagnostic")]
     [Fact]
     public void Projection_Missing_Seed_Emits_Diagnostic()
     {
@@ -522,10 +535,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("BP001", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("BP001", diag.Id);
     }
 
+    [Scenario("Projection Multiple Projectors Emits Diagnostic")]
     [Fact]
     public void Projection_Multiple_Projectors_Emits_Diagnostic()
     {
@@ -555,10 +569,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("BP002", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("BP002", diag.Id);
     }
 
+    [Scenario("Projection Invalid Projector Emits Diagnostic")]
     [Fact]
     public void Projection_Invalid_Projector_Emits_Diagnostic()
     {
@@ -584,10 +599,11 @@ public class BuilderGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diag = run.Results.SelectMany(r => r.Diagnostics).FirstOrDefault();
-        Assert.NotNull(diag);
-        Assert.Equal("BP003", diag.Id);
+        ScenarioExpect.NotNull(diag);
+        ScenarioExpect.Equal("BP003", diag.Id);
     }
 
+    [Scenario("Mutable With ParameterizedCtor Uses Defaults")]
     [Fact]
     public void Mutable_With_ParameterizedCtor_Uses_Defaults()
     {
@@ -627,20 +643,21 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("PatternKit.Examples.Builders.ParamCtorDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("Test:25", result);
+        ScenarioExpect.Equal("Test:25", result);
     }
 
+    [Scenario("Internal Type Generates Internal Builder")]
     [Fact]
     public void Internal_Type_Generates_Internal_Builder()
     {
@@ -671,20 +688,21 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
 
         pe.Position = 0;
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe);
         var result = asm.GetType("PatternKit.Examples.Builders.InternalDemo")!
             .GetMethod("Run")!
             .Invoke(null, null) as string;
-        Assert.Equal("Internal", result);
+        ScenarioExpect.Equal("Internal", result);
     }
 
+    [Scenario("RequireAsync Validation Works")]
     [Fact]
     public void RequireAsync_Validation_Works()
     {
@@ -723,13 +741,14 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
     }
 
+    [Scenario("Projection RequireAsync Works")]
     [Fact]
     public void Projection_RequireAsync_Works()
     {
@@ -773,10 +792,10 @@ public class BuilderGeneratorTests
         var gen = new BuilderGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         using var pe = new MemoryStream();
         var emit = updated.Emit(pe);
-        Assert.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
     }
 }

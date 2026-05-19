@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Routing;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Routing;
 
 public sealed class RecipientListTests
 {
+    [Scenario("Dispatch SendsToMatchingRecipientsInOrder")]
     [Fact]
     public void Dispatch_SendsToMatchingRecipientsInOrder()
     {
@@ -17,11 +19,12 @@ public sealed class RecipientListTests
 
         var result = list.Dispatch(Message<Order>.Create(new Order("o-1", 100m)));
 
-        Assert.Equal(["audit", "billing"], log);
-        Assert.Equal(["audit", "billing"], result.DeliveredRecipients);
-        Assert.Equal(2, result.Count);
+        ScenarioExpect.Equal(["audit", "billing"], log);
+        ScenarioExpect.Equal(["audit", "billing"], result.DeliveredRecipients);
+        ScenarioExpect.Equal(2, result.Count);
     }
 
+    [Scenario("Dispatch ReturnsEmptyResultWhenNoRecipientsMatch")]
     [Fact]
     public void Dispatch_ReturnsEmptyResultWhenNoRecipientsMatch()
     {
@@ -31,10 +34,11 @@ public sealed class RecipientListTests
 
         var result = list.Dispatch(Message<Order>.Create(new Order("o-1", 100m)));
 
-        Assert.Empty(result.DeliveredRecipients);
-        Assert.Equal(0, result.Count);
+        ScenarioExpect.Empty(result.DeliveredRecipients);
+        ScenarioExpect.Equal(0, result.Count);
     }
 
+    [Scenario("To AddsUnconditionalRecipient")]
     [Fact]
     public void To_AddsUnconditionalRecipient()
     {
@@ -45,29 +49,32 @@ public sealed class RecipientListTests
 
         var result = list.Dispatch(Message<Order>.Create(new Order("o-1", 100m)));
 
-        Assert.True(delivered);
-        Assert.Equal(["audit"], result.DeliveredRecipients);
+        ScenarioExpect.True(delivered);
+        ScenarioExpect.Equal(["audit"], result.DeliveredRecipients);
     }
 
+    [Scenario("Dispatch RejectsNullMessage")]
     [Fact]
     public void Dispatch_RejectsNullMessage()
     {
         var list = RecipientList<Order>.Create().To("audit", (_, _) => { }).Build();
 
-        Assert.Throws<ArgumentNullException>(() => list.Dispatch(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => list.Dispatch(null!));
     }
 
+    [Scenario("Builder RejectsInvalidArguments")]
     [Fact]
     public void Builder_RejectsInvalidArguments()
     {
         var builder = RecipientList<Order>.Create();
 
-        Assert.Throws<ArgumentException>(() => builder.When("", (_, _) => true));
-        Assert.Throws<ArgumentNullException>(() => builder.When("audit", null!));
-        Assert.Throws<ArgumentNullException>(() => builder.To("audit", null!));
-        Assert.Throws<ArgumentNullException>(() => builder.When("audit", (_, _) => true).Then(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => builder.When("", (_, _) => true));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When("audit", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.To("audit", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When("audit", (_, _) => true).Then(null!));
     }
 
+    [Scenario("RecipientListResult CopiesDeliveredRecipients")]
     [Fact]
     public void RecipientListResult_CopiesDeliveredRecipients()
     {
@@ -76,15 +83,17 @@ public sealed class RecipientListTests
 
         delivered.Add("billing");
 
-        Assert.Equal(["audit"], result.DeliveredRecipients);
+        ScenarioExpect.Equal(["audit"], result.DeliveredRecipients);
     }
 
+    [Scenario("RecipientListResult RejectsNullRecipients")]
     [Fact]
     public void RecipientListResult_RejectsNullRecipients()
     {
-        Assert.Throws<ArgumentNullException>(() => new RecipientListResult(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new RecipientListResult(null!));
     }
 
+    [Scenario("AsyncDispatch SendsToMatchingRecipientsInOrder")]
     [Fact]
     public async Task AsyncDispatch_SendsToMatchingRecipientsInOrder()
     {
@@ -104,10 +113,11 @@ public sealed class RecipientListTests
 
         var result = await list.DispatchAsync(Message<Order>.Create(new Order("o-1", 100m)));
 
-        Assert.Equal(["audit", "billing"], log);
-        Assert.Equal(["audit", "billing"], result.DeliveredRecipients);
+        ScenarioExpect.Equal(["audit", "billing"], log);
+        ScenarioExpect.Equal(["audit", "billing"], result.DeliveredRecipients);
     }
 
+    [Scenario("AsyncDispatch ObservesCancellation")]
     [Fact]
     public async Task AsyncDispatch_ObservesCancellation()
     {
@@ -117,10 +127,11 @@ public sealed class RecipientListTests
             .To("audit", (_, _, _) => ValueTask.CompletedTask)
             .Build();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await list.DispatchAsync(Message<Order>.Create(new Order("o-1", 100m)), cancellationToken: cts.Token));
     }
 
+    [Scenario("AsyncDispatch PreservesProvidedContextCancellationWhenNoTokenIsSupplied")]
     [Fact]
     public async Task AsyncDispatch_PreservesProvidedContextCancellationWhenNoTokenIsSupplied()
     {
@@ -130,7 +141,7 @@ public sealed class RecipientListTests
             .To("audit", (_, ctx, token) =>
             {
                 seenToken = ctx.CancellationToken;
-                Assert.Equal(CancellationToken.None, token);
+                ScenarioExpect.Equal(CancellationToken.None, token);
                 return ValueTask.CompletedTask;
             })
             .Build();
@@ -138,9 +149,10 @@ public sealed class RecipientListTests
 
         await list.DispatchAsync(Message<Order>.Create(new Order("o-1", 100m)), context);
 
-        Assert.Equal(cts.Token, seenToken);
+        ScenarioExpect.Equal(cts.Token, seenToken);
     }
 
+    [Scenario("AsyncDispatch UsesExplicitCancellationTokenOverProvidedContext")]
     [Fact]
     public async Task AsyncDispatch_UsesExplicitCancellationTokenOverProvidedContext()
     {
@@ -158,9 +170,10 @@ public sealed class RecipientListTests
 
         await list.DispatchAsync(Message<Order>.Create(new Order("o-1", 100m)), context, callCts.Token);
 
-        Assert.Equal(callCts.Token, seenToken);
+        ScenarioExpect.Equal(callCts.Token, seenToken);
     }
 
+    [Scenario("AsyncDispatch RejectsNullMessage")]
     [Fact]
     public async Task AsyncDispatch_RejectsNullMessage()
     {
@@ -168,18 +181,19 @@ public sealed class RecipientListTests
             .To("audit", (_, _, _) => ValueTask.CompletedTask)
             .Build();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await list.DispatchAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await list.DispatchAsync(null!));
     }
 
+    [Scenario("AsyncBuilder RejectsInvalidArguments")]
     [Fact]
     public void AsyncBuilder_RejectsInvalidArguments()
     {
         var builder = AsyncRecipientList<Order>.Create();
 
-        Assert.Throws<ArgumentException>(() => builder.When("", (_, _, _) => new ValueTask<bool>(true)));
-        Assert.Throws<ArgumentNullException>(() => builder.When("audit", null!));
-        Assert.Throws<ArgumentNullException>(() => builder.To("audit", null!));
-        Assert.Throws<ArgumentNullException>(() => builder.When("audit", (_, _, _) => new ValueTask<bool>(true)).Then(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => builder.When("", (_, _, _) => new ValueTask<bool>(true)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When("audit", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.To("audit", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When("audit", (_, _, _) => new ValueTask<bool>(true)).Then(null!));
     }
 
     private sealed record Order(string Id, decimal Total);

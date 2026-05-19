@@ -1,10 +1,12 @@
 using Microsoft.CodeAnalysis;
 using PatternKit.Common;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class MementoGeneratorTests
 {
+    [Scenario("GenerateMementoForClass")]
     [Fact]
     public void GenerateMementoForClass()
     {
@@ -26,17 +28,18 @@ public class MementoGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Memento struct is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Document.Memento.g.cs", names);
+        ScenarioExpect.Contains("Document.Memento.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateMementoForRecordClass")]
     [Fact]
     public void GenerateMementoForRecordClass()
     {
@@ -54,17 +57,18 @@ public class MementoGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Memento struct is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("EditorState.Memento.g.cs", names);
+        ScenarioExpect.Contains("EditorState.Memento.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateMementoForRecordStruct")]
     [Fact]
     public void GenerateMementoForRecordStruct()
     {
@@ -82,17 +86,18 @@ public class MementoGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Memento struct is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Point.Memento.g.cs", names);
+        ScenarioExpect.Contains("Point.Memento.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateMementoForStruct")]
     [Fact]
     public void GenerateMementoForStruct()
     {
@@ -114,17 +119,18 @@ public class MementoGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Memento struct is generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("Counter.Memento.g.cs", names);
+        ScenarioExpect.Contains("Counter.Memento.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ErrorWhenNotPartial")]
     [Fact]
     public void ErrorWhenNotPartial()
     {
@@ -146,9 +152,10 @@ public class MementoGeneratorTests
 
         // PKMEM001 diagnostic is reported
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKMEM001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKMEM001");
     }
 
+    [Scenario("GenerateCaretakerWhenRequested")]
     [Fact]
     public void GenerateCaretakerWhenRequested()
     {
@@ -167,14 +174,15 @@ public class MementoGeneratorTests
 
         // Memento and caretaker are generated
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("EditorState.Memento.g.cs", names);
-        Assert.Contains("EditorState.History.g.cs", names);
+        ScenarioExpect.Contains("EditorState.Memento.g.cs", names);
+        ScenarioExpect.Contains("EditorState.History.g.cs", names);
 
         // Compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("MemberExclusionWithIgnore")]
     [Fact]
     public void MemberExclusionWithIgnore()
     {
@@ -201,14 +209,15 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
 
-        Assert.NotEqual(default, mementoSourceResult);
+        ScenarioExpect.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Memento includes Text but not InternalId
-        Assert.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
-        Assert.DoesNotContain("InternalId", mementoSource);
+        ScenarioExpect.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
+        ScenarioExpect.DoesNotContain("InternalId", mementoSource);
     }
 
+    [Scenario("ExplicitInclusionMode")]
     [Fact]
     public void ExplicitInclusionMode()
     {
@@ -235,14 +244,15 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
 
-        Assert.NotEqual(default, mementoSourceResult);
+        ScenarioExpect.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Memento includes Text but not InternalData
-        Assert.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
-        Assert.DoesNotContain("InternalData", mementoSource);
+        ScenarioExpect.Contains("string Text", mementoSource); // Type might be "string" or "global::System.String"
+        ScenarioExpect.DoesNotContain("InternalData", mementoSource);
     }
 
+    [Scenario("WarningForMutableReferenceCapture")]
     [Fact]
     public void WarningForMutableReferenceCapture()
     {
@@ -266,9 +276,10 @@ public class MementoGeneratorTests
 
         // PKMEM003 warning is reported for List<string>
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKMEM003" && d.GetMessage().Contains("Tags"));
+        ScenarioExpect.Contains(diags, d => d.Id == "PKMEM003" && d.GetMessage().Contains("Tags"));
     }
 
+    [Scenario("GeneratedMementoHasCaptureAndRestore")]
     [Fact]
     public void GeneratedMementoHasCaptureAndRestore()
     {
@@ -289,14 +300,15 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
 
-        Assert.NotEqual(default, mementoSourceResult);
+        ScenarioExpect.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Verify Capture and RestoreNew methods exist
-        Assert.Contains("public static EditorStateMemento Capture", mementoSource);
-        Assert.Contains("public global::TestNamespace.EditorState RestoreNew()", mementoSource);
+        ScenarioExpect.Contains("public static EditorStateMemento Capture", mementoSource);
+        ScenarioExpect.Contains("public global::TestNamespace.EditorState RestoreNew()", mementoSource);
     }
 
+    [Scenario("GeneratedCaretakerHasUndoRedo")]
     [Fact]
     public void GeneratedCaretakerHasUndoRedo()
     {
@@ -317,17 +329,18 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
 
-        Assert.NotEqual(default, caretakerSourceResult);
+        ScenarioExpect.NotEqual(default, caretakerSourceResult);
         var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
         // Verify caretaker has undo/redo functionality
-        Assert.Contains("public bool Undo()", caretakerSource);
-        Assert.Contains("public bool Redo()", caretakerSource);
-        Assert.Contains("public void Capture", caretakerSource);
-        Assert.Contains("public bool CanUndo", caretakerSource);
-        Assert.Contains("public bool CanRedo", caretakerSource);
+        ScenarioExpect.Contains("public bool Undo()", caretakerSource);
+        ScenarioExpect.Contains("public bool Redo()", caretakerSource);
+        ScenarioExpect.Contains("public void Capture", caretakerSource);
+        ScenarioExpect.Contains("public bool CanUndo", caretakerSource);
+        ScenarioExpect.Contains("public bool CanRedo", caretakerSource);
     }
 
+    [Scenario("GeneratedMementoIncludesVersion")]
     [Fact]
     public void GeneratedMementoIncludesVersion()
     {
@@ -351,13 +364,14 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("Memento.g.cs"));
 
-        Assert.NotEqual(default, mementoSourceResult);
+        ScenarioExpect.NotEqual(default, mementoSourceResult);
         var mementoSource = mementoSourceResult.SourceText.ToString();
 
         // Verify MementoVersion property exists
-        Assert.Contains("public int MementoVersion", mementoSource);
+        ScenarioExpect.Contains("public int MementoVersion", mementoSource);
     }
 
+    [Scenario("CaretakerRespectsCapacity")]
     [Fact]
     public void CaretakerRespectsCapacity()
     {
@@ -378,11 +392,11 @@ public class MementoGeneratorTests
             .SelectMany(r => r.GeneratedSources)
             .FirstOrDefault(gs => gs.HintName.Contains("History.g.cs"));
 
-        Assert.NotEqual(default, caretakerSourceResult);
+        ScenarioExpect.NotEqual(default, caretakerSourceResult);
         var caretakerSource = caretakerSourceResult.SourceText.ToString();
 
         // Verify capacity setting (using regex for flexibility)
-        Assert.Matches(@"private\s+const\s+int\s+MaxCapacity\s*=\s*50", caretakerSource);
-        Assert.Matches(@"if\s*\(\s*_states\.Count\s*>\s*MaxCapacity\s*\)", caretakerSource);
+        ScenarioExpect.Matches(@"private\s+const\s+int\s+MaxCapacity\s*=\s*50", caretakerSource);
+        ScenarioExpect.Matches(@"if\s*\(\s*_states\.Count\s*>\s*MaxCapacity\s*\)", caretakerSource);
     }
 }

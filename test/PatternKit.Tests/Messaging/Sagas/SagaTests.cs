@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Sagas;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Sagas;
 
 public sealed class SagaTests
 {
+    [Scenario("Handle AppliesMatchingTypedStepsInOrder")]
     [Fact]
     public void Handle_AppliesMatchingTypedStepsInOrder()
     {
@@ -17,14 +19,15 @@ public sealed class SagaTests
         var started = saga.Handle(OrderState.Empty, Message<OrderStarted>.Create(new OrderStarted("order-1")));
         var paid = saga.Handle(started.State, Message<PaymentAccepted>.Create(new PaymentAccepted("order-1")));
 
-        Assert.True(started.Matched);
-        Assert.False(started.Completed);
-        Assert.Equal("order-1", started.State.OrderId);
-        Assert.True(paid.Matched);
-        Assert.True(paid.Completed);
-        Assert.True(paid.State.Paid);
+        ScenarioExpect.True(started.Matched);
+        ScenarioExpect.False(started.Completed);
+        ScenarioExpect.Equal("order-1", started.State.OrderId);
+        ScenarioExpect.True(paid.Matched);
+        ScenarioExpect.True(paid.Completed);
+        ScenarioExpect.True(paid.State.Paid);
     }
 
+    [Scenario("Handle UsesGuardPredicate")]
     [Fact]
     public void Handle_UsesGuardPredicate()
     {
@@ -35,10 +38,11 @@ public sealed class SagaTests
 
         var result = saga.Handle(new OrderState("order-1", Started: true, Paid: false), Message<PaymentAccepted>.Create(new PaymentAccepted("order-2")));
 
-        Assert.False(result.Matched);
-        Assert.False(result.State.Paid);
+        ScenarioExpect.False(result.Matched);
+        ScenarioExpect.False(result.State.Paid);
     }
 
+    [Scenario("Handle ReturnsUnmatchedForUnknownMessageType")]
     [Fact]
     public void Handle_ReturnsUnmatchedForUnknownMessageType()
     {
@@ -48,10 +52,11 @@ public sealed class SagaTests
 
         var result = saga.Handle(OrderState.Empty, Message<PaymentAccepted>.Create(new PaymentAccepted("order-1")));
 
-        Assert.False(result.Matched);
-        Assert.Equal(OrderState.Empty, result.State);
+        ScenarioExpect.False(result.Matched);
+        ScenarioExpect.Equal(OrderState.Empty, result.State);
     }
 
+    [Scenario("Handle PassesMessageContext")]
     [Fact]
     public void Handle_PassesMessageContext()
     {
@@ -62,27 +67,30 @@ public sealed class SagaTests
 
         var result = saga.Handle(OrderState.Empty, message);
 
-        Assert.Equal("corr-1", result.State.OrderId);
+        ScenarioExpect.Equal("corr-1", result.State.OrderId);
     }
 
+    [Scenario("Handle RejectsNullMessage")]
     [Fact]
     public void Handle_RejectsNullMessage()
     {
         var saga = Saga<OrderState>.Create().Build();
 
-        Assert.Throws<ArgumentNullException>(() => saga.Handle(OrderState.Empty, (Message<OrderStarted>)null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => saga.Handle(OrderState.Empty, (Message<OrderStarted>)null!));
     }
 
+    [Scenario("Builder RejectsNullDelegates")]
     [Fact]
     public void Builder_RejectsNullDelegates()
     {
         var builder = Saga<OrderState>.Create();
 
-        Assert.Throws<ArgumentNullException>(() => builder.When<OrderStarted>(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.CompleteWhen(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.On<OrderStarted>().Then(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When<OrderStarted>(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.CompleteWhen(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.On<OrderStarted>().Then(null!));
     }
 
+    [Scenario("AsyncHandle AppliesMatchingTypedStepsInOrder")]
     [Fact]
     public async Task AsyncHandle_AppliesMatchingTypedStepsInOrder()
     {
@@ -95,12 +103,13 @@ public sealed class SagaTests
         var started = await saga.HandleAsync(OrderState.Empty, Message<OrderStarted>.Create(new OrderStarted("order-1")));
         var paid = await saga.HandleAsync(started.State, Message<PaymentAccepted>.Create(new PaymentAccepted("order-1")));
 
-        Assert.True(started.Matched);
-        Assert.False(started.Completed);
-        Assert.True(paid.Completed);
-        Assert.True(paid.State.Paid);
+        ScenarioExpect.True(started.Matched);
+        ScenarioExpect.False(started.Completed);
+        ScenarioExpect.True(paid.Completed);
+        ScenarioExpect.True(paid.State.Paid);
     }
 
+    [Scenario("AsyncHandle UsesGuardPredicate")]
     [Fact]
     public async Task AsyncHandle_UsesGuardPredicate()
     {
@@ -111,10 +120,11 @@ public sealed class SagaTests
 
         var result = await saga.HandleAsync(new OrderState("order-1", Started: true, Paid: false), Message<PaymentAccepted>.Create(new PaymentAccepted("order-2")));
 
-        Assert.False(result.Matched);
-        Assert.False(result.State.Paid);
+        ScenarioExpect.False(result.Matched);
+        ScenarioExpect.False(result.State.Paid);
     }
 
+    [Scenario("AsyncHandle ObservesCancellation")]
     [Fact]
     public async Task AsyncHandle_ObservesCancellation()
     {
@@ -124,10 +134,11 @@ public sealed class SagaTests
             .On<OrderStarted>().Then((state, _, _, _) => new ValueTask<OrderState>(state with { Started = true }))
             .Build();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await saga.HandleAsync(OrderState.Empty, Message<OrderStarted>.Create(new OrderStarted("order-1")), cancellationToken: cts.Token));
     }
 
+    [Scenario("AsyncHandle PreservesProvidedContextCancellationWhenNoTokenIsSupplied")]
     [Fact]
     public async Task AsyncHandle_PreservesProvidedContextCancellationWhenNoTokenIsSupplied()
     {
@@ -137,7 +148,7 @@ public sealed class SagaTests
             .On<OrderStarted>().Then((state, _, context, token) =>
             {
                 seenToken = context.CancellationToken;
-                Assert.Equal(CancellationToken.None, token);
+                ScenarioExpect.Equal(CancellationToken.None, token);
                 return new ValueTask<OrderState>(state);
             })
             .Build();
@@ -145,9 +156,10 @@ public sealed class SagaTests
 
         await saga.HandleAsync(OrderState.Empty, Message<OrderStarted>.Create(new OrderStarted("order-1")), context);
 
-        Assert.Equal(cts.Token, seenToken);
+        ScenarioExpect.Equal(cts.Token, seenToken);
     }
 
+    [Scenario("AsyncHandle UsesExplicitCancellationTokenOverProvidedContext")]
     [Fact]
     public async Task AsyncHandle_UsesExplicitCancellationTokenOverProvidedContext()
     {
@@ -165,25 +177,27 @@ public sealed class SagaTests
 
         await saga.HandleAsync(OrderState.Empty, Message<OrderStarted>.Create(new OrderStarted("order-1")), context, callCts.Token);
 
-        Assert.Equal(callCts.Token, seenToken);
+        ScenarioExpect.Equal(callCts.Token, seenToken);
     }
 
+    [Scenario("AsyncHandle RejectsNullMessage")]
     [Fact]
     public async Task AsyncHandle_RejectsNullMessage()
     {
         var saga = AsyncSaga<OrderState>.Create().Build();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await saga.HandleAsync(OrderState.Empty, (Message<OrderStarted>)null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await saga.HandleAsync(OrderState.Empty, (Message<OrderStarted>)null!));
     }
 
+    [Scenario("AsyncBuilder RejectsNullDelegates")]
     [Fact]
     public void AsyncBuilder_RejectsNullDelegates()
     {
         var builder = AsyncSaga<OrderState>.Create();
 
-        Assert.Throws<ArgumentNullException>(() => builder.When<OrderStarted>(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.CompleteWhen(null!));
-        Assert.Throws<ArgumentNullException>(() => builder.On<OrderStarted>().Then(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.When<OrderStarted>(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.CompleteWhen(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => builder.On<OrderStarted>().Then(null!));
     }
 
     private sealed record OrderState(string? OrderId, bool Started, bool Paid)

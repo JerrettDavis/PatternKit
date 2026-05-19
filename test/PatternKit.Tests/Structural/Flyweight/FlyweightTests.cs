@@ -197,34 +197,39 @@ public sealed class FlyweightTests(ITestOutputHelper output) : TinyBddXunitBase(
 
 public sealed class FlyweightBuilderTests
 {
+    [Scenario("WithFactory Null Throws")]
     [Fact]
     public void WithFactory_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Flyweight<int, string>.Create().WithFactory(null!));
     }
 
+    [Scenario("WithCapacity Negative Throws")]
     [Fact]
     public void WithCapacity_Negative_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() =>
             Flyweight<int, string>.Create().WithCapacity(-1));
     }
 
+    [Scenario("WithComparer Null Throws")]
     [Fact]
     public void WithComparer_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Flyweight<int, string>.Create().WithComparer(null!));
     }
 
+    [Scenario("Preload Batch Null Throws")]
     [Fact]
     public void Preload_Batch_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Flyweight<int, string>.Create().Preload(null!));
     }
 
+    [Scenario("Preload Batch Empty Returns Builder")]
     [Fact]
     public void Preload_Batch_Empty_Returns_Builder()
     {
@@ -233,9 +238,10 @@ public sealed class FlyweightBuilderTests
             .Preload(Array.Empty<(int, string)>());
 
         var fw = builder.Build();
-        Assert.Equal(0, fw.Count);
+        ScenarioExpect.Equal(0, fw.Count);
     }
 
+    [Scenario("Preload Batch Works")]
     [Fact]
     public void Preload_Batch_Works()
     {
@@ -244,12 +250,13 @@ public sealed class FlyweightBuilderTests
             .Preload((1, "one"), (2, "two"), (3, "three"))
             .Build();
 
-        Assert.Equal(3, fw.Count);
-        Assert.Equal("one", fw.Get(1));
-        Assert.Equal("two", fw.Get(2));
-        Assert.Equal("three", fw.Get(3));
+        ScenarioExpect.Equal(3, fw.Count);
+        ScenarioExpect.Equal("one", fw.Get(1));
+        ScenarioExpect.Equal("two", fw.Get(2));
+        ScenarioExpect.Equal("three", fw.Get(3));
     }
 
+    [Scenario("WithCapacity Sets Initial Capacity")]
     [Fact]
     public void WithCapacity_Sets_Initial_Capacity()
     {
@@ -258,11 +265,12 @@ public sealed class FlyweightBuilderTests
             .WithCapacity(100)
             .Build();
 
-        Assert.Equal(0, fw.Count);
+        ScenarioExpect.Equal(0, fw.Count);
         fw.Get(1);
-        Assert.Equal(1, fw.Count);
+        ScenarioExpect.Equal(1, fw.Count);
     }
 
+    [Scenario("Preload Sets Capacity From Count")]
     [Fact]
     public void Preload_Sets_Capacity_From_Count()
     {
@@ -271,9 +279,10 @@ public sealed class FlyweightBuilderTests
             .Preload((1, "a"), (2, "b"))
             .Build();
 
-        Assert.Equal(2, fw.Count);
+        ScenarioExpect.Equal(2, fw.Count);
     }
 
+    [Scenario("TryGetExisting On Preloaded Key Returns True")]
     [Fact]
     public void TryGetExisting_On_Preloaded_Key_Returns_True()
     {
@@ -282,10 +291,11 @@ public sealed class FlyweightBuilderTests
             .Preload("key", "value")
             .Build();
 
-        Assert.True(fw.TryGetExisting("key", out var val));
-        Assert.Equal("value", val);
+        ScenarioExpect.True(fw.TryGetExisting("key", out var val));
+        ScenarioExpect.Equal("value", val);
     }
 
+    [Scenario("TryGetExisting On Missing Key Returns False")]
     [Fact]
     public void TryGetExisting_On_Missing_Key_Returns_False()
     {
@@ -293,9 +303,10 @@ public sealed class FlyweightBuilderTests
             .WithFactory(s => s)
             .Build();
 
-        Assert.False(fw.TryGetExisting("missing", out _));
+        ScenarioExpect.False(fw.TryGetExisting("missing", out _));
     }
 
+    [Scenario("Get With In Parameter Works")]
     [Fact]
     public void Get_With_In_Parameter_Works()
     {
@@ -306,9 +317,10 @@ public sealed class FlyweightBuilderTests
         var key = 42;
         var result = fw.Get(in key);
 
-        Assert.Equal("value:42", result);
+        ScenarioExpect.Equal("value:42", result);
     }
 
+    [Scenario("Concurrent Preload And Factory")]
     [Fact]
     public void Concurrent_Preload_And_Factory()
     {
@@ -324,13 +336,13 @@ public sealed class FlyweightBuilderTests
 
         // Preloaded key should not call factory
         var v1 = fw.Get(1);
-        Assert.Equal("preloaded:1", v1);
-        Assert.Equal(0, factoryCalls);
+        ScenarioExpect.Equal("preloaded:1", v1);
+        ScenarioExpect.Equal(0, factoryCalls);
 
         // New key should call factory
         var v2 = fw.Get(2);
-        Assert.Equal("created:2", v2);
-        Assert.Equal(1, factoryCalls);
+        ScenarioExpect.Equal("created:2", v2);
+        ScenarioExpect.Equal(1, factoryCalls);
     }
 }
 

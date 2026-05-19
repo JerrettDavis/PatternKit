@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Reliability;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Reliability;
 
 public sealed class IdempotentReceiverTests
 {
+    [Scenario("HandleAsync ProcessesFirstMessageAndSuppressesDuplicate")]
     [Fact]
     public async Task HandleAsync_ProcessesFirstMessageAndSuppressesDuplicate()
     {
@@ -23,15 +25,16 @@ public sealed class IdempotentReceiverTests
         var first = await receiver.HandleAsync(message);
         var duplicate = await receiver.HandleAsync(message);
 
-        Assert.True(first.Processed);
-        Assert.Equal("processed:order-1", first.Result);
-        Assert.Equal(IdempotentReceiverStatus.Duplicate, duplicate.Status);
-        Assert.Equal("idem-1", duplicate.Key);
-        Assert.Equal(1, calls);
-        Assert.True(store.TryGet("idem-1", out var claim));
-        Assert.Equal(IdempotencyEntryStatus.Completed, claim!.Status);
+        ScenarioExpect.True(first.Processed);
+        ScenarioExpect.Equal("processed:order-1", first.Result);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Duplicate, duplicate.Status);
+        ScenarioExpect.Equal("idem-1", duplicate.Key);
+        ScenarioExpect.Equal(1, calls);
+        ScenarioExpect.True(store.TryGet("idem-1", out var claim));
+        ScenarioExpect.Equal(IdempotencyEntryStatus.Completed, claim!.Status);
     }
 
+    [Scenario("HandleAsync ReplaysCompletedResultWhenConfigured")]
     [Fact]
     public async Task HandleAsync_ReplaysCompletedResultWhenConfigured()
     {
@@ -46,11 +49,12 @@ public sealed class IdempotentReceiverTests
         var first = await receiver.HandleAsync(message);
         var duplicate = await receiver.HandleAsync(message);
 
-        Assert.Equal(IdempotentReceiverStatus.Processed, first.Status);
-        Assert.Equal(IdempotentReceiverStatus.Replayed, duplicate.Status);
-        Assert.Equal("processed:order-1", duplicate.Result);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Processed, first.Status);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Replayed, duplicate.Status);
+        ScenarioExpect.Equal("processed:order-1", duplicate.Result);
     }
 
+    [Scenario("HandleAsync SuppressesDuplicateWhenStoredResultHasWrongType")]
     [Fact]
     public async Task HandleAsync_SuppressesDuplicateWhenStoredResultHasWrongType()
     {
@@ -65,10 +69,11 @@ public sealed class IdempotentReceiverTests
 
         var result = await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")).WithIdempotencyKey("idem-1"));
 
-        Assert.Equal(IdempotentReceiverStatus.Duplicate, result.Status);
-        Assert.Null(result.Result);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Duplicate, result.Status);
+        ScenarioExpect.Null(result.Result);
     }
 
+    [Scenario("HandleAsync RejectsMissingKeyByDefault")]
     [Fact]
     public async Task HandleAsync_RejectsMissingKeyByDefault()
     {
@@ -84,10 +89,11 @@ public sealed class IdempotentReceiverTests
 
         var result = await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")));
 
-        Assert.Equal(IdempotentReceiverStatus.MissingKey, result.Status);
-        Assert.Equal(0, calls);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.MissingKey, result.Status);
+        ScenarioExpect.Equal(0, calls);
     }
 
+    [Scenario("HandleAsync CanProcessMissingKeyWhenConfigured")]
     [Fact]
     public async Task HandleAsync_CanProcessMissingKeyWhenConfigured()
     {
@@ -99,11 +105,12 @@ public sealed class IdempotentReceiverTests
 
         var result = await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")));
 
-        Assert.Equal(IdempotentReceiverStatus.Processed, result.Status);
-        Assert.Null(result.Key);
-        Assert.Equal("processed", result.Result);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Processed, result.Status);
+        ScenarioExpect.Null(result.Key);
+        ScenarioExpect.Equal("processed", result.Result);
     }
 
+    [Scenario("HandleAsync UsesCustomKeySelector")]
     [Fact]
     public async Task HandleAsync_UsesCustomKeySelector()
     {
@@ -116,11 +123,12 @@ public sealed class IdempotentReceiverTests
         var first = await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")));
         var duplicate = await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")));
 
-        Assert.True(first.Processed);
-        Assert.Equal(IdempotentReceiverStatus.Duplicate, duplicate.Status);
-        Assert.Equal("order-1", duplicate.Key);
+        ScenarioExpect.True(first.Processed);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Duplicate, duplicate.Status);
+        ScenarioExpect.Equal("order-1", duplicate.Key);
     }
 
+    [Scenario("HandleAsync PreservesSuppliedContextAndAppliesExplicitCancellation")]
     [Fact]
     public async Task HandleAsync_PreservesSuppliedContextAndAppliesExplicitCancellation()
     {
@@ -143,11 +151,12 @@ public sealed class IdempotentReceiverTests
             context,
             source.Token);
 
-        Assert.Equal(IdempotentReceiverStatus.Processed, result.Status);
-        Assert.Equal("north", observedTenant);
-        Assert.True(observedCancellation.CanBeCanceled);
+        ScenarioExpect.Equal(IdempotentReceiverStatus.Processed, result.Status);
+        ScenarioExpect.Equal("north", observedTenant);
+        ScenarioExpect.True(observedCancellation.CanBeCanceled);
     }
 
+    [Scenario("HandleAsync MarksFailedAndRethrowsHandlerFailure")]
     [Fact]
     public async Task HandleAsync_MarksFailedAndRethrowsHandlerFailure()
     {
@@ -157,14 +166,15 @@ public sealed class IdempotentReceiverTests
                 (_, _, _) => throw new InvalidOperationException("handler failed"))
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
             await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")).WithIdempotencyKey("idem-1")));
 
-        Assert.True(store.TryGet("idem-1", out var claim));
-        Assert.Equal(IdempotencyEntryStatus.Failed, claim!.Status);
-        Assert.Equal("handler failed", claim.FailureReason);
+        ScenarioExpect.True(store.TryGet("idem-1", out var claim));
+        ScenarioExpect.Equal(IdempotencyEntryStatus.Failed, claim!.Status);
+        ScenarioExpect.Equal("handler failed", claim.FailureReason);
     }
 
+    [Scenario("HandleAsync PropagatesStoreFailure")]
     [Fact]
     public async Task HandleAsync_PropagatesStoreFailure()
     {
@@ -173,10 +183,11 @@ public sealed class IdempotentReceiverTests
                 (_, _, _) => new ValueTask<string>("processed"))
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
             await receiver.HandleAsync(Message<Order>.Create(new Order("order-1")).WithIdempotencyKey("idem-1")));
     }
 
+    [Scenario("HandleAsync PropagatesCancellation")]
     [Fact]
     public async Task HandleAsync_PropagatesCancellation()
     {
@@ -187,12 +198,13 @@ public sealed class IdempotentReceiverTests
                 (_, _, _) => new ValueTask<string>("processed"))
             .Build();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await receiver.HandleAsync(
                 Message<Order>.Create(new Order("order-1")).WithIdempotencyKey("idem-1"),
                 cancellationToken: source.Token));
     }
 
+    [Scenario("InboxProcessor DelegatesToIdempotentReceiver")]
     [Fact]
     public async Task InboxProcessor_DelegatesToIdempotentReceiver()
     {
@@ -204,48 +216,52 @@ public sealed class IdempotentReceiverTests
 
         var result = await inbox.ProcessAsync(Message<Order>.Create(new Order("order-1")).WithIdempotencyKey("idem-1"));
 
-        Assert.Equal("order-1", result.Result);
+        ScenarioExpect.Equal("order-1", result.Result);
     }
 
+    [Scenario("Builder RejectsInvalidArguments")]
     [Fact]
     public void Builder_RejectsInvalidArguments()
     {
-        Assert.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(null!, (_, _, _) => default).Build());
-        Assert.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(new InMemoryIdempotencyStore(), null!).Build());
-        Assert.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(new InMemoryIdempotencyStore(), (_, _, _) => default).KeyBy(null!));
-        Assert.Throws<ArgumentNullException>(() => InboxProcessor<Order, string>.Create(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(null!, (_, _, _) => default).Build());
+        ScenarioExpect.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(new InMemoryIdempotencyStore(), null!).Build());
+        ScenarioExpect.Throws<ArgumentNullException>(() => IdempotentReceiver<Order, string>.Create(new InMemoryIdempotencyStore(), (_, _, _) => default).KeyBy(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => InboxProcessor<Order, string>.Create(null!));
     }
 
+    [Scenario("InMemoryIdempotencyStore ValidatesKeysAndTracksCount")]
     [Fact]
     public async Task InMemoryIdempotencyStore_ValidatesKeysAndTracksCount()
     {
         var store = new InMemoryIdempotencyStore();
 
-        await Assert.ThrowsAsync<ArgumentException>(async () => await store.TryClaimAsync(""));
+        await ScenarioExpect.ThrowsAsync<ArgumentException>(async () => await store.TryClaimAsync(""));
         await store.TryClaimAsync("idem-1");
         await store.MarkFailedAsync("idem-2", "failed");
 
-        Assert.Equal(2, store.Count);
-        Assert.False(store.TryGet("missing", out var missing));
-        Assert.Null(missing);
-        Assert.True(store.TryGet("idem-2", out var claim));
-        Assert.Equal(IdempotencyEntryStatus.Failed, claim!.Status);
-        Assert.Equal("failed", claim.FailureReason);
+        ScenarioExpect.Equal(2, store.Count);
+        ScenarioExpect.False(store.TryGet("missing", out var missing));
+        ScenarioExpect.Null(missing);
+        ScenarioExpect.True(store.TryGet("idem-2", out var claim));
+        ScenarioExpect.Equal(IdempotencyEntryStatus.Failed, claim!.Status);
+        ScenarioExpect.Equal("failed", claim.FailureReason);
     }
 
+    [Scenario("IdempotencyClaim ValidatesFactoryKeys")]
     [Fact]
     public void IdempotencyClaim_ValidatesFactoryKeys()
     {
-        Assert.Throws<ArgumentException>(() => IdempotencyClaim.ClaimedKey(""));
-        Assert.Throws<ArgumentException>(() => IdempotencyClaim.Existing(" ", IdempotencyEntryStatus.Completed));
+        ScenarioExpect.Throws<ArgumentException>(() => IdempotencyClaim.ClaimedKey(""));
+        ScenarioExpect.Throws<ArgumentException>(() => IdempotencyClaim.Existing(" ", IdempotencyEntryStatus.Completed));
     }
 
+    [Scenario("HandleAsync RejectsNullMessage")]
     [Fact]
     public async Task HandleAsync_RejectsNullMessage()
     {
         var receiver = IdempotentReceiver<Order, string>.Create(new InMemoryIdempotencyStore(), (_, _, _) => default).Build();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await receiver.HandleAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await receiver.HandleAsync(null!));
     }
 
     private sealed record Order(string Id);

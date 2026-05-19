@@ -1,11 +1,13 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using PatternKit.Generators.Messaging;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public sealed class SagaGeneratorTests
 {
+    [Scenario("GeneratesSyncSagaFactory")]
     [Fact]
     public void GeneratesSyncSagaFactory()
     {
@@ -50,18 +52,19 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, result => Assert.Empty(result.Diagnostics));
-        var generated = Assert.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
         var text = generated.SourceText.ToString();
-        Assert.Equal("OrderSaga.Saga.g.cs", generated.HintName);
-        Assert.Contains(".On<global::MyApp.Started>().Then(Start)", text);
-        Assert.Contains(".On<global::MyApp.Paid>().Then(Pay)", text);
-        Assert.Contains(".CompleteWhen(IsComplete)", text);
+        ScenarioExpect.Equal("OrderSaga.Saga.g.cs", generated.HintName);
+        ScenarioExpect.Contains(".On<global::MyApp.Started>().Then(Start)", text);
+        ScenarioExpect.Contains(".On<global::MyApp.Paid>().Then(Pay)", text);
+        ScenarioExpect.Contains(".CompleteWhen(IsComplete)", text);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GeneratesAsyncSagaFactory")]
     [Fact]
     public void GeneratesAsyncSagaFactory()
     {
@@ -89,13 +92,14 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, result => Assert.Empty(result.Diagnostics));
-        Assert.Contains("AsyncSaga<global::MyApp.OrderState>", Assert.Single(run.Results.SelectMany(result => result.GeneratedSources)).SourceText.ToString());
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        ScenarioExpect.Contains("AsyncSaga<global::MyApp.OrderState>", ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources)).SourceText.ToString());
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsDiagnosticForNonPartialSaga")]
     [Fact]
     public void ReportsDiagnosticForNonPartialSaga()
     {
@@ -120,9 +124,10 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        Assert.Equal("PKSG001", Assert.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
+        ScenarioExpect.Equal("PKSG001", ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
     }
 
+    [Scenario("ReportsDiagnosticForMissingSteps")]
     [Fact]
     public void ReportsDiagnosticForMissingSteps()
     {
@@ -141,9 +146,10 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        Assert.Equal("PKSG002", Assert.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
+        ScenarioExpect.Equal("PKSG002", ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidStepSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidStepSignature()
     {
@@ -168,9 +174,10 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        Assert.Equal("PKSG003", Assert.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
+        ScenarioExpect.Equal("PKSG003", ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidCompletionSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidCompletionSignature()
     {
@@ -198,7 +205,7 @@ public sealed class SagaGeneratorTests
         var gen = new SagaGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        Assert.Equal("PKSG004", Assert.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
+        ScenarioExpect.Equal("PKSG004", ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

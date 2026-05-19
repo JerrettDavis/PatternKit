@@ -111,80 +111,91 @@ public sealed class AsyncFlowBuilderTests
             yield return i;
     }
 
+    [Scenario("AsyncFlow From Null Throws")]
     [Fact]
     public void AsyncFlow_From_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() => AsyncFlow<int>.From(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => AsyncFlow<int>.From(null!));
     }
 
+    [Scenario("AsyncFlow Map Null Throws")]
     [Fact]
     public void AsyncFlow_Map_Null_Throws()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(3));
-        Assert.Throws<ArgumentNullException>(() => flow.Map<int>(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => flow.Map<int>(null!));
     }
 
+    [Scenario("AsyncFlow Filter Null Throws")]
     [Fact]
     public void AsyncFlow_Filter_Null_Throws()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(3));
-        Assert.Throws<ArgumentNullException>(() => flow.Filter(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => flow.Filter(null!));
     }
 
+    [Scenario("AsyncFlow FlatMap Null Throws")]
     [Fact]
     public void AsyncFlow_FlatMap_Null_Throws()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(3));
-        Assert.Throws<ArgumentNullException>(() => flow.FlatMap<int>(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => flow.FlatMap<int>(null!));
     }
 
+    [Scenario("AsyncFlow Tee Null Throws")]
     [Fact]
     public void AsyncFlow_Tee_Null_Throws()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(3));
-        Assert.Throws<ArgumentNullException>(() => flow.Tee(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => flow.Tee(null!));
     }
 
+    [Scenario("SharedAsyncFlow Branch Null Throws")]
     [Fact]
     public void SharedAsyncFlow_Branch_Null_Throws()
     {
         var shared = AsyncFlow<int>.From(RangeAsync(3)).Share();
-        Assert.Throws<ArgumentNullException>(() => shared.Branch(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => shared.Branch(null!));
     }
 
+    [Scenario("AsyncFlow FoldAsync")]
     [Fact]
     public async Task AsyncFlow_FoldAsync()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(5));
         var sum = await flow.FoldAsync(0, (acc, x) => acc + x);
 
-        Assert.Equal(15, sum);
+        ScenarioExpect.Equal(15, sum);
     }
 
+    [Scenario("AsyncFlow FoldAsync Null Flow Throws")]
     [Fact]
     public async Task AsyncFlow_FoldAsync_Null_Flow_Throws()
     {
         AsyncFlow<int>? flow = null;
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(() =>
             flow!.FoldAsync(0, (acc, x) => acc + x).AsTask());
     }
 
+    [Scenario("AsyncFlow FoldAsync Null Folder Throws")]
     [Fact]
     public async Task AsyncFlow_FoldAsync_Null_Folder_Throws()
     {
         var flow = AsyncFlow<int>.From(RangeAsync(3));
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(() =>
             flow.FoldAsync<int, int>(0, null!).AsTask());
     }
 
+    [Scenario("AsyncFlow FirstOptionAsync Null Throws")]
     [Fact]
     public async Task AsyncFlow_FirstOptionAsync_Null_Throws()
     {
         AsyncFlow<int>? flow = null;
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(() =>
             flow!.FirstOptionAsync().AsTask());
     }
 
+    [Scenario("SharedAsyncFlow Fork Works")]
     [Fact]
     public async Task SharedAsyncFlow_Fork_Works()
     {
@@ -195,9 +206,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in fork)
             result.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3 }, result);
+        ScenarioExpect.Equal(new[] { 1, 2, 3 }, result);
     }
 
+    [Scenario("AsyncFlow Empty Source")]
     [Fact]
     public async Task AsyncFlow_Empty_Source()
     {
@@ -206,9 +218,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow)
             result.Add(v);
 
-        Assert.Empty(result);
+        ScenarioExpect.Empty(result);
     }
 
+    [Scenario("AsyncFlow Chained Operations")]
     [Fact]
     public async Task AsyncFlow_Chained_Operations()
     {
@@ -220,9 +233,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow)
             result.Add(v);
 
-        Assert.Equal(new[] { 20, 40, 60, 80, 100 }, result);
+        ScenarioExpect.Equal(new[] { 20, 40, 60, 80, 100 }, result);
     }
 
+    [Scenario("AsyncFlow WithCancellation Works")]
     [Fact]
     public async Task AsyncFlow_WithCancellation_Works()
     {
@@ -233,9 +247,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow.WithCancellation(cts.Token))
             result.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3 }, result);
+        ScenarioExpect.Equal(new[] { 1, 2, 3 }, result);
     }
 
+    [Scenario("SharedAsyncFlow MultipleForks SameData")]
     [Fact]
     public async Task SharedAsyncFlow_MultipleForks_SameData()
     {
@@ -253,11 +268,12 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in fork2) list2.Add(v);
         await foreach (var v in fork3) list3.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list1);
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list2);
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list3);
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, list1);
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, list2);
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, list3);
     }
 
+    [Scenario("SharedAsyncFlow ConcurrentForks")]
     [Fact]
     public async Task SharedAsyncFlow_ConcurrentForks()
     {
@@ -275,11 +291,12 @@ public sealed class AsyncFlowBuilderTests
 
         foreach (var result in results)
         {
-            Assert.Equal(10, result.Count);
-            Assert.Equal(Enumerable.Range(1, 10), result);
+            ScenarioExpect.Equal(10, result.Count);
+            ScenarioExpect.Equal(Enumerable.Range(1, 10), result);
         }
     }
 
+    [Scenario("SharedAsyncFlow Branch TrueFalse")]
     [Fact]
     public async Task SharedAsyncFlow_Branch_TrueFalse()
     {
@@ -292,10 +309,11 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in trueFlow) evenList.Add(v);
         await foreach (var v in falseFlow) oddList.Add(v);
 
-        Assert.Equal(new[] { 2, 4, 6, 8, 10 }, evenList);
-        Assert.Equal(new[] { 1, 3, 5, 7, 9 }, oddList);
+        ScenarioExpect.Equal(new[] { 2, 4, 6, 8, 10 }, evenList);
+        ScenarioExpect.Equal(new[] { 1, 3, 5, 7, 9 }, oddList);
     }
 
+    [Scenario("AsyncFlow Map Transform")]
     [Fact]
     public async Task AsyncFlow_Map_Transform()
     {
@@ -305,9 +323,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow.Map(x => $"item{x}"))
             result.Add(v);
 
-        Assert.Equal(new[] { "item1", "item2", "item3" }, result);
+        ScenarioExpect.Equal(new[] { "item1", "item2", "item3" }, result);
     }
 
+    [Scenario("AsyncFlow Filter Predicate")]
     [Fact]
     public async Task AsyncFlow_Filter_Predicate()
     {
@@ -317,9 +336,10 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow.Filter(x => x > 5))
             result.Add(v);
 
-        Assert.Equal(new[] { 6, 7, 8, 9, 10 }, result);
+        ScenarioExpect.Equal(new[] { 6, 7, 8, 9, 10 }, result);
     }
 
+    [Scenario("AsyncFlow Tee SideEffect")]
     [Fact]
     public async Task AsyncFlow_Tee_SideEffect()
     {
@@ -330,8 +350,8 @@ public sealed class AsyncFlowBuilderTests
         await foreach (var v in flow.Tee(x => sideEffects.Add(x * 10)))
             result.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3 }, result);
-        Assert.Equal(new[] { 10, 20, 30 }, sideEffects);
+        ScenarioExpect.Equal(new[] { 1, 2, 3 }, result);
+        ScenarioExpect.Equal(new[] { 10, 20, 30 }, sideEffects);
     }
 }
 
@@ -363,6 +383,7 @@ public sealed class AsyncReplayBufferTests
         }
     }
 
+    [Scenario("SharedAsyncFlow SourceThrows PropagatesException")]
     [Fact]
     public async Task SharedAsyncFlow_SourceThrows_PropagatesException()
     {
@@ -370,16 +391,17 @@ public sealed class AsyncReplayBufferTests
         var fork = shared.Fork();
 
         var items = new List<int>();
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
         {
             await foreach (var v in fork)
                 items.Add(v);
         });
 
-        Assert.Equal("Source error", ex.Message);
-        Assert.Equal(new[] { 1, 2 }, items);
+        ScenarioExpect.Equal("Source error", ex.Message);
+        ScenarioExpect.Equal(new[] { 1, 2 }, items);
     }
 
+    [Scenario("SharedAsyncFlow ErrorPropagates ToMultipleForks")]
     [Fact]
     public async Task SharedAsyncFlow_ErrorPropagates_ToMultipleForks()
     {
@@ -390,7 +412,7 @@ public sealed class AsyncReplayBufferTests
 
         // First fork consumes and hits error
         var items1 = new List<int>();
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
         {
             await foreach (var v in fork1)
                 items1.Add(v);
@@ -402,10 +424,11 @@ public sealed class AsyncReplayBufferTests
         await foreach (var v in fork2)
             items2.Add(v);
 
-        Assert.Equal(new[] { 1, 2 }, items1);
-        Assert.Equal(new[] { 1, 2 }, items2); // Gets buffered items without error
+        ScenarioExpect.Equal(new[] { 1, 2 }, items1);
+        ScenarioExpect.Equal(new[] { 1, 2 }, items2); // Gets buffered items without error
     }
 
+    [Scenario("SharedAsyncFlow Cancellation StopsEnumeration")]
     [Fact]
     public async Task SharedAsyncFlow_Cancellation_StopsEnumeration()
     {
@@ -426,7 +449,7 @@ public sealed class AsyncReplayBufferTests
             cts.Cancel();
 
             // Next attempt should throw
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () =>
+            await ScenarioExpect.ThrowsAnyAsync<OperationCanceledException>(async () =>
             {
                 while (await enumerator.MoveNextAsync())
                     items.Add(enumerator.Current);
@@ -437,9 +460,10 @@ public sealed class AsyncReplayBufferTests
             await enumerator.DisposeAsync();
         }
 
-        Assert.Single(items);
+        ScenarioExpect.Single(items);
     }
 
+    [Scenario("SharedAsyncFlow TryGetAsync NegativeIndex ReturnsFalse")]
     [Fact]
     public async Task SharedAsyncFlow_TryGetAsync_NegativeIndex_ReturnsFalse()
     {
@@ -452,9 +476,10 @@ public sealed class AsyncReplayBufferTests
         await foreach (var v in fork)
             items.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3 }, items);
+        ScenarioExpect.Equal(new[] { 1, 2, 3 }, items);
     }
 
+    [Scenario("SharedAsyncFlow MultipleConcurrentWaiters")]
     [Fact]
     public async Task SharedAsyncFlow_MultipleConcurrentWaiters()
     {
@@ -473,10 +498,11 @@ public sealed class AsyncReplayBufferTests
 
         foreach (var result in results)
         {
-            Assert.Equal(new[] { 1, 2, 3, 4, 5 }, result);
+            ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, result);
         }
     }
 
+    [Scenario("SharedAsyncFlow EmptySource AllForksEmpty")]
     [Fact]
     public async Task SharedAsyncFlow_EmptySource_AllForksEmpty()
     {
@@ -491,10 +517,11 @@ public sealed class AsyncReplayBufferTests
         await foreach (var v in fork1) items1.Add(v);
         await foreach (var v in fork2) items2.Add(v);
 
-        Assert.Empty(items1);
-        Assert.Empty(items2);
+        ScenarioExpect.Empty(items1);
+        ScenarioExpect.Empty(items2);
     }
 
+    [Scenario("SharedAsyncFlow SingleItem AllForksGetIt")]
     [Fact]
     public async Task SharedAsyncFlow_SingleItem_AllForksGetIt()
     {
@@ -512,11 +539,12 @@ public sealed class AsyncReplayBufferTests
         await foreach (var v in fork2) items2.Add(v);
         await foreach (var v in fork3) items3.Add(v);
 
-        Assert.Equal(new[] { 1 }, items1);
-        Assert.Equal(new[] { 1 }, items2);
-        Assert.Equal(new[] { 1 }, items3);
+        ScenarioExpect.Equal(new[] { 1 }, items1);
+        ScenarioExpect.Equal(new[] { 1 }, items2);
+        ScenarioExpect.Equal(new[] { 1 }, items3);
     }
 
+    [Scenario("SharedAsyncFlow SequentialForkConsumption")]
     [Fact]
     public async Task SharedAsyncFlow_SequentialForkConsumption()
     {
@@ -540,11 +568,12 @@ public sealed class AsyncReplayBufferTests
         var items2 = new List<int>();
         await foreach (var v in fork2) items2.Add(v);
 
-        Assert.Equal(1, enumerationCount); // Source should only be enumerated once
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, items1);
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, items2);
+        ScenarioExpect.Equal(1, enumerationCount); // Source should only be enumerated once
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, items1);
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, items2);
     }
 
+    [Scenario("SharedAsyncFlow InterleavedForkConsumption")]
     [Fact]
     public async Task SharedAsyncFlow_InterleavedForkConsumption()
     {
@@ -556,26 +585,26 @@ public sealed class AsyncReplayBufferTests
         try
         {
             // Interleave consumption
-            Assert.True(await fork1.MoveNextAsync());
-            Assert.Equal(1, fork1.Current);
+            ScenarioExpect.True(await fork1.MoveNextAsync());
+            ScenarioExpect.Equal(1, fork1.Current);
 
-            Assert.True(await fork2.MoveNextAsync());
-            Assert.Equal(1, fork2.Current);
+            ScenarioExpect.True(await fork2.MoveNextAsync());
+            ScenarioExpect.Equal(1, fork2.Current);
 
-            Assert.True(await fork2.MoveNextAsync());
-            Assert.Equal(2, fork2.Current);
+            ScenarioExpect.True(await fork2.MoveNextAsync());
+            ScenarioExpect.Equal(2, fork2.Current);
 
-            Assert.True(await fork1.MoveNextAsync());
-            Assert.Equal(2, fork1.Current);
+            ScenarioExpect.True(await fork1.MoveNextAsync());
+            ScenarioExpect.Equal(2, fork1.Current);
 
-            Assert.True(await fork1.MoveNextAsync());
-            Assert.Equal(3, fork1.Current);
+            ScenarioExpect.True(await fork1.MoveNextAsync());
+            ScenarioExpect.Equal(3, fork1.Current);
 
-            Assert.True(await fork2.MoveNextAsync());
-            Assert.Equal(3, fork2.Current);
+            ScenarioExpect.True(await fork2.MoveNextAsync());
+            ScenarioExpect.Equal(3, fork2.Current);
 
-            Assert.False(await fork1.MoveNextAsync());
-            Assert.False(await fork2.MoveNextAsync());
+            ScenarioExpect.False(await fork1.MoveNextAsync());
+            ScenarioExpect.False(await fork2.MoveNextAsync());
         }
         finally
         {

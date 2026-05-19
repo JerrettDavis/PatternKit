@@ -1,9 +1,11 @@
 using PatternKit.Examples.TemplateDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.TemplateDemo;
 
 public sealed class TemplateDemoTests
 {
+    [Scenario("DataProcessor Execute Counts Words")]
     [Fact]
     public void DataProcessor_Execute_Counts_Words()
     {
@@ -11,9 +13,10 @@ public sealed class TemplateDemoTests
 
         var result = processor.Execute("The quick brown fox");
 
-        Assert.Equal(4, result);
+        ScenarioExpect.Equal(4, result);
     }
 
+    [Scenario("DataProcessor Execute Handles Multiple Spaces")]
     [Fact]
     public void DataProcessor_Execute_Handles_Multiple_Spaces()
     {
@@ -21,9 +24,10 @@ public sealed class TemplateDemoTests
 
         var result = processor.Execute("One   two    three");
 
-        Assert.Equal(3, result);
+        ScenarioExpect.Equal(3, result);
     }
 
+    [Scenario("DataProcessor Execute Empty String")]
     [Fact]
     public void DataProcessor_Execute_Empty_String()
     {
@@ -31,9 +35,10 @@ public sealed class TemplateDemoTests
 
         var result = processor.Execute("");
 
-        Assert.Equal(0, result);
+        ScenarioExpect.Equal(0, result);
     }
 
+    [Scenario("TemplateMethodDemo Run Executes Without Errors")]
     [Fact]
     public void TemplateMethodDemo_Run_Executes_Without_Errors()
     {
@@ -43,6 +48,7 @@ public sealed class TemplateDemoTests
 
 public sealed class TemplateFluentDemoTests
 {
+    [Scenario("TemplateFluentDemo Run Executes Without Errors")]
     [Fact]
     public void TemplateFluentDemo_Run_Executes_Without_Errors()
     {
@@ -52,6 +58,7 @@ public sealed class TemplateFluentDemoTests
 
 public sealed class AsyncDataPipelineTests
 {
+    [Scenario("AsyncDataPipeline ExecuteAsync Processes Request")]
     [Fact]
     public async Task AsyncDataPipeline_ExecuteAsync_Processes_Request()
     {
@@ -59,9 +66,10 @@ public sealed class AsyncDataPipelineTests
 
         var result = await pipeline.ExecuteAsync(42);
 
-        Assert.Equal("PAYLOAD:42", result);
+        ScenarioExpect.Equal("PAYLOAD:42", result);
     }
 
+    [Scenario("AsyncDataPipeline ExecuteAsync Cancellation")]
     [Fact]
     public async Task AsyncDataPipeline_ExecuteAsync_Cancellation()
     {
@@ -69,13 +77,14 @@ public sealed class AsyncDataPipelineTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+        await ScenarioExpect.ThrowsAnyAsync<OperationCanceledException>(
             () => pipeline.ExecuteAsync(1, cts.Token));
     }
 }
 
 public sealed class TemplateAsyncFluentDemoTests
 {
+    [Scenario("TemplateAsyncFluentDemo RunAsync Executes Without Errors")]
     [Fact]
     public async Task TemplateAsyncFluentDemo_RunAsync_Executes_Without_Errors()
     {

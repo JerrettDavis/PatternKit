@@ -17,6 +17,7 @@ using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -100,6 +101,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateVisitorAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, false, false }
     };
 
+    [Scenario("AttributeUsage Is Declared As Expected")]
     [Theory]
     [MemberData(nameof(AttributeUsageCases))]
     public void AttributeUsage_Is_Declared_As_Expected(
@@ -108,14 +110,15 @@ public sealed class AbstractionsAttributeCoverageTests
         bool allowMultiple,
         bool inherited)
     {
-        var usage = Assert.Single(attributeType.GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+        var usage = ScenarioExpect.Single(attributeType.GetCustomAttributes(typeof(AttributeUsageAttribute), false)
             .Cast<AttributeUsageAttribute>());
 
-        Assert.Equal(validOn, usage.ValidOn);
-        Assert.Equal(allowMultiple, usage.AllowMultiple);
-        Assert.Equal(inherited, usage.Inherited);
+        ScenarioExpect.Equal(validOn, usage.ValidOn);
+        ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
+        ScenarioExpect.Equal(inherited, usage.Inherited);
     }
 
+    [Scenario("Adapter Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Adapter_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -130,16 +133,17 @@ public sealed class AbstractionsAttributeCoverageTests
         };
         var map = new AdapterMapAttribute { TargetMember = nameof(IDisposable.Dispose) };
 
-        Assert.Equal(typeof(IDisposable), generator.Target);
-        Assert.Equal(typeof(string), generator.Adaptee);
-        Assert.Equal("StringDisposableAdapter", generator.AdapterTypeName);
-        Assert.Equal(AdapterMissingMapPolicy.ThrowingStub, generator.MissingMap);
-        Assert.False(generator.Sealed);
-        Assert.Equal("Demo.Adapters", generator.Namespace);
-        Assert.Equal(nameof(IDisposable.Dispose), map.TargetMember);
+        ScenarioExpect.Equal(typeof(IDisposable), generator.Target);
+        ScenarioExpect.Equal(typeof(string), generator.Adaptee);
+        ScenarioExpect.Equal("StringDisposableAdapter", generator.AdapterTypeName);
+        ScenarioExpect.Equal(AdapterMissingMapPolicy.ThrowingStub, generator.MissingMap);
+        ScenarioExpect.False(generator.Sealed);
+        ScenarioExpect.Equal("Demo.Adapters", generator.Namespace);
+        ScenarioExpect.Equal(nameof(IDisposable.Dispose), map.TargetMember);
         AssertEnumValues(AdapterMissingMapPolicy.Error, AdapterMissingMapPolicy.ThrowingStub, AdapterMissingMapPolicy.Ignore);
     }
 
+    [Scenario("Bridge Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Bridge_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -151,14 +155,15 @@ public sealed class AbstractionsAttributeCoverageTests
             DefaultTypeName = "FileBackend"
         };
 
-        Assert.Equal("StorageBackend", implementor.ImplementorTypeName);
-        Assert.Equal(typeof(IDisposable), abstraction.ImplementorType);
-        Assert.Equal("Backend", abstraction.ImplementorPropertyName);
-        Assert.True(abstraction.GenerateDefault);
-        Assert.Equal("FileBackend", abstraction.DefaultTypeName);
-        Assert.IsType<BridgeIgnoreAttribute>(new BridgeIgnoreAttribute());
+        ScenarioExpect.Equal("StorageBackend", implementor.ImplementorTypeName);
+        ScenarioExpect.Equal(typeof(IDisposable), abstraction.ImplementorType);
+        ScenarioExpect.Equal("Backend", abstraction.ImplementorPropertyName);
+        ScenarioExpect.True(abstraction.GenerateDefault);
+        ScenarioExpect.Equal("FileBackend", abstraction.DefaultTypeName);
+        ScenarioExpect.IsType<BridgeIgnoreAttribute>(new BridgeIgnoreAttribute());
     }
 
+    [Scenario("Chain And Command Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Chain_And_Command_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -178,24 +183,25 @@ public sealed class AbstractionsAttributeCoverageTests
         };
         var commandHandler = new CommandHandlerAttribute { CommandType = typeof(string) };
 
-        Assert.Equal(ChainModel.Pipeline, chain.Model);
-        Assert.Equal("Run", chain.HandleMethodName);
-        Assert.Equal("TryRun", chain.TryHandleMethodName);
-        Assert.Equal(7, handler.Order);
-        Assert.Equal("Audit", handler.Name);
-        Assert.Equal("SubmitOrder", command.CommandTypeName);
-        Assert.False(command.GenerateAsync);
-        Assert.True(command.ForceAsync);
-        Assert.True(command.GenerateUndo);
-        Assert.Equal(typeof(string), commandHandler.CommandType);
-        Assert.IsType<ChainDefaultAttribute>(new ChainDefaultAttribute());
-        Assert.IsType<ChainTerminalAttribute>(new ChainTerminalAttribute());
-        Assert.IsType<CommandHostAttribute>(new CommandHostAttribute());
-        Assert.IsType<CommandCaseAttribute>(new CommandCaseAttribute());
-        Assert.IsType<CommandUndoAttribute>(new CommandUndoAttribute());
+        ScenarioExpect.Equal(ChainModel.Pipeline, chain.Model);
+        ScenarioExpect.Equal("Run", chain.HandleMethodName);
+        ScenarioExpect.Equal("TryRun", chain.TryHandleMethodName);
+        ScenarioExpect.Equal(7, handler.Order);
+        ScenarioExpect.Equal("Audit", handler.Name);
+        ScenarioExpect.Equal("SubmitOrder", command.CommandTypeName);
+        ScenarioExpect.False(command.GenerateAsync);
+        ScenarioExpect.True(command.ForceAsync);
+        ScenarioExpect.True(command.GenerateUndo);
+        ScenarioExpect.Equal(typeof(string), commandHandler.CommandType);
+        ScenarioExpect.IsType<ChainDefaultAttribute>(new ChainDefaultAttribute());
+        ScenarioExpect.IsType<ChainTerminalAttribute>(new ChainTerminalAttribute());
+        ScenarioExpect.IsType<CommandHostAttribute>(new CommandHostAttribute());
+        ScenarioExpect.IsType<CommandCaseAttribute>(new CommandCaseAttribute());
+        ScenarioExpect.IsType<CommandUndoAttribute>(new CommandUndoAttribute());
         AssertEnumValues(ChainModel.Responsibility, ChainModel.Pipeline);
     }
 
+    [Scenario("Composite Composer And Decorator Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Composite_Composer_And_Decorator_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -225,32 +231,33 @@ public sealed class AbstractionsAttributeCoverageTests
             ForceAsync = true
         };
 
-        Assert.Equal("NodeBase", composite.ComponentBaseName);
-        Assert.Equal("BranchBase", composite.CompositeBaseName);
-        Assert.Equal("Items", composite.ChildrenPropertyName);
-        Assert.Equal(CompositeChildrenStorage.ImmutableArray, composite.Storage);
-        Assert.True(composite.GenerateTraversalHelpers);
-        Assert.Equal("Run", composer.InvokeMethodName);
-        Assert.Equal("RunAsync", composer.InvokeAsyncMethodName);
-        Assert.True(composer.GenerateAsync);
-        Assert.True(composer.ForceAsync);
-        Assert.Equal(ComposerWrapOrder.InnerFirst, composer.WrapOrder);
-        Assert.Equal(12, step.Order);
-        Assert.Equal("Validate", step.Name);
-        Assert.Equal("StorageDecorator", decorator.BaseTypeName);
-        Assert.Equal("StorageDecorators", decorator.HelpersTypeName);
-        Assert.Equal(DecoratorCompositionMode.PipelineNextStyle, decorator.Composition);
-        Assert.True(decorator.GenerateAsync);
-        Assert.True(decorator.ForceAsync);
-        Assert.IsType<CompositeIgnoreAttribute>(new CompositeIgnoreAttribute());
-        Assert.IsType<ComposeTerminalAttribute>(new ComposeTerminalAttribute());
-        Assert.IsType<ComposeIgnoreAttribute>(new ComposeIgnoreAttribute());
-        Assert.IsType<DecoratorIgnoreAttribute>(new DecoratorIgnoreAttribute());
+        ScenarioExpect.Equal("NodeBase", composite.ComponentBaseName);
+        ScenarioExpect.Equal("BranchBase", composite.CompositeBaseName);
+        ScenarioExpect.Equal("Items", composite.ChildrenPropertyName);
+        ScenarioExpect.Equal(CompositeChildrenStorage.ImmutableArray, composite.Storage);
+        ScenarioExpect.True(composite.GenerateTraversalHelpers);
+        ScenarioExpect.Equal("Run", composer.InvokeMethodName);
+        ScenarioExpect.Equal("RunAsync", composer.InvokeAsyncMethodName);
+        ScenarioExpect.True(composer.GenerateAsync);
+        ScenarioExpect.True(composer.ForceAsync);
+        ScenarioExpect.Equal(ComposerWrapOrder.InnerFirst, composer.WrapOrder);
+        ScenarioExpect.Equal(12, step.Order);
+        ScenarioExpect.Equal("Validate", step.Name);
+        ScenarioExpect.Equal("StorageDecorator", decorator.BaseTypeName);
+        ScenarioExpect.Equal("StorageDecorators", decorator.HelpersTypeName);
+        ScenarioExpect.Equal(DecoratorCompositionMode.PipelineNextStyle, decorator.Composition);
+        ScenarioExpect.True(decorator.GenerateAsync);
+        ScenarioExpect.True(decorator.ForceAsync);
+        ScenarioExpect.IsType<CompositeIgnoreAttribute>(new CompositeIgnoreAttribute());
+        ScenarioExpect.IsType<ComposeTerminalAttribute>(new ComposeTerminalAttribute());
+        ScenarioExpect.IsType<ComposeIgnoreAttribute>(new ComposeIgnoreAttribute());
+        ScenarioExpect.IsType<DecoratorIgnoreAttribute>(new DecoratorIgnoreAttribute());
         AssertEnumValues(CompositeChildrenStorage.List, CompositeChildrenStorage.ImmutableArray);
         AssertEnumValues(ComposerWrapOrder.OuterFirst, ComposerWrapOrder.InnerFirst);
         AssertEnumValues(DecoratorCompositionMode.None, DecoratorCompositionMode.HelpersOnly, DecoratorCompositionMode.PipelineNextStyle);
     }
 
+    [Scenario("Facade Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Facade_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -269,21 +276,22 @@ public sealed class AbstractionsAttributeCoverageTests
         var expose = new FacadeExposeAttribute { MethodName = "Checkout" };
         var map = new FacadeMapAttribute { MemberName = "GetInvoice" };
 
-        Assert.Equal("BillingFacade", facade.FacadeTypeName);
-        Assert.False(facade.GenerateAsync);
-        Assert.True(facade.ForceAsync);
-        Assert.Equal(FacadeMissingMapPolicy.Stub, facade.MissingMap);
-        Assert.Equal("Billing.Client", facade.TargetTypeName);
-        Assert.Equal(["CreateInvoice"], facade.Include);
-        Assert.Equal(["DeleteInvoice"], facade.Exclude);
-        Assert.Equal("Billing", facade.MemberPrefix);
-        Assert.Equal("_billing", facade.FieldName);
-        Assert.Equal("Checkout", expose.MethodName);
-        Assert.Equal("GetInvoice", map.MemberName);
-        Assert.IsType<FacadeIgnoreAttribute>(new FacadeIgnoreAttribute());
+        ScenarioExpect.Equal("BillingFacade", facade.FacadeTypeName);
+        ScenarioExpect.False(facade.GenerateAsync);
+        ScenarioExpect.True(facade.ForceAsync);
+        ScenarioExpect.Equal(FacadeMissingMapPolicy.Stub, facade.MissingMap);
+        ScenarioExpect.Equal("Billing.Client", facade.TargetTypeName);
+        ScenarioExpect.Equal(["CreateInvoice"], facade.Include);
+        ScenarioExpect.Equal(["DeleteInvoice"], facade.Exclude);
+        ScenarioExpect.Equal("Billing", facade.MemberPrefix);
+        ScenarioExpect.Equal("_billing", facade.FieldName);
+        ScenarioExpect.Equal("Checkout", expose.MethodName);
+        ScenarioExpect.Equal("GetInvoice", map.MemberName);
+        ScenarioExpect.IsType<FacadeIgnoreAttribute>(new FacadeIgnoreAttribute());
         AssertEnumValues(FacadeMissingMapPolicy.Error, FacadeMissingMapPolicy.Stub, FacadeMissingMapPolicy.Ignore);
     }
 
+    [Scenario("Flyweight Iterator And Messaging Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Flyweight_Iterator_And_Messaging_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -326,56 +334,57 @@ public sealed class AbstractionsAttributeCoverageTests
         };
         var route = new ContentRouteAttribute("priority", 4, "IsPriority");
 
-        Assert.Equal(typeof(string), flyweight.KeyType);
-        Assert.Equal("SymbolCache", flyweight.CacheTypeName);
-        Assert.Equal(128, flyweight.Capacity);
-        Assert.Equal(FlyweightEviction.Lru, flyweight.Eviction);
-        Assert.Equal(FlyweightThreadingPolicy.Concurrent, flyweight.Threading);
-        Assert.False(flyweight.GenerateTryGet);
-        Assert.False(iterator.GenerateEnumerator);
-        Assert.False(iterator.GenerateTryMoveNext);
-        Assert.Equal("Demo.Dispatching", dispatcher.Namespace);
-        Assert.Equal("DemoDispatcher", dispatcher.Name);
-        Assert.True(dispatcher.IncludeObjectOverloads);
-        Assert.False(dispatcher.IncludeStreaming);
-        Assert.Equal(GeneratedVisibility.Internal, dispatcher.Visibility);
-        Assert.Equal(typeof(string), routingSlip.PayloadType);
-        Assert.Equal("Build", routingSlip.FactoryName);
-        Assert.Equal("BuildAsync", routingSlip.AsyncFactoryName);
-        Assert.Equal("validate", routingStep.Name);
-        Assert.Equal(10, routingStep.Order);
-        Assert.Equal(typeof(int), saga.StateType);
-        Assert.Equal("BuildSaga", saga.FactoryName);
-        Assert.Equal("BuildSagaAsync", saga.AsyncFactoryName);
-        Assert.Equal(typeof(decimal), sagaStep.MessageType);
-        Assert.Equal(11, sagaStep.Order);
-        Assert.Equal(typeof(string), router.PayloadType);
-        Assert.Equal(typeof(int), router.ResultType);
-        Assert.Equal("BuildRouter", router.FactoryName);
-        Assert.Equal("priority", route.Name);
-        Assert.Equal(4, route.Order);
-        Assert.Equal("IsPriority", route.PredicateMethodName);
-        Assert.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
-        Assert.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
-        Assert.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
-        Assert.Throws<ArgumentNullException>(() => new SagaStepAttribute(null!, 1));
-        Assert.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(null!, typeof(int)));
-        Assert.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
-        Assert.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
-        Assert.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
-        Assert.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
-        Assert.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
-        Assert.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
-        Assert.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
-        Assert.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());
-        Assert.IsType<DepthFirstAttribute>(new DepthFirstAttribute());
-        Assert.IsType<BreadthFirstAttribute>(new BreadthFirstAttribute());
-        Assert.IsType<TraversalChildrenAttribute>(new TraversalChildrenAttribute());
+        ScenarioExpect.Equal(typeof(string), flyweight.KeyType);
+        ScenarioExpect.Equal("SymbolCache", flyweight.CacheTypeName);
+        ScenarioExpect.Equal(128, flyweight.Capacity);
+        ScenarioExpect.Equal(FlyweightEviction.Lru, flyweight.Eviction);
+        ScenarioExpect.Equal(FlyweightThreadingPolicy.Concurrent, flyweight.Threading);
+        ScenarioExpect.False(flyweight.GenerateTryGet);
+        ScenarioExpect.False(iterator.GenerateEnumerator);
+        ScenarioExpect.False(iterator.GenerateTryMoveNext);
+        ScenarioExpect.Equal("Demo.Dispatching", dispatcher.Namespace);
+        ScenarioExpect.Equal("DemoDispatcher", dispatcher.Name);
+        ScenarioExpect.True(dispatcher.IncludeObjectOverloads);
+        ScenarioExpect.False(dispatcher.IncludeStreaming);
+        ScenarioExpect.Equal(GeneratedVisibility.Internal, dispatcher.Visibility);
+        ScenarioExpect.Equal(typeof(string), routingSlip.PayloadType);
+        ScenarioExpect.Equal("Build", routingSlip.FactoryName);
+        ScenarioExpect.Equal("BuildAsync", routingSlip.AsyncFactoryName);
+        ScenarioExpect.Equal("validate", routingStep.Name);
+        ScenarioExpect.Equal(10, routingStep.Order);
+        ScenarioExpect.Equal(typeof(int), saga.StateType);
+        ScenarioExpect.Equal("BuildSaga", saga.FactoryName);
+        ScenarioExpect.Equal("BuildSagaAsync", saga.AsyncFactoryName);
+        ScenarioExpect.Equal(typeof(decimal), sagaStep.MessageType);
+        ScenarioExpect.Equal(11, sagaStep.Order);
+        ScenarioExpect.Equal(typeof(string), router.PayloadType);
+        ScenarioExpect.Equal(typeof(int), router.ResultType);
+        ScenarioExpect.Equal("BuildRouter", router.FactoryName);
+        ScenarioExpect.Equal("priority", route.Name);
+        ScenarioExpect.Equal(4, route.Order);
+        ScenarioExpect.Equal("IsPriority", route.PredicateMethodName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new SagaStepAttribute(null!, 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
+        ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
+        ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
+        ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
+        ScenarioExpect.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
+        ScenarioExpect.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());
+        ScenarioExpect.IsType<DepthFirstAttribute>(new DepthFirstAttribute());
+        ScenarioExpect.IsType<BreadthFirstAttribute>(new BreadthFirstAttribute());
+        ScenarioExpect.IsType<TraversalChildrenAttribute>(new TraversalChildrenAttribute());
         AssertEnumValues(FlyweightEviction.None, FlyweightEviction.Lru);
         AssertEnumValues(FlyweightThreadingPolicy.SingleThreadedFast, FlyweightThreadingPolicy.Locking, FlyweightThreadingPolicy.Concurrent);
         AssertEnumValues(GeneratedVisibility.Public, GeneratedVisibility.Internal);
     }
 
+    [Scenario("Memento Prototype Observer Proxy And Singleton Attributes Expose Defaults And Configuration")]
     [Fact]
     public void Memento_Prototype_Observer_Proxy_And_Singleton_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -417,37 +426,37 @@ public sealed class AbstractionsAttributeCoverageTests
             InstancePropertyName = "Current"
         };
 
-        Assert.True(memento.GenerateCaretaker);
-        Assert.Equal(10, memento.Capacity);
-        Assert.Equal(MementoInclusionMode.ExplicitOnly, memento.InclusionMode);
-        Assert.False(memento.SkipDuplicates);
-        Assert.Equal(MementoCaptureStrategy.DeepCopy, mementoStrategy.Strategy);
-        Assert.Equal(PrototypeMode.DeepWhenPossible, prototype.Mode);
-        Assert.Equal("Copy", prototype.CloneMethodName);
-        Assert.True(prototype.IncludeExplicit);
-        Assert.Equal(PrototypeCloneStrategy.Clone, prototypeStrategy.Strategy);
-        Assert.Equal(typeof(string), observer.PayloadType);
-        Assert.Equal(ObserverThreadingPolicy.Concurrent, observer.Threading);
-        Assert.Equal(ObserverExceptionPolicy.Aggregate, observer.Exceptions);
-        Assert.Equal(ObserverOrderPolicy.Undefined, observer.Order);
-        Assert.False(observer.GenerateAsync);
-        Assert.True(observer.ForceAsync);
-        Assert.Equal("BillingProxy", proxy.ProxyTypeName);
-        Assert.Equal(ProxyInterceptorMode.Pipeline, proxy.InterceptorMode);
-        Assert.True(proxy.GenerateAsync);
-        Assert.True(proxy.ForceAsync);
-        Assert.Equal(ProxyExceptionPolicy.Swallow, proxy.Exceptions);
-        Assert.Equal(SingletonMode.Lazy, singleton.Mode);
-        Assert.Equal(SingletonThreading.SingleThreadedFast, singleton.Threading);
-        Assert.Equal("Current", singleton.InstancePropertyName);
-        Assert.IsType<MementoIgnoreAttribute>(new MementoIgnoreAttribute());
-        Assert.IsType<MementoIncludeAttribute>(new MementoIncludeAttribute());
-        Assert.IsType<ObserverHubAttribute>(new ObserverHubAttribute());
-        Assert.IsType<ObservedEventAttribute>(new ObservedEventAttribute());
-        Assert.IsType<PrototypeIgnoreAttribute>(new PrototypeIgnoreAttribute());
-        Assert.IsType<PrototypeIncludeAttribute>(new PrototypeIncludeAttribute());
-        Assert.IsType<ProxyIgnoreAttribute>(new ProxyIgnoreAttribute());
-        Assert.IsType<SingletonFactoryAttribute>(new SingletonFactoryAttribute());
+        ScenarioExpect.True(memento.GenerateCaretaker);
+        ScenarioExpect.Equal(10, memento.Capacity);
+        ScenarioExpect.Equal(MementoInclusionMode.ExplicitOnly, memento.InclusionMode);
+        ScenarioExpect.False(memento.SkipDuplicates);
+        ScenarioExpect.Equal(MementoCaptureStrategy.DeepCopy, mementoStrategy.Strategy);
+        ScenarioExpect.Equal(PrototypeMode.DeepWhenPossible, prototype.Mode);
+        ScenarioExpect.Equal("Copy", prototype.CloneMethodName);
+        ScenarioExpect.True(prototype.IncludeExplicit);
+        ScenarioExpect.Equal(PrototypeCloneStrategy.Clone, prototypeStrategy.Strategy);
+        ScenarioExpect.Equal(typeof(string), observer.PayloadType);
+        ScenarioExpect.Equal(ObserverThreadingPolicy.Concurrent, observer.Threading);
+        ScenarioExpect.Equal(ObserverExceptionPolicy.Aggregate, observer.Exceptions);
+        ScenarioExpect.Equal(ObserverOrderPolicy.Undefined, observer.Order);
+        ScenarioExpect.False(observer.GenerateAsync);
+        ScenarioExpect.True(observer.ForceAsync);
+        ScenarioExpect.Equal("BillingProxy", proxy.ProxyTypeName);
+        ScenarioExpect.Equal(ProxyInterceptorMode.Pipeline, proxy.InterceptorMode);
+        ScenarioExpect.True(proxy.GenerateAsync);
+        ScenarioExpect.True(proxy.ForceAsync);
+        ScenarioExpect.Equal(ProxyExceptionPolicy.Swallow, proxy.Exceptions);
+        ScenarioExpect.Equal(SingletonMode.Lazy, singleton.Mode);
+        ScenarioExpect.Equal(SingletonThreading.SingleThreadedFast, singleton.Threading);
+        ScenarioExpect.Equal("Current", singleton.InstancePropertyName);
+        ScenarioExpect.IsType<MementoIgnoreAttribute>(new MementoIgnoreAttribute());
+        ScenarioExpect.IsType<MementoIncludeAttribute>(new MementoIncludeAttribute());
+        ScenarioExpect.IsType<ObserverHubAttribute>(new ObserverHubAttribute());
+        ScenarioExpect.IsType<ObservedEventAttribute>(new ObservedEventAttribute());
+        ScenarioExpect.IsType<PrototypeIgnoreAttribute>(new PrototypeIgnoreAttribute());
+        ScenarioExpect.IsType<PrototypeIncludeAttribute>(new PrototypeIncludeAttribute());
+        ScenarioExpect.IsType<ProxyIgnoreAttribute>(new ProxyIgnoreAttribute());
+        ScenarioExpect.IsType<SingletonFactoryAttribute>(new SingletonFactoryAttribute());
         AssertEnumValues(MementoInclusionMode.IncludeAll, MementoInclusionMode.ExplicitOnly);
         AssertEnumValues(MementoCaptureStrategy.ByReference, MementoCaptureStrategy.Clone, MementoCaptureStrategy.DeepCopy, MementoCaptureStrategy.Custom);
         AssertEnumValues(PrototypeMode.ShallowWithWarnings, PrototypeMode.Shallow, PrototypeMode.DeepWhenPossible);
@@ -461,6 +470,7 @@ public sealed class AbstractionsAttributeCoverageTests
         AssertEnumValues(SingletonThreading.ThreadSafe, SingletonThreading.SingleThreadedFast);
     }
 
+    [Scenario("State And Template Attributes Expose Defaults And Configuration")]
     [Fact]
     public void State_And_Template_Attributes_Expose_Defaults_And_Configuration()
     {
@@ -505,38 +515,39 @@ public sealed class AbstractionsAttributeCoverageTests
             StepOrder = 3
         };
 
-        Assert.Equal(typeof(TestState), stateMachine.StateType);
-        Assert.Equal(typeof(TestTrigger), stateMachine.TriggerType);
-        Assert.Equal("Apply", stateMachine.FireMethodName);
-        Assert.Equal("ApplyAsync", stateMachine.FireAsyncMethodName);
-        Assert.Equal("CanApply", stateMachine.CanFireMethodName);
-        Assert.True(stateMachine.GenerateAsync);
-        Assert.True(stateMachine.ForceAsync);
-        Assert.Equal(StateMachineInvalidTriggerPolicy.ReturnFalse, stateMachine.InvalidTrigger);
-        Assert.Equal(StateMachineGuardFailurePolicy.Ignore, stateMachine.GuardFailure);
-        Assert.Equal(TestState.Draft, transition.From);
-        Assert.Equal(TestTrigger.Publish, transition.Trigger);
-        Assert.Equal(TestState.Published, transition.To);
-        Assert.Equal(TestState.Draft, guard.From);
-        Assert.Equal(TestTrigger.Publish, guard.Trigger);
-        Assert.Equal(TestState.Published, entry.State);
-        Assert.Equal(TestState.Draft, exit.State);
-        Assert.Equal("Run", template.ExecuteMethodName);
-        Assert.Equal("RunAsync", template.ExecuteAsyncMethodName);
-        Assert.True(template.GenerateAsync);
-        Assert.True(template.ForceAsync);
-        Assert.Equal(TemplateErrorPolicy.HandleAndContinue, template.ErrorPolicy);
-        Assert.Equal(3, step.Order);
-        Assert.Equal("Persist", step.Name);
-        Assert.True(step.Optional);
-        Assert.Equal(HookPoint.OnError, hook.HookPoint);
-        Assert.Equal(3, hook.StepOrder);
+        ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
+        ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
+        ScenarioExpect.Equal("Apply", stateMachine.FireMethodName);
+        ScenarioExpect.Equal("ApplyAsync", stateMachine.FireAsyncMethodName);
+        ScenarioExpect.Equal("CanApply", stateMachine.CanFireMethodName);
+        ScenarioExpect.True(stateMachine.GenerateAsync);
+        ScenarioExpect.True(stateMachine.ForceAsync);
+        ScenarioExpect.Equal(StateMachineInvalidTriggerPolicy.ReturnFalse, stateMachine.InvalidTrigger);
+        ScenarioExpect.Equal(StateMachineGuardFailurePolicy.Ignore, stateMachine.GuardFailure);
+        ScenarioExpect.Equal(TestState.Draft, transition.From);
+        ScenarioExpect.Equal(TestTrigger.Publish, transition.Trigger);
+        ScenarioExpect.Equal(TestState.Published, transition.To);
+        ScenarioExpect.Equal(TestState.Draft, guard.From);
+        ScenarioExpect.Equal(TestTrigger.Publish, guard.Trigger);
+        ScenarioExpect.Equal(TestState.Published, entry.State);
+        ScenarioExpect.Equal(TestState.Draft, exit.State);
+        ScenarioExpect.Equal("Run", template.ExecuteMethodName);
+        ScenarioExpect.Equal("RunAsync", template.ExecuteAsyncMethodName);
+        ScenarioExpect.True(template.GenerateAsync);
+        ScenarioExpect.True(template.ForceAsync);
+        ScenarioExpect.Equal(TemplateErrorPolicy.HandleAndContinue, template.ErrorPolicy);
+        ScenarioExpect.Equal(3, step.Order);
+        ScenarioExpect.Equal("Persist", step.Name);
+        ScenarioExpect.True(step.Optional);
+        ScenarioExpect.Equal(HookPoint.OnError, hook.HookPoint);
+        ScenarioExpect.Equal(3, hook.StepOrder);
         AssertEnumValues(StateMachineInvalidTriggerPolicy.Throw, StateMachineInvalidTriggerPolicy.Ignore, StateMachineInvalidTriggerPolicy.ReturnFalse);
         AssertEnumValues(StateMachineGuardFailurePolicy.Throw, StateMachineGuardFailurePolicy.Ignore, StateMachineGuardFailurePolicy.ReturnFalse);
         AssertEnumValues(HookPoint.BeforeAll, HookPoint.AfterAll, HookPoint.OnError);
         AssertEnumValues(TemplateErrorPolicy.Rethrow, TemplateErrorPolicy.HandleAndContinue);
     }
 
+    [Scenario("Visitor Attribute Exposes Defaults And Configuration")]
     [Fact]
     public void Visitor_Attribute_Exposes_Defaults_And_Configuration()
     {
@@ -549,14 +560,14 @@ public sealed class AbstractionsAttributeCoverageTests
             AutoDiscoverDerivedTypes = false
         };
 
-        Assert.Null(defaults.VisitorInterfaceName);
-        Assert.True(defaults.GenerateAsync);
-        Assert.True(defaults.GenerateActions);
-        Assert.True(defaults.AutoDiscoverDerivedTypes);
-        Assert.Equal("IWorkflowNodeVisitor", configured.VisitorInterfaceName);
-        Assert.False(configured.GenerateAsync);
-        Assert.False(configured.GenerateActions);
-        Assert.False(configured.AutoDiscoverDerivedTypes);
+        ScenarioExpect.Null(defaults.VisitorInterfaceName);
+        ScenarioExpect.True(defaults.GenerateAsync);
+        ScenarioExpect.True(defaults.GenerateActions);
+        ScenarioExpect.True(defaults.AutoDiscoverDerivedTypes);
+        ScenarioExpect.Equal("IWorkflowNodeVisitor", configured.VisitorInterfaceName);
+        ScenarioExpect.False(configured.GenerateAsync);
+        ScenarioExpect.False(configured.GenerateActions);
+        ScenarioExpect.False(configured.AutoDiscoverDerivedTypes);
     }
 
     private static void AssertEnumValues<TEnum>(params TEnum[] values)
@@ -564,7 +575,7 @@ public sealed class AbstractionsAttributeCoverageTests
     {
         foreach (var value in values)
         {
-            Assert.True(Enum.IsDefined(value), $"{typeof(TEnum).Name}.{value} should be defined.");
+            ScenarioExpect.True(Enum.IsDefined(value), $"{typeof(TEnum).Name}.{value} should be defined.");
         }
     }
 }

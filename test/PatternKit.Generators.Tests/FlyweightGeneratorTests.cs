@@ -1,9 +1,11 @@
 using PatternKit.Generators.Flyweight;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class FlyweightGeneratorTests
 {
+    [Scenario("GeneratesFlyweightCacheWithLru")]
     [Fact]
     public void GeneratesFlyweightCacheWithLru()
     {
@@ -24,17 +26,18 @@ public class FlyweightGeneratorTests
         var gen = new FlyweightGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Glyph.Flyweight.g.cs").SourceText.ToString();
-        Assert.Contains("public sealed partial class GlyphCache", generated);
-        Assert.Contains("public global::TestNamespace.Glyph Get(string key)", generated);
-        Assert.Contains("public bool TryGet(string key, out global::TestNamespace.Glyph value)", generated);
-        Assert.Contains("private void Trim()", generated);
+        ScenarioExpect.Contains("public sealed partial class GlyphCache", generated);
+        ScenarioExpect.Contains("public global::TestNamespace.Glyph Get(string key)", generated);
+        ScenarioExpect.Contains("public bool TryGet(string key, out global::TestNamespace.Glyph value)", generated);
+        ScenarioExpect.Contains("private void Trim()", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsMissingFactory")]
     [Fact]
     public void ReportsMissingFactory()
     {
@@ -52,9 +55,10 @@ public class FlyweightGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKFLY002");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKFLY002");
     }
 
+    [Scenario("ReportsInvalidLruConfiguration")]
     [Fact]
     public void ReportsInvalidLruConfiguration()
     {
@@ -76,9 +80,10 @@ public class FlyweightGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diags = result.Results.SelectMany(r => r.Diagnostics);
-        Assert.Contains(diags, d => d.Id == "PKFLY006");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKFLY006");
     }
 
+    [Scenario("ReportsNonPartialAndNonStaticFactory")]
     [Fact]
     public void ReportsNonPartialAndNonStaticFactory()
     {
@@ -107,7 +112,7 @@ public class FlyweightGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
         var diags = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diags, d => d.Id == "PKFLY001");
-        Assert.Contains(diags, d => d.Id == "PKFLY004");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKFLY001");
+        ScenarioExpect.Contains(diags, d => d.Id == "PKFLY004");
     }
 }

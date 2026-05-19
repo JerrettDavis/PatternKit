@@ -1,9 +1,11 @@
 using PatternKit.Generators.Command;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class CommandGeneratorTests
 {
+    [Scenario("GeneratesCommandExecutor")]
     [Fact]
     public void GeneratesCommandExecutor()
     {
@@ -27,15 +29,16 @@ public class CommandGeneratorTests
         var gen = new CommandGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "RenameUser.Command.g.cs").SourceText.ToString();
-        Assert.Contains("public readonly partial struct RenameUserCommand", generated);
-        Assert.Contains("public static void Execute(global::TestNamespace.UserService handler, in global::TestNamespace.RenameUser command)", generated);
+        ScenarioExpect.Contains("public readonly partial struct RenameUserCommand", generated);
+        ScenarioExpect.Contains("public static void Execute(global::TestNamespace.UserService handler, in global::TestNamespace.RenameUser command)", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsMissingHandler")]
     [Fact]
     public void ReportsMissingHandler()
     {
@@ -51,9 +54,10 @@ public class CommandGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReportsMissingHandler));
         var gen = new CommandGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKCMD002");
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKCMD002");
     }
 
+    [Scenario("GeneratesAsyncCommandExecutorWithCancellationToken")]
     [Fact]
     public void GeneratesAsyncCommandExecutorWithCancellationToken()
     {
@@ -78,13 +82,14 @@ public class CommandGeneratorTests
         var gen = new CommandGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "RefreshUser.Command.g.cs").SourceText.ToString();
-        Assert.Contains("public static global::System.Threading.Tasks.ValueTask ExecuteAsync", generated);
-        Assert.Contains("handler.Handle(command, ct)", generated);
-        Assert.True(updated.Emit(Stream.Null).Success);
+        ScenarioExpect.Contains("public static global::System.Threading.Tasks.ValueTask ExecuteAsync", generated);
+        ScenarioExpect.Contains("handler.Handle(command, ct)", generated);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
     }
 
+    [Scenario("ReportsCommandShapeDiagnostics")]
     [Theory]
     [InlineData("public readonly record struct RenameUser(string NewName);", "PKCMD001")]
     [InlineData("""
@@ -117,6 +122,6 @@ public class CommandGeneratorTests
         var gen = new CommandGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
     }
 }

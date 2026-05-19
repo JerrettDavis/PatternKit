@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class ComposerGeneratorTests
 {
+    [Scenario("BasicSyncPipeline GeneratesCorrectly")]
     [Fact]
     public void BasicSyncPipeline_GeneratesCorrectly()
     {
@@ -43,21 +45,22 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("RequestPipeline.Composer.g.cs", names);
+        ScenarioExpect.Contains("RequestPipeline.Composer.g.cs", names);
 
         // Verify the generated source contains Invoke method
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
+        ScenarioExpect.Contains("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AsyncPipeline WithValueTask GeneratesCorrectly")]
     [Fact]
     public void AsyncPipeline_WithValueTask_GeneratesCorrectly()
     {
@@ -95,23 +98,24 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("AsyncRequestPipeline.Composer.g.cs", names);
+        ScenarioExpect.Contains("AsyncRequestPipeline.Composer.g.cs", names);
 
         // Verify the generated source contains InvokeAsync method
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("InvokeAsync", generatedSource);
-        Assert.Contains("ValueTask", generatedSource);
-        Assert.Contains("CancellationToken", generatedSource);
+        ScenarioExpect.Contains("InvokeAsync", generatedSource);
+        ScenarioExpect.Contains("ValueTask", generatedSource);
+        ScenarioExpect.Contains("CancellationToken", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("NotPartial ProducesDiagnostic")]
     [Fact]
     public void NotPartial_ProducesDiagnostic()
     {
@@ -140,10 +144,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM001 diagnostic
         var diagnostics = result.Results[0].Diagnostics;
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM001");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM001");
     }
 
+    [Scenario("NoSteps ProducesDiagnostic")]
     [Fact]
     public void NoSteps_ProducesDiagnostic()
     {
@@ -169,10 +174,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM002 diagnostic
         var diagnostics = result.Results[0].Diagnostics;
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM002");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM002");
     }
 
+    [Scenario("NoTerminal ProducesDiagnostic")]
     [Fact]
     public void NoTerminal_ProducesDiagnostic()
     {
@@ -198,10 +204,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM004 diagnostic
         var diagnostics = result.Results[0].Diagnostics;
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM004");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM004");
     }
 
+    [Scenario("MultipleTerminals ProducesDiagnostic")]
     [Fact]
     public void MultipleTerminals_ProducesDiagnostic()
     {
@@ -233,10 +240,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM005 diagnostic
         var diagnostics = result.Results[0].Diagnostics;
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM005");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM005");
     }
 
+    [Scenario("DuplicateOrder ProducesDiagnostic")]
     [Fact]
     public void DuplicateOrder_ProducesDiagnostic()
     {
@@ -268,10 +276,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM003 diagnostic
         var diagnostics = result.Results[0].Diagnostics;
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM003");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM003");
     }
 
+    [Scenario("StructType GeneratesCorrectly")]
     [Fact]
     public void StructType_GeneratesCorrectly()
     {
@@ -299,21 +308,22 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("RequestPipeline.Composer.g.cs", names);
+        ScenarioExpect.Contains("RequestPipeline.Composer.g.cs", names);
 
         // Verify the generated source contains 'partial struct'
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial struct RequestPipeline", generatedSource);
+        ScenarioExpect.Contains("partial struct RequestPipeline", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("RecordClass GeneratesCorrectly")]
     [Fact]
     public void RecordClass_GeneratesCorrectly()
     {
@@ -341,21 +351,22 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("RequestPipeline.Composer.g.cs", names);
+        ScenarioExpect.Contains("RequestPipeline.Composer.g.cs", names);
 
         // Verify the generated source contains 'partial record class'
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial record class RequestPipeline", generatedSource);
+        ScenarioExpect.Contains("partial record class RequestPipeline", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("RecordStruct GeneratesCorrectly")]
     [Fact]
     public void RecordStruct_GeneratesCorrectly()
     {
@@ -383,21 +394,22 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("RequestPipeline.Composer.g.cs", names);
+        ScenarioExpect.Contains("RequestPipeline.Composer.g.cs", names);
 
         // Verify the generated source contains 'partial record struct'
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial record struct RequestPipeline", generatedSource);
+        ScenarioExpect.Contains("partial record struct RequestPipeline", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("OrderingOuterFirst WrapsCorrectly")]
     [Fact]
     public void OrderingOuterFirst_WrapsCorrectly()
     {
@@ -444,22 +456,23 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
 
         // The pipeline should be built from terminal and wrapped by steps
-        Assert.Contains("pipeline", generatedSource);
-        Assert.Contains("First", generatedSource);
-        Assert.Contains("Second", generatedSource);
-        Assert.Contains("Terminal", generatedSource);
+        ScenarioExpect.Contains("pipeline", generatedSource);
+        ScenarioExpect.Contains("First", generatedSource);
+        ScenarioExpect.Contains("Second", generatedSource);
+        ScenarioExpect.Contains("Terminal", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("OrderingInnerFirst WrapsCorrectly")]
     [Fact]
     public void OrderingInnerFirst_WrapsCorrectly()
     {
@@ -506,22 +519,23 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
 
         // The pipeline should be built from terminal and wrapped by steps
-        Assert.Contains("pipeline", generatedSource);
-        Assert.Contains("First", generatedSource);
-        Assert.Contains("Second", generatedSource);
-        Assert.Contains("Terminal", generatedSource);
+        ScenarioExpect.Contains("pipeline", generatedSource);
+        ScenarioExpect.Contains("First", generatedSource);
+        ScenarioExpect.Contains("Second", generatedSource);
+        ScenarioExpect.Contains("Terminal", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ComposeIgnoreAttribute SkipsMethod")]
     [Fact]
     public void ComposeIgnoreAttribute_SkipsMethod()
     {
@@ -553,20 +567,21 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
 
         // Should only have pipeline using Step1, not Step2
-        Assert.Contains("Step1", generatedSource);
-        Assert.DoesNotContain("Step2", generatedSource);
+        ScenarioExpect.Contains("Step1", generatedSource);
+        ScenarioExpect.DoesNotContain("Step2", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("CustomInvokeMethodName GeneratesCorrectly")]
     [Fact]
     public void CustomInvokeMethodName_GeneratesCorrectly()
     {
@@ -594,18 +609,19 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source contains custom method name
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public global::PatternKit.Examples.Response Execute(in global::PatternKit.Examples.Request input)", generatedSource);
-        Assert.DoesNotContain("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
+        ScenarioExpect.Contains("public global::PatternKit.Examples.Response Execute(in global::PatternKit.Examples.Request input)", generatedSource);
+        ScenarioExpect.DoesNotContain("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("SyncPipelineWithForceAsync GeneratesBoth")]
     [Fact]
     public void SyncPipelineWithForceAsync_GeneratesBoth()
     {
@@ -640,18 +656,19 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source contains both Invoke and InvokeAsync
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
-        Assert.Contains("InvokeAsync", generatedSource);
+        ScenarioExpect.Contains("public global::PatternKit.Examples.Response Invoke(in global::PatternKit.Examples.Request input)", generatedSource);
+        ScenarioExpect.Contains("InvokeAsync", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AsyncStruct GeneratesCorrectly")]
     [Fact]
     public void AsyncStruct_GeneratesCorrectly()
     {
@@ -689,18 +706,19 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source contains InvokeAsync method
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("InvokeAsync", generatedSource);
-        Assert.Contains("ValueTask", generatedSource);
+        ScenarioExpect.Contains("InvokeAsync", generatedSource);
+        ScenarioExpect.Contains("ValueTask", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("InvalidStepSignature ProducesDiagnostic")]
     [Fact]
     public void InvalidStepSignature_ProducesDiagnostic()
     {
@@ -732,10 +750,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM006 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToList();
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM006");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM006");
     }
 
+    [Scenario("InvalidTerminalSignature ProducesDiagnostic")]
     [Fact]
     public void InvalidTerminalSignature_ProducesDiagnostic()
     {
@@ -767,10 +786,11 @@ public class ComposerGeneratorTests
 
         // Should have PKCOM007 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToList();
-        Assert.NotEmpty(diagnostics);
-        Assert.Contains(diagnostics, d => d.Id == "PKCOM007");
+        ScenarioExpect.NotEmpty(diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKCOM007");
     }
 
+    [Scenario("TrulyMixedSyncAndAsync GeneratesAsyncOnly")]
     [Fact]
     public void TrulyMixedSyncAndAsync_GeneratesAsyncOnly()
     {
@@ -812,17 +832,18 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify the generated source contains InvokeAsync (mixed scenario only generates async)
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("InvokeAsync", generatedSource);
+        ScenarioExpect.Contains("InvokeAsync", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StructComposer ForceAsync CustomNames InnerFirst CoversStructAsyncPipeline")]
     [Fact]
     public void StructComposer_ForceAsync_CustomNames_InnerFirst_CoversStructAsyncPipeline()
     {
@@ -858,20 +879,21 @@ public class ComposerGeneratorTests
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("RunAsync", generatedSource);
-        Assert.Contains("var self = this;", generatedSource);
-        Assert.Contains("terminalFunc", generatedSource);
-        Assert.Contains("self.AuthAsync(arg, pipeline)", generatedSource);
-        Assert.Contains("self.Audit(in arg, inp => pipeline(inp).GetAwaiter().GetResult())", generatedSource);
-        Assert.DoesNotContain("public Response Run(", generatedSource);
+        ScenarioExpect.Contains("RunAsync", generatedSource);
+        ScenarioExpect.Contains("var self = this;", generatedSource);
+        ScenarioExpect.Contains("terminalFunc", generatedSource);
+        ScenarioExpect.Contains("self.AuthAsync(arg, pipeline)", generatedSource);
+        ScenarioExpect.Contains("self.Audit(in arg, inp => pipeline(inp).GetAwaiter().GetResult())", generatedSource);
+        ScenarioExpect.DoesNotContain("public Response Run(", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AsyncSignatureWarnings WhenCancellationTokenIsWrongType")]
     [Fact]
     public void AsyncSignatureWarnings_WhenCancellationTokenIsWrongType()
     {
@@ -903,12 +925,13 @@ public class ComposerGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Equal(2, diagnostics.Count(d => d.Id == "PKCOM009"));
+        ScenarioExpect.Equal(2, diagnostics.Count(d => d.Id == "PKCOM009"));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.False(emit.Success);
+        ScenarioExpect.False(emit.Success);
     }
 
+    [Scenario("InvalidStep WithTooFewParameters ReportsDiagnostic")]
     [Fact]
     public void InvalidStep_WithTooFewParameters_ReportsDiagnostic()
     {
@@ -933,11 +956,12 @@ public class ComposerGeneratorTests
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
-        var diagnostic = Assert.Single(result.Results.SelectMany(r => r.Diagnostics));
-        Assert.Equal("PKCOM006", diagnostic.Id);
-        Assert.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
+        var diagnostic = ScenarioExpect.Single(result.Results.SelectMany(r => r.Diagnostics));
+        ScenarioExpect.Equal("PKCOM006", diagnostic.Id);
+        ScenarioExpect.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
     }
 
+    [Scenario("InvalidTerminal WithTooManyParameters ReportsDiagnostic")]
     [Fact]
     public void InvalidTerminal_WithTooManyParameters_ReportsDiagnostic()
     {
@@ -962,11 +986,12 @@ public class ComposerGeneratorTests
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
-        var diagnostic = Assert.Single(result.Results.SelectMany(r => r.Diagnostics));
-        Assert.Equal("PKCOM007", diagnostic.Id);
-        Assert.Contains("Terminal", diagnostic.GetMessage(), StringComparison.Ordinal);
+        var diagnostic = ScenarioExpect.Single(result.Results.SelectMany(r => r.Diagnostics));
+        ScenarioExpect.Equal("PKCOM007", diagnostic.Id);
+        ScenarioExpect.Contains("Terminal", diagnostic.GetMessage(), StringComparison.Ordinal);
     }
 
+    [Scenario("TaskBasedAsyncPipeline CustomAsyncName GeneratesTaskUnwrapAndNoCancellationTokenCalls")]
     [Fact]
     public void TaskBasedAsyncPipeline_CustomAsyncName_GeneratesTaskUnwrapAndNoCancellationTokenCalls()
     {
@@ -999,19 +1024,20 @@ public class ComposerGeneratorTests
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
-        Assert.Contains("ExecuteAsync", generatedSource);
-        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(TerminalAsync(arg))", generatedSource);
-        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(SecondAsync(arg, pipeline))", generatedSource);
-        Assert.Contains("First(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult())", generatedSource);
-        Assert.DoesNotContain("namespace ", generatedSource);
+        ScenarioExpect.Contains("ExecuteAsync", generatedSource);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(TerminalAsync(arg))", generatedSource);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(SecondAsync(arg, pipeline))", generatedSource);
+        ScenarioExpect.Contains("First(in arg, inp => prevPipeline(inp).GetAwaiter().GetResult())", generatedSource);
+        ScenarioExpect.DoesNotContain("namespace ", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StructTaskBasedAsyncPipeline WithCancellationToken WrapsTaskCalls")]
     [Fact]
     public void StructTaskBasedAsyncPipeline_WithCancellationToken_WrapsTaskCalls()
     {
@@ -1041,14 +1067,14 @@ public class ComposerGeneratorTests
         var gen = new ComposerGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
-        Assert.Contains("var self = this;", generatedSource);
-        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.TerminalAsync(arg, cancellationToken))", generatedSource);
-        Assert.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.StepAsync(arg, pipeline, cancellationToken))", generatedSource);
+        ScenarioExpect.Contains("var self = this;", generatedSource);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.TerminalAsync(arg, cancellationToken))", generatedSource);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Response>(self.StepAsync(arg, pipeline, cancellationToken))", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 }

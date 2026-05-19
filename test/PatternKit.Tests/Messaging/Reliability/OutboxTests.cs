@@ -1,10 +1,12 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Reliability;
+using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Reliability;
 
 public sealed class OutboxTests
 {
+    [Scenario("EnqueueAsync AddsOutboxRecord")]
     [Fact]
     public async Task EnqueueAsync_AddsOutboxRecord()
     {
@@ -16,12 +18,13 @@ public sealed class OutboxTests
             "outbox-1",
             createdAt);
 
-        Assert.Equal("outbox-1", record.Id);
-        Assert.Equal(createdAt, record.CreatedAt);
-        Assert.False(record.Dispatched);
-        Assert.Single(outbox.Records);
+        ScenarioExpect.Equal("outbox-1", record.Id);
+        ScenarioExpect.Equal(createdAt, record.CreatedAt);
+        ScenarioExpect.False(record.Dispatched);
+        ScenarioExpect.Single(outbox.Records);
     }
 
+    [Scenario("DispatchPendingAsync DispatchesPendingRecordsAndMarksThemDispatched")]
     [Fact]
     public async Task DispatchPendingAsync_DispatchesPendingRecordsAndMarksThemDispatched()
     {
@@ -33,17 +36,18 @@ public sealed class OutboxTests
         var dispatched = await outbox.DispatchPendingAsync(dispatcher);
         var secondPass = await outbox.DispatchPendingAsync(dispatcher);
 
-        Assert.Equal(2, dispatched);
-        Assert.Equal(0, secondPass);
-        Assert.Equal(["order-1", "order-2"], dispatcher.Dispatched);
-        Assert.All(outbox.Records, record =>
+        ScenarioExpect.Equal(2, dispatched);
+        ScenarioExpect.Equal(0, secondPass);
+        ScenarioExpect.Equal(["order-1", "order-2"], dispatcher.Dispatched);
+        ScenarioExpect.All(outbox.Records, record =>
         {
-            Assert.True(record.Dispatched);
-            Assert.Equal(1, record.Attempts);
-            Assert.Null(record.LastError);
+            ScenarioExpect.True(record.Dispatched);
+            ScenarioExpect.Equal(1, record.Attempts);
+            ScenarioExpect.Null(record.LastError);
         });
     }
 
+    [Scenario("DispatchPendingAsync RecordsFailedAttemptAndRethrows")]
     [Fact]
     public async Task DispatchPendingAsync_RecordsFailedAttemptAndRethrows()
     {
@@ -51,14 +55,15 @@ public sealed class OutboxTests
         await outbox.EnqueueAsync(Message<Order>.Create(new Order("order-1")), "outbox-1");
         var dispatcher = new FailingDispatcher();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await outbox.DispatchPendingAsync(dispatcher));
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () => await outbox.DispatchPendingAsync(dispatcher));
 
-        var record = Assert.Single(outbox.Records);
-        Assert.False(record.Dispatched);
-        Assert.Equal(1, record.Attempts);
-        Assert.Equal("dispatch failed", record.LastError);
+        var record = ScenarioExpect.Single(outbox.Records);
+        ScenarioExpect.False(record.Dispatched);
+        ScenarioExpect.Equal(1, record.Attempts);
+        ScenarioExpect.Equal("dispatch failed", record.LastError);
     }
 
+    [Scenario("DispatchPendingAsync ObservesCancellation")]
     [Fact]
     public async Task DispatchPendingAsync_ObservesCancellation()
     {
@@ -67,24 +72,26 @@ public sealed class OutboxTests
         source.Cancel();
         await outbox.EnqueueAsync(Message<Order>.Create(new Order("order-1")), "outbox-1");
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await outbox.DispatchPendingAsync(new RecordingDispatcher(), source.Token));
     }
 
+    [Scenario("OutboxMessage ValidatesArguments")]
     [Fact]
     public void OutboxMessage_ValidatesArguments()
     {
-        Assert.Throws<ArgumentException>(() => new OutboxMessage<Order>("", Message<Order>.Create(new Order("order-1")), DateTimeOffset.UtcNow));
-        Assert.Throws<ArgumentNullException>(() => new OutboxMessage<Order>("outbox-1", null!, DateTimeOffset.UtcNow));
+        ScenarioExpect.Throws<ArgumentException>(() => new OutboxMessage<Order>("", Message<Order>.Create(new Order("order-1")), DateTimeOffset.UtcNow));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new OutboxMessage<Order>("outbox-1", null!, DateTimeOffset.UtcNow));
     }
 
+    [Scenario("EnqueueAsync ValidatesArguments")]
     [Fact]
     public async Task EnqueueAsync_ValidatesArguments()
     {
         var outbox = new InMemoryOutbox<Order>();
 
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await outbox.EnqueueAsync(null!));
-        await Assert.ThrowsAsync<ArgumentNullException>(async () => await outbox.DispatchPendingAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await outbox.EnqueueAsync(null!));
+        await ScenarioExpect.ThrowsAsync<ArgumentNullException>(async () => await outbox.DispatchPendingAsync(null!));
     }
 
     private sealed record Order(string Id);

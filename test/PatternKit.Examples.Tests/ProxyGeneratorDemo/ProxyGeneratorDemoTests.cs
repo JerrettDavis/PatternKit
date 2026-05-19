@@ -10,6 +10,7 @@ namespace PatternKit.Examples.Tests.ProxyGeneratorDemo;
 [Collection(PatternKit.Examples.Tests.ConsoleTestCollection.Name)]
 public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("RealPaymentService StoresSuccessfulTransactions")]
     [Fact]
     public void RealPaymentService_StoresSuccessfulTransactions()
     {
@@ -18,14 +19,15 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
         var result = service.ProcessPayment(CreateRequest("cust-1", 42m));
         var history = service.GetTransactionHistory("cust-1");
 
-        Assert.True(result.Success);
-        Assert.StartsWith("TXN-", result.TransactionId);
-        var transaction = Assert.Single(history);
-        Assert.Equal("cust-1", transaction.CustomerId);
-        Assert.Equal(42m, transaction.Amount);
-        Assert.Equal("USD", transaction.Currency);
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.StartsWith("TXN-", result.TransactionId);
+        var transaction = ScenarioExpect.Single(history);
+        ScenarioExpect.Equal("cust-1", transaction.CustomerId);
+        ScenarioExpect.Equal(42m, transaction.Amount);
+        ScenarioExpect.Equal("USD", transaction.Currency);
     }
 
+    [Scenario("RealPaymentService AsyncPayment StoresTransaction")]
     [Fact]
     public async Task RealPaymentService_AsyncPayment_StoresTransaction()
     {
@@ -33,11 +35,12 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
 
         var result = await service.ProcessPaymentAsync(CreateRequest("cust-async", 75m));
 
-        Assert.True(result.Success);
-        Assert.Contains("async", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Single(service.GetTransactionHistory("cust-async"));
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.Contains("async", result.Message, StringComparison.OrdinalIgnoreCase);
+        ScenarioExpect.Single(service.GetTransactionHistory("cust-async"));
     }
 
+    [Scenario("GeneratedProxy WithInterceptors InvokesInnerService")]
     [Fact]
     public void GeneratedProxy_WithInterceptors_InvokesInnerService()
     {
@@ -49,12 +52,13 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
         var result = proxy.ProcessPayment(CreateRequest("cust-proxy", 100m));
         var history = proxy.GetTransactionHistory("cust-proxy");
 
-        Assert.True(result.Success);
-        Assert.Single(history);
-        Assert.Contains(nameof(IPaymentService.ProcessPayment), timing.GetTimings().Keys);
-        Assert.Contains(nameof(IPaymentService.GetTransactionHistory), timing.GetTimings().Keys);
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.Single(history);
+        ScenarioExpect.Contains(nameof(IPaymentService.ProcessPayment), timing.GetTimings().Keys);
+        ScenarioExpect.Contains(nameof(IPaymentService.GetTransactionHistory), timing.GetTimings().Keys);
     }
 
+    [Scenario("GeneratedProxy WithAuthenticationInterceptor RejectsInvalidToken")]
     [Fact]
     public void GeneratedProxy_WithAuthenticationInterceptor_RejectsInvalidToken()
     {
@@ -71,9 +75,10 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
             AuthToken = "bad-token"
         };
 
-        Assert.Throws<UnauthorizedAccessException>(() => proxy.ProcessPayment(request));
+        ScenarioExpect.Throws<UnauthorizedAccessException>(() => proxy.ProcessPayment(request));
     }
 
+    [Scenario("GeneratedProxy AsyncInterceptors InvokeInnerService")]
     [Fact]
     public async Task GeneratedProxy_AsyncInterceptors_InvokeInnerService()
     {
@@ -84,10 +89,11 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
 
         var result = await proxy.ProcessPaymentAsync(CreateRequest("cust-proxy-async", 55m));
 
-        Assert.True(result.Success);
-        Assert.Contains(nameof(IPaymentService.ProcessPaymentAsync), timing.GetTimings().Keys);
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.Contains(nameof(IPaymentService.ProcessPaymentAsync), timing.GetTimings().Keys);
     }
 
+    [Scenario("CachingInterceptor RecordsTransactionHistoryResults")]
     [Fact]
     public void CachingInterceptor_RecordsTransactionHistoryResults()
     {
@@ -98,11 +104,11 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
         _ = proxy.GetTransactionHistory("cust-cache");
 
         var stats = cache.GetStats();
-        Assert.Equal(1, stats.Count);
-        Assert.Equal(0, stats.Expired);
+        ScenarioExpect.Equal(1, stats.Count);
+        ScenarioExpect.Equal(0, stats.Expired);
 
         cache.ClearCache();
-        Assert.Equal(0, cache.GetStats().Count);
+        ScenarioExpect.Equal(0, cache.GetStats().Count);
     }
 
     [Scenario("Comprehensive proxy demo runs the generated proxy pipeline")]

@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.Chain;
+using TinyBDD;
 
 namespace PatternKit.Tests.Behavioral.Chain;
 
@@ -6,6 +7,7 @@ public sealed class AsyncChainTests
 {
     #region AsyncActionChain<TContext> Tests
 
+    [Scenario("AsyncActionChain Executes All Handlers")]
     [Fact]
     public async Task AsyncActionChain_Executes_All_Handlers()
     {
@@ -25,11 +27,12 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("h1-5", log[0]);
-        Assert.Equal("h2-5", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("h1-5", log[0]);
+        ScenarioExpect.Equal("h2-5", log[1]);
     }
 
+    [Scenario("AsyncActionChain When ThenContinue Conditional True")]
     [Fact]
     public async Task AsyncActionChain_When_ThenContinue_Conditional_True()
     {
@@ -42,11 +45,12 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("positive", log[0]);
-        Assert.Equal("always", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("positive", log[0]);
+        ScenarioExpect.Equal("always", log[1]);
     }
 
+    [Scenario("AsyncActionChain When ThenContinue Conditional False")]
     [Fact]
     public async Task AsyncActionChain_When_ThenContinue_Conditional_False()
     {
@@ -59,10 +63,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(-5);
 
-        Assert.Single(log);
-        Assert.Equal("always", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("always", log[0]);
     }
 
+    [Scenario("AsyncActionChain ThenStop Halts Chain")]
     [Fact]
     public async Task AsyncActionChain_ThenStop_Halts_Chain()
     {
@@ -75,10 +80,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(15);
 
-        Assert.Single(log);
-        Assert.Equal("stopped", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("stopped", log[0]);
     }
 
+    [Scenario("AsyncActionChain ThenStop Continues When False")]
     [Fact]
     public async Task AsyncActionChain_ThenStop_Continues_When_False()
     {
@@ -91,10 +97,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("finally", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("finally", log[0]);
     }
 
+    [Scenario("AsyncActionChain Handler Can ShortCircuit")]
     [Fact]
     public async Task AsyncActionChain_Handler_Can_ShortCircuit()
     {
@@ -114,10 +121,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("handler-1", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("handler-1", log[0]);
     }
 
+    [Scenario("AsyncActionChain Finally Executes At End")]
     [Fact]
     public async Task AsyncActionChain_Finally_Executes_At_End()
     {
@@ -133,11 +141,12 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("handler", log[0]);
-        Assert.Equal("finally", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("handler", log[0]);
+        ScenarioExpect.Equal("finally", log[1]);
     }
 
+    [Scenario("AsyncActionChain Async Predicate")]
     [Fact]
     public async Task AsyncActionChain_Async_Predicate()
     {
@@ -153,10 +162,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("positive", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("positive", log[0]);
     }
 
+    [Scenario("AsyncActionChain Async Action")]
     [Fact]
     public async Task AsyncActionChain_Async_Action()
     {
@@ -172,10 +182,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("async-positive", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-positive", log[0]);
     }
 
+    [Scenario("AsyncActionChain Empty Chain Executes")]
     [Fact]
     public async Task AsyncActionChain_Empty_Chain_Executes()
     {
@@ -183,9 +194,10 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5); // Should not throw
 
-        Assert.True(true);
+        ScenarioExpect.True(true);
     }
 
+    [Scenario("AsyncActionChain Context Passed Through")]
     [Fact]
     public async Task AsyncActionChain_Context_Passed_Through()
     {
@@ -205,10 +217,11 @@ public sealed class AsyncChainTests
 
         await chain.ExecuteAsync(5);
 
-        Assert.Equal(5, capturedValues[0]);
-        Assert.Equal(15, capturedValues[1]);
+        ScenarioExpect.Equal(5, capturedValues[0]);
+        ScenarioExpect.Equal(15, capturedValues[1]);
     }
 
+    [Scenario("AsyncActionChain Multiple When Clauses")]
     [Fact]
     public async Task AsyncActionChain_Multiple_When_Clauses()
     {
@@ -226,16 +239,17 @@ public sealed class AsyncChainTests
         await chain.ExecuteAsync(50);
 
         // All conditions that pass add their entries
-        Assert.Contains("medium", log);
-        Assert.Contains("small", log);
-        Assert.Contains("finally", log);
-        Assert.DoesNotContain("large", log);
+        ScenarioExpect.Contains("medium", log);
+        ScenarioExpect.Contains("small", log);
+        ScenarioExpect.Contains("finally", log);
+        ScenarioExpect.DoesNotContain("large", log);
     }
 
     #endregion
 
     #region AsyncResultChain<TContext, TResult> Tests
 
+    [Scenario("AsyncResultChain Returns First Match")]
     [Fact]
     public async Task AsyncResultChain_Returns_First_Match()
     {
@@ -247,10 +261,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("positive", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("positive", result);
     }
 
+    [Scenario("AsyncResultChain Returns False When No Match")]
     [Fact]
     public async Task AsyncResultChain_Returns_False_When_No_Match()
     {
@@ -260,10 +275,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Null(result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("AsyncResultChain Finally Fallback")]
     [Fact]
     public async Task AsyncResultChain_Finally_Fallback()
     {
@@ -274,10 +290,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("default", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("default", result);
     }
 
+    [Scenario("AsyncResultChain Async Predicate")]
     [Fact]
     public async Task AsyncResultChain_Async_Predicate()
     {
@@ -292,10 +309,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("positive", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("positive", result);
     }
 
+    [Scenario("AsyncResultChain Async Producer")]
     [Fact]
     public async Task AsyncResultChain_Async_Producer()
     {
@@ -310,10 +328,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("async-5", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("async-5", result);
     }
 
+    [Scenario("AsyncResultChain Multiple Conditions")]
     [Fact]
     public async Task AsyncResultChain_Multiple_Conditions()
     {
@@ -329,12 +348,13 @@ public sealed class AsyncChainTests
         var (_, r3) = await chain.ExecuteAsync(75);
         var (_, r4) = await chain.ExecuteAsync(50);
 
-        Assert.Equal("A", r1);
-        Assert.Equal("B", r2);
-        Assert.Equal("C", r3);
-        Assert.Equal("F", r4);
+        ScenarioExpect.Equal("A", r1);
+        ScenarioExpect.Equal("B", r2);
+        ScenarioExpect.Equal("C", r3);
+        ScenarioExpect.Equal("F", r4);
     }
 
+    [Scenario("AsyncResultChain Use Raw Handler")]
     [Fact]
     public async Task AsyncResultChain_Use_Raw_Handler()
     {
@@ -349,10 +369,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("positive-5", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("positive-5", result);
     }
 
+    [Scenario("AsyncResultChain Finally Async Producer")]
     [Fact]
     public async Task AsyncResultChain_Finally_Async_Producer()
     {
@@ -367,10 +388,11 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal("fallback-5", result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("fallback-5", result);
     }
 
+    [Scenario("AsyncResultChain Empty Chain Returns False")]
     [Fact]
     public async Task AsyncResultChain_Empty_Chain_Returns_False()
     {
@@ -378,8 +400,8 @@ public sealed class AsyncChainTests
 
         var (success, result) = await chain.ExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Null(result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
     }
 
     #endregion

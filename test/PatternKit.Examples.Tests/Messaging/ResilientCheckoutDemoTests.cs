@@ -1,9 +1,11 @@
 using PatternKit.Examples.Messaging;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.Messaging;
 
 public sealed class ResilientCheckoutDemoTests
 {
+    [Scenario("Run CompletesPrimaryCardRoute")]
     [Fact]
     public void Run_CompletesPrimaryCardRoute()
     {
@@ -12,18 +14,19 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.True(result.Succeeded);
-        Assert.False(result.ManualReview);
-        Assert.Equal("primary-card", result.FinalRoute);
-        Assert.Single(result.Attempts);
-        Assert.StartsWith("primarywarehouse-order-primary-", result.ReservationId, StringComparison.Ordinal);
-        Assert.StartsWith("card-order-primary-", result.PaymentId, StringComparison.Ordinal);
-        Assert.StartsWith("primarywarehouse-ship-order-primary-", result.ShipmentId, StringComparison.Ordinal);
-        Assert.Contains("validate:ok", result.Audit);
-        Assert.Empty(services.Inventory.ReleasedReservations);
-        Assert.Empty(services.Payments.RefundedPayments);
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.False(result.ManualReview);
+        ScenarioExpect.Equal("primary-card", result.FinalRoute);
+        ScenarioExpect.Single(result.Attempts);
+        ScenarioExpect.StartsWith("primarywarehouse-order-primary-", result.ReservationId, StringComparison.Ordinal);
+        ScenarioExpect.StartsWith("card-order-primary-", result.PaymentId, StringComparison.Ordinal);
+        ScenarioExpect.StartsWith("primarywarehouse-ship-order-primary-", result.ShipmentId, StringComparison.Ordinal);
+        ScenarioExpect.Contains("validate:ok", result.Audit);
+        ScenarioExpect.Empty(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Empty(services.Payments.RefundedPayments);
     }
 
+    [Scenario("Run RollsBackPrimaryReservationAndRetriesDropshipWhenInventoryUnavailable")]
     [Fact]
     public void Run_RollsBackPrimaryReservationAndRetriesDropshipWhenInventoryUnavailable()
     {
@@ -35,15 +38,16 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.True(result.Succeeded);
-        Assert.Equal("dropship-card", result.FinalRoute);
-        Assert.Equal(["primary-card", "dropship-card"], result.Attempts.Select(static attempt => attempt.Route));
-        Assert.Equal(CheckoutFailureKind.InventoryUnavailable, result.Attempts[0].FailureKind);
-        Assert.StartsWith("dropship-order-dropship-", result.ReservationId, StringComparison.Ordinal);
-        Assert.Empty(services.Inventory.ReleasedReservations);
-        Assert.Contains("route:primary-card:failed:InventoryUnavailable", result.Audit);
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.Equal("dropship-card", result.FinalRoute);
+        ScenarioExpect.Equal(["primary-card", "dropship-card"], result.Attempts.Select(static attempt => attempt.Route));
+        ScenarioExpect.Equal(CheckoutFailureKind.InventoryUnavailable, result.Attempts[0].FailureKind);
+        ScenarioExpect.StartsWith("dropship-order-dropship-", result.ReservationId, StringComparison.Ordinal);
+        ScenarioExpect.Empty(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Contains("route:primary-card:failed:InventoryUnavailable", result.Audit);
     }
 
+    [Scenario("Run RefundsCardAndRetriesGiftCardWhenPaymentDeclines")]
     [Fact]
     public void Run_RefundsCardAndRetriesGiftCardWhenPaymentDeclines()
     {
@@ -55,16 +59,17 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.True(result.Succeeded);
-        Assert.Equal("primary-gift-card", result.FinalRoute);
-        Assert.Equal(["primary-card", "primary-gift-card"], result.Attempts.Select(static attempt => attempt.Route));
-        Assert.Equal(CheckoutFailureKind.PaymentDeclined, result.Attempts[0].FailureKind);
-        Assert.Single(services.Inventory.ReleasedReservations);
-        Assert.Empty(services.Payments.RefundedPayments);
-        Assert.StartsWith("giftcard-order-gift-", result.PaymentId, StringComparison.Ordinal);
-        Assert.Contains(result.Audit, static entry => entry.StartsWith("inventory:released:", StringComparison.Ordinal));
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.Equal("primary-gift-card", result.FinalRoute);
+        ScenarioExpect.Equal(["primary-card", "primary-gift-card"], result.Attempts.Select(static attempt => attempt.Route));
+        ScenarioExpect.Equal(CheckoutFailureKind.PaymentDeclined, result.Attempts[0].FailureKind);
+        ScenarioExpect.Single(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Empty(services.Payments.RefundedPayments);
+        ScenarioExpect.StartsWith("giftcard-order-gift-", result.PaymentId, StringComparison.Ordinal);
+        ScenarioExpect.Contains(result.Audit, static entry => entry.StartsWith("inventory:released:", StringComparison.Ordinal));
     }
 
+    [Scenario("Run SendsFraudHoldToManualReviewWithoutSideEffects")]
     [Fact]
     public void Run_SendsFraudHoldToManualReviewWithoutSideEffects()
     {
@@ -73,17 +78,18 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.False(result.Succeeded);
-        Assert.True(result.ManualReview);
-        Assert.Equal("manual-review", result.FinalRoute);
-        Assert.Null(result.ReservationId);
-        Assert.Null(result.PaymentId);
-        Assert.Null(result.ShipmentId);
-        Assert.Contains("manual-review:queued", result.Audit);
-        Assert.Empty(services.Inventory.ReleasedReservations);
-        Assert.Empty(services.Payments.RefundedPayments);
+        ScenarioExpect.False(result.Succeeded);
+        ScenarioExpect.True(result.ManualReview);
+        ScenarioExpect.Equal("manual-review", result.FinalRoute);
+        ScenarioExpect.Null(result.ReservationId);
+        ScenarioExpect.Null(result.PaymentId);
+        ScenarioExpect.Null(result.ShipmentId);
+        ScenarioExpect.Contains("manual-review:queued", result.Audit);
+        ScenarioExpect.Empty(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Empty(services.Payments.RefundedPayments);
     }
 
+    [Scenario("Run SendsUnrecoverableFailureToManualReview")]
     [Fact]
     public void Run_SendsUnrecoverableFailureToManualReview()
     {
@@ -95,12 +101,13 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.False(result.Succeeded);
-        Assert.True(result.ManualReview);
-        Assert.Equal("manual-review", result.FinalRoute);
-        Assert.Equal(["primary-card", "dropship-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
+        ScenarioExpect.False(result.Succeeded);
+        ScenarioExpect.True(result.ManualReview);
+        ScenarioExpect.Equal("manual-review", result.FinalRoute);
+        ScenarioExpect.Equal(["primary-card", "dropship-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
     }
 
+    [Scenario("Run UsesPreferredGiftCardWhenBalanceCoversTotal")]
     [Fact]
     public void Run_UsesPreferredGiftCardWhenBalanceCoversTotal()
     {
@@ -112,15 +119,16 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.True(result.Succeeded);
-        Assert.False(result.ManualReview);
-        Assert.Equal("primary-gift-card", result.FinalRoute);
-        Assert.Single(result.Attempts);
-        Assert.StartsWith("giftcard-order-preferred-gift-", result.PaymentId, StringComparison.Ordinal);
-        Assert.Empty(services.Inventory.ReleasedReservations);
-        Assert.Empty(services.Payments.RefundedPayments);
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.False(result.ManualReview);
+        ScenarioExpect.Equal("primary-gift-card", result.FinalRoute);
+        ScenarioExpect.Single(result.Attempts);
+        ScenarioExpect.StartsWith("giftcard-order-preferred-gift-", result.PaymentId, StringComparison.Ordinal);
+        ScenarioExpect.Empty(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Empty(services.Payments.RefundedPayments);
     }
 
+    [Scenario("Run EmptyCartValidationFailureEscalatesToManualReview")]
     [Fact]
     public void Run_EmptyCartValidationFailureEscalatesToManualReview()
     {
@@ -132,17 +140,18 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.False(result.Succeeded);
-        Assert.True(result.ManualReview);
-        Assert.Equal("manual-review", result.FinalRoute);
-        Assert.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
-        Assert.Equal(CheckoutFailureKind.ValidationFailed, result.Attempts[0].FailureKind);
-        Assert.Contains("cart-empty", result.Attempts[0].Message, StringComparison.Ordinal);
-        Assert.Null(result.ReservationId);
-        Assert.Null(result.PaymentId);
-        Assert.Null(result.ShipmentId);
+        ScenarioExpect.False(result.Succeeded);
+        ScenarioExpect.True(result.ManualReview);
+        ScenarioExpect.Equal("manual-review", result.FinalRoute);
+        ScenarioExpect.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
+        ScenarioExpect.Equal(CheckoutFailureKind.ValidationFailed, result.Attempts[0].FailureKind);
+        ScenarioExpect.Contains("cart-empty", result.Attempts[0].Message, StringComparison.Ordinal);
+        ScenarioExpect.Null(result.ReservationId);
+        ScenarioExpect.Null(result.PaymentId);
+        ScenarioExpect.Null(result.ShipmentId);
     }
 
+    [Scenario("Run CardDeclineWithoutGiftCardFallbackEscalatesToManualReviewAndReleasesInventory")]
     [Fact]
     public void Run_CardDeclineWithoutGiftCardFallbackEscalatesToManualReviewAndReleasesInventory()
     {
@@ -154,14 +163,14 @@ public sealed class ResilientCheckoutDemoTests
 
         var result = ResilientCheckoutDemo.Run(request, services);
 
-        Assert.False(result.Succeeded);
-        Assert.True(result.ManualReview);
-        Assert.Equal("manual-review", result.FinalRoute);
-        Assert.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
-        Assert.Equal(CheckoutFailureKind.PaymentDeclined, result.Attempts[0].FailureKind);
-        Assert.Single(services.Inventory.ReleasedReservations);
-        Assert.Empty(services.Payments.RefundedPayments);
-        Assert.Contains(result.Audit, static entry => entry.StartsWith("inventory:released:", StringComparison.Ordinal));
+        ScenarioExpect.False(result.Succeeded);
+        ScenarioExpect.True(result.ManualReview);
+        ScenarioExpect.Equal("manual-review", result.FinalRoute);
+        ScenarioExpect.Equal(["primary-card", "manual-review"], result.Attempts.Select(static attempt => attempt.Route));
+        ScenarioExpect.Equal(CheckoutFailureKind.PaymentDeclined, result.Attempts[0].FailureKind);
+        ScenarioExpect.Single(services.Inventory.ReleasedReservations);
+        ScenarioExpect.Empty(services.Payments.RefundedPayments);
+        ScenarioExpect.Contains(result.Audit, static entry => entry.StartsWith("inventory:released:", StringComparison.Ordinal));
     }
 
     private static CheckoutRequest CreateRequest(string orderId, decimal total, decimal giftCardBalance = 0m)

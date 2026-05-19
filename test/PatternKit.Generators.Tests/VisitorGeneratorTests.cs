@@ -1,5 +1,6 @@
 using System.Runtime.Loader;
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -36,6 +37,7 @@ public class VisitorGeneratorTests
                                         }
                                         """;
 
+    [Scenario("Generates Visitor Infrastructure Without Diagnostics")]
     [Fact]
     public void Generates_Visitor_Infrastructure_Without_Diagnostics()
     {
@@ -48,39 +50,40 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Interfaces
-        Assert.Contains("IAstNodeVisitor.Interfaces.g.cs", names);
+        ScenarioExpect.Contains("IAstNodeVisitor.Interfaces.g.cs", names);
 
         // Accept methods for each type
-        Assert.Contains("AstNode.Accept.g.cs", names);
-        Assert.Contains("Expression.Accept.g.cs", names);
-        Assert.Contains("Statement.Accept.g.cs", names);
-        Assert.Contains("NumberExpression.Accept.g.cs", names);
-        Assert.Contains("AddExpression.Accept.g.cs", names);
+        ScenarioExpect.Contains("AstNode.Accept.g.cs", names);
+        ScenarioExpect.Contains("Expression.Accept.g.cs", names);
+        ScenarioExpect.Contains("Statement.Accept.g.cs", names);
+        ScenarioExpect.Contains("NumberExpression.Accept.g.cs", names);
+        ScenarioExpect.Contains("AddExpression.Accept.g.cs", names);
 
         var generatedSources = run.Results.SelectMany(r => r.GeneratedSources).ToDictionary(
             gs => gs.HintName,
             gs => gs.SourceText.ToString());
-        Assert.Contains("public TResult Accept<TResult>", generatedSources["AstNode.Accept.g.cs"]);
-        Assert.Contains("public new TResult Accept<TResult>", generatedSources["Expression.Accept.g.cs"]);
-        Assert.Contains("public new System.Threading.Tasks.ValueTask<TResult> AcceptAsync<TResult>", generatedSources["NumberExpression.Accept.g.cs"]);
+        ScenarioExpect.Contains("public TResult Accept<TResult>", generatedSources["AstNode.Accept.g.cs"]);
+        ScenarioExpect.Contains("public new TResult Accept<TResult>", generatedSources["Expression.Accept.g.cs"]);
+        ScenarioExpect.Contains("public new System.Threading.Tasks.ValueTask<TResult> AcceptAsync<TResult>", generatedSources["NumberExpression.Accept.g.cs"]);
 
         // Builders
-        Assert.Contains("AstNodeVisitorBuilder.g.cs", names);
-        Assert.Contains("AstNodeActionVisitorBuilder.g.cs", names);
-        Assert.Contains("AstNodeAsyncVisitorBuilder.g.cs", names);
-        Assert.Contains("AstNodeAsyncActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("AstNodeVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("AstNodeActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("AstNodeAsyncVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("AstNodeAsyncActionVisitorBuilder.g.cs", names);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Sync Result Visitor Dispatches Correctly")]
     [Fact]
     public void Sync_Result_Visitor_Dispatches_Correctly()
     {
@@ -119,12 +122,12 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -132,9 +135,10 @@ public class VisitorGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("Num:42|Add|Expr|Stmt", run);
+        ScenarioExpect.Equal("Num:42|Add|Expr|Stmt", run);
     }
 
+    [Scenario("Sync Action Visitor Executes Side Effects")]
     [Fact]
     public void Sync_Action_Visitor_Executes_Side_Effects()
     {
@@ -171,12 +175,12 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -184,9 +188,10 @@ public class VisitorGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as string;
 
-        Assert.Equal("N:7|A", run);
+        ScenarioExpect.Equal("N:7|A", run);
     }
 
+    [Scenario("Async Result Visitor Supports ValueTask")]
     [Fact]
     public void Async_Result_Visitor_Supports_ValueTask()
     {
@@ -228,12 +233,12 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -241,11 +246,12 @@ public class VisitorGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as System.Threading.Tasks.Task<string>;
 
-        Assert.NotNull(run);
+        ScenarioExpect.NotNull(run);
         var result = run.GetAwaiter().GetResult();
-        Assert.Equal("Async:99|AsyncExpr", result);
+        ScenarioExpect.Equal("Async:99|AsyncExpr", result);
     }
 
+    [Scenario("Async Action Visitor Supports ValueTask")]
     [Fact]
     public void Async_Action_Visitor_Supports_ValueTask()
     {
@@ -289,12 +295,12 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -302,11 +308,12 @@ public class VisitorGeneratorTests
             .GetMethod("Run")!
             .Invoke(null, null) as System.Threading.Tasks.Task<string>;
 
-        Assert.NotNull(run);
+        ScenarioExpect.NotNull(run);
         var result = run.GetAwaiter().GetResult();
-        Assert.Equal("AN:123|AS", result);
+        ScenarioExpect.Equal("AN:123|AS", result);
     }
 
+    [Scenario("Throws When No Handler Matches And No Default")]
     [Fact]
     public void Throws_When_No_Handler_Matches_And_No_Default()
     {
@@ -340,20 +347,21 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
         var runMethod = asm.GetType("PatternKit.Examples.Ast.NoDefaultDemo")!.GetMethod("Run")!;
 
-        Assert.Throws<System.Reflection.TargetInvocationException>(() => runMethod.Invoke(null, null));
+        ScenarioExpect.Throws<System.Reflection.TargetInvocationException>(() => runMethod.Invoke(null, null));
     }
 
+    [Scenario("Custom Visitor Interface Name Works")]
     [Fact]
     public void Custom_Visitor_Interface_Name_Works()
     {
@@ -380,16 +388,17 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("INodeProcessor.Interfaces.g.cs", names);
-        Assert.Contains("NodeVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("INodeProcessor.Interfaces.g.cs", names);
+        ScenarioExpect.Contains("NodeVisitorBuilder.g.cs", names);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Disable Async Generation Works")]
     [Fact]
     public void Disable_Async_Generation_Works()
     {
@@ -416,22 +425,23 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Should have sync builders
-        Assert.Contains("SyncNodeVisitorBuilder.g.cs", names);
-        Assert.Contains("SyncNodeActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("SyncNodeVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("SyncNodeActionVisitorBuilder.g.cs", names);
 
         // Should NOT have async builders
-        Assert.DoesNotContain("SyncNodeAsyncVisitorBuilder.g.cs", names);
-        Assert.DoesNotContain("SyncNodeAsyncActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.DoesNotContain("SyncNodeAsyncVisitorBuilder.g.cs", names);
+        ScenarioExpect.DoesNotContain("SyncNodeAsyncActionVisitorBuilder.g.cs", names);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Disable Actions Generation Works")]
     [Fact]
     public void Disable_Actions_Generation_Works()
     {
@@ -458,22 +468,23 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Should have result builders
-        Assert.Contains("ResultNodeVisitorBuilder.g.cs", names);
-        Assert.Contains("ResultNodeAsyncVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("ResultNodeVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("ResultNodeAsyncVisitorBuilder.g.cs", names);
 
         // Should NOT have action builders
-        Assert.DoesNotContain("ResultNodeActionVisitorBuilder.g.cs", names);
-        Assert.DoesNotContain("ResultNodeAsyncActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.DoesNotContain("ResultNodeActionVisitorBuilder.g.cs", names);
+        ScenarioExpect.DoesNotContain("ResultNodeAsyncActionVisitorBuilder.g.cs", names);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Generates Visitor For Interface Hierarchy")]
     [Fact]
     public void Generates_Visitor_For_Interface_Hierarchy()
     {
@@ -511,28 +522,29 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Interfaces
-        Assert.Contains("IShapeVisitor.Interfaces.g.cs", names);
+        ScenarioExpect.Contains("IShapeVisitor.Interfaces.g.cs", names);
 
         // Accept methods for each type (interface + concrete classes)
-        Assert.Contains("IShape.Accept.g.cs", names);
-        Assert.Contains("Circle.Accept.g.cs", names);
-        Assert.Contains("Rectangle.Accept.g.cs", names);
-        Assert.Contains("Triangle.Accept.g.cs", names);
+        ScenarioExpect.Contains("IShape.Accept.g.cs", names);
+        ScenarioExpect.Contains("Circle.Accept.g.cs", names);
+        ScenarioExpect.Contains("Rectangle.Accept.g.cs", names);
+        ScenarioExpect.Contains("Triangle.Accept.g.cs", names);
 
         // Builders
-        Assert.Contains("IShapeVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("IShapeVisitorBuilder.g.cs", names);
 
         // Verify compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Interface Hierarchy Visitor Dispatches Correctly")]
     [Fact]
     public void Interface_Hierarchy_Visitor_Dispatches_Correctly()
     {
@@ -583,13 +595,13 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Emit and execute
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join("\n", res.Diagnostics));
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -600,9 +612,10 @@ public class VisitorGeneratorTests
         // Circle area: π * 5^2 ≈ 78.54
         // Rectangle area: 4 * 6 = 24
         // Total ≈ 102.54
-        Assert.True(result > 100 && result < 105, $"Expected ~102.54, got {result}");
+        ScenarioExpect.True(result > 100 && result < 105, $"Expected ~102.54, got {result}");
     }
 
+    [Scenario("Generates Visitor For Struct Hierarchy")]
     [Fact]
     public void Generates_Visitor_For_Struct_Hierarchy()
     {
@@ -638,25 +651,26 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Interfaces
-        Assert.Contains("IValueVisitor.Interfaces.g.cs", names);
+        ScenarioExpect.Contains("IValueVisitor.Interfaces.g.cs", names);
 
         // Accept methods for interface and structs
-        Assert.Contains("IValue.Accept.g.cs", names);
-        Assert.Contains("IntValue.Accept.g.cs", names);
-        Assert.Contains("DoubleValue.Accept.g.cs", names);
-        Assert.Contains("StringValue.Accept.g.cs", names);
+        ScenarioExpect.Contains("IValue.Accept.g.cs", names);
+        ScenarioExpect.Contains("IntValue.Accept.g.cs", names);
+        ScenarioExpect.Contains("DoubleValue.Accept.g.cs", names);
+        ScenarioExpect.Contains("StringValue.Accept.g.cs", names);
 
         // Verify compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Struct Visitor Dispatches Without Boxing")]
     [Fact]
     public void Struct_Visitor_Dispatches_Without_Boxing()
     {
@@ -706,13 +720,13 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Emit and execute
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join("\n", res.Diagnostics));
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -720,9 +734,10 @@ public class VisitorGeneratorTests
         var runMethod = demo.GetMethod("Run")!;
         var result = (string)runMethod.Invoke(null, null)!;
 
-        Assert.Equal("Int:42,Double:3.14", result);
+        ScenarioExpect.Equal("Int:42,Double:3.14", result);
     }
 
+    [Scenario("Diagnostic PKVIS001 EmittedWhenNoConcretTypesFound")]
     [Fact]
     public void Diagnostic_PKVIS001_EmittedWhenNoConcretTypesFound()
     {
@@ -744,12 +759,13 @@ public class VisitorGeneratorTests
 
         // Should have PKVIS001 warning
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKVIS001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKVIS001");
 
         var pkvis001 = diagnostics.First(d => d.Id == "PKVIS001");
-        Assert.Contains("IEmptyHierarchy", pkvis001.GetMessage());
+        ScenarioExpect.Contains("IEmptyHierarchy", pkvis001.GetMessage());
     }
 
+    [Scenario("Diagnostic PKVIS002 EmittedWhenBaseTypeNotPartial")]
     [Fact]
     public void Diagnostic_PKVIS002_EmittedWhenBaseTypeNotPartial()
     {
@@ -773,12 +789,13 @@ public class VisitorGeneratorTests
 
         // Should have PKVIS002 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKVIS002");
 
         var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
-        Assert.Contains("NonPartialBase", pkvis002.GetMessage());
+        ScenarioExpect.Contains("NonPartialBase", pkvis002.GetMessage());
     }
 
+    [Scenario("Diagnostic PKVIS004 EmittedWhenDerivedTypeNotPartial")]
     [Fact]
     public void Diagnostic_PKVIS004_EmittedWhenDerivedTypeNotPartial()
     {
@@ -802,12 +819,13 @@ public class VisitorGeneratorTests
 
         // Should have PKVIS004 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKVIS004");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKVIS004");
 
         var pkvis004 = diagnostics.First(d => d.Id == "PKVIS004");
-        Assert.Contains("NonPartialDerived", pkvis004.GetMessage());
+        ScenarioExpect.Contains("NonPartialDerived", pkvis004.GetMessage());
     }
 
+    [Scenario("No Diagnostics For Valid Hierarchy")]
     [Fact]
     public void No_Diagnostics_For_Valid_Hierarchy()
     {
@@ -833,9 +851,10 @@ public class VisitorGeneratorTests
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics)
             .Where(d => d.Id.StartsWith("PKVIS"))
             .ToArray();
-        Assert.Empty(diagnostics);
+        ScenarioExpect.Empty(diagnostics);
     }
 
+    [Scenario("Generates Visitor For Record Hierarchy")]
     [Fact]
     public void Generates_Visitor_For_Record_Hierarchy()
     {
@@ -862,28 +881,29 @@ public class VisitorGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected files
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
 
         // Interfaces
-        Assert.Contains("IMessageVisitor.Interfaces.g.cs", names);
+        ScenarioExpect.Contains("IMessageVisitor.Interfaces.g.cs", names);
 
         // Accept methods for each record type
-        Assert.Contains("Message.Accept.g.cs", names);
-        Assert.Contains("TextMessage.Accept.g.cs", names);
-        Assert.Contains("ImageMessage.Accept.g.cs", names);
-        Assert.Contains("AudioMessage.Accept.g.cs", names);
+        ScenarioExpect.Contains("Message.Accept.g.cs", names);
+        ScenarioExpect.Contains("TextMessage.Accept.g.cs", names);
+        ScenarioExpect.Contains("ImageMessage.Accept.g.cs", names);
+        ScenarioExpect.Contains("AudioMessage.Accept.g.cs", names);
 
         // Builders
-        Assert.Contains("MessageVisitorBuilder.g.cs", names);
+        ScenarioExpect.Contains("MessageVisitorBuilder.g.cs", names);
 
         // Verify compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Record Visitor Dispatches Correctly")]
     [Fact]
     public void Record_Visitor_Dispatches_Correctly()
     {
@@ -927,13 +947,13 @@ public class VisitorGeneratorTests
         var gen = new VisitorGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Emit and execute
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success, string.Join("\n", res.Diagnostics));
+        ScenarioExpect.True(res.Success, string.Join("\n", res.Diagnostics));
         pe.Position = 0;
 
         var asm = AssemblyLoadContext.Default.LoadFromStream(pe, pdb);
@@ -941,9 +961,10 @@ public class VisitorGeneratorTests
         var runMethod = demo.GetMethod("Run")!;
         var result = (string)runMethod.Invoke(null, null)!;
 
-        Assert.Equal("Text: Hello World|Image: PNG", result);
+        ScenarioExpect.Equal("Text: Hello World|Image: PNG", result);
     }
 
+    [Scenario("Diagnostic PKVIS002 EmittedWhenInterfaceBaseTypeNotPartial")]
     [Fact]
     public void Diagnostic_PKVIS002_EmittedWhenInterfaceBaseTypeNotPartial()
     {
@@ -967,9 +988,9 @@ public class VisitorGeneratorTests
 
         // Should have PKVIS002 error
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKVIS002");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKVIS002");
 
         var pkvis002 = diagnostics.First(d => d.Id == "PKVIS002");
-        Assert.Contains("INotPartial", pkvis002.GetMessage());
+        ScenarioExpect.Contains("INotPartial", pkvis002.GetMessage());
     }
 }

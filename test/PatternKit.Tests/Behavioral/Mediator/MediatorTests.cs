@@ -115,15 +115,17 @@ public sealed class MediatorBuilderTests
     private sealed record Pong(string Value);
     private sealed record Alert(string Message);
 
+    [Scenario("Send NoHandler Throws")]
     [Fact]
     public async Task Send_NoHandler_Throws()
     {
         var m = PatternKit.Behavioral.Mediator.Mediator.Create().Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => m.Send<Ping, Pong>(new Ping(1)).AsTask());
     }
 
+    [Scenario("Send NullResult ReturnsDefault")]
     [Fact]
     public async Task Send_NullResult_ReturnsDefault()
     {
@@ -132,9 +134,10 @@ public sealed class MediatorBuilderTests
             .Build();
 
         var result = await m.Send<Ping, Pong>(new Ping(1));
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("Publish NoHandlers NoOp")]
     [Fact]
     public async Task Publish_NoHandlers_NoOp()
     {
@@ -144,6 +147,7 @@ public sealed class MediatorBuilderTests
         await m.Publish(new Alert("test"));
     }
 
+    [Scenario("Publish SingleHandler Executes")]
     [Fact]
     public async Task Publish_SingleHandler_Executes()
     {
@@ -154,10 +158,11 @@ public sealed class MediatorBuilderTests
 
         await m.Publish(new Alert("hello"));
 
-        Assert.Single(received);
-        Assert.Equal("hello", received[0]);
+        ScenarioExpect.Single(received);
+        ScenarioExpect.Equal("hello", received[0]);
     }
 
+    [Scenario("Publish MultipleHandlers AllExecute")]
     [Fact]
     public async Task Publish_MultipleHandlers_AllExecute()
     {
@@ -170,12 +175,13 @@ public sealed class MediatorBuilderTests
 
         await m.Publish(new Alert("test"));
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("h1:test", log[0]);
-        Assert.Equal("h2:test", log[1]);
-        Assert.Equal("h3:test", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("h1:test", log[0]);
+        ScenarioExpect.Equal("h2:test", log[1]);
+        ScenarioExpect.Equal("h3:test", log[2]);
     }
 
+    [Scenario("Pre Behavior Runs Before Handler")]
     [Fact]
     public async Task Pre_Behavior_Runs_Before_Handler()
     {
@@ -187,9 +193,10 @@ public sealed class MediatorBuilderTests
 
         await m.Send<Ping, Pong>(new Ping(1));
 
-        Assert.Equal(new[] { "pre", "handler" }, log);
+        ScenarioExpect.Equal(new[] { "pre", "handler" }, log);
     }
 
+    [Scenario("Post Behavior Runs After Handler")]
     [Fact]
     public async Task Post_Behavior_Runs_After_Handler()
     {
@@ -201,9 +208,10 @@ public sealed class MediatorBuilderTests
 
         await m.Send<Ping, Pong>(new Ping(1));
 
-        Assert.Equal(new[] { "handler", "post" }, log);
+        ScenarioExpect.Equal(new[] { "handler", "post" }, log);
     }
 
+    [Scenario("Multiple Pre And Post Behaviors")]
     [Fact]
     public async Task Multiple_Pre_And_Post_Behaviors()
     {
@@ -218,9 +226,10 @@ public sealed class MediatorBuilderTests
 
         await m.Send<Ping, Pong>(new Ping(1));
 
-        Assert.Equal(new[] { "pre1", "pre2", "handler", "post1", "post2" }, log);
+        ScenarioExpect.Equal(new[] { "pre1", "pre2", "handler", "post1", "post2" }, log);
     }
 
+    [Scenario("Whole Behavior Wraps Handler")]
     [Fact]
     public async Task Whole_Behavior_Wraps_Handler()
     {
@@ -238,9 +247,10 @@ public sealed class MediatorBuilderTests
 
         await m.Send<Ping, Pong>(new Ping(1));
 
-        Assert.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
+        ScenarioExpect.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
     }
 
+    [Scenario("Multiple Whole Behaviors Wrap InOrder")]
     [Fact]
     public async Task Multiple_Whole_Behaviors_Wrap_InOrder()
     {
@@ -266,9 +276,10 @@ public sealed class MediatorBuilderTests
         await m.Send<Ping, Pong>(new Ping(1));
 
         // Last registered is innermost
-        Assert.Equal(new[] { "outer:before", "inner:before", "handler", "inner:after", "outer:after" }, log);
+        ScenarioExpect.Equal(new[] { "outer:before", "inner:before", "handler", "inner:after", "outer:after" }, log);
     }
 
+    [Scenario("Sync Command Handler")]
     [Fact]
     public async Task Sync_Command_Handler()
     {
@@ -278,10 +289,11 @@ public sealed class MediatorBuilderTests
 
         var result = await m.Send<Ping, Pong>(new Ping(42));
 
-        Assert.NotNull(result);
-        Assert.Equal("sync:42", result!.Value);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.Equal("sync:42", result!.Value);
     }
 
+    [Scenario("Async Whole Behavior")]
     [Fact]
     public async Task Async_Whole_Behavior()
     {
@@ -314,9 +326,10 @@ public sealed class MediatorBuilderTests
 
         await m.Send<Ping, Pong>(new Ping(1));
 
-        Assert.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
+        ScenarioExpect.Equal(new[] { "whole:before", "handler", "whole:after" }, log);
     }
 
+    [Scenario("Publish With Behaviors")]
     [Fact]
     public async Task Publish_With_Behaviors()
     {
@@ -329,21 +342,23 @@ public sealed class MediatorBuilderTests
 
         await m.Publish(new Alert("test"));
 
-        Assert.Equal(new[] { "pre", "handler:test", "post" }, log);
+        ScenarioExpect.Equal(new[] { "pre", "handler:test", "post" }, log);
     }
 
 #if NET8_0_OR_GREATER
+    [Scenario("Stream NoHandler Throws")]
     [Fact]
     public async Task Stream_NoHandler_Throws()
     {
         var m = PatternKit.Behavioral.Mediator.Mediator.Create().Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(async () =>
         {
             await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
         });
     }
 
+    [Scenario("Stream Yields All Items")]
     [Fact]
     public async Task Stream_Yields_All_Items()
     {
@@ -355,7 +370,7 @@ public sealed class MediatorBuilderTests
         await foreach (var x in m.Stream<Ping, int>(new Ping(10)))
             items.Add(x);
 
-        Assert.Equal(new[] { 10, 11, 12, 13, 14 }, items);
+        ScenarioExpect.Equal(new[] { 10, 11, 12, 13, 14 }, items);
     }
 
     private static async IAsyncEnumerable<int> RangeAsync(int start, int count)
@@ -367,6 +382,7 @@ public sealed class MediatorBuilderTests
         }
     }
 
+    [Scenario("Stream PrePost Behaviors")]
     [Fact]
     public async Task Stream_PrePost_Behaviors()
     {
@@ -379,10 +395,11 @@ public sealed class MediatorBuilderTests
 
         await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
 
-        Assert.Contains("pre", log);
-        Assert.Contains("post", log);
+        ScenarioExpect.Contains("pre", log);
+        ScenarioExpect.Contains("post", log);
     }
 
+    [Scenario("Stream With Whole Behavior")]
     [Fact]
     public async Task Stream_With_Whole_Behavior()
     {
@@ -398,7 +415,7 @@ public sealed class MediatorBuilderTests
 
         await foreach (var _ in m.Stream<Ping, int>(new Ping(1))) { }
 
-        Assert.Contains("whole", log);
+        ScenarioExpect.Contains("whole", log);
     }
 #endif
 }
@@ -409,6 +426,7 @@ public sealed class MediatorBuilderTests
 
 public sealed class TaskExtensionsTests
 {
+    [Scenario("AsValueTask CompletedTask ReturnsValueTask")]
     [Fact]
     public async Task AsValueTask_CompletedTask_ReturnsValueTask()
     {
@@ -416,10 +434,11 @@ public sealed class TaskExtensionsTests
 
         var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
 
-        Assert.True(valueTask.IsCompletedSuccessfully);
-        Assert.Equal(42, await valueTask);
+        ScenarioExpect.True(valueTask.IsCompletedSuccessfully);
+        ScenarioExpect.Equal(42, await valueTask);
     }
 
+    [Scenario("AsValueTask PendingTask ReturnsValueTask")]
     [Fact]
     public async Task AsValueTask_PendingTask_ReturnsValueTask()
     {
@@ -431,9 +450,10 @@ public sealed class TaskExtensionsTests
 
         var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
 
-        Assert.Equal("result", await valueTask);
+        ScenarioExpect.Equal("result", await valueTask);
     }
 
+    [Scenario("AsValueTask FaultedTask PropagatesException")]
     [Fact]
     public async Task AsValueTask_FaultedTask_PropagatesException()
     {
@@ -441,13 +461,14 @@ public sealed class TaskExtensionsTests
 
         var valueTask = PatternKit.Behavioral.Mediator.TaskExtensions.AsValueTask(task);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => valueTask.AsTask());
-        Assert.Equal("test error", ex.Message);
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() => valueTask.AsTask());
+        ScenarioExpect.Equal("test error", ex.Message);
     }
 }
 
 public sealed class MediatorHelpersTests
 {
+    [Scenario("Box CompletedSuccessfully ReturnsBoxedValue")]
     [Fact]
     public async Task Box_CompletedSuccessfully_ReturnsBoxedValue()
     {
@@ -455,11 +476,12 @@ public sealed class MediatorHelpersTests
 
         var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
 
-        Assert.True(boxed.IsCompletedSuccessfully);
+        ScenarioExpect.True(boxed.IsCompletedSuccessfully);
         var result = await boxed;
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("Box PendingTask AwaitsAndReturns")]
     [Fact]
     public async Task Box_PendingTask_AwaitsAndReturns()
     {
@@ -468,13 +490,14 @@ public sealed class MediatorHelpersTests
 
         var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
 
-        Assert.False(boxed.IsCompleted);
+        ScenarioExpect.False(boxed.IsCompleted);
         source.SetResult("async result");
 
         var result = await boxed;
-        Assert.Equal("async result", result);
+        ScenarioExpect.Equal("async result", result);
     }
 
+    [Scenario("Box NullResult ReturnsNull")]
     [Fact]
     public async Task Box_NullResult_ReturnsNull()
     {
@@ -483,9 +506,10 @@ public sealed class MediatorHelpersTests
         var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
 
         var result = await boxed;
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("Box ReferenceType BoxesCorrectly")]
     [Fact]
     public async Task Box_ReferenceType_BoxesCorrectly()
     {
@@ -495,9 +519,10 @@ public sealed class MediatorHelpersTests
         var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
 
         var result = await boxed;
-        Assert.Same(obj, result);
+        ScenarioExpect.Same(obj, result);
     }
 
+    [Scenario("Box AsyncPath BoxesCorrectly")]
     [Fact]
     public async Task Box_AsyncPath_BoxesCorrectly()
     {
@@ -510,7 +535,7 @@ public sealed class MediatorHelpersTests
         var boxed = PatternKit.Behavioral.Mediator.MediatorHelpers.Box(valueTask);
 
         var result = await boxed;
-        Assert.Equal(123, result);
+        ScenarioExpect.Equal(123, result);
     }
 }
 

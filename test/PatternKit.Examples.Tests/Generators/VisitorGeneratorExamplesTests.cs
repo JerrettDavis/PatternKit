@@ -8,6 +8,7 @@ namespace PatternKit.Examples.Tests.GeneratorTests;
 [Feature("Visitor generator examples")]
 public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    [Scenario("ResultVisitor DispatchesToConcreteDocumentHandlers")]
     [Fact]
     public void ResultVisitor_DispatchesToConcreteDocumentHandlers()
     {
@@ -19,12 +20,13 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
             .Default(document => $"default:{document.FileName}")
             .Build();
 
-        Assert.Equal("pdf:3", new PdfDocument { FileName = "a.pdf", PageCount = 3 }.Accept(visitor));
-        Assert.Equal("word:400", new WordDocument { FileName = "a.docx", WordCount = 400 }.Accept(visitor));
-        Assert.Equal("sheet:2", new SpreadsheetDocument { FileName = "a.xlsx", SheetCount = 2 }.Accept(visitor));
-        Assert.Equal("markdown:9", new MarkdownDocument { FileName = "README.md", LineCount = 9 }.Accept(visitor));
+        ScenarioExpect.Equal("pdf:3", new PdfDocument { FileName = "a.pdf", PageCount = 3 }.Accept(visitor));
+        ScenarioExpect.Equal("word:400", new WordDocument { FileName = "a.docx", WordCount = 400 }.Accept(visitor));
+        ScenarioExpect.Equal("sheet:2", new SpreadsheetDocument { FileName = "a.xlsx", SheetCount = 2 }.Accept(visitor));
+        ScenarioExpect.Equal("markdown:9", new MarkdownDocument { FileName = "README.md", LineCount = 9 }.Accept(visitor));
     }
 
+    [Scenario("ActionVisitor CollectsMetadataForEachConcreteDocument")]
     [Fact]
     public void ActionVisitor_CollectsMetadataForEachConcreteDocument()
     {
@@ -42,11 +44,12 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
         new SpreadsheetDocument { FileName = "budget.xlsx", HasFormulas = true }.Accept(visitor);
         new MarkdownDocument { FileName = "README.md", HasCodeBlocks = true }.Accept(visitor);
 
-        Assert.Equal(
+        ScenarioExpect.Equal(
             ["pdf:contract.pdf:True", "word:memo.docx:False", "sheet:budget.xlsx:True", "markdown:README.md:True"],
             log);
     }
 
+    [Scenario("AsyncVisitors DispatchToConcreteDocumentHandlers")]
     [Fact]
     public async Task AsyncVisitors_DispatchToConcreteDocumentHandlers()
     {
@@ -75,10 +78,11 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
         var result = await document.AcceptAsync(resultVisitor);
         await document.AcceptAsync(actionVisitor);
 
-        Assert.Equal("pdf:DOC-1", result);
-        Assert.Equal(["pdf:DOC-1"], actionLog);
+        ScenarioExpect.Equal("pdf:DOC-1", result);
+        ScenarioExpect.Equal(["pdf:DOC-1"], actionLog);
     }
 
+    [Scenario("DocumentProcessingDemo RunAsync Completes")]
     [Fact]
     public async Task DocumentProcessingDemo_RunAsync_Completes()
     {
@@ -238,8 +242,8 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
         var method = typeof(DocumentProcessingDemo).GetMethod(
             methodName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        Assert.NotNull(method);
-        return Assert.IsType<DocumentProcessingDemo.ValidationResult>(method.Invoke(null, [document]));
+        ScenarioExpect.NotNull(method);
+        return ScenarioExpect.IsType<DocumentProcessingDemo.ValidationResult>(method.Invoke(null, [document]));
     }
 
     private static async Task<string> InvokeIndexAsync(string methodName, Document document)
@@ -247,8 +251,8 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
         var method = typeof(DocumentProcessingDemo).GetMethod(
             methodName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        Assert.NotNull(method);
-        var task = Assert.IsAssignableFrom<Task<string>>(method.Invoke(null, [document, CancellationToken.None]));
+        ScenarioExpect.NotNull(method);
+        var task = ScenarioExpect.IsAssignableFrom<Task<string>>(method.Invoke(null, [document, CancellationToken.None]));
         return await task;
     }
 
@@ -257,8 +261,8 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
         var method = typeof(DocumentProcessingDemo).GetMethod(
             methodName,
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-        Assert.NotNull(method);
-        var task = Assert.IsAssignableFrom<Task>(method.Invoke(null, [document, scans, CancellationToken.None]));
+        ScenarioExpect.NotNull(method);
+        var task = ScenarioExpect.IsAssignableFrom<Task>(method.Invoke(null, [document, scans, CancellationToken.None]));
         await task;
     }
 

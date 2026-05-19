@@ -1,9 +1,11 @@
 using PatternKit.Generators.Chain;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class ChainGeneratorTests
 {
+    [Scenario("GeneratesResponsibilityChain")]
     [Fact]
     public void GeneratesResponsibilityChain()
     {
@@ -34,15 +36,16 @@ public class ChainGeneratorTests
         var gen = new ChainGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Router.Chain.g.cs").SourceText.ToString();
-        Assert.Contains("public bool TryHandle(in global::TestNamespace.Request input, out global::TestNamespace.Response output)", generated);
-        Assert.Contains("public global::TestNamespace.Response Handle", generated);
+        ScenarioExpect.Contains("public bool TryHandle(in global::TestNamespace.Request input, out global::TestNamespace.Response output)", generated);
+        ScenarioExpect.Contains("public global::TestNamespace.Response Handle", generated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ReportsDuplicateOrder")]
     [Fact]
     public void ReportsDuplicateOrder()
     {
@@ -66,9 +69,10 @@ public class ChainGeneratorTests
         var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ReportsDuplicateOrder));
         var gen = new ChainGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKCH003");
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKCH003");
     }
 
+    [Scenario("ReportsResponsibilityChainDiagnostics")]
     [Theory]
     [InlineData("""
         [Chain]
@@ -125,9 +129,10 @@ public class ChainGeneratorTests
         var gen = new ChainGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
     }
 
+    [Scenario("ReportsPipelineTerminalDiagnostics")]
     [Theory]
     [InlineData("", "PKCH005")]
     [InlineData("""
@@ -155,9 +160,10 @@ public class ChainGeneratorTests
         var gen = new ChainGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
 
-        Assert.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == diagnosticId);
     }
 
+    [Scenario("GeneratesResponsibilityChainWithCustomMethodNamesInGlobalNamespace")]
     [Fact]
     public void GeneratesResponsibilityChainWithCustomMethodNamesInGlobalNamespace()
     {
@@ -179,11 +185,11 @@ public class ChainGeneratorTests
         var gen = new ChainGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         var generated = result.Results.SelectMany(r => r.GeneratedSources).Single(s => s.HintName == "Router.Chain.g.cs").SourceText.ToString();
-        Assert.Contains("public bool TryRoute", generated);
-        Assert.Contains("public global::Response Route", generated);
-        Assert.DoesNotContain("namespace ", generated);
-        Assert.True(updated.Emit(Stream.Null).Success);
+        ScenarioExpect.Contains("public bool TryRoute", generated);
+        ScenarioExpect.Contains("public global::Response Route", generated);
+        ScenarioExpect.DoesNotContain("namespace ", generated);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
     }
 }
