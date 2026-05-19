@@ -243,7 +243,7 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddEnterpriseFeatureSlices();
         services.AddSingleton<EnterpriseFeatureSlicesExample>(sp => new(
             sp.GetRequiredService<EnterpriseCheckout>(),
-            EnterpriseFeatureSlicesDemo.CreateRetailRequest));
+            () => EnterpriseFeatureSlicesDemo.CreateRetailRequest()));
         return services.RegisterExample<EnterpriseFeatureSlicesExample>("Enterprise Feature Slices with .NET DI", ExampleIntegrationSurface.DependencyInjection);
     }
 
@@ -310,7 +310,7 @@ public static class PatternKitExampleServiceCollectionExtensions
 
     public static IServiceCollection AddPatternsShowcaseExample(this IServiceCollection services)
     {
-        services.AddSingleton(_ => PatternShowcase.Build());
+        services.AddSingleton(_ => PatternShowcase.PatternShowcase.Build());
         services.AddSingleton<PatternsShowcaseExample>(sp => new(sp.GetRequiredService<ShowcaseFacade>()));
         return services.RegisterExample<PatternsShowcaseExample>("Patterns Showcase", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection);
     }
@@ -352,7 +352,7 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddSingleton(_ => Proxy<int, string>.Create(id => $"Remote data for ID {id}").CachingProxy().Build());
         services.AddSingleton(_ =>
         {
-            var mock = ProxyDemo.MockFramework.CreateMock<(string To, string Subject, string Body), bool>()
+            var mock = ProxyDemo.ProxyDemo.MockFramework.CreateMock<(string To, string Subject, string Body), bool>()
                 .Setup(input => input.To.Contains("@example.com", StringComparison.OrdinalIgnoreCase), true)
                 .Returns(true);
             return mock.Build();
@@ -453,21 +453,21 @@ public static class PatternKitExampleServiceCollectionExtensions
 
     private sealed class DemoEmailSender : IEmailSender
     {
-        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new(new(Channel.Email, true, "email:accepted"));
+        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new ValueTask<SendResult>(new SendResult(Channel.Email, true, "email:accepted"));
     }
 
     private sealed class DemoSmsSender : ISmsSender
     {
-        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new(new(Channel.Sms, true, "sms:accepted"));
+        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new ValueTask<SendResult>(new SendResult(Channel.Sms, true, "sms:accepted"));
     }
 
     private sealed class DemoPushSender : IPushSender
     {
-        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new(new(Channel.Push, true, "push:accepted"));
+        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new ValueTask<SendResult>(new SendResult(Channel.Push, true, "push:accepted"));
     }
 
     private sealed class DemoImSender : IImSender
     {
-        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new(new(Channel.Im, true, "im:accepted"));
+        public ValueTask<SendResult> SendAsync(SendContext ctx, CancellationToken ct) => new ValueTask<SendResult>(new SendResult(Channel.Im, true, "im:accepted"));
     }
 }
