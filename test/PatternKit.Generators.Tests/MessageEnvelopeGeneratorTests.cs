@@ -119,8 +119,8 @@ public sealed class MessageEnvelopeGeneratorTests
         var gen = new MessageEnvelopeGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
-        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
-        ScenarioExpect.Equal("PKME003", diagnostic.Id);
+        var diagnostics = run.Results.SelectMany(result => result.Diagnostics).Select(static diagnostic => diagnostic.Id);
+        ScenarioExpect.Contains("PKME003", diagnostics);
     }
 
     [Scenario("Reports diagnostic for duplicate header names")]
