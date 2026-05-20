@@ -63,7 +63,7 @@ Each `PatternKitExampleDescriptor` includes:
 | `Patterns` | PatternKit primitives demonstrated by the example. |
 | `ProductionChecks` | The behaviors that make the example production-shaped and regression-testable. |
 
-The companion `IPatternKitPatternCatalog` records the canonical GoF pattern matrix. It links each pattern to its fluent runtime path, TinyBDD tests, real-world example, and source-generated path. Any missing generated path must point to a tracked issue; currently that is limited to the dedicated Interpreter generator and the dedicated Abstract Factory family generator.
+The companion `IPatternKitPatternCatalog` records the broader pattern matrix: GoF patterns, enterprise integration patterns, messaging reliability patterns, and application architecture patterns. It links each pattern to its fluent/runtime path, TinyBDD tests, real-world example, and source-generated path. Any missing generated path must point to a tracked issue so planned work stays visible.
 
 ## Validate in a generic host
 

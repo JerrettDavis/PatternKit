@@ -3,13 +3,17 @@ using Microsoft.Extensions.DependencyInjection;
 namespace PatternKit.Examples.ProductionReadiness;
 
 /// <summary>
-/// GoF pattern family used by the PatternKit pattern coverage catalog.
+/// Pattern family used by the PatternKit pattern coverage catalog.
 /// </summary>
 public enum PatternFamily
 {
     Creational,
     Structural,
-    Behavioral
+    Behavioral,
+    EnterpriseIntegration,
+    MessagingReliability,
+    CloudArchitecture,
+    ApplicationArchitecture
 }
 
 /// <summary>
@@ -37,7 +41,7 @@ public sealed record PatternImplementationPath(
 }
 
 /// <summary>
-/// Describes one canonical GoF pattern and the PatternKit surfaces that support it.
+/// Describes one design, integration, or architecture pattern and the PatternKit surfaces that support it.
 /// </summary>
 public sealed record PatternCoverageDescriptor(
     string Name,
@@ -46,7 +50,7 @@ public sealed record PatternCoverageDescriptor(
     IReadOnlyList<string> IntegrationNotes);
 
 /// <summary>
-/// Read-only catalog of PatternKit's coverage for the canonical GoF design patterns.
+/// Read-only catalog of PatternKit's supported and tracked design, integration, and architecture patterns.
 /// </summary>
 public interface IPatternKitPatternCatalog
 {
@@ -357,7 +361,189 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/document-processing-visitor.md",
             "src/PatternKit.Examples/Generators/Visitors/DocumentProcessingDemo.cs",
             "test/PatternKit.Examples.Tests/Generators/VisitorGeneratorExamplesTests.cs",
-            ["fluent visitor", "generated visitor", "document processing example"])
+            ["fluent visitor", "generated visitor", "document processing example"]),
+
+        Pattern("Message Envelope", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-envelope.md",
+            "src/PatternKit.Core/Messaging/Message.cs",
+            "test/PatternKit.Tests/Messaging/MessageTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/215",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/MessageEnvelopeExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageEnvelopeExampleTests.cs",
+            ["runtime envelope and headers", "generated contract path tracked", "enterprise workflow example"]),
+
+        Pattern("Content-Based Router", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-routing.md",
+            "src/PatternKit.Core/Messaging/Routing/ContentRouter.cs",
+            "test/PatternKit.Tests/Messaging/Routing/ContentRouterTests.cs",
+            "docs/generators/messaging.md",
+            "src/PatternKit.Generators/Messaging/ContentRouterGenerator.cs",
+            "test/PatternKit.Generators.Tests/ContentRouterGeneratorTests.cs",
+            null,
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/ContentRouterGeneratorExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ContentRouterGeneratorExampleTests.cs",
+            ["fluent content router", "generated content router", "message routing example"]),
+
+        Pattern("Recipient List", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-routing.md",
+            "src/PatternKit.Core/Messaging/Routing/RecipientList.cs",
+            "test/PatternKit.Tests/Messaging/Routing/RecipientListTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/210",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/MessageRoutingExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs",
+            ["fluent recipient list", "generated recipient list tracked", "fan-out routing example"]),
+
+        Pattern("Splitter", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-routing.md",
+            "src/PatternKit.Core/Messaging/Routing/Splitter.cs",
+            "test/PatternKit.Tests/Messaging/Routing/SplitterTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/211",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/MessageRoutingExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs",
+            ["fluent splitter", "generated splitter tracked", "line-item message example"]),
+
+        Pattern("Aggregator", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-routing.md",
+            "src/PatternKit.Core/Messaging/Routing/Aggregator.cs",
+            "test/PatternKit.Tests/Messaging/Routing/AggregatorTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/211",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/MessageRoutingExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs",
+            ["fluent aggregator", "generated aggregator tracked", "correlated total example"]),
+
+        Pattern("Routing Slip", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/routing-slip.md",
+            "src/PatternKit.Core/Messaging/Routing/RoutingSlip.cs",
+            "test/PatternKit.Tests/Messaging/Routing/RoutingSlipTests.cs",
+            "docs/generators/messaging.md",
+            "src/PatternKit.Generators/Messaging/RoutingSlipGenerator.cs",
+            "test/PatternKit.Generators.Tests/RoutingSlipGeneratorTests.cs",
+            null,
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/RoutingSlipExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/RoutingSlipExampleTests.cs",
+            ["fluent routing slip", "generated routing slip", "fulfillment itinerary example"]),
+
+        Pattern("Saga / Process Manager", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/saga.md",
+            "src/PatternKit.Core/Messaging/Sagas/Saga.cs",
+            "test/PatternKit.Tests/Messaging/Sagas/SagaTests.cs",
+            "docs/generators/messaging.md",
+            "src/PatternKit.Generators/Messaging/SagaGenerator.cs",
+            "test/PatternKit.Generators.Tests/SagaGeneratorTests.cs",
+            null,
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/SagaExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/SagaExampleTests.cs",
+            ["fluent saga", "generated process manager", "order lifecycle example"]),
+
+        Pattern("Mailbox", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/mailbox.md",
+            "src/PatternKit.Core/Messaging/Mailboxes/Mailbox.cs",
+            "test/PatternKit.Tests/Messaging/Mailboxes/MailboxTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/209",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/MailboxExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",
+            ["fluent serialized inbox", "generated mailbox tracked", "bounded worker example"]),
+
+        Pattern("Idempotent Receiver", PatternFamily.MessagingReliability,
+            "docs/patterns/messaging/reliability.md",
+            "src/PatternKit.Core/Messaging/Reliability/IdempotentReceiver.cs",
+            "test/PatternKit.Tests/Messaging/Reliability/IdempotentReceiverTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/213",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/ReliabilityExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs",
+            ["runtime duplicate suppression", "generated reliability path tracked", "at-least-once example"]),
+
+        Pattern("Inbox", PatternFamily.MessagingReliability,
+            "docs/patterns/messaging/reliability.md",
+            "src/PatternKit.Core/Messaging/Reliability/InboxProcessor.cs",
+            "test/PatternKit.Tests/Messaging/Reliability/IdempotentReceiverTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/213",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/ReliabilityExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs",
+            ["runtime inbox boundary", "generated inbox path tracked", "reliable handoff example"]),
+
+        Pattern("Outbox", PatternFamily.MessagingReliability,
+            "docs/patterns/messaging/reliability.md",
+            "src/PatternKit.Core/Messaging/Reliability/InMemoryOutbox.cs",
+            "test/PatternKit.Tests/Messaging/Reliability/OutboxTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/213",
+            "docs/examples/enterprise-messaging-workflows.md",
+            "src/PatternKit.Examples/Messaging/ReliabilityExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs",
+            ["runtime outbox", "generated outbox path tracked", "dispatch handoff example"]),
+
+        Pattern("Request-Reply", PatternFamily.EnterpriseIntegration,
+            "docs/examples/messaging-backplane-facade.md",
+            "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/214",
+            "docs/examples/messaging-backplane-facade.md",
+            "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
+            ["typed request/reply client", "generated backplane topology tracked", "hosted backplane example"]),
+
+        Pattern("Publish-Subscribe", PatternFamily.EnterpriseIntegration,
+            "docs/examples/messaging-backplane-facade.md",
+            "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/214",
+            "docs/examples/messaging-backplane-facade.md",
+            "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
+            ["typed publish/subscribe", "generated backplane topology tracked", "transport boundary example"]),
+
+        Pattern("CQRS", PatternFamily.ApplicationArchitecture,
+            "docs/generators/dispatcher.md",
+            "src/PatternKit.Core/Behavioral/Mediator/Mediator.cs",
+            "test/PatternKit.Tests/Behavioral/Mediator/MediatorTests.cs",
+            "docs/generators/dispatcher.md",
+            "src/PatternKit.Generators/Messaging/DispatcherGenerator.cs",
+            "test/PatternKit.Generators.Tests/DispatcherGeneratorTests.cs",
+            "https://github.com/JerrettDavis/PatternKit/issues/212",
+            "docs/generators/dispatcher.md",
+            "src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs",
+            "test/PatternKit.Examples.Tests/MediatorDemo/MediatorDemoTests.cs",
+            ["dispatcher command/query separation", "generated dispatcher", "first-class CQRS example tracked"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;
