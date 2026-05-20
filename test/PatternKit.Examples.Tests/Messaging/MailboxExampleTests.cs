@@ -16,15 +16,13 @@ public sealed class MailboxExampleTests(ITestOutputHelper output) : TinyBddXunit
     public Task Fluent_And_Generated_Mailbox_Paths_Process_Messages_In_Order()
         => Given("mailbox example entry points", () =>
                 new MailboxExampleRunner(MailboxExample.RunFluentAsync, MailboxExample.RunGeneratedAsync))
-            .When("running both mailbox paths", async runner => new
-            {
-                Fluent = await runner.RunFluentAsync(),
-                Generated = await runner.RunGeneratedAsync()
-            })
+            .When("running both mailbox paths", async ValueTask<MailboxExampleRun> (runner) => new MailboxExampleRun(
+                await runner.RunFluentAsync(),
+                await runner.RunGeneratedAsync()))
             .Then("both paths process correlated work in order", result =>
             {
-                ScenarioExpect.Equal(["batch-42:prepare", "batch-42:ship"], result.Fluent);
-                ScenarioExpect.Equal(result.Fluent, result.Generated);
+                ScenarioExpect.Equal(["batch-42:prepare", "batch-42:ship"], result.FluentProcessed);
+                ScenarioExpect.Equal(result.FluentProcessed, result.GeneratedProcessed);
             })
             .AssertPassed();
 
@@ -37,7 +35,7 @@ public sealed class MailboxExampleTests(ITestOutputHelper output) : TinyBddXunit
                 services.AddGeneratedMailboxExample();
                 return services.BuildServiceProvider(validateScopes: true);
             })
-            .When("resolving and running the generated mailbox example", async provider =>
+            .When("resolving and running the generated mailbox example", async ValueTask<MailboxImportRun> (provider) =>
             {
                 using (provider)
                 {
@@ -56,6 +54,10 @@ public sealed class MailboxExampleTests(ITestOutputHelper output) : TinyBddXunit
                 && result.Integration.HasFlag(ExampleIntegrationSurface.SourceGenerator)
                 && result.Integration.HasFlag(ExampleIntegrationSurface.Messaging))
             .AssertPassed();
+
+    private sealed record MailboxExampleRun(
+        IReadOnlyList<string> FluentProcessed,
+        IReadOnlyList<string> GeneratedProcessed);
 
     private sealed record MailboxImportRun(IReadOnlyList<string> Processed, ExampleIntegrationSurface Integration);
 }
