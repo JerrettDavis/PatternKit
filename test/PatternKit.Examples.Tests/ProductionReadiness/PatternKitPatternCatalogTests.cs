@@ -51,7 +51,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Outbox",
         "Request-Reply",
         "Publish-Subscribe",
-        "CQRS"
+        "CQRS",
+        "Specification"
     ];
 
     [Scenario("Catalog covers every canonical GoF pattern")]
@@ -94,7 +95,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             {
                 ScenarioExpect.Equal(10, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
-                ScenarioExpect.Equal(1, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(2, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 

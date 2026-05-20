@@ -58,6 +58,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Observer**](observer.md) | Event hubs and observer dispatch | `[ObserverHub]` |
 | [**State Machine**](state-machine.md) | Deterministic finite state machines | `[StateMachine]` |
 | [**Strategy**](strategy.md) | Predicate-based dispatch with fluent builder | `[GenerateStrategy]` |
+| [**Specification**](specification.md) | Named business-rule registries | `[GenerateSpecificationRegistry]` |
 | [**Template Method**](template-method-generator.md) | Template method skeletons with hook points | `[Template]` |
 | [**Visitor**](visitor-generator.md) | Type-safe visitor implementations | `[GenerateVisitor]` |
 

@@ -197,6 +197,10 @@ PKINT001 | PatternKit.Generators.Interpreter | Error | Interpreter host must be 
 PKINT002 | PatternKit.Generators.Interpreter | Error | Interpreter must declare at least one rule.
 PKINT003 | PatternKit.Generators.Interpreter | Error | Interpreter rule signature is invalid.
 PKINT004 | PatternKit.Generators.Interpreter | Error | Interpreter rule declaration is duplicated.
+PKSPEC001 | PatternKit.Generators.Specification | Error | Specification registry host must be partial.
+PKSPEC002 | PatternKit.Generators.Specification | Error | Specification registry must declare at least one rule.
+PKSPEC003 | PatternKit.Generators.Specification | Error | Specification rule signature is invalid.
+PKSPEC004 | PatternKit.Generators.Specification | Error | Specification rule declaration is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

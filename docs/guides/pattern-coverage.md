@@ -58,6 +58,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Request-Reply | Messaging backplane facade example | Backplane topology generator |
 | Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Backplane topology generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
+| Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
 
 ## Research Baselines
 
