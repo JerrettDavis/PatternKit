@@ -6,6 +6,7 @@ using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
+using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
@@ -26,6 +27,7 @@ using PatternKit.Examples.Pricing;
 using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
+using PatternKit.Examples.RetryDemo;
 using PatternKit.Examples.Singleton;
 using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.Strategies.Coercion;
@@ -114,6 +116,7 @@ public sealed record ReactiveTransactionExample(ReactiveTransaction Transaction)
 public sealed record AsyncConnectionStateMachineExample(Func<string[], ValueTask<(ConnectionStateDemo.Mode Final, List<string> Log)>> RunAsync);
 public sealed record TemplateMethodSubclassingExample(DataProcessor Processor);
 public sealed record TemplateMethodAsyncExample(AsyncDataPipeline Pipeline);
+public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -160,7 +163,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddReactiveTransactionExample()
             .AddAsyncConnectionStateMachineExample()
             .AddTemplateMethodSubclassingExample()
-            .AddTemplateMethodAsyncExample();
+            .AddTemplateMethodAsyncExample()
+            .AddInventoryRetryExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -525,6 +529,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddTransient<AsyncDataPipeline>();
         services.AddTransient<TemplateMethodAsyncExample>(sp => new(sp.GetRequiredService<AsyncDataPipeline>()));
         return services.RegisterExample<TemplateMethodAsyncExample>("Template Method Async", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddInventoryRetryExample(this IServiceCollection services)
+    {
+        services.AddInventoryRetryDemo();
+        services.AddSingleton<InventoryRetryExample>(sp => new(
+            sp.GetRequiredService<RetryPolicy<InventoryResponse>>(),
+            sp.GetRequiredService<InventoryLookupService>()));
+        return services.RegisterExample<InventoryRetryExample>("Inventory Retry Policy", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     private static IServiceCollection RegisterExample<T>(

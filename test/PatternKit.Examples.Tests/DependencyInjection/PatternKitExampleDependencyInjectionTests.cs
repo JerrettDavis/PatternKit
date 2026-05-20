@@ -88,6 +88,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
         var interpreter = provider.GetRequiredService<GeneratedInterpreterRulesExample>();
         var specifications = provider.GetRequiredService<LoanApprovalSpecificationsExample>();
+        var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -148,7 +149,8 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("resilient checkout succeeds", checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded),
             ("generated interpreter computes tier discounts", interpreter.Pricing.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.TierDiscountRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 100m, CustomerTier = "Gold" }) == 10m),
             ("generated interpreter evaluates VIP eligibility", interpreter.Eligibility.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.VipEligibilityRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 150m, CustomerTier = "Gold" })),
-            ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved)
+            ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved),
+            ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available)
         ];
     }
 
