@@ -106,6 +106,129 @@ public sealed class AbstractFactoryGeneratorTests
         ScenarioExpect.Equal("PKAF003", diagnostic.Id);
     }
 
+    [Scenario("Reports diagnostic for abstract factory without products")]
+    [Fact]
+    public void ReportsDiagnosticForAbstractFactoryWithoutProducts()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            [GenerateAbstractFactory(typeof(string))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForAbstractFactoryWithoutProducts));
+
+        ScenarioExpect.Equal("PKAF002", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for duplicate abstract factory products")]
+    [Fact]
+    public void ReportsDiagnosticForDuplicateAbstractFactoryProducts()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public sealed class WindowsButton : IButton { }
+            public sealed class AlternateWindowsButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(string))]
+            [AbstractFactoryProduct("windows", typeof(IButton), typeof(WindowsButton))]
+            [AbstractFactoryProduct("windows", typeof(IButton), typeof(AlternateWindowsButton))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForDuplicateAbstractFactoryProducts));
+
+        ScenarioExpect.Equal("PKAF004", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for incompatible abstract factory key")]
+    [Fact]
+    public void ReportsDiagnosticForIncompatibleAbstractFactoryKey()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public sealed class WindowsButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(int))]
+            [AbstractFactoryProduct("windows", typeof(IButton), typeof(WindowsButton))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForIncompatibleAbstractFactoryKey));
+
+        ScenarioExpect.Equal("PKAF003", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for abstract factory product without public parameterless constructor")]
+    [Fact]
+    public void ReportsDiagnosticForProductWithoutPublicParameterlessConstructor()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public sealed class WindowsButton : IButton
+            {
+                public WindowsButton(string label) { }
+            }
+
+            [GenerateAbstractFactory(typeof(string))]
+            [AbstractFactoryProduct("windows", typeof(IButton), typeof(WindowsButton))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForProductWithoutPublicParameterlessConstructor));
+
+        ScenarioExpect.Equal("PKAF003", diagnostic.Id);
+    }
+
+    [Scenario("Generates default products and omits service provider overload when not requested")]
+    [Fact]
+    public void GeneratesDefaultProductsAndOmitsServiceProviderOverloadWhenNotRequested()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public class ButtonBase : IButton { }
+            public sealed class DefaultButton : ButtonBase { }
+
+            [GenerateAbstractFactory(typeof(string), FactoryMethodName = "Build")]
+            [AbstractFactoryProduct("fallback", typeof(ButtonBase), typeof(DefaultButton), IsDefaultFamily = true)]
+            public static partial class WidgetFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesDefaultProductsAndOmitsServiceProviderOverloadWhenNotRequested));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+
+        ScenarioExpect.Contains("Build()", text);
+        ScenarioExpect.Contains("builder.DefaultProduct<global::Demo.ButtonBase>(() => new global::Demo.DefaultButton())", text);
+        ScenarioExpect.DoesNotContain("IServiceProvider", text);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
@@ -115,4 +238,12 @@ public sealed class AbstractFactoryGeneratorTests
                 MetadataReference.CreateFromFile(typeof(PatternKit.Creational.AbstractFactory.AbstractFactory<>).Assembly.Location),
                 MetadataReference.CreateFromFile(typeof(IServiceProvider).Assembly.Location)
             ]);
+
+    private static Diagnostic RunAndGetSingleDiagnostic(string source, string assemblyName)
+    {
+        var comp = CreateCompilation(source, assemblyName);
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+        return ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+    }
 }
