@@ -23,6 +23,7 @@ Example source:
 | Inbox/outbox | `ReliabilityExample.cs` | Explicit handoff records for durable integration boundaries owned by the application. |
 | Source-generated dispatcher | `DispatcherExample.cs` | Compile-time mediator commands, notifications, streams, and paging. |
 | Source-generated content router | `ContentRouterGeneratorExample.cs` | Attribute-driven content routing without runtime scanning. |
+| Source-generated recipient list | `RecipientListGeneratorExample.cs` | Attribute-driven fan-out without runtime scanning. |
 | Resilient checkout orchestration | `ResilientCheckoutDemo.cs` | Route selection, routing-slip execution, command compensation, and fallback routes. |
 | Collaborating service mailboxes | `ServiceCollaborationMailboxDemo.cs` | Inventory, payment, shipping, and notification mailboxes collaborating over correlated messages. |
 | Backplane facade | `BackplaneFacadeDemo.cs` | MassTransit/MediatR-shaped host builder, typed client, request/reply, and pub/sub over an application-owned transport boundary. |

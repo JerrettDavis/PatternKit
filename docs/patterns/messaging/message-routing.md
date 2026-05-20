@@ -40,6 +40,25 @@ var result = recipients.Dispatch(Message<Order>.Create(new Order("order-1", 150m
 
 Use `AsyncRecipientList<TPayload>` for async recipient handlers.
 
+Use `[GenerateRecipientList]` when the recipient map is part of application structure and should be compiled into a strongly typed factory:
+
+```csharp
+[GenerateRecipientList(typeof(Order))]
+public static partial class OrderRecipients
+{
+    private static bool IsPriority(Message<Order> message, MessageContext context)
+        => message.Payload.Priority == "priority";
+
+    [RecipientListRecipient("priority-audit", 10, nameof(IsPriority))]
+    private static void PriorityAudit(Message<Order> message, MessageContext context)
+    {
+        // deliver to audit sink
+    }
+}
+```
+
+The generated factory returns the same `RecipientList<TPayload>` runtime type as the fluent API.
+
 ## Splitter
 
 `Splitter<TPayload, TItem>` turns one message into item messages. Child messages preserve the parent headers. When the parent has a message id and no causation id, child messages set `CausationId` to the parent `MessageId`.
@@ -95,6 +114,8 @@ Use external infrastructure for:
 - <xref:PatternKit.Messaging.Routing.AsyncContentRouter`2>
 - <xref:PatternKit.Messaging.Routing.RecipientList`1>
 - <xref:PatternKit.Messaging.Routing.AsyncRecipientList`1>
+- <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute>
+- <xref:PatternKit.Generators.Messaging.RecipientListRecipientAttribute>
 - <xref:PatternKit.Messaging.Routing.Splitter`2>
 - <xref:PatternKit.Messaging.Routing.Aggregator`3>
 - <xref:PatternKit.Messaging.Routing.AggregationResult`2>

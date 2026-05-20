@@ -66,6 +66,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Enterprise Messaging Workflow Suite**
   End-to-end messaging examples for envelopes, content routing, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, outboxes, and generated messaging factories. See [Enterprise Messaging Workflow Suite](enterprise-messaging-workflows.md).
 
+* **Generated Recipient List**
+  Shows fluent and source-generated recipient-list fan-out side by side, with an importable `IServiceCollection` extension. See [Generated Recipient List](generated-recipient-list.md).
+
 * **Resilient Checkout and Collaborating Mailboxes**
   Application-shaped messaging demos: checkout route selection, routing-slip execution, command compensation, fallback routes, and service mailboxes collaborating over correlated messages. See [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md).
 

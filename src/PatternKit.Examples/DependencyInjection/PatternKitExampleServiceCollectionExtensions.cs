@@ -84,6 +84,7 @@ public sealed record PosTenderVisitorExample(TypeDispatcher<VisitorTender, strin
 public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
+public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
@@ -123,6 +124,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddApiExceptionMappingVisitorExample()
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
+            .AddGeneratedRecipientListExample()
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
             .AddEnterpriseMessagingWorkflowSuiteExample()
@@ -320,6 +322,13 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new MessageRouterVisitorExample(MessageRoutingExample.Run));
         return services.RegisterExample<MessageRouterVisitorExample>("Message Router Visitor", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedRecipientListExample(this IServiceCollection services)
+    {
+        services.AddRecipientListGeneratorExample();
+        services.AddSingleton<GeneratedRecipientListExample>(sp => new(sp.GetRequiredService<RecipientListGeneratorExampleRunner>()));
+        return services.RegisterExample<GeneratedRecipientListExample>("Generated Recipient List", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPatternsShowcaseExample(this IServiceCollection services)

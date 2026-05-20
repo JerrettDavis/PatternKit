@@ -55,6 +55,9 @@
 - name: Enterprise Messaging Workflow Suite
   href: enterprise-messaging-workflows.md
 
+- name: Generated Recipient List
+  href: generated-recipient-list.md
+
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 

@@ -233,6 +233,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ContentRouter", "RecipientList", "Splitter", "Aggregator", "RoutingSlip", "Saga", "Mailbox"],
             ["idempotency", "inbox/outbox", "generated dispatcher"]),
         Descriptor(
+            "Generated Recipient List",
+            "src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs",
+            "docs/examples/generated-recipient-list.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["RecipientList"],
+            ["fan-out routing", "source-generated factory", "DI composition"]),
+        Descriptor(
             "CQRS Dispatcher",
             "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",
