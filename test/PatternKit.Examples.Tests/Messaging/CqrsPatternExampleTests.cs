@@ -15,8 +15,8 @@ public sealed class CqrsPatternExampleTests(ITestOutputHelper output) : TinyBddX
     [Scenario("Fluent mediator path separates command writes from query reads")]
     [Fact]
     public Task Fluent_Mediator_Path_Separates_Command_Writes_From_Query_Reads()
-        => Given("the fluent CQRS example", () => CqrsPatternExample.RunFluentAsync)
-            .When("running the command and query flow", async run => await run(CancellationToken.None))
+        => Given<Func<CancellationToken, ValueTask<CqrsSummary>>>("the fluent CQRS example", () => CqrsPatternExample.RunFluentAsync)
+            .When<CqrsSummary>("running the command and query flow", run => run(CancellationToken.None))
             .Then("the query read model matches the command write", summary =>
                 summary.Path == "fluent" && summary.QueryMatchedCommand)
             .And("the write total is calculated by the command handler", summary =>
@@ -38,7 +38,7 @@ public sealed class CqrsPatternExampleTests(ITestOutputHelper output) : TinyBddX
                 services.AddSourceGeneratedCqrsServices();
                 return services.BuildServiceProvider(validateScopes: true);
             })
-            .When("running the generated command and query flow", async provider =>
+            .When("running the generated command and query flow", async ValueTask<CqrsSummary> (provider) =>
             {
                 using (provider)
                     return await CqrsPatternExample.RunSourceGeneratedAsync(provider, CancellationToken.None);
@@ -64,7 +64,7 @@ public sealed class CqrsPatternExampleTests(ITestOutputHelper output) : TinyBddX
                 services.AddCqrsDispatcherExample();
                 return services.BuildServiceProvider(validateScopes: true);
             })
-            .When("resolving and running both CQRS paths", async provider =>
+            .When("resolving and running both CQRS paths", async ValueTask<CqrsExampleRun> (provider) =>
             {
                 using (provider)
                 {
@@ -74,12 +74,7 @@ public sealed class CqrsPatternExampleTests(ITestOutputHelper output) : TinyBddX
                     var descriptor = provider.GetServices<PatternKitExampleServiceDescriptor>()
                         .Single(descriptor => descriptor.ExampleName == "CQRS Dispatcher");
 
-                    return new
-                    {
-                        Fluent = fluent,
-                        Generated = generated,
-                        descriptor.Integration
-                    };
+                    return new CqrsExampleRun(fluent, generated, descriptor.Integration);
                 }
             })
             .Then("both entry points produce matched command and query results", result =>
@@ -88,4 +83,9 @@ public sealed class CqrsPatternExampleTests(ITestOutputHelper output) : TinyBddX
                 result.Integration.HasFlag(ExampleIntegrationSurface.DependencyInjection)
                 && result.Integration.HasFlag(ExampleIntegrationSurface.SourceGenerator))
             .AssertPassed();
+
+    private sealed record CqrsExampleRun(
+        CqrsSummary Fluent,
+        CqrsSummary Generated,
+        ExampleIntegrationSurface Integration);
 }
