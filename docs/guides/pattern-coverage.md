@@ -30,7 +30,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Structural | Proxy | `Proxy<TIn, TOut>` | Proxy generator |
 | Behavioral | Chain of Responsibility | `ActionChain<T>` and `ResultChain<T>` | Chain generator |
 | Behavioral | Command | `Command<T>` | Command generator |
-| Behavioral | Interpreter | `Interpreter<TContext, TResult>` | Tracked in [#206](https://github.com/JerrettDavis/PatternKit/issues/206) |
+| Behavioral | Interpreter | `Interpreter<TContext, TResult>` | Interpreter generator |
 | Behavioral | Iterator | `Flow<T>` and sequence helpers | Iterator generator |
 | Behavioral | Mediator | `Mediator` | Dispatcher generator |
 | Behavioral | Memento | `Memento<T>` | Memento generator |

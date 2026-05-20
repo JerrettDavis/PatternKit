@@ -99,6 +99,34 @@ var tierDiscount = interpreter.Interpret(tierDiscountRule, context); // 15.00
 var thresholdDiscount = interpreter.Interpret(thresholdRule, context); // 5.00
 ```
 
+### Source-Generated Variant
+
+For production applications with a stable pricing grammar, the same rule set can be declared with generator attributes and registered through dependency injection:
+
+```csharp
+[GenerateInterpreter(typeof(PricingContext), typeof(decimal), FactoryMethodName = "Create")]
+public static partial class GeneratedPricingRuleInterpreter
+{
+    [InterpreterTerminal("number")]
+    private static decimal Number(string token) => decimal.Parse(token);
+
+    [InterpreterTerminal("var")]
+    private static decimal Variable(string token, PricingContext context) =>
+        token == "cart_total" ? context.CartTotal : 0m;
+
+    [InterpreterNonTerminal("mul")]
+    private static decimal Multiply(decimal[] args) => args[0] * args[1];
+}
+
+public static IServiceCollection AddPricingRules(this IServiceCollection services)
+{
+    services.AddSingleton(_ => GeneratedPricingRuleInterpreter.Create());
+    return services;
+}
+```
+
+The full `InterpreterDemo` includes generated pricing and eligibility interpreters that are validated by TinyBDD tests and imported through `AddPatternKitExamples`.
+
 ### Why This Pattern
 
 - **Business agility**: Rules can be stored in a database and changed without deployment

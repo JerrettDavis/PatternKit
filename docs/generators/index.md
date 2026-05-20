@@ -52,6 +52,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Chain**](chain.md) | Chain-of-responsibility pipelines | `[Chain]` |
 | [**Command**](command.md) | Command objects and invokers | `[Command]` |
 | [**Composer**](composer.md) | Pipeline composition from ordered steps | `[Composer]` |
+| [**Interpreter**](interpreter.md) | DSL rule factories for terminal and non-terminal expressions | `[GenerateInterpreter]` |
 | [**Iterator**](iterator.md) | Enumerable/async-enumerable iteration helpers | `[Iterator]` |
 | [**Memento**](memento.md) | Immutable snapshots with optional undo/redo history | `[Memento]` |
 | [**Observer**](observer.md) | Event hubs and observer dispatch | `[ObserverHub]` |
@@ -133,6 +134,10 @@ public partial class EditorState { }
 // Strategy - predicate dispatch
 [GenerateStrategy("Router", typeof(Request), StrategyKind.Action)]
 public partial class Router { }
+
+// Interpreter - generated DSL rule factory
+[GenerateInterpreter(typeof(PricingContext), typeof(decimal))]
+public static partial class PricingRules { }
 
 // Template Method - algorithm skeleton
 [Template]

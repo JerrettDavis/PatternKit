@@ -1,4 +1,4 @@
-﻿; Unshipped analyzer release
+; Unshipped analyzer release
 ; https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.Analyzers/ReleaseTrackingAnalyzers.Help.md
 
 ### New Rules
@@ -193,6 +193,10 @@ PKAF001 | PatternKit.Generators.Factories | Error | Abstract factory host must b
 PKAF002 | PatternKit.Generators.Factories | Error | Abstract factory must declare at least one product.
 PKAF003 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is invalid.
 PKAF004 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is duplicated.
+PKINT001 | PatternKit.Generators.Interpreter | Error | Interpreter host must be partial.
+PKINT002 | PatternKit.Generators.Interpreter | Error | Interpreter must declare at least one rule.
+PKINT003 | PatternKit.Generators.Interpreter | Error | Interpreter rule signature is invalid.
+PKINT004 | PatternKit.Generators.Interpreter | Error | Interpreter rule declaration is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

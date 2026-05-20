@@ -118,10 +118,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                     .OrderBy(static issue => issue)
                     .ToArray();
 
-                ScenarioExpect.Equal(
-                [
-                    "Interpreter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/206"
-                ], tracked);
+                ScenarioExpect.Empty(tracked);
             })
             .AssertPassed();
 

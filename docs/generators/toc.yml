@@ -43,6 +43,9 @@
 - name: Flyweight
   href: flyweight.md
 
+- name: Interpreter
+  href: interpreter.md
+
 - name: Iterator
   href: iterator.md
 

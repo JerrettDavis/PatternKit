@@ -8,6 +8,7 @@ using PatternKit.Generators.Decorator;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
+using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
 using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
@@ -72,6 +73,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(FactoryDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(FactoryClassAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(FactoryClassKeyAttribute), AttributeTargets.Class, false, false },
+        { typeof(GenerateInterpreterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(InterpreterTerminalAttribute), AttributeTargets.Method, true, false },
+        { typeof(InterpreterNonTerminalAttribute), AttributeTargets.Method, true, false },
         { typeof(IteratorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(IteratorStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalIteratorAttribute), AttributeTargets.Class, false, false },
@@ -142,6 +146,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(validOn, usage.ValidOn);
         ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
         ScenarioExpect.Equal(inherited, usage.Inherited);
+    }
+
+    [Scenario("Interpreter Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Interpreter_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateInterpreterAttribute(typeof(string), typeof(decimal))
+        {
+            FactoryMethodName = "BuildRules"
+        };
+        var terminal = new InterpreterTerminalAttribute("number");
+        var nonTerminal = new InterpreterNonTerminalAttribute("add");
+
+        ScenarioExpect.Equal(typeof(string), generator.ContextType);
+        ScenarioExpect.Equal(typeof(decimal), generator.ResultType);
+        ScenarioExpect.Equal("BuildRules", generator.FactoryMethodName);
+        ScenarioExpect.Equal("number", terminal.Name);
+        ScenarioExpect.Equal("add", nonTerminal.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInterpreterAttribute(null!, typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInterpreterAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new InterpreterTerminalAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new InterpreterNonTerminalAttribute(" "));
     }
 
     [Scenario("Adapter Attributes Expose Defaults And Configuration")]
