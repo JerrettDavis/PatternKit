@@ -79,6 +79,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateContentRouterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ContentRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ObserverHubAttribute), AttributeTargets.Class, false, false },
         { typeof(ObservedEventAttribute), AttributeTargets.Property, false, false },
@@ -339,6 +341,15 @@ public sealed class AbstractionsAttributeCoverageTests
             AsyncFactoryName = "BuildRecipientsAsync"
         };
         var recipient = new RecipientListRecipientAttribute("priority-audit", 5, "IsPriority");
+        var envelope = new GenerateMessageEnvelopeAttribute(typeof(string))
+        {
+            FactoryName = "BuildEnvelope",
+            ContextFactoryName = "BuildContext"
+        };
+        var envelopeHeader = new MessageEnvelopeHeaderAttribute("tenant-id", typeof(string))
+        {
+            ParameterName = "tenantId"
+        };
 
         ScenarioExpect.Equal(typeof(string), flyweight.KeyType);
         ScenarioExpect.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -375,6 +386,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("priority-audit", recipient.Name);
         ScenarioExpect.Equal(5, recipient.Order);
         ScenarioExpect.Equal("IsPriority", recipient.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), envelope.PayloadType);
+        ScenarioExpect.Equal("BuildEnvelope", envelope.FactoryName);
+        ScenarioExpect.Equal("BuildContext", envelope.ContextFactoryName);
+        ScenarioExpect.Equal("tenant-id", envelopeHeader.Name);
+        ScenarioExpect.Equal(typeof(string), envelopeHeader.ValueType);
+        ScenarioExpect.Equal("tenantId", envelopeHeader.ParameterName);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
@@ -386,6 +403,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRecipientListAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("name", 1, ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));
         ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
         ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());

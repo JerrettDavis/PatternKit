@@ -170,6 +170,10 @@ PKCR002 | PatternKit.Generators.Messaging | Error | Content router must declare 
 PKCR003 | PatternKit.Generators.Messaging | Error | Content route handler or predicate signature is invalid.
 PKCR004 | PatternKit.Generators.Messaging | Error | Content router default handler signature is invalid.
 PKCR005 | PatternKit.Generators.Messaging | Error | Content router route name or order is duplicated.
+PKME001 | PatternKit.Generators.Messaging | Error | Message envelope type must be partial.
+PKME002 | PatternKit.Generators.Messaging | Error | Message envelope must declare at least one required header.
+PKME003 | PatternKit.Generators.Messaging | Error | Message envelope header configuration is invalid.
+PKME004 | PatternKit.Generators.Messaging | Error | Message envelope header name or generated parameter name is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.
