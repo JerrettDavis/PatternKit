@@ -156,7 +156,7 @@ public sealed class InterpreterGenerator : IIncrementalGenerator
         if (!method.IsStatic || method.IsGenericMethod || method.ReturnsVoid)
             return false;
 
-        if (!SymbolEqualityComparer.IncludeNullability.Equals(method.ReturnType, resultType))
+        if (!SymbolEqualityComparer.Default.Equals(method.ReturnType, resultType))
             return false;
 
         var parameters = method.Parameters;
@@ -165,11 +165,11 @@ public sealed class InterpreterGenerator : IIncrementalGenerator
 
         var firstParameterValid = isTerminal
             ? parameters[0].Type.SpecialType == SpecialType.System_String
-            : parameters[0].Type is IArrayTypeSymbol arrayType && SymbolEqualityComparer.IncludeNullability.Equals(arrayType.ElementType, resultType);
+            : parameters[0].Type is IArrayTypeSymbol arrayType && SymbolEqualityComparer.Default.Equals(arrayType.ElementType, resultType);
         if (!firstParameterValid)
             return false;
 
-        if (parameters.Length == 2 && !SymbolEqualityComparer.IncludeNullability.Equals(parameters[1].Type, contextType))
+        if (parameters.Length == 2 && !SymbolEqualityComparer.Default.Equals(parameters[1].Type, contextType))
             return false;
 
         rule = new Rule(
