@@ -71,6 +71,18 @@ var splitter = Splitter<Order, LineItem>.Create()
 var lineMessages = splitter.Split(orderMessage);
 ```
 
+Use `[GenerateSplitter]` when the split projection is stable and should be compiled into a named factory:
+
+```csharp
+[GenerateSplitter(typeof(Order), typeof(LineItem))]
+public static partial class OrderLineSplitter
+{
+    [SplitterProjection]
+    private static IEnumerable<LineItem> ProjectLines(Message<Order> message, MessageContext context)
+        => message.Payload.Lines;
+}
+```
+
 ## Aggregator
 
 `Aggregator<TKey, TItem, TResult>` groups messages in memory until a completion policy is satisfied, then projects the completed group into a result and removes it from the open groups.
@@ -90,6 +102,26 @@ if (result.Completed)
 ```
 
 Duplicate message ids are ignored by default. Use `DuplicateMessagePolicy.Replace` or `DuplicateMessagePolicy.Include` when a workflow needs different behavior.
+
+Use `[GenerateAggregator]` when the correlation, completion, and projection contract is part of the application topology:
+
+```csharp
+[GenerateAggregator(typeof(string), typeof(LineItem), typeof(decimal))]
+public static partial class OrderLineAggregator
+{
+    [AggregatorCorrelation]
+    private static string Correlate(Message<LineItem> message, MessageContext context)
+        => message.Headers.CorrelationId ?? message.Payload.Sku;
+
+    [AggregatorCompletion]
+    private static bool Complete(string key, IReadOnlyList<Message<LineItem>> messages, MessageContext context)
+        => messages.Count == 2;
+
+    [AggregatorProjection]
+    private static decimal Project(string key, IReadOnlyList<Message<LineItem>> messages, MessageContext context)
+        => messages.Sum(message => message.Payload.Amount);
+}
+```
 
 ## Choosing Boundaries
 
@@ -117,9 +149,15 @@ Use external infrastructure for:
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute>
 - <xref:PatternKit.Generators.Messaging.RecipientListRecipientAttribute>
 - <xref:PatternKit.Messaging.Routing.Splitter`2>
+- <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute>
+- <xref:PatternKit.Generators.Messaging.SplitterProjectionAttribute>
 - <xref:PatternKit.Messaging.Routing.Aggregator`3>
 - <xref:PatternKit.Messaging.Routing.AggregationResult`2>
 - <xref:PatternKit.Messaging.Routing.DuplicateMessagePolicy>
+- <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute>
+- <xref:PatternKit.Generators.Messaging.AggregatorCorrelationAttribute>
+- <xref:PatternKit.Generators.Messaging.AggregatorCompletionAttribute>
+- <xref:PatternKit.Generators.Messaging.AggregatorProjectionAttribute>
 
 ## Example Source
 

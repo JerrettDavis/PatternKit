@@ -178,3 +178,9 @@ PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be 
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.
 PKRL004 | PatternKit.Generators.Messaging | Error | Recipient name or order is duplicated.
+PKSA001 | PatternKit.Generators.Messaging | Error | Splitter or aggregator host must be partial.
+PKSA002 | PatternKit.Generators.Messaging | Error | Generated splitter host must declare exactly one projection.
+PKSA003 | PatternKit.Generators.Messaging | Error | Generated splitter projection signature is invalid.
+PKSA004 | PatternKit.Generators.Messaging | Error | Generated aggregator host must declare correlation, completion, and projection methods.
+PKSA005 | PatternKit.Generators.Messaging | Error | Generated aggregator method signature is invalid.
+PKSA006 | PatternKit.Generators.Messaging | Error | Generated aggregator duplicate policy is invalid.

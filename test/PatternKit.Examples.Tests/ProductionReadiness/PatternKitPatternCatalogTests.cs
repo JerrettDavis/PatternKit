@@ -121,15 +121,13 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(
                 [
                     "Abstract Factory has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/207",
-                    "Aggregator has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/211",
                     "Idempotent Receiver has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
                     "Inbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
                     "Interpreter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/206",
                     "Mailbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/209",
                     "Outbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
                     "Publish-Subscribe has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",
-                    "Request-Reply has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",
-                    "Splitter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/211"
+                    "Request-Reply has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214"
                 ], tracked);
             })
             .AssertPassed();

@@ -61,6 +61,9 @@
 - name: Generated Recipient List
   href: generated-recipient-list.md
 
+- name: Generated Splitter and Aggregator
+  href: generated-splitter-aggregator.md
+
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 

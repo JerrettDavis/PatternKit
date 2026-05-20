@@ -67,6 +67,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Message Envelope**](messaging.md#generated-message-envelope) | Required message metadata contracts | `[GenerateMessageEnvelope]` |
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
 | [**Recipient List**](messaging.md#generated-recipient-list) | Recipient fan-out factories | `[GenerateRecipientList]` |
+| [**Splitter / Aggregator**](messaging.md#generated-splitter-and-aggregator) | Split/rejoin message routing factories | `[GenerateSplitter]` / `[GenerateAggregator]` |
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
 | [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
 
@@ -146,6 +147,13 @@ public static partial class OrderAcceptedEnvelope { }
 // Content router - generated first-match route factory
 [GenerateContentRouter(typeof(Order), typeof(string))]
 public static partial class OrderRouter { }
+
+// Splitter and aggregator - generated split/rejoin factories
+[GenerateSplitter(typeof(Order), typeof(OrderLine))]
+public static partial class OrderSplitter { }
+
+[GenerateAggregator(typeof(string), typeof(OrderLine), typeof(decimal))]
+public static partial class OrderLineAggregator { }
 
 // Routing slip - generated ordered itinerary factory
 [GenerateRoutingSlip(typeof(Order))]

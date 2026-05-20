@@ -1,11 +1,12 @@
 # Messaging Generators
 
-PatternKit includes six messaging-oriented source generators:
+PatternKit includes seven messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
+- <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute> and <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute> for split/rejoin routing.
 - <xref:PatternKit.Generators.Messaging.GenerateRoutingSlipAttribute> for ordered routing-slip factories.
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute> for typed saga/process-manager factories.
 
@@ -137,6 +138,46 @@ Example files:
 - `src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs`
 
+## Generated Splitter And Aggregator
+
+`[GenerateSplitter]` creates a `Splitter<TPayload, TItem>` factory from one static projection method. `[GenerateAggregator]` creates an `Aggregator<TKey, TItem, TResult>` factory from static correlation, completion, and projection methods:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateSplitter(typeof(Order), typeof(OrderLine), FactoryName = "CreateLineSplitter")]
+public static partial class OrderSplitter
+{
+    [SplitterProjection]
+    private static IEnumerable<OrderLine> ProjectLines(Message<Order> message, MessageContext context)
+        => message.Payload.Lines;
+}
+
+[GenerateAggregator(typeof(string), typeof(OrderLine), typeof(decimal), FactoryName = "CreateLineTotal")]
+public static partial class OrderLineAggregator
+{
+    [AggregatorCorrelation]
+    private static string Correlate(Message<OrderLine> message, MessageContext context)
+        => message.Headers.CorrelationId ?? message.Payload.OrderId;
+
+    [AggregatorCompletion]
+    private static bool Complete(string key, IReadOnlyList<Message<OrderLine>> messages, MessageContext context)
+        => messages.Count == 2;
+
+    [AggregatorProjection]
+    private static decimal Project(string key, IReadOnlyList<Message<OrderLine>> messages, MessageContext context)
+        => messages.Sum(message => message.Payload.Amount);
+}
+```
+
+Use generated splitter/aggregator factories when the split projection and rejoin contract are stable. Use runtime builders when completion rules depend on tenant configuration or runtime-discovered topology.
+
+Example files:
+
+- `src/PatternKit.Examples/Messaging/MessageRoutingExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs`
+
 ## Generated Saga
 
 `[GenerateSaga]` emits a process-manager factory from typed transition methods:
@@ -173,6 +214,7 @@ Example source:
 | `PKME001`-`PKME004` | Message Envelope | Non-partial host, missing headers, invalid header configuration, or duplicate names. |
 | `PKCR001`-`PKCR005` | Content Router | Non-partial host, missing routes, invalid signatures, duplicate defaults, or duplicate route identity. |
 | `PKRL001`-`PKRL004` | Recipient List | Non-partial host, missing recipients, invalid signatures, or duplicate recipient identity. |
+| `PKSA001`-`PKSA006` | Splitter / Aggregator | Non-partial host, missing contract methods, invalid signatures, or invalid duplicate policy. |
 | `PKRS001`-`PKRS003` | Routing Slip | Non-partial host, missing steps, or invalid step signatures. |
 | `PKSG001`-`PKSG004` | Saga | Non-partial host, missing transitions, invalid transition signatures, or invalid completion checks. |
 

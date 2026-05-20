@@ -79,6 +79,12 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateContentRouterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ContentRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateSplitterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(SplitterProjectionAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateAggregatorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AggregatorCorrelationAttribute), AttributeTargets.Method, false, false },
+        { typeof(AggregatorCompletionAttribute), AttributeTargets.Method, false, false },
+        { typeof(AggregatorProjectionAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -341,6 +347,15 @@ public sealed class AbstractionsAttributeCoverageTests
             AsyncFactoryName = "BuildRecipientsAsync"
         };
         var recipient = new RecipientListRecipientAttribute("priority-audit", 5, "IsPriority");
+        var splitter = new GenerateSplitterAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildSplitter"
+        };
+        var aggregator = new GenerateAggregatorAttribute(typeof(string), typeof(int), typeof(decimal))
+        {
+            FactoryName = "BuildAggregator",
+            DuplicatePolicy = "Replace"
+        };
         var envelope = new GenerateMessageEnvelopeAttribute(typeof(string))
         {
             FactoryName = "BuildEnvelope",
@@ -386,6 +401,14 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("priority-audit", recipient.Name);
         ScenarioExpect.Equal(5, recipient.Order);
         ScenarioExpect.Equal("IsPriority", recipient.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), splitter.PayloadType);
+        ScenarioExpect.Equal(typeof(int), splitter.ItemType);
+        ScenarioExpect.Equal("BuildSplitter", splitter.FactoryName);
+        ScenarioExpect.Equal(typeof(string), aggregator.KeyType);
+        ScenarioExpect.Equal(typeof(int), aggregator.ItemType);
+        ScenarioExpect.Equal(typeof(decimal), aggregator.ResultType);
+        ScenarioExpect.Equal("BuildAggregator", aggregator.FactoryName);
+        ScenarioExpect.Equal("Replace", aggregator.DuplicatePolicy);
         ScenarioExpect.Equal(typeof(string), envelope.PayloadType);
         ScenarioExpect.Equal("BuildEnvelope", envelope.FactoryName);
         ScenarioExpect.Equal("BuildContext", envelope.ContextFactoryName);
@@ -403,11 +426,20 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRecipientListAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("name", 1, ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSplitterAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSplitterAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(null!, typeof(int), typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), null!, typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), typeof(int), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));
         ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
+        ScenarioExpect.IsType<SplitterProjectionAttribute>(new SplitterProjectionAttribute());
+        ScenarioExpect.IsType<AggregatorCorrelationAttribute>(new AggregatorCorrelationAttribute());
+        ScenarioExpect.IsType<AggregatorCompletionAttribute>(new AggregatorCompletionAttribute());
+        ScenarioExpect.IsType<AggregatorProjectionAttribute>(new AggregatorProjectionAttribute());
         ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         ScenarioExpect.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         ScenarioExpect.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());

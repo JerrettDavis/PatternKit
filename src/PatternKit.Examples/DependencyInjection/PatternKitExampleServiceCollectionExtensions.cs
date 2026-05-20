@@ -86,6 +86,7 @@ public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
+public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
@@ -127,6 +128,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddMessageRouterVisitorExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedRecipientListExample()
+            .AddGeneratedSplitterAggregatorExample()
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
             .AddEnterpriseMessagingWorkflowSuiteExample()
@@ -326,6 +328,12 @@ public static class PatternKitExampleServiceCollectionExtensions
         return services.RegisterExample<MessageRouterVisitorExample>("Message Router Visitor", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.DependencyInjection);
     }
 
+    public static IServiceCollection AddMessageRoutingExample(this IServiceCollection services)
+    {
+        services.AddSingleton(new MessageRoutingExampleRunner(MessageRoutingExample.RunFluent, MessageRoutingExample.RunGenerated));
+        return services;
+    }
+
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)
     {
         services.AddMessageEnvelopeExample();
@@ -338,6 +346,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddRecipientListGeneratorExample();
         services.AddSingleton<GeneratedRecipientListExample>(sp => new(sp.GetRequiredService<RecipientListGeneratorExampleRunner>()));
         return services.RegisterExample<GeneratedRecipientListExample>("Generated Recipient List", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedSplitterAggregatorExample(this IServiceCollection services)
+    {
+        services.AddMessageRoutingExample();
+        services.AddSingleton<GeneratedSplitterAggregatorExample>(sp => new(sp.GetRequiredService<MessageRoutingExampleRunner>()));
+        return services.RegisterExample<GeneratedSplitterAggregatorExample>("Generated Splitter and Aggregator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPatternsShowcaseExample(this IServiceCollection services)

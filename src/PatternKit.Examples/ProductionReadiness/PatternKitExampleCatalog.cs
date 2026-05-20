@@ -249,6 +249,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["RecipientList"],
             ["fan-out routing", "source-generated factory", "DI composition"]),
         Descriptor(
+            "Generated Splitter and Aggregator",
+            "src/PatternKit.Examples/Messaging/MessageRoutingExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs",
+            "docs/examples/generated-splitter-aggregator.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Splitter", "Aggregator"],
+            ["split/rejoin routing", "source-generated factories", "DI composition"]),
+        Descriptor(
             "CQRS Dispatcher",
             "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",
