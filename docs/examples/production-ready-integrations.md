@@ -12,10 +12,12 @@ using PatternKit.Examples.ProductionReadiness;
 
 var services = new ServiceCollection()
     .AddLogging()
-    .AddPatternKitExampleCatalog();
+    .AddPatternKitExampleCatalog()
+    .AddPatternKitPatternCatalog();
 
 using var provider = services.BuildServiceProvider(validateScopes: true);
 var catalog = provider.GetRequiredService<IPatternKitExampleCatalog>();
+var patterns = provider.GetRequiredService<IPatternKitPatternCatalog>();
 ```
 
 ## Register runnable examples
@@ -25,6 +27,7 @@ The examples package also exposes a fluent IoC surface for every catalog entry. 
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.DependencyInjection;
+using PatternKit.Examples.ProductionReadiness;
 
 var services = new ServiceCollection()
     .AddLogging()
@@ -34,6 +37,7 @@ using var provider = services.BuildServiceProvider(validateScopes: true);
 
 var pricing = provider.GetRequiredService<PricingCalculatorExample>();
 var catalog = provider.GetRequiredService<IPatternKitExampleCatalog>();
+var patterns = provider.GetRequiredService<IPatternKitPatternCatalog>();
 ```
 
 Each example also has its own focused extension, so sample applications can import only the slice they need:
@@ -58,6 +62,8 @@ Each `PatternKitExampleDescriptor` includes:
 | `Integration` | Tooling surfaces covered: DI, options, generic host, ASP.NET Core, source generators, messaging, or external infrastructure. |
 | `Patterns` | PatternKit primitives demonstrated by the example. |
 | `ProductionChecks` | The behaviors that make the example production-shaped and regression-testable. |
+
+The companion `IPatternKitPatternCatalog` records the canonical GoF pattern matrix. It links each pattern to its fluent runtime path, TinyBDD tests, real-world example, and source-generated path. Any missing generated path must point to a tracked issue; currently that is limited to the dedicated Interpreter generator and the dedicated Abstract Factory family generator.
 
 ## Validate in a generic host
 

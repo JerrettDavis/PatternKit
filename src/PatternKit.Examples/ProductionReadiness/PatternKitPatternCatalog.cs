@@ -1,0 +1,404 @@
+using Microsoft.Extensions.DependencyInjection;
+
+namespace PatternKit.Examples.ProductionReadiness;
+
+/// <summary>
+/// GoF pattern family used by the PatternKit pattern coverage catalog.
+/// </summary>
+public enum PatternFamily
+{
+    Creational,
+    Structural,
+    Behavioral
+}
+
+/// <summary>
+/// Describes a PatternKit implementation path for a design pattern.
+/// </summary>
+public sealed record PatternImplementationPath(
+    string Name,
+    string FluentDocumentationPath,
+    string FluentSourcePath,
+    string FluentTestPath,
+    string? GeneratorDocumentationPath,
+    string? GeneratorSourcePath,
+    string? GeneratorTestPath,
+    string? TrackingIssueUrl,
+    string ExampleDocumentationPath,
+    string ExampleSourcePath,
+    string ExampleTestPath)
+{
+    public bool HasSourceGeneratedPath =>
+        !string.IsNullOrWhiteSpace(GeneratorDocumentationPath)
+        && !string.IsNullOrWhiteSpace(GeneratorSourcePath)
+        && !string.IsNullOrWhiteSpace(GeneratorTestPath);
+
+    public bool HasTrackedGeneratorGap => !string.IsNullOrWhiteSpace(TrackingIssueUrl);
+}
+
+/// <summary>
+/// Describes one canonical GoF pattern and the PatternKit surfaces that support it.
+/// </summary>
+public sealed record PatternCoverageDescriptor(
+    string Name,
+    PatternFamily Family,
+    PatternImplementationPath Implementation,
+    IReadOnlyList<string> IntegrationNotes);
+
+/// <summary>
+/// Read-only catalog of PatternKit's coverage for the canonical GoF design patterns.
+/// </summary>
+public interface IPatternKitPatternCatalog
+{
+    IReadOnlyList<PatternCoverageDescriptor> Patterns { get; }
+}
+
+/// <summary>
+/// Pattern coverage manifest used by docs, tests, and production-readiness audits.
+/// </summary>
+public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
+{
+    private static readonly IReadOnlyList<PatternCoverageDescriptor> Items =
+    [
+        Pattern("Abstract Factory", PatternFamily.Creational,
+            "docs/patterns/creational/abstract-factory/index.md",
+            "src/PatternKit.Core/Creational/AbstractFactory/AbstractFactory.cs",
+            "test/PatternKit.Tests/Creational/AbstractFactoryTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/207",
+            "docs/examples/enterprise-order.md",
+            "src/PatternKit.Examples/AbstractFactoryDemo/AbstractFactoryDemo.cs",
+            "test/PatternKit.Examples.Tests/AbstractFactoryDemo/AbstractFactoryDemoTests.cs",
+            ["fluent family factory", "dedicated generator tracked", "example importable through AddPatternKitExamples"]),
+
+        Pattern("Builder", PatternFamily.Creational,
+            "docs/patterns/creational/builder/index.md",
+            "src/PatternKit.Core/Creational/Builder/MutableBuilder.cs",
+            "test/PatternKit.Tests/Creational/Builder/MutableBuilderTests.cs",
+            "docs/generators/builder.md",
+            "src/PatternKit.Generators/Builders/BuilderGenerator.cs",
+            "test/PatternKit.Generators.Tests/BuilderGeneratorTests.cs",
+            null,
+            "docs/examples/source-generator-application-suite.md",
+            "src/PatternKit.Examples/Generators/Builders/CorporateApplicationBuilderDemo/CorporateApplication.cs",
+            "test/PatternKit.Examples.Tests/Generators/CorporateApplicationBuilderDemoTests.cs",
+            ["fluent builders", "generated builder", "Generic Host module example"]),
+
+        Pattern("Factory Method", PatternFamily.Creational,
+            "docs/patterns/creational/factory/index.md",
+            "src/PatternKit.Core/Creational/Factory/Factory.cs",
+            "test/PatternKit.Tests/Creational/Factory/FactoryTests.cs",
+            "docs/generators/factory-method.md",
+            "src/PatternKit.Generators/Factories/FactoriesGenerator.cs",
+            "test/PatternKit.Generators.Tests/FactoriesGeneratorTests.cs",
+            null,
+            "docs/examples/source-generator-application-suite.md",
+            "src/PatternKit.Examples/Generators/Factories/FactoryGeneratorExamples.cs",
+            "test/PatternKit.Examples.Tests/Generators/FactoryGeneratorExamplesTests.cs",
+            ["fluent keyed factory", "generated factory method", "startup module creation"]),
+
+        Pattern("Prototype", PatternFamily.Creational,
+            "docs/patterns/creational/prototype/index.md",
+            "src/PatternKit.Core/Creational/Prototype/Prototype.cs",
+            "test/PatternKit.Tests/Creational/Prototype/PrototypeTests.cs",
+            "docs/generators/prototype.md",
+            "src/PatternKit.Generators/PrototypeGenerator.cs",
+            "test/PatternKit.Generators.Tests/PrototypeGeneratorTests.cs",
+            null,
+            "docs/examples/prototype-demo.md",
+            "src/PatternKit.Examples/PrototypeDemo/PrototypeDemo.cs",
+            "test/PatternKit.Examples.Tests/PrototypeDemo/PrototypeDemoTests.cs",
+            ["fluent clone registry", "generated clone surface", "game character example"]),
+
+        Pattern("Singleton", PatternFamily.Creational,
+            "docs/patterns/creational/singleton/index.md",
+            "src/PatternKit.Core/Creational/Singleton/Singleton.cs",
+            "test/PatternKit.Tests/Creational/Singleton/SingletonTests.cs",
+            "docs/generators/singleton.md",
+            "src/PatternKit.Generators/Singleton/SingletonGenerator.cs",
+            "test/PatternKit.Generators.Tests/SingletonGeneratorTests.cs",
+            null,
+            "docs/examples/pos-app-state-singleton.md",
+            "src/PatternKit.Examples/Singleton/PosAppStateDemo.cs",
+            "test/PatternKit.Examples.Tests/Singleton/PosAppStateDemoTests.cs",
+            ["fluent singleton", "generated singleton", "DI-safe POS example"]),
+
+        Pattern("Adapter", PatternFamily.Structural,
+            "docs/patterns/structural/adapter/index.md",
+            "src/PatternKit.Core/Structural/Adapter/Adapter.cs",
+            "test/PatternKit.Tests/Structural/Adapters/AdapterTests.cs",
+            "docs/generators/adapter.md",
+            "src/PatternKit.Generators/Adapter/AdapterGenerator.cs",
+            "test/PatternKit.Generators.Tests/AdapterGeneratorTests.cs",
+            null,
+            "docs/examples/source-generator-application-suite.md",
+            "src/PatternKit.Examples/AdapterGeneratorDemo/PaymentAdapter.cs",
+            "test/PatternKit.Examples.Tests/AdapterGeneratorDemo/AdapterGeneratorDemoTests.cs",
+            ["fluent DTO mapping", "generated adapter", "payment adapter example"]),
+
+        Pattern("Bridge", PatternFamily.Structural,
+            "docs/patterns/structural/bridge/index.md",
+            "src/PatternKit.Core/Structural/Bridge/Bridge.cs",
+            "test/PatternKit.Tests/Structural/Bridge/BridgeTests.cs",
+            "docs/generators/bridge.md",
+            "src/PatternKit.Generators/Bridge/BridgeGenerator.cs",
+            "test/PatternKit.Generators.Tests/BridgeGeneratorTests.cs",
+            null,
+            "docs/patterns/structural/bridge/real-world-examples.md",
+            "src/PatternKit.Examples/BridgeDemo/BridgeDemo.cs",
+            "test/PatternKit.Examples.Tests/BridgeDemo/BridgeDemoTests.cs",
+            ["fluent abstraction implementation split", "generated bridge", "notification bridge example"]),
+
+        Pattern("Composite", PatternFamily.Structural,
+            "docs/patterns/structural/composite/index.md",
+            "src/PatternKit.Core/Structural/Composite/Composite.cs",
+            "test/PatternKit.Tests/Structural/Composite/CompositeTests.cs",
+            "docs/generators/composite.md",
+            "src/PatternKit.Generators/Composite/CompositeGenerator.cs",
+            "test/PatternKit.Generators.Tests/CompositeGeneratorTests.cs",
+            null,
+            "docs/patterns/structural/composite/real-world-examples.md",
+            "src/PatternKit.Examples/CompositeDemo/CompositeDemo.cs",
+            "test/PatternKit.Examples.Tests/CompositeDemo/CompositeDemoTests.cs",
+            ["fluent folding", "generated composite", "file system style example"]),
+
+        Pattern("Decorator", PatternFamily.Structural,
+            "docs/patterns/structural/decorator/index.md",
+            "src/PatternKit.Core/Structural/Decorator/Decorator.cs",
+            "test/PatternKit.Tests/Structural/Decorator/DecoratorTests.cs",
+            "docs/generators/decorator.md",
+            "src/PatternKit.Generators/DecoratorGenerator.cs",
+            "test/PatternKit.Generators.Tests/DecoratorGeneratorTests.cs",
+            null,
+            "docs/examples/payment-processor-decorator.md",
+            "src/PatternKit.Examples/PointOfSale/PaymentProcessorDemo.cs",
+            "test/PatternKit.Examples.Tests/PointOfSale/PaymentProcessorTests.cs",
+            ["fluent wrapping", "generated decorator", "payment processor example"]),
+
+        Pattern("Facade", PatternFamily.Structural,
+            "docs/patterns/structural/facade/index.md",
+            "src/PatternKit.Core/Structural/Facade/Facade.cs",
+            "test/PatternKit.Tests/Structural/Facade/FacadeTests.cs",
+            "docs/generators/facade.md",
+            "src/PatternKit.Generators/FacadeGenerator.cs",
+            "test/PatternKit.Generators.Tests/FacadeGeneratorTests.cs",
+            null,
+            "docs/examples/messaging-backplane-facade.md",
+            "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
+            ["fluent facade", "generated facade", "messaging backplane example"]),
+
+        Pattern("Flyweight", PatternFamily.Structural,
+            "docs/patterns/structural/flyweight/index.md",
+            "src/PatternKit.Core/Structural/Flyweight/Flyweight.cs",
+            "test/PatternKit.Tests/Structural/Flyweight/FlyweightTests.cs",
+            "docs/generators/flyweight.md",
+            "src/PatternKit.Generators/Flyweight/FlyweightGenerator.cs",
+            "test/PatternKit.Generators.Tests/FlyweightGeneratorTests.cs",
+            null,
+            "docs/examples/flyweight-glyph-cache.md",
+            "src/PatternKit.Examples/FlyweightDemo/FlyweightDemo.cs",
+            "test/PatternKit.Examples.Tests/FlyweightDemos/FlyweightDemoTests.cs",
+            ["fluent cache", "generated cache", "glyph cache example"]),
+
+        Pattern("Proxy", PatternFamily.Structural,
+            "docs/patterns/structural/proxy/index.md",
+            "src/PatternKit.Core/Structural/Proxy/Proxy.cs",
+            "test/PatternKit.Tests/Structural/Proxy/ProxyTests.cs",
+            "docs/generators/proxy.md",
+            "src/PatternKit.Generators/ProxyGenerator.cs",
+            "test/PatternKit.Generators.Tests/ProxyGeneratorTests.cs",
+            null,
+            "docs/examples/proxy-demo.md",
+            "src/PatternKit.Examples/ProxyDemo/ProxyDemo.cs",
+            "test/PatternKit.Examples.Tests/ProxyDemo/ProxyDemoTests.cs",
+            ["fluent proxy", "generated proxy", "virtual and protection examples"]),
+
+        Pattern("Chain of Responsibility", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/chain/index.md",
+            "src/PatternKit.Core/Behavioral/Chain/ActionChain.cs",
+            "test/PatternKit.Tests/Behavioral/Chain/ActionChainTests.cs",
+            "docs/generators/chain.md",
+            "src/PatternKit.Generators/Chain/ChainGenerator.cs",
+            "test/PatternKit.Generators.Tests/ChainGeneratorTests.cs",
+            null,
+            "docs/examples/auth-logging-chain.md",
+            "src/PatternKit.Examples/Chain/AuthLoggingDemo.cs",
+            "test/PatternKit.Examples.Tests/Chain/AuthLoggingDemoTests.cs",
+            ["fluent chain", "generated chain", "request pipeline example"]),
+
+        Pattern("Command", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/command/index.md",
+            "src/PatternKit.Core/Behavioral/Command/Command.cs",
+            "test/PatternKit.Tests/Behavioral/Command/CommandTests.cs",
+            "docs/generators/command.md",
+            "src/PatternKit.Generators/Command/CommandGenerator.cs",
+            "test/PatternKit.Generators.Tests/CommandGeneratorTests.cs",
+            null,
+            "docs/examples/resilient-checkout-and-mailboxes.md",
+            "src/PatternKit.Examples/Messaging/ResilientCheckoutDemo.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ResilientCheckoutDemoTests.cs",
+            ["fluent command", "generated command", "checkout command example"]),
+
+        Pattern("Interpreter", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/interpreter/index.md",
+            "src/PatternKit.Core/Behavioral/Interpreter/Interpreter.cs",
+            "test/PatternKit.Tests/Behavioral/InterpreterTests.cs",
+            null,
+            null,
+            null,
+            "https://github.com/JerrettDavis/PatternKit/issues/206",
+            "docs/patterns/behavioral/interpreter/real-world-examples.md",
+            "src/PatternKit.Examples/InterpreterDemo/InterpreterDemo.cs",
+            "test/PatternKit.Examples.Tests/InterpreterDemo/InterpreterDemoTests.cs",
+            ["fluent interpreter", "dedicated generator tracked", "rules engine example"]),
+
+        Pattern("Iterator", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/iterator/index.md",
+            "src/PatternKit.Core/Behavioral/Iterator/Flow.cs",
+            "test/PatternKit.Tests/Behavioral/Iterator/FlowTests.cs",
+            "docs/generators/iterator.md",
+            "src/PatternKit.Generators/Iterator/IteratorGenerator.cs",
+            "test/PatternKit.Generators.Tests/IteratorGeneratorTests.cs",
+            null,
+            "docs/examples/source-generator-application-suite.md",
+            "src/PatternKit.Examples/IteratorDemo/IteratorDemo.cs",
+            "test/PatternKit.Examples.Tests/IteratorDemo/IteratorDemoTests.cs",
+            ["fluent flow", "generated iterator", "paged stream example"]),
+
+        Pattern("Mediator", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/mediator/index.md",
+            "src/PatternKit.Core/Behavioral/Mediator/Mediator.cs",
+            "test/PatternKit.Tests/Behavioral/Mediator/MediatorTests.cs",
+            "docs/generators/dispatcher.md",
+            "src/PatternKit.Generators/Messaging/DispatcherGenerator.cs",
+            "test/PatternKit.Generators.Tests/DispatcherGeneratorTests.cs",
+            null,
+            "docs/examples/mediator-demo.md",
+            "src/PatternKit.Examples/MediatorDemo/Demo.cs",
+            "test/PatternKit.Examples.Tests/MediatorDemo/MediatorDemoTests.cs",
+            ["fluent mediator", "generated dispatcher mediator", "service collaboration example"]),
+
+        Pattern("Memento", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/memento/index.md",
+            "src/PatternKit.Core/Behavioral/Memento/Memento.cs",
+            "test/PatternKit.Tests/Behavioral/Memento/MementoTests.cs",
+            "docs/generators/memento.md",
+            "src/PatternKit.Generators/MementoGenerator.cs",
+            "test/PatternKit.Generators.Tests/MementoGeneratorTests.cs",
+            null,
+            "docs/examples/text-editor-memento.md",
+            "src/PatternKit.Examples/MementoDemo/MementoDemo.cs",
+            "test/PatternKit.Examples.Tests/MementoDemo/MementoDemoTests.cs",
+            ["fluent memento", "generated snapshots", "text editor history example"]),
+
+        Pattern("Observer", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/observer/index.md",
+            "src/PatternKit.Core/Behavioral/Observer/Observer.cs",
+            "test/PatternKit.Tests/Behavioral/Observer/ObserverTests.cs",
+            "docs/generators/observer.md",
+            "src/PatternKit.Generators/Observer/ObserverGenerator.cs",
+            "test/PatternKit.Generators.Tests/ObserverGeneratorTests.cs",
+            null,
+            "docs/examples/observer-demo.md",
+            "src/PatternKit.Examples/ObserverDemo/SimpleEventHub.cs",
+            "test/PatternKit.Examples.Tests/ObserverDemo/EventHubTests.cs",
+            ["fluent observer", "generated observer hub", "event hub example"]),
+
+        Pattern("State", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/state/index.md",
+            "src/PatternKit.Core/Behavioral/State/StateMachine.cs",
+            "test/PatternKit.Tests/Behavioral/State/StateMachineTests.cs",
+            "docs/generators/state-machine.md",
+            "src/PatternKit.Generators/StateMachineGenerator.cs",
+            "test/PatternKit.Generators.Tests/StateMachineGeneratorTests.cs",
+            null,
+            "docs/examples/state-machine.md",
+            "src/PatternKit.Examples/StateDemo/StateDemo.cs",
+            "test/PatternKit.Examples.Tests/StateDemo/StateDemoTests.cs",
+            ["fluent state machine", "generated state machine", "order lifecycle example"]),
+
+        Pattern("Strategy", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/strategy/index.md",
+            "src/PatternKit.Core/Behavioral/Strategy/Strategy.cs",
+            "test/PatternKit.Tests/Behavioral/Strategy/StrategyTests.cs",
+            "docs/generators/strategy.md",
+            "src/PatternKit.Generators/StrategyGenerator.cs",
+            "test/PatternKit.Generators.Tests/StrategyGeneratorTests.cs",
+            null,
+            "docs/examples/composed-notification-strategy.md",
+            "src/PatternKit.Examples/Strategies/Composed/ComposedStrategies.cs",
+            "test/PatternKit.Examples.Tests/Strategies/Composed/ComposedStrategiesTests.cs",
+            ["fluent strategy", "generated strategy", "notification channel example"]),
+
+        Pattern("Template Method", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/template/index.md",
+            "src/PatternKit.Core/Behavioral/Template/TemplateMethod.cs",
+            "test/PatternKit.Tests/Behavioral/TemplateMethodTests.cs",
+            "docs/generators/template-method-generator.md",
+            "src/PatternKit.Generators/TemplateGenerator.cs",
+            "test/PatternKit.Generators.Tests/TemplateGeneratorTests.cs",
+            null,
+            "docs/examples/template-method-demo.md",
+            "src/PatternKit.Examples/TemplateDemo/TemplateDemo.cs",
+            "test/PatternKit.Examples.Tests/TemplateDemo/TemplateDemoTests.cs",
+            ["fluent and base template", "generated template", "import workflow example"]),
+
+        Pattern("Visitor", PatternFamily.Behavioral,
+            "docs/patterns/behavioral/visitor/index.md",
+            "src/PatternKit.Core/Behavioral/Visitor/Visitor.cs",
+            "test/PatternKit.Tests/Behavioral/VisitorTests.cs",
+            "docs/generators/visitor-generator.md",
+            "src/PatternKit.Generators/VisitorGenerator.cs",
+            "test/PatternKit.Generators.Tests/VisitorGeneratorTests.cs",
+            null,
+            "docs/examples/document-processing-visitor.md",
+            "src/PatternKit.Examples/Generators/Visitors/DocumentProcessingDemo.cs",
+            "test/PatternKit.Examples.Tests/Generators/VisitorGeneratorExamplesTests.cs",
+            ["fluent visitor", "generated visitor", "document processing example"])
+    ];
+
+    public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;
+
+    private static PatternCoverageDescriptor Pattern(
+        string name,
+        PatternFamily family,
+        string fluentDocumentationPath,
+        string fluentSourcePath,
+        string fluentTestPath,
+        string? generatorDocumentationPath,
+        string? generatorSourcePath,
+        string? generatorTestPath,
+        string? trackingIssueUrl,
+        string exampleDocumentationPath,
+        string exampleSourcePath,
+        string exampleTestPath,
+        IReadOnlyList<string> integrationNotes)
+        => new(
+            name,
+            family,
+            new PatternImplementationPath(
+                name,
+                fluentDocumentationPath,
+                fluentSourcePath,
+                fluentTestPath,
+                generatorDocumentationPath,
+                generatorSourcePath,
+                generatorTestPath,
+                trackingIssueUrl,
+                exampleDocumentationPath,
+                exampleSourcePath,
+                exampleTestPath),
+            integrationNotes);
+}
+
+public static class PatternKitPatternCatalogServiceCollectionExtensions
+{
+    public static IServiceCollection AddPatternKitPatternCatalog(this IServiceCollection services)
+    {
+        services.AddSingleton<IPatternKitPatternCatalog, PatternKitPatternCatalog>();
+        return services;
+    }
+}

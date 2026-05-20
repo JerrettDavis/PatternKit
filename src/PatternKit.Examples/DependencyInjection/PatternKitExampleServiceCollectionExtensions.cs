@@ -69,7 +69,7 @@ public sealed class CoercerService<T> : ICoercer<T>
     public T? From(object? value) => Coercer<T>.From(value);
 }
 
-public sealed record ProductionReadyExampleIntegrations(IPatternKitExampleCatalog Catalog);
+public sealed record ProductionReadyExampleIntegrations(IPatternKitExampleCatalog ExampleCatalog, IPatternKitPatternCatalog PatternCatalog);
 public sealed record AuthLoggingChainExample(ActionChain<HttpRequest> Chain, List<string> Log);
 public sealed record CoercionExample(ICoercer<int> Integers, ICoercer<bool> Booleans, ICoercer<string> Strings);
 public sealed record ComposedNotificationStrategyExample(AsyncStrategy<SendContext, SendResult> Strategy);
@@ -141,8 +141,11 @@ public static class PatternKitExampleServiceCollectionExtensions
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
         services.AddPatternKitExampleCatalog();
+        services.AddPatternKitPatternCatalog();
         services.AddSingleton<ProductionReadyExampleIntegrations>(sp =>
-            new(sp.GetRequiredService<IPatternKitExampleCatalog>()));
+            new(
+                sp.GetRequiredService<IPatternKitExampleCatalog>(),
+                sp.GetRequiredService<IPatternKitPatternCatalog>()));
         return services.RegisterExample<ProductionReadyExampleIntegrations>("Production-Ready Example Integrations", ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
