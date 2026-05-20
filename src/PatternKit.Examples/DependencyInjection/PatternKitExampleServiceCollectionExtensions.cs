@@ -7,7 +7,6 @@ using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
-using PatternKit.Examples.AbstractFactoryDemo;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.Chain;
@@ -44,6 +43,7 @@ using PosPaymentKind = PatternKit.Examples.ObserverDemo.PaymentKind;
 using ShowcaseFacade = PatternKit.Examples.PatternShowcase.PatternShowcase.IOrderProcessingFacade;
 using TransactionPipeline = PatternKit.Examples.Chain.TransactionPipeline;
 using VisitorTender = PatternKit.Examples.VisitorDemo.Tender;
+using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 
 namespace PatternKit.Examples.DependencyInjection;
 
@@ -72,7 +72,7 @@ public sealed class CoercerService<T> : ICoercer<T>
 }
 
 public sealed record ProductionReadyExampleIntegrations(IPatternKitExampleCatalog ExampleCatalog, IPatternKitPatternCatalog PatternCatalog);
-public sealed record AbstractFactoryWidgetExample(AbstractFactory<AbstractFactoryDemo.Platform> Factory);
+public sealed record AbstractFactoryWidgetExample(AbstractFactory<WidgetDemo.Platform> Factory);
 public sealed record AuthLoggingChainExample(ActionChain<HttpRequest> Chain, List<string> Log);
 public sealed record CoercionExample(ICoercer<int> Integers, ICoercer<bool> Booleans, ICoercer<string> Strings);
 public sealed record ComposedNotificationStrategyExample(AsyncStrategy<SendContext, SendResult> Strategy);
@@ -167,8 +167,8 @@ public static class PatternKitExampleServiceCollectionExtensions
 
     public static IServiceCollection AddAbstractFactoryWidgetExample(this IServiceCollection services)
     {
-        services.AddSingleton(static sp => AbstractFactoryDemo.CreateUIFactory(sp));
-        services.AddSingleton<AbstractFactoryWidgetExample>(sp => new(sp.GetRequiredService<AbstractFactory<AbstractFactoryDemo.Platform>>()));
+        services.AddSingleton(static sp => WidgetDemo.CreateUIFactory(sp));
+        services.AddSingleton<AbstractFactoryWidgetExample>(sp => new(sp.GetRequiredService<AbstractFactory<WidgetDemo.Platform>>()));
         return services.RegisterExample<AbstractFactoryWidgetExample>("Abstract Factory Widget Families", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
