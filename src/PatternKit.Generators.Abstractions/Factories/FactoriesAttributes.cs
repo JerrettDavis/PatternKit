@@ -33,3 +33,20 @@ public sealed class FactoryClassKeyAttribute(object key) : Attribute
 {
     public object Key { get; } = key;
 }
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class GenerateAbstractFactoryAttribute(Type keyType) : Attribute
+{
+    public Type KeyType { get; } = keyType;
+    public string FactoryMethodName { get; set; } = "Create";
+    public string? ServiceProviderFactoryMethodName { get; set; }
+}
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
+public sealed class AbstractFactoryProductAttribute(object familyKey, Type contractType, Type implementationType) : Attribute
+{
+    public object FamilyKey { get; } = familyKey;
+    public Type ContractType { get; } = contractType;
+    public Type ImplementationType { get; } = implementationType;
+    public bool IsDefaultFamily { get; set; }
+}

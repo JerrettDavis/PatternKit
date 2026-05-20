@@ -189,6 +189,10 @@ PKBT002 | PatternKit.Generators.Messaging | Error | Backplane topology must decl
 PKBT003 | PatternKit.Generators.Messaging | Error | Backplane request/reply declaration is invalid.
 PKBT004 | PatternKit.Generators.Messaging | Error | Backplane subscription declaration is invalid.
 PKBT005 | PatternKit.Generators.Messaging | Error | Backplane request default route is duplicated.
+PKAF001 | PatternKit.Generators.Factories | Error | Abstract factory host must be partial.
+PKAF002 | PatternKit.Generators.Factories | Error | Abstract factory must declare at least one product.
+PKAF003 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is invalid.
+PKAF004 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

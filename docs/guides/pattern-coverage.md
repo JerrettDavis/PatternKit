@@ -16,7 +16,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 
 | Family | Pattern | Fluent path | Source-generated path |
 | --- | --- | --- | --- |
-| Creational | Abstract Factory | `AbstractFactory<,>` | Tracked in [#207](https://github.com/JerrettDavis/PatternKit/issues/207) |
+| Creational | Abstract Factory | `AbstractFactory<TKey>` | Abstract Factory generator |
 | Creational | Builder | Builder helpers | Builder generator |
 | Creational | Factory Method | `Factory<TKey, TValue>` | Factory Method generator |
 | Creational | Prototype | `Prototype<TKey, TValue>` | Prototype generator |

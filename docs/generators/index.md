@@ -26,6 +26,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 
 | Generator | Description | Attribute |
 |---|---|---|
+| [**Abstract Factory**](abstract-factory.md) | Product-family factories with optional IServiceProvider construction | `[GenerateAbstractFactory]` |
 | [**Builder**](builder.md) | GoF-aligned builders with mutable or state-projection models, sync/async pipelines | `[GenerateBuilder]` |
 | [**Factory Method**](factory-method.md) | Keyed dispatcher from a static partial class | `[FactoryMethod]` |
 | [**Factory Class**](factory-class.md) | GoF-style factory mapping keys to products | `[FactoryClass]` |
@@ -86,6 +87,12 @@ public partial class Person { public string Name { get; set; } }
 // Factory - keyed product creation
 [GenerateFactory(typeof(INotification), typeof(NotificationKind))]
 public abstract partial class NotificationFactory { }
+
+// Abstract factory - generated product families
+[GenerateAbstractFactory(typeof(Platform))]
+[AbstractFactoryProduct(Platform.Windows, typeof(IButton), typeof(WindowsButton))]
+[AbstractFactoryProduct(Platform.Linux, typeof(IButton), typeof(LinuxButton))]
+public static partial class PlatformWidgets { }
 
 // Prototype - cloning
 [Prototype]

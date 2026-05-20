@@ -7,6 +7,7 @@ using PatternKit.Generators.Composer;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
+using PatternKit.Generators.Factories;
 using PatternKit.Generators.Iterator;
 using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
@@ -64,6 +65,13 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(FacadeIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
         { typeof(FlyweightAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(FlyweightFactoryAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateAbstractFactoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AbstractFactoryProductAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(FactoryMethodAttribute), AttributeTargets.Class, false, false },
+        { typeof(FactoryCaseAttribute), AttributeTargets.Method, true, false },
+        { typeof(FactoryDefaultAttribute), AttributeTargets.Method, false, false },
+        { typeof(FactoryClassAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
+        { typeof(FactoryClassKeyAttribute), AttributeTargets.Class, false, false },
         { typeof(IteratorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(IteratorStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalIteratorAttribute), AttributeTargets.Class, false, false },
@@ -321,6 +329,28 @@ public sealed class AbstractionsAttributeCoverageTests
             Threading = FlyweightThreadingPolicy.Concurrent,
             GenerateTryGet = false
         };
+        var abstractFactory = new GenerateAbstractFactoryAttribute(typeof(DayOfWeek))
+        {
+            FactoryMethodName = "BuildWidgets",
+            ServiceProviderFactoryMethodName = "BuildWidgetsFromServices"
+        };
+        var abstractFactoryProduct = new AbstractFactoryProductAttribute(DayOfWeek.Monday, typeof(string), typeof(string))
+        {
+            IsDefaultFamily = true
+        };
+        var factoryMethod = new FactoryMethodAttribute(typeof(string))
+        {
+            CreateMethodName = "Make",
+            CaseInsensitiveStrings = false
+        };
+        var factoryCase = new FactoryCaseAttribute("email");
+        var factoryClass = new FactoryClassAttribute(typeof(int))
+        {
+            FactoryTypeName = "WidgetFactory",
+            GenerateTryCreate = false,
+            GenerateEnumKeys = true
+        };
+        var factoryClassKey = new FactoryClassKeyAttribute(7);
         var iterator = new IteratorAttribute
         {
             GenerateEnumerator = false,
@@ -407,6 +437,23 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(FlyweightEviction.Lru, flyweight.Eviction);
         ScenarioExpect.Equal(FlyweightThreadingPolicy.Concurrent, flyweight.Threading);
         ScenarioExpect.False(flyweight.GenerateTryGet);
+        ScenarioExpect.Equal(typeof(DayOfWeek), abstractFactory.KeyType);
+        ScenarioExpect.Equal("BuildWidgets", abstractFactory.FactoryMethodName);
+        ScenarioExpect.Equal("BuildWidgetsFromServices", abstractFactory.ServiceProviderFactoryMethodName);
+        ScenarioExpect.Equal(DayOfWeek.Monday, abstractFactoryProduct.FamilyKey);
+        ScenarioExpect.Equal(typeof(string), abstractFactoryProduct.ContractType);
+        ScenarioExpect.Equal(typeof(string), abstractFactoryProduct.ImplementationType);
+        ScenarioExpect.True(abstractFactoryProduct.IsDefaultFamily);
+        ScenarioExpect.Equal(typeof(string), factoryMethod.KeyType);
+        ScenarioExpect.Equal("Make", factoryMethod.CreateMethodName);
+        ScenarioExpect.False(factoryMethod.CaseInsensitiveStrings);
+        ScenarioExpect.Equal("email", factoryCase.Key);
+        ScenarioExpect.IsType<FactoryDefaultAttribute>(new FactoryDefaultAttribute());
+        ScenarioExpect.Equal(typeof(int), factoryClass.KeyType);
+        ScenarioExpect.Equal("WidgetFactory", factoryClass.FactoryTypeName);
+        ScenarioExpect.False(factoryClass.GenerateTryCreate);
+        ScenarioExpect.True(factoryClass.GenerateEnumKeys);
+        ScenarioExpect.Equal(7, factoryClassKey.Key);
         ScenarioExpect.False(iterator.GenerateEnumerator);
         ScenarioExpect.False(iterator.GenerateTryMoveNext);
         ScenarioExpect.Equal("Demo.Dispatching", dispatcher.Namespace);
