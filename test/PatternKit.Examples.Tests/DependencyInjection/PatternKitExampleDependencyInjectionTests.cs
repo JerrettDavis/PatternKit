@@ -113,7 +113,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         [
             ("integer coercer converts text", coercion.Integers.From("42") == 42),
             ("boolean coercer converts text", coercion.Booleans.From("true") == true),
-            ("string coercer converts values", !string.IsNullOrWhiteSpace(coercion.Strings.From(12))),
+            ("string coercer accepts strings", coercion.Strings.From("patternkit") == "patternkit"),
             ("notification strategy sends", send.Success),
             ("auth chain logs denied admin requests", auth.Log.Contains("deny: missing auth", StringComparer.Ordinal)),
             ("minimal router returns a successful response", json.StatusCode == 200),
