@@ -1,5 +1,7 @@
 - name: Choosing Patterns
   href: choosing-patterns.md
+- name: Pattern Coverage
+  href: pattern-coverage.md
 - name: Composing Patterns
   href: composing-patterns.md
 - name: Migrating from Traditional Patterns
