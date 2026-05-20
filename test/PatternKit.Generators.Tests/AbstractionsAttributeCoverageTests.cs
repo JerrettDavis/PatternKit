@@ -92,6 +92,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateReliabilityPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ReliabilityHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(ReliabilityKeySelectorAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateBackplaneTopologyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(BackplaneRequestReplyAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(BackplaneSubscriptionAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -378,6 +381,16 @@ public sealed class AbstractionsAttributeCoverageTests
             DuplicatePolicy = "ReplayCompleted",
             MissingKeyPolicy = "Process"
         };
+        var backplane = new GenerateBackplaneTopologyAttribute(typeof(object))
+        {
+            HostBuilderType = typeof(List<>),
+            ConfigureMethodName = "ApplyTopology"
+        };
+        var requestReply = new BackplaneRequestReplyAttribute(typeof(string), typeof(int), "orders", "Handle")
+        {
+            PredicateMethodName = "IsPriority"
+        };
+        var subscription = new BackplaneSubscriptionAttribute(typeof(decimal), "orders.submitted", "audit", "Audit");
         var envelope = new GenerateMessageEnvelopeAttribute(typeof(string))
         {
             FactoryName = "BuildEnvelope",
@@ -444,6 +457,18 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("BuildOutbox", reliability.OutboxFactoryName);
         ScenarioExpect.Equal("ReplayCompleted", reliability.DuplicatePolicy);
         ScenarioExpect.Equal("Process", reliability.MissingKeyPolicy);
+        ScenarioExpect.Equal(typeof(object), backplane.ServicesType);
+        ScenarioExpect.Equal(typeof(List<>), backplane.HostBuilderType);
+        ScenarioExpect.Equal("ApplyTopology", backplane.ConfigureMethodName);
+        ScenarioExpect.Equal(typeof(string), requestReply.RequestType);
+        ScenarioExpect.Equal(typeof(int), requestReply.ResponseType);
+        ScenarioExpect.Equal("orders", requestReply.EndpointName);
+        ScenarioExpect.Equal("Handle", requestReply.HandlerMethodName);
+        ScenarioExpect.Equal("IsPriority", requestReply.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(decimal), subscription.EventType);
+        ScenarioExpect.Equal("orders.submitted", subscription.Topic);
+        ScenarioExpect.Equal("audit", subscription.EndpointName);
+        ScenarioExpect.Equal("Audit", subscription.HandlerMethodName);
         ScenarioExpect.Equal(typeof(string), envelope.PayloadType);
         ScenarioExpect.Equal("BuildEnvelope", envelope.FactoryName);
         ScenarioExpect.Equal("BuildContext", envelope.ContextFactoryName);
@@ -470,6 +495,15 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(null!, typeof(int), typeof(decimal)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(typeof(string), null!, typeof(decimal)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(typeof(string), typeof(int), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBackplaneTopologyAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BackplaneRequestReplyAttribute(null!, typeof(int), "orders", "Handle"));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BackplaneRequestReplyAttribute(typeof(string), null!, "orders", "Handle"));
+        ScenarioExpect.Throws<ArgumentException>(() => new BackplaneRequestReplyAttribute(typeof(string), typeof(int), "", "Handle"));
+        ScenarioExpect.Throws<ArgumentException>(() => new BackplaneRequestReplyAttribute(typeof(string), typeof(int), "orders", ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BackplaneSubscriptionAttribute(null!, "orders", "audit", "Handle"));
+        ScenarioExpect.Throws<ArgumentException>(() => new BackplaneSubscriptionAttribute(typeof(string), "", "audit", "Handle"));
+        ScenarioExpect.Throws<ArgumentException>(() => new BackplaneSubscriptionAttribute(typeof(string), "orders", "", "Handle"));
+        ScenarioExpect.Throws<ArgumentException>(() => new BackplaneSubscriptionAttribute(typeof(string), "orders", "audit", ""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));

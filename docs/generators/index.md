@@ -72,6 +72,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
 | [**Mailbox**](messaging.md#generated-mailbox) | Serialized in-process inbox factories | `[GenerateMailbox]` |
 | [**Reliability Pipeline**](messaging.md#generated-reliability-pipeline) | Idempotent receiver, inbox, and outbox factories | `[GenerateReliabilityPipeline]` |
+| [**Backplane Topology**](messaging.md#generated-backplane-topology) | Request/reply routes and publish/subscribe endpoint topology | `[GenerateBackplaneTopology]` |
 
 ## Quick Reference
 
@@ -164,6 +165,12 @@ public static partial class OrderMailbox { }
 // Reliability pipeline - generated idempotent receiver, inbox, and outbox factories
 [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
 public static partial class OrderReliability { }
+
+// Backplane topology - generated request/reply and pub/sub host wiring
+[GenerateBackplaneTopology(typeof(OrderBackplaneServices), HostBuilderType = typeof(OrderBackplaneHostBuilder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders", nameof(OrderBackplaneServices.AcceptAsync))]
+[BackplaneSubscription(typeof(OrderSubmitted), "orders.submitted", "audit-service", nameof(OrderBackplaneServices.AuditAsync))]
+public static partial class OrderBackplane { }
 
 // Routing slip - generated ordered itinerary factory
 [GenerateRoutingSlip(typeof(Order))]
