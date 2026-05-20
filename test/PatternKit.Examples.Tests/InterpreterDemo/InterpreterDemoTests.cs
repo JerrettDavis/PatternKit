@@ -1,5 +1,6 @@
 using PatternKit.Examples.InterpreterDemo;
 using static PatternKit.Examples.InterpreterDemo.InterpreterDemo;
+using Expr = PatternKit.Behavioral.Interpreter.ExpressionExtensions;
 using TinyBDD;
 
 namespace PatternKit.Examples.Tests.InterpreterDemoTests;
@@ -146,6 +147,43 @@ public sealed class InterpreterDemoTests
         ScenarioExpect.True(generated.HasNonTerminal("round"));
     }
 
+    [Scenario("CreateGeneratedPricingInterpreter Covers Production Pricing Rules")]
+    [Fact]
+    public void CreateGeneratedPricingInterpreter_Covers_Production_Pricing_Rules()
+    {
+        var interpreter = CreateGeneratedPricingInterpreter();
+        var ctx = new PricingContext
+        {
+            CartTotal = 120m,
+            ItemCount = 4,
+            CustomerTier = "Diamond",
+            Variables = { ["manual_credit"] = 8m }
+        };
+        var arithmeticRule = Expr.NonTerminal("sub",
+            Expr.NonTerminal("add", Expr.Terminal("number", "10"), Expr.Terminal("var", "manual_credit")),
+            Expr.NonTerminal("div", Expr.Terminal("number", "9"), Expr.Terminal("number", "3")));
+        var fallbackRule = Expr.NonTerminal("add",
+            Expr.Terminal("var", "missing"),
+            Expr.Terminal("var", "item_count"));
+        var comparisonRule = Expr.NonTerminal("add",
+            Expr.NonTerminal("eq", Expr.Terminal("number", "2"), Expr.Terminal("number", "2")),
+            Expr.NonTerminal("lt", Expr.Terminal("number", "1"), Expr.Terminal("number", "2")));
+
+        ScenarioExpect.Equal(24m, interpreter.Interpret(TierDiscountRule, ctx));
+        ScenarioExpect.Equal(15m, interpreter.Interpret(arithmeticRule, ctx));
+        ScenarioExpect.Equal(4m, interpreter.Interpret(fallbackRule, ctx));
+        ScenarioExpect.Equal(2m, interpreter.Interpret(comparisonRule, ctx));
+        ScenarioExpect.Equal(0m, interpreter.Interpret(
+            Expr.NonTerminal("div", Expr.Terminal("number", "9"), Expr.Terminal("number", "0")),
+            ctx));
+        ScenarioExpect.Equal(3m, interpreter.Interpret(
+            Expr.NonTerminal("if", Expr.Terminal("number", "0"), Expr.Terminal("number", "7"), Expr.Terminal("number", "3")),
+            ctx));
+        ScenarioExpect.Throws<InvalidOperationException>(() => interpreter.Interpret(
+            Expr.NonTerminal("if", Expr.Terminal("number", "1")),
+            ctx));
+    }
+
     [Scenario("ThresholdDiscountRule Below Threshold")]
     [Fact]
     public void ThresholdDiscountRule_Below_Threshold()
@@ -260,6 +298,29 @@ public sealed class InterpreterDemoTests
         ScenarioExpect.Equal(fluentResult, generatedResult);
         ScenarioExpect.True(generated.HasTerminal("cartOver"));
         ScenarioExpect.True(generated.HasNonTerminal("and"));
+    }
+
+    [Scenario("CreateGeneratedEligibilityInterpreter Covers Production Eligibility Rules")]
+    [Fact]
+    public void CreateGeneratedEligibilityInterpreter_Covers_Production_Eligibility_Rules()
+    {
+        var interpreter = CreateGeneratedEligibilityInterpreter();
+        var ctx = new PricingContext
+        {
+            CartTotal = 120m,
+            ItemCount = 6,
+            CustomerTier = "Gold",
+            PromoCode = "SPRING",
+            IsHoliday = true
+        };
+        var eligibilityRule = Expr.NonTerminal("and",
+            Expr.NonTerminal("or", Expr.Terminal("promo", "SPRING"), Expr.Terminal("bool", "false")),
+            Expr.NonTerminal("and", Expr.Terminal("isHoliday", ""), Expr.Terminal("itemsOver", "5")));
+
+        ScenarioExpect.True(interpreter.Interpret(eligibilityRule, ctx));
+        ScenarioExpect.False(interpreter.Interpret(Expr.NonTerminal("not", Expr.Terminal("tier", "Gold")), ctx));
+        ScenarioExpect.False(interpreter.Interpret(Expr.Terminal("itemsOver", "10"), ctx));
+        ScenarioExpect.False(interpreter.Interpret(Expr.Terminal("promo", "WINTER"), ctx));
     }
 
     [Scenario("VipEligibilityRule Standard High Cart")]
