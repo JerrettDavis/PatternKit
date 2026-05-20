@@ -54,10 +54,14 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
                 return services.BuildServiceProvider(validateScopes: true);
             })
             .When("using representative registered examples", UseRegisteredExamples)
-            .Then("the registered examples produce expected outputs", passed => passed)
+            .Then("the registered examples produce expected outputs", checks =>
+            {
+                foreach (var check in checks)
+                    ScenarioExpect.True(check.Passed, check.Name);
+            })
             .AssertPassed();
 
-    private static bool UseRegisteredExamples(ServiceProvider provider)
+    private static IReadOnlyList<(string Name, bool Passed)> UseRegisteredExamples(ServiceProvider provider)
     {
         var coercion = provider.GetRequiredService<CoercionExample>();
         var notifications = provider.GetRequiredService<ComposedNotificationStrategyExample>();
@@ -105,28 +109,31 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var asyncResult = asyncTemplate.Pipeline.ExecuteAsync(7, CancellationToken.None).GetAwaiter().GetResult();
         editor.Editor.Insert("hello");
 
-        return coercion.Integers.From("42") == 42
-               && coercion.Booleans.From("true") == true
-               && !string.IsNullOrWhiteSpace(coercion.Strings.From(12))
-               && send.Success
-               && auth.Log.Contains("deny: missing auth", StringComparer.Ordinal)
-               && json.StatusCode == 200
-               && receipt.FinalTotal > 0
-               && singleton.State.Instance.Devices.PrinterReady
-               && order.ok
-               && proxy.RemoteProxy.Execute(42).Contains("42", StringComparison.Ordinal)
-               && proxy.EmailProxy.Execute(("user@example.com", "Hello", "Body"))
-               && flyweight.RenderSentence("hello").Count == 5
-               && editor.Editor.State.Text == "hello"
-               && received
-               && viewModel.ViewModel.CanSave.Value
-               && transaction.Transaction.CanCheckout.Value
-               && state.Final == PatternKit.Examples.AsyncStateDemo.ConnectionStateDemo.Mode.Connected
-               && template.Processor.Execute("one two") == 2
-               && asyncResult == "PAYLOAD:7"
-               && routing.Run().AggregatedTotal == 100m
-               && envelope.Run().Attempt == 1
-               && checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded;
+        return
+        [
+            ("integer coercer converts text", coercion.Integers.From("42") == 42),
+            ("boolean coercer converts text", coercion.Booleans.From("true") == true),
+            ("string coercer converts values", !string.IsNullOrWhiteSpace(coercion.Strings.From(12))),
+            ("notification strategy sends", send.Success),
+            ("auth chain logs denied admin requests", auth.Log.Contains("deny: missing auth", StringComparer.Ordinal)),
+            ("minimal router returns a successful response", json.StatusCode == 200),
+            ("decorated payment processor totals the order", receipt.FinalTotal > 0),
+            ("singleton POS app state is initialized", singleton.State.Instance.Devices.PrinterReady),
+            ("pattern showcase facade places an order", order.ok),
+            ("remote proxy returns remote data", proxy.RemoteProxy.Execute(42).Contains("42", StringComparison.Ordinal)),
+            ("email proxy accepts example addresses", proxy.EmailProxy.Execute(("user@example.com", "Hello", "Body"))),
+            ("flyweight renderer returns one glyph per character", flyweight.RenderSentence("hello").Count == 5),
+            ("memento editor tracks inserted text", editor.Editor.State.Text == "hello"),
+            ("observer event hub publishes events", received),
+            ("reactive view model enables save", viewModel.ViewModel.CanSave.Value),
+            ("reactive transaction enables checkout", transaction.Transaction.CanCheckout.Value),
+            ("async state machine connects", state.Final == PatternKit.Examples.AsyncStateDemo.ConnectionStateDemo.Mode.Connected),
+            ("template method counts words", template.Processor.Execute("one two") == 2),
+            ("async template method formats payloads", asyncResult == "PAYLOAD:7"),
+            ("message router visitor aggregates totals", routing.Run().AggregatedTotal == 100m),
+            ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
+            ("resilient checkout succeeds", checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded)
+        ];
     }
 
     private static PurchaseOrder CreateOrder()
