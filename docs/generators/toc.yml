@@ -1,6 +1,9 @@
 - name: Generators Overview
   href: index.md
 
+- name: Abstract Factory
+  href: abstract-factory.md
+
 - name: Adapter
   href: adapter.md
 
