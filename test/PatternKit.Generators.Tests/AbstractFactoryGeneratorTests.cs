@@ -350,6 +350,71 @@ public sealed class AbstractFactoryGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Formats primitive abstract factory family keys")]
+    [Fact]
+    public void FormatsPrimitiveAbstractFactoryFamilyKeys()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public class Product { }
+
+            [GenerateAbstractFactory(typeof(bool))]
+            [AbstractFactoryProduct(true, typeof(Product), typeof(Product))]
+            public static partial class BoolFactory;
+
+            [GenerateAbstractFactory(typeof(byte))]
+            [AbstractFactoryProduct((byte)1, typeof(Product), typeof(Product))]
+            public static partial class ByteFactory;
+
+            [GenerateAbstractFactory(typeof(sbyte))]
+            [AbstractFactoryProduct((sbyte)-1, typeof(Product), typeof(Product))]
+            public static partial class SByteFactory;
+
+            [GenerateAbstractFactory(typeof(short))]
+            [AbstractFactoryProduct((short)-2, typeof(Product), typeof(Product))]
+            public static partial class ShortFactory;
+
+            [GenerateAbstractFactory(typeof(ushort))]
+            [AbstractFactoryProduct((ushort)2, typeof(Product), typeof(Product))]
+            public static partial class UShortFactory;
+
+            [GenerateAbstractFactory(typeof(int))]
+            [AbstractFactoryProduct(-3, typeof(Product), typeof(Product))]
+            public static partial class IntFactory;
+
+            [GenerateAbstractFactory(typeof(long))]
+            [AbstractFactoryProduct(-4L, typeof(Product), typeof(Product))]
+            public static partial class LongFactory;
+
+            [GenerateAbstractFactory(typeof(ulong))]
+            [AbstractFactoryProduct(5UL, typeof(Product), typeof(Product))]
+            public static partial class ULongFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(FormatsPrimitiveAbstractFactoryFamilyKeys));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var text = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+
+        ScenarioExpect.Contains("builder.Family(true)", text);
+        ScenarioExpect.Contains("builder.Family(1)", text);
+        ScenarioExpect.Contains("builder.Family(-1)", text);
+        ScenarioExpect.Contains("builder.Family(-2)", text);
+        ScenarioExpect.Contains("builder.Family(2)", text);
+        ScenarioExpect.Contains("builder.Family(-3)", text);
+        ScenarioExpect.Contains("builder.Family(-4L)", text);
+        ScenarioExpect.Contains("builder.Family(5UL)", text);
+        ScenarioExpect.Contains("builder.Product<global::Demo.Product>(() => new global::Demo.Product())", text);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
