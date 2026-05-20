@@ -110,5 +110,9 @@ public sealed class AbstractFactoryGeneratorTests
         => RoslynTestHelpers.CreateCompilation(
             source,
             assemblyName,
-            extra: MetadataReference.CreateFromFile(typeof(PatternKit.Creational.AbstractFactory.AbstractFactory<>).Assembly.Location));
+            extra:
+            [
+                MetadataReference.CreateFromFile(typeof(PatternKit.Creational.AbstractFactory.AbstractFactory<>).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(IServiceProvider).Assembly.Location)
+            ]);
 }
