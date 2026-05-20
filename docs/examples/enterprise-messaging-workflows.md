@@ -25,6 +25,7 @@ Example source:
 | Source-generated dispatcher | `DispatcherExample.cs` | Compile-time mediator commands, notifications, streams, and paging. |
 | Source-generated content router | `ContentRouterGeneratorExample.cs` | Attribute-driven content routing without runtime scanning. |
 | Source-generated recipient list | `RecipientListGeneratorExample.cs` | Attribute-driven fan-out without runtime scanning. |
+| Source-generated splitter and aggregator | `MessageRoutingExample.cs` | Attribute-driven split projection, correlation, completion, and result projection without runtime scanning. |
 | Resilient checkout orchestration | `ResilientCheckoutDemo.cs` | Route selection, routing-slip execution, command compensation, and fallback routes. |
 | Collaborating service mailboxes | `ServiceCollaborationMailboxDemo.cs` | Inventory, payment, shipping, and notification mailboxes collaborating over correlated messages. |
 | Backplane facade | `BackplaneFacadeDemo.cs` | MassTransit/MediatR-shaped host builder, typed client, request/reply, and pub/sub over an application-owned transport boundary. |
@@ -66,6 +67,8 @@ public static partial class FulfillmentSlip
 
 The generated factories are AOT-friendly and do not scan assemblies. The runtime builders are better for user- or tenant-defined routing.
 
+Generated splitter and aggregator contracts follow the same rule: use `[GenerateSplitter]` and `[SplitterProjection]` for a stable split projection, then `[GenerateAggregator]` with `[AggregatorCorrelation]`, `[AggregatorCompletion]`, and `[AggregatorProjection]` for the matching rejoin contract.
+
 ## Testing Guidance
 
 The example tests use behavior-oriented assertions:
@@ -91,5 +94,6 @@ The example tests use behavior-oriented assertions:
 - [Mailbox](../patterns/messaging/mailbox.md)
 - [Idempotent Receiver, Inbox, and Outbox](../patterns/messaging/reliability.md)
 - [Messaging Generators](../generators/messaging.md)
+- [Generated Splitter And Aggregator](generated-splitter-aggregator.md)
 - [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md)
 - [Messaging Backplane Facade](messaging-backplane-facade.md)

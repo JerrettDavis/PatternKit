@@ -47,8 +47,8 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Messaging generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
 | Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Messaging generator |
-| Enterprise Integration | Splitter | `Splitter<TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
-| Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
+| Enterprise Integration | Splitter | `Splitter<TIn, TOut>` | Messaging generator |
+| Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Messaging generator |
 | Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |
 | Enterprise Integration | Saga / Process Manager | `Saga<TState>` | Messaging generator |
 | Enterprise Integration | Mailbox | `Mailbox<TPayload>` | Tracked in [#209](https://github.com/JerrettDavis/PatternKit/issues/209) |
