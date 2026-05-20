@@ -391,7 +391,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/template-method-async-demo.md",
             ExampleIntegrationSurface.LibraryOnly,
             ["AsyncTemplate", "AsyncTemplateMethod"],
-            ["cancellation", "async storage", "error observation"])
+            ["cancellation", "async storage", "error observation"]),
+        Descriptor(
+            "Inventory Retry Policy",
+            "src/PatternKit.Examples/RetryDemo/InventoryRetryDemo.cs",
+            "test/PatternKit.Examples.Tests/RetryDemo/InventoryRetryDemoTests.cs",
+            "docs/examples/inventory-retry-policy.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Retry"],
+            ["transient result retry", "source-generated policy factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

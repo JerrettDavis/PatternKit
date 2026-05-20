@@ -77,6 +77,12 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Reliability Pipeline**](messaging.md#generated-reliability-pipeline) | Idempotent receiver, inbox, and outbox factories | `[GenerateReliabilityPipeline]` |
 | [**Backplane Topology**](messaging.md#generated-backplane-topology) | Request/reply routes and publish/subscribe endpoint topology | `[GenerateBackplaneTopology]` |
 
+### Cloud And Resilience
+
+| Generator | Description | Attribute |
+|---|---|---|
+| [**Retry**](retry.md) | Bounded retry policy factories for transient results and exceptions | `[GenerateRetryPolicy]` |
+
 ## Quick Reference
 
 ### Creational
@@ -192,6 +198,14 @@ public static partial class OrderSlip { }
 // Saga - generated process-manager factory
 [GenerateSaga(typeof(OrderSagaState))]
 public static partial class OrderSaga { }
+```
+
+### Cloud And Resilience
+
+```csharp
+// Retry - generated bounded retry policy
+[GenerateRetryPolicy(typeof(InventoryResponse), MaxAttempts = 3, BackoffFactor = 2)]
+public static partial class InventoryRetryPolicy { }
 ```
 
 ## Examples

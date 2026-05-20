@@ -311,6 +311,10 @@
           href: messaging/enterprise-generators.md
         - name: Source-Generated Dispatcher
           href: messaging/dispatcher.md
+    - name: Cloud Architecture
+      items:
+        - name: Retry
+          href: cloud/retry.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:

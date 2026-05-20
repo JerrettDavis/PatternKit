@@ -201,6 +201,10 @@ PKSPEC001 | PatternKit.Generators.Specification | Error | Specification registry
 PKSPEC002 | PatternKit.Generators.Specification | Error | Specification registry must declare at least one rule.
 PKSPEC003 | PatternKit.Generators.Specification | Error | Specification rule signature is invalid.
 PKSPEC004 | PatternKit.Generators.Specification | Error | Specification rule declaration is duplicated.
+PKRET001 | PatternKit.Generators.Retry | Error | Retry policy host must be partial.
+PKRET002 | PatternKit.Generators.Retry | Error | Retry policy configuration is invalid.
+PKRET003 | PatternKit.Generators.Retry | Error | Retry predicate signature is invalid.
+PKRET004 | PatternKit.Generators.Retry | Error | Retry predicate declaration is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

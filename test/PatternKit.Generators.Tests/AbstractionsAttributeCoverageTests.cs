@@ -14,6 +14,7 @@ using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
+using PatternKit.Generators.Retry;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
@@ -119,6 +120,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(PrototypeStrategyAttribute), AttributeTargets.Property | AttributeTargets.Field, false, false },
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateRetryPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(RetryResultPredicateAttribute), AttributeTargets.Method, false, false },
+        { typeof(RetryExceptionPredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(SingletonAttribute), AttributeTargets.Class, false, false },
         { typeof(SingletonFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSpecificationRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -166,6 +170,30 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("approved", rule.Name);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSpecificationRegistryAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new SpecificationRuleAttribute(""));
+    }
+
+    [Scenario("Retry Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Retry_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var retry = new GenerateRetryPolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildInventoryPolicy",
+            PolicyName = "inventory",
+            MaxAttempts = 5,
+            InitialDelayMilliseconds = 25,
+            BackoffFactor = 2
+        };
+
+        ScenarioExpect.Equal(typeof(string), retry.ResultType);
+        ScenarioExpect.Equal("BuildInventoryPolicy", retry.FactoryMethodName);
+        ScenarioExpect.Equal("inventory", retry.PolicyName);
+        ScenarioExpect.Equal(5, retry.MaxAttempts);
+        ScenarioExpect.Equal(25, retry.InitialDelayMilliseconds);
+        ScenarioExpect.Equal(2, retry.BackoffFactor);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRetryPolicyAttribute(null!));
+        ScenarioExpect.IsType<RetryResultPredicateAttribute>(new RetryResultPredicateAttribute());
+        ScenarioExpect.IsType<RetryExceptionPredicateAttribute>(new RetryExceptionPredicateAttribute());
     }
 
     [Scenario("Interpreter Attributes Expose Defaults And Validation")]
