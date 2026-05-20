@@ -14,11 +14,10 @@ public sealed class RecipientListGeneratorExampleTests(ITestOutputHelper output)
     [Scenario("Fluent and generated recipient lists deliver the same recipients")]
     [Fact]
     public Task Fluent_And_Generated_Recipient_Lists_Deliver_The_Same_Recipients()
-        => Given("recipient-list example entry points", () => new
-            {
-                Fluent = RecipientListGeneratorExample.RunFluent,
-                Generated = RecipientListGeneratorExample.RunGenerated
-            })
+        => Given("recipient-list example entry points", () =>
+                new RecipientListExampleEntrypoints(
+                    RecipientListGeneratorExample.RunFluent,
+                    RecipientListGeneratorExample.RunGenerated))
             .When("running both recipient-list paths", runners => new
             {
                 Fluent = runners.Fluent(),
@@ -63,4 +62,8 @@ public sealed class RecipientListGeneratorExampleTests(ITestOutputHelper output)
     private sealed record RecipientListImportRun(
         RecipientListSummary Summary,
         ExampleIntegrationSurface Integration);
+
+    private sealed record RecipientListExampleEntrypoints(
+        Func<RecipientListSummary> Fluent,
+        Func<RecipientListSummary> Generated);
 }
