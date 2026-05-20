@@ -86,6 +86,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
         var cqrs = provider.GetRequiredService<CqrsDispatcherExample>();
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
+        var interpreter = provider.GetRequiredService<GeneratedInterpreterRulesExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -143,7 +144,9 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),
             ("CQRS generated path matches command writes to query reads", cqrsGenerated.QueryMatchedCommand),
-            ("resilient checkout succeeds", checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded)
+            ("resilient checkout succeeds", checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded),
+            ("generated interpreter computes tier discounts", interpreter.Pricing.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.TierDiscountRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 100m, CustomerTier = "Gold" }) == 10m),
+            ("generated interpreter evaluates VIP eligibility", interpreter.Eligibility.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.VipEligibilityRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 150m, CustomerTier = "Gold" }))
         ];
     }
 

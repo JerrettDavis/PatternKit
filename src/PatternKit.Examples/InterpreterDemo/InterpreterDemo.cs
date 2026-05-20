@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.Interpreter;
+using PatternKit.Generators.Interpreter;
 using static PatternKit.Behavioral.Interpreter.ExpressionExtensions;
 
 namespace PatternKit.Examples.InterpreterDemo;
@@ -121,6 +122,12 @@ public static class InterpreterDemo
     }
 
     /// <summary>
+    /// Creates the source-generated pricing interpreter used by importable examples and IoC integrations.
+    /// </summary>
+    public static Interpreter<PricingContext, decimal> CreateGeneratedPricingInterpreter()
+        => GeneratedPricingRuleInterpreter.Create();
+
+    /// <summary>
     /// Creates an async interpreter for rules that need external lookups.
     /// </summary>
     public static AsyncInterpreter<PricingContext, decimal> CreateAsyncPricingInterpreter()
@@ -193,6 +200,12 @@ public static class InterpreterDemo
 
             .Build();
     }
+
+    /// <summary>
+    /// Creates the source-generated eligibility interpreter used by importable examples and IoC integrations.
+    /// </summary>
+    public static Interpreter<PricingContext, bool> CreateGeneratedEligibilityInterpreter()
+        => GeneratedEligibilityRuleInterpreter.Create();
 
     // ─────────────────────────────────────────────────────────────────────────
     // Sample Rule Expressions
@@ -373,4 +386,104 @@ public static class InterpreterDemo
     }
 
     public static void Run() => RunAsync().GetAwaiter().GetResult();
+}
+
+[GenerateInterpreter(typeof(InterpreterDemo.PricingContext), typeof(decimal), FactoryMethodName = "Create")]
+public static partial class GeneratedPricingRuleInterpreter
+{
+    [InterpreterTerminal("number")]
+    private static decimal Number(string token) => decimal.Parse(token);
+
+    [InterpreterTerminal("percent")]
+    private static decimal Percent(string token) => decimal.Parse(token.TrimEnd('%')) / 100m;
+
+    [InterpreterTerminal("var")]
+    private static decimal Variable(string token, InterpreterDemo.PricingContext context)
+        => token switch
+        {
+            "cart_total" => context.CartTotal,
+            "item_count" => context.ItemCount,
+            "tier_discount" => context.CustomerTier switch
+            {
+                "Gold" => 0.10m,
+                "Platinum" => 0.15m,
+                "Diamond" => 0.20m,
+                _ => 0.0m
+            },
+            _ => context.Variables.TryGetValue(token, out var value) ? value : 0m
+        };
+
+    [InterpreterNonTerminal("add")]
+    private static decimal Add(decimal[] args) => args[0] + args[1];
+
+    [InterpreterNonTerminal("div")]
+    private static decimal Divide(decimal[] args) => args[1] != 0 ? args[0] / args[1] : 0m;
+
+    [InterpreterNonTerminal("eq")]
+    private static decimal Equal(decimal[] args) => args[0] == args[1] ? 1m : 0m;
+
+    [InterpreterNonTerminal("gt")]
+    private static decimal GreaterThan(decimal[] args) => args[0] > args[1] ? 1m : 0m;
+
+    [InterpreterNonTerminal("if")]
+    private static decimal If(decimal[] args)
+    {
+        if (args.Length != 3)
+            throw new InvalidOperationException("if requires 3 arguments: condition, then, else");
+        return args[0] > 0 ? args[1] : args[2];
+    }
+
+    [InterpreterNonTerminal("lt")]
+    private static decimal LessThan(decimal[] args) => args[0] < args[1] ? 1m : 0m;
+
+    [InterpreterNonTerminal("max")]
+    private static decimal Max(decimal[] args) => Math.Max(args[0], args[1]);
+
+    [InterpreterNonTerminal("min")]
+    private static decimal Min(decimal[] args) => Math.Min(args[0], args[1]);
+
+    [InterpreterNonTerminal("mul")]
+    private static decimal Multiply(decimal[] args) => args[0] * args[1];
+
+    [InterpreterNonTerminal("round")]
+    private static decimal Round(decimal[] args) => Math.Round(args[0], 2, MidpointRounding.AwayFromZero);
+
+    [InterpreterNonTerminal("sub")]
+    private static decimal Subtract(decimal[] args) => args[0] - args[1];
+}
+
+[GenerateInterpreter(typeof(InterpreterDemo.PricingContext), typeof(bool), FactoryMethodName = "Create")]
+public static partial class GeneratedEligibilityRuleInterpreter
+{
+    [InterpreterTerminal("bool")]
+    private static bool Boolean(string token) => bool.Parse(token);
+
+    [InterpreterTerminal("cartOver")]
+    private static bool CartOver(string token, InterpreterDemo.PricingContext context)
+        => context.CartTotal > decimal.Parse(token);
+
+    [InterpreterTerminal("isHoliday")]
+    private static bool IsHoliday(string token, InterpreterDemo.PricingContext context)
+        => context.IsHoliday;
+
+    [InterpreterTerminal("itemsOver")]
+    private static bool ItemsOver(string token, InterpreterDemo.PricingContext context)
+        => context.ItemCount > int.Parse(token);
+
+    [InterpreterTerminal("promo")]
+    private static bool Promo(string token, InterpreterDemo.PricingContext context)
+        => context.PromoCode.Equals(token, StringComparison.OrdinalIgnoreCase);
+
+    [InterpreterTerminal("tier")]
+    private static bool Tier(string token, InterpreterDemo.PricingContext context)
+        => context.CustomerTier.Equals(token, StringComparison.OrdinalIgnoreCase);
+
+    [InterpreterNonTerminal("and")]
+    private static bool And(bool[] args) => args[0] && args[1];
+
+    [InterpreterNonTerminal("not")]
+    private static bool Not(bool[] args) => !args[0];
+
+    [InterpreterNonTerminal("or")]
+    private static bool Or(bool[] args) => args[0] || args[1];
 }

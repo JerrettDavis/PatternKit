@@ -34,6 +34,8 @@ PatternKit's implementation uses a fluent builder API to define:
 
 The interpreter recursively evaluates the expression tree, producing a final result.
 
+PatternKit also includes a source-generated path for stable grammars. Annotate a partial rule host with `[GenerateInterpreter]`, mark static methods with `[InterpreterTerminal]` and `[InterpreterNonTerminal]`, and the generator emits an immutable interpreter factory that composes the same runtime without reflection.
+
 ## When to Use
 
 - **Domain-specific languages (DSLs)**: Building custom languages for configuration, rules, or queries
@@ -57,6 +59,27 @@ The interpreter recursively evaluates the expression tree, producing a final res
 | `ActionInterpreter<TContext>` | Sync interpreter with side effects | Commands, state mutations |
 | `AsyncInterpreter<TContext, TResult>` | Async interpreter returning a value | External lookups, I/O |
 | `AsyncActionInterpreter<TContext>` | Async interpreter with side effects | Async commands |
+
+## Generated Path
+
+```csharp
+[GenerateInterpreter(typeof(PricingContext), typeof(decimal), FactoryMethodName = "Build")]
+public static partial class PricingRules
+{
+    [InterpreterTerminal("number")]
+    private static decimal Number(string token) => decimal.Parse(token);
+
+    [InterpreterTerminal("cart_total")]
+    private static decimal CartTotal(string token, PricingContext context) => context.CartTotal;
+
+    [InterpreterNonTerminal("add")]
+    private static decimal Add(decimal[] args) => args[0] + args[1];
+}
+
+var interpreter = PricingRules.Build();
+```
+
+Use the fluent builder when a grammar is assembled dynamically. Use the generated path when the grammar belongs to the application contract and should be validated at compile time.
 
 ## Diagram
 
@@ -97,5 +120,6 @@ classDiagram
 - [Comprehensive Guide](guide.md) - Detailed usage and patterns
 - [API Reference](api-reference.md) - Complete API documentation
 - [Real-World Examples](real-world-examples.md) - Production-ready examples
+- [Interpreter Generator](../../../generators/interpreter.md) - Source-generated rule factories
 - [Strategy Pattern](../strategy/index.md) - For simple conditional logic
 - [Composite Pattern](../../structural/composite/index.md) - For tree structures without interpretation

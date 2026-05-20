@@ -130,6 +130,22 @@ public sealed class InterpreterDemoTests
         ScenarioExpect.Equal(15m, result); // 150 * 0.10 = 15
     }
 
+    [Scenario("CreateGeneratedPricingInterpreter Matches Fluent Pricing Rules")]
+    [Fact]
+    public void CreateGeneratedPricingInterpreter_Matches_Fluent_Pricing_Rules()
+    {
+        var fluent = CreatePricingInterpreter();
+        var generated = CreateGeneratedPricingInterpreter();
+        var ctx = new PricingContext { CartTotal = 150m, CustomerTier = "Platinum" };
+
+        var fluentResult = fluent.Interpret(TierDiscountRule, ctx);
+        var generatedResult = generated.Interpret(TierDiscountRule, ctx);
+
+        ScenarioExpect.Equal(fluentResult, generatedResult);
+        ScenarioExpect.True(generated.HasTerminal("percent"));
+        ScenarioExpect.True(generated.HasNonTerminal("round"));
+    }
+
     [Scenario("ThresholdDiscountRule Below Threshold")]
     [Fact]
     public void ThresholdDiscountRule_Below_Threshold()
@@ -228,6 +244,22 @@ public sealed class InterpreterDemoTests
         var result = interpreter.Interpret(VipEligibilityRule, ctx);
 
         ScenarioExpect.True(result);
+    }
+
+    [Scenario("CreateGeneratedEligibilityInterpreter Matches Fluent Eligibility Rules")]
+    [Fact]
+    public void CreateGeneratedEligibilityInterpreter_Matches_Fluent_Eligibility_Rules()
+    {
+        var fluent = CreateEligibilityInterpreter();
+        var generated = CreateGeneratedEligibilityInterpreter();
+        var ctx = new PricingContext { CustomerTier = "Gold", CartTotal = 150m };
+
+        var fluentResult = fluent.Interpret(VipEligibilityRule, ctx);
+        var generatedResult = generated.Interpret(VipEligibilityRule, ctx);
+
+        ScenarioExpect.Equal(fluentResult, generatedResult);
+        ScenarioExpect.True(generated.HasTerminal("cartOver"));
+        ScenarioExpect.True(generated.HasNonTerminal("and"));
     }
 
     [Scenario("VipEligibilityRule Standard High Cart")]

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Behavioral.Chain;
+using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Creational.AbstractFactory;
@@ -44,6 +45,7 @@ using ShowcaseFacade = PatternKit.Examples.PatternShowcase.PatternShowcase.IOrde
 using TransactionPipeline = PatternKit.Examples.Chain.TransactionPipeline;
 using VisitorTender = PatternKit.Examples.VisitorDemo.Tender;
 using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
+using InterpreterRulesDemo = PatternKit.Examples.InterpreterDemo.InterpreterDemo;
 
 namespace PatternKit.Examples.DependencyInjection;
 
@@ -98,6 +100,7 @@ public sealed record GeneratedMailboxExample(MailboxExampleRunner Runner);
 public sealed record GeneratedReliabilityPipelineExample(ReliabilityExampleRunner Runner);
 public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, CheckoutServices, CheckoutResult> Run);
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
+public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -143,6 +146,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedReliabilityPipelineExample()
             .AddResilientCheckoutMailboxesExample()
             .AddMessagingBackplaneFacadeExample()
+            .AddGeneratedInterpreterRulesExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -421,6 +425,16 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new MessagingBackplaneFacadeExample(BackplaneFacadeDemo.RunAsync));
         return services.RegisterExample<MessagingBackplaneFacadeExample>("Messaging Backplane Facade", ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.ExternalInfrastructure | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedInterpreterRulesExample(this IServiceCollection services)
+    {
+        services.AddSingleton(static _ => InterpreterRulesDemo.CreateGeneratedPricingInterpreter());
+        services.AddSingleton(static _ => InterpreterRulesDemo.CreateGeneratedEligibilityInterpreter());
+        services.AddSingleton<GeneratedInterpreterRulesExample>(sp => new(
+            sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, decimal>>(),
+            sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, bool>>()));
+        return services.RegisterExample<GeneratedInterpreterRulesExample>("Generated Interpreter Rules", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)
