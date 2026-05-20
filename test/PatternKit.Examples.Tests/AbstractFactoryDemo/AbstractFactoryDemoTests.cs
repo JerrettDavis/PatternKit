@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.AbstractFactoryDemo;
 using static PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 using TinyBDD;
@@ -38,7 +39,7 @@ public sealed class AbstractFactoryDemoTests
     [Fact]
     public void Generated_Factory_ServiceProvider_Overload_Creates_Platform_Widget_Families()
     {
-        var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection().BuildServiceProvider();
+        var services = new ServiceCollection().BuildServiceProvider();
         var factory = CreateUIFactory(services);
 
         var mac = factory.GetFamily(Platform.MacOS);
