@@ -229,6 +229,127 @@ public sealed class AbstractFactoryGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Formats escaped literal and null family keys")]
+    [Fact]
+    public void FormatsEscapedLiteralAndNullFamilyKeys()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public sealed class QuoteButton : IButton { }
+            public sealed class NewLineButton : IButton { }
+            public sealed class NullButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(string))]
+            [AbstractFactoryProduct("win\"dows", typeof(IButton), typeof(QuoteButton))]
+            public static partial class StringLiteralFactory;
+
+            [GenerateAbstractFactory(typeof(char))]
+            [AbstractFactoryProduct('\n', typeof(IButton), typeof(NewLineButton))]
+            public static partial class CharLiteralFactory;
+
+            [GenerateAbstractFactory(typeof(object))]
+            [AbstractFactoryProduct(null, typeof(IButton), typeof(NullButton))]
+            public static partial class NullFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(FormatsEscapedLiteralAndNullFamilyKeys));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = run.Results.SelectMany(result => result.GeneratedSources).ToArray();
+        var stringLiteralFactory = ScenarioExpect.Single(generated.Where(source => source.HintName == "StringLiteralFactory.AbstractFactory.g.cs"));
+        var charLiteralFactory = ScenarioExpect.Single(generated.Where(source => source.HintName == "CharLiteralFactory.AbstractFactory.g.cs"));
+        var nullFactory = ScenarioExpect.Single(generated.Where(source => source.HintName == "NullFactory.AbstractFactory.g.cs"));
+
+        ScenarioExpect.Contains("builder.Family(\"win\\\"dows\")", stringLiteralFactory.SourceText.ToString());
+        ScenarioExpect.Contains("builder.Family('\\n')", charLiteralFactory.SourceText.ToString());
+        ScenarioExpect.Contains("builder.Family(null!)", nullFactory.SourceText.ToString());
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("Reports diagnostic for unnamed enum family key")]
+    [Fact]
+    public void ReportsDiagnosticForUnnamedEnumFamilyKey()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public enum Platform { Windows = 1 }
+            public interface IButton { }
+            public sealed class WindowsButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(Platform))]
+            [AbstractFactoryProduct((Platform)2, typeof(IButton), typeof(WindowsButton))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForUnnamedEnumFamilyKey));
+
+        ScenarioExpect.Equal("PKAF003", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for abstract implementation type")]
+    [Fact]
+    public void ReportsDiagnosticForAbstractImplementationType()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public interface IButton { }
+            public abstract class AbstractButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(string))]
+            [AbstractFactoryProduct("windows", typeof(IButton), typeof(AbstractButton))]
+            public static partial class WidgetFactory;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForAbstractImplementationType));
+
+        ScenarioExpect.Equal("PKAF003", diagnostic.Id);
+    }
+
+    [Scenario("Generates abstract factory for global struct host")]
+    [Fact]
+    public void GeneratesAbstractFactoryForGlobalStructHost()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            public interface IButton { }
+            public sealed class WindowsButton : IButton { }
+
+            [GenerateAbstractFactory(typeof(uint))]
+            [AbstractFactoryProduct(7u, typeof(IButton), typeof(WindowsButton))]
+            public partial struct WidgetFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesAbstractFactoryForGlobalStructHost));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+
+        ScenarioExpect.Contains("partial struct WidgetFactory", text);
+        ScenarioExpect.DoesNotContain("namespace ", text);
+        ScenarioExpect.Contains("builder.Family(7u)", text);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
