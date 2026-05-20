@@ -90,12 +90,15 @@ public sealed class InterpreterGenerator : IIncrementalGenerator
         if (contextType is null || resultType is null)
             return;
 
-        var rules = GetRules(type, contextType, resultType, context);
-        if (rules.Length == 0)
+        var rules = GetRules(type, contextType, resultType, context, out var hasAnnotatedRules);
+        if (!hasAnnotatedRules)
         {
             context.ReportDiagnostic(Diagnostic.Create(MissingRules, node.Identifier.GetLocation(), type.Name));
             return;
         }
+
+        if (rules.Length == 0)
+            return;
 
         if (TryFindDuplicate(rules, out var duplicate))
         {
@@ -113,8 +116,10 @@ public sealed class InterpreterGenerator : IIncrementalGenerator
         INamedTypeSymbol type,
         INamedTypeSymbol contextType,
         INamedTypeSymbol resultType,
-        SourceProductionContext context)
+        SourceProductionContext context,
+        out bool hasAnnotatedRules)
     {
+        hasAnnotatedRules = false;
         var builder = ImmutableArray.CreateBuilder<Rule>();
         foreach (var method in type.GetMembers().OfType<IMethodSymbol>())
         {
@@ -124,6 +129,7 @@ public sealed class InterpreterGenerator : IIncrementalGenerator
                 if (attrName != InterpreterTerminalAttributeName && attrName != InterpreterNonTerminalAttributeName)
                     continue;
 
+                hasAnnotatedRules = true;
                 var isTerminal = attrName == InterpreterTerminalAttributeName;
                 if (!TryGetRule(method, attr, isTerminal, contextType, resultType, out var rule))
                 {
