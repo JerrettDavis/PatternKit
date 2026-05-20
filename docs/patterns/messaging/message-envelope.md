@@ -94,6 +94,34 @@ if (context.TryGetItem<int>("attempt", out var attempt))
 }
 ```
 
+## Source-Generated Contracts
+
+Use `[GenerateMessageEnvelope]` when an application boundary has a stable envelope contract and every message must include the same required headers:
+
+```csharp
+using PatternKit.Generators.Messaging;
+
+[GenerateMessageEnvelope(typeof(OrderAccepted), FactoryName = "CreateAccepted")]
+[MessageEnvelopeHeader("message-id", typeof(string), ParameterName = "messageId")]
+[MessageEnvelopeHeader("correlation-id", typeof(string), ParameterName = "correlationId")]
+[MessageEnvelopeHeader("idempotency-key", typeof(string), ParameterName = "idempotencyKey")]
+public static partial class OrderAcceptedEnvelope;
+```
+
+The generated factory returns `Message<OrderAccepted>` and requires each header as a typed parameter. The generated context factory starts an execution context from the same contract:
+
+```csharp
+var message = OrderAcceptedEnvelope.CreateAccepted(
+    new OrderAccepted("order-42", 199.95m),
+    "msg-100",
+    "order-42",
+    "order-42:accepted");
+
+var context = OrderAcceptedEnvelope.CreateContext(message);
+```
+
+Prefer the fluent runtime API when the header set is dynamic. Prefer the generated path when the contract is stable and should fail at compile time if a required header is omitted.
+
 ## Relationship To Other Patterns
 
 `Message<TPayload>` and `MessageContext` are not a replacement for a mediator, observer, or broker. They are shared metadata primitives for higher-level patterns:
@@ -110,6 +138,8 @@ if (context.TryGetItem<int>("attempt", out var attempt))
 - <xref:PatternKit.Messaging.MessageHeaders>
 - <xref:PatternKit.Messaging.MessageContext>
 - <xref:PatternKit.Messaging.MessageHeaderNames>
+- <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute>
+- <xref:PatternKit.Generators.Messaging.MessageEnvelopeHeaderAttribute>
 
 ## Example Source
 

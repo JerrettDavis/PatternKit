@@ -1,8 +1,9 @@
 # Messaging Generators
 
-PatternKit includes five messaging-oriented source generators:
+PatternKit includes six messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
+- <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
 - <xref:PatternKit.Generators.Messaging.GenerateRoutingSlipAttribute> for ordered routing-slip factories.
@@ -29,6 +30,27 @@ Example source:
 - `src/PatternKit.Examples/Messaging/DispatcherExample.cs`
 - `src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs`
 - `test/PatternKit.Examples.Tests/Messaging/DispatcherExampleTests.cs`
+
+## Generated Message Envelope
+
+`[GenerateMessageEnvelope]` creates typed factories for message contracts that require a stable set of headers:
+
+```csharp
+using PatternKit.Generators.Messaging;
+
+[GenerateMessageEnvelope(typeof(OrderAccepted), FactoryName = "CreateAccepted")]
+[MessageEnvelopeHeader("message-id", typeof(string), ParameterName = "messageId")]
+[MessageEnvelopeHeader("correlation-id", typeof(string), ParameterName = "correlationId")]
+[MessageEnvelopeHeader("tenant-id", typeof(string), ParameterName = "tenantId")]
+public static partial class OrderAcceptedEnvelope;
+```
+
+The generated factory returns `Message<TPayload>` and writes every required header. It also emits a context factory so the same contract can start routing, saga, mailbox, or reliability workflows without manual `MessageContext.From(...)` boilerplate.
+
+Example source:
+
+- `src/PatternKit.Examples/Messaging/MessageEnvelopeExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/MessageEnvelopeExampleTests.cs`
 
 ## Generated Content Router
 
@@ -148,6 +170,7 @@ Example source:
 | ID | Generator | Meaning |
 | --- | --- | --- |
 | `PKDSP001`-`PKDSP004` | Dispatcher | Invalid dispatcher configuration or handler registration. |
+| `PKME001`-`PKME004` | Message Envelope | Non-partial host, missing headers, invalid header configuration, or duplicate names. |
 | `PKCR001`-`PKCR005` | Content Router | Non-partial host, missing routes, invalid signatures, duplicate defaults, or duplicate route identity. |
 | `PKRL001`-`PKRL004` | Recipient List | Non-partial host, missing recipients, invalid signatures, or duplicate recipient identity. |
 | `PKRS001`-`PKRS003` | Routing Slip | Non-partial host, missing steps, or invalid step signatures. |

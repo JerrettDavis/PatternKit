@@ -126,7 +126,6 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                     "Inbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
                     "Interpreter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/206",
                     "Mailbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/209",
-                    "Message Envelope has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/215",
                     "Outbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
                     "Publish-Subscribe has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",
                     "Request-Reply has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",

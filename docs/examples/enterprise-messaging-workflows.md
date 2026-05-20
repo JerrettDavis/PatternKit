@@ -12,6 +12,7 @@ Example source:
 | Pattern | Example source | What it demonstrates |
 | --- | --- | --- |
 | Message envelope/context | `MessageEnvelopeExample.cs` | Correlation, causation, idempotency, headers, typed payloads, and execution-scoped context. |
+| Source-generated message envelope | `MessageEnvelopeExample.cs` | Required-header contract factories for stable integration boundaries. |
 | Content router | `MessageRoutingExample.cs` | First-match routing of orders to named destinations. |
 | Recipient list | `MessageRoutingExample.cs` | Fan-out to multiple interested recipients. |
 | Splitter | `MessageRoutingExample.cs` | Splitting one aggregate message into line-level messages. |
@@ -32,7 +33,7 @@ Example source:
 
 A production application usually combines these primitives in layers:
 
-1. Accept or create a `Message<TPayload>` at the boundary with correlation, causation, and idempotency headers.
+1. Accept or create a `Message<TPayload>` at the boundary with correlation, causation, and idempotency headers. Use generated envelope contracts when the header set is stable.
 2. Route the message through a content router, recipient list, splitter, or routing slip.
 3. Serialize stateful handlers through a mailbox when concurrency must be constrained.
 4. Use a saga/process manager when multiple messages update long-running state.

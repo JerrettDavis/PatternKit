@@ -64,6 +64,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | Generator | Description | Attribute |
 |---|---|---|
 | [**Dispatcher**](dispatcher.md) | Mediator pattern with commands, notifications, and streams | `[GenerateDispatcher]` |
+| [**Message Envelope**](messaging.md#generated-message-envelope) | Required message metadata contracts | `[GenerateMessageEnvelope]` |
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
 | [**Recipient List**](messaging.md#generated-recipient-list) | Recipient fan-out factories | `[GenerateRecipientList]` |
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
@@ -136,6 +137,11 @@ public interface IDocumentVisitor { }
 ```csharp
 // Dispatcher - mediator pattern
 [assembly: GenerateDispatcher(Namespace = "MyApp", Name = "Dispatcher")]
+
+// Message envelope - generated required-header contract
+[GenerateMessageEnvelope(typeof(OrderAccepted))]
+[MessageEnvelopeHeader("correlation-id", typeof(string))]
+public static partial class OrderAcceptedEnvelope { }
 
 // Content router - generated first-match route factory
 [GenerateContentRouter(typeof(Order), typeof(string))]

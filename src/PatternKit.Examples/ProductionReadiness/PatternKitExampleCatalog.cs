@@ -230,8 +230,16 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "test/PatternKit.Examples.Tests/Messaging/MessageEnvelopeExampleTests.cs",
             "docs/examples/enterprise-messaging-workflows.md",
             ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator,
-            ["ContentRouter", "RecipientList", "Splitter", "Aggregator", "RoutingSlip", "Saga", "Mailbox"],
-            ["idempotency", "inbox/outbox", "generated dispatcher"]),
+            ["MessageEnvelope", "ContentRouter", "RecipientList", "Splitter", "Aggregator", "RoutingSlip", "Saga", "Mailbox"],
+            ["idempotency", "inbox/outbox", "generated envelope contracts", "generated dispatcher"]),
+        Descriptor(
+            "Generated Message Envelope",
+            "src/PatternKit.Examples/Messaging/MessageEnvelopeExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MessageEnvelopeExampleTests.cs",
+            "docs/examples/generated-message-envelope.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["MessageEnvelope"],
+            ["required headers", "source-generated factory", "DI composition"]),
         Descriptor(
             "Generated Recipient List",
             "src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs",

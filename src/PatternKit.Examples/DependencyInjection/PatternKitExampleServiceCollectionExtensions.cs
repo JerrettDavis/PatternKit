@@ -84,6 +84,7 @@ public sealed record PosTenderVisitorExample(TypeDispatcher<VisitorTender, strin
 public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
+public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
@@ -124,6 +125,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddApiExceptionMappingVisitorExample()
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
+            .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedRecipientListExample()
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
@@ -322,6 +324,13 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new MessageRouterVisitorExample(MessageRoutingExample.Run));
         return services.RegisterExample<MessageRouterVisitorExample>("Message Router Visitor", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)
+    {
+        services.AddMessageEnvelopeExample();
+        services.AddSingleton<GeneratedMessageEnvelopeExample>(sp => new(sp.GetRequiredService<MessageEnvelopeExampleRunner>()));
+        return services.RegisterExample<GeneratedMessageEnvelopeExample>("Generated Message Envelope", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddGeneratedRecipientListExample(this IServiceCollection services)
