@@ -55,8 +55,8 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Messaging Reliability | Idempotent Receiver | `IdempotentReceiver<TPayload, TResult>` | Reliability pipeline generator |
 | Messaging Reliability | Inbox | `InboxProcessor<TPayload, TResult>` | Reliability pipeline generator |
 | Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Reliability pipeline generator |
-| Enterprise Integration | Request-Reply | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
-| Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
+| Enterprise Integration | Request-Reply | Messaging backplane facade example | Backplane topology generator |
+| Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Backplane topology generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 
 ## Research Baselines

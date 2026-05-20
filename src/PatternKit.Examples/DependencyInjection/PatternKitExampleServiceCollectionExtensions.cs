@@ -409,7 +409,7 @@ public static class PatternKitExampleServiceCollectionExtensions
     public static IServiceCollection AddMessagingBackplaneFacadeExample(this IServiceCollection services)
     {
         services.AddSingleton(new MessagingBackplaneFacadeExample(BackplaneFacadeDemo.RunAsync));
-        return services.RegisterExample<MessagingBackplaneFacadeExample>("Messaging Backplane Facade", ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.ExternalInfrastructure | ExampleIntegrationSurface.DependencyInjection);
+        return services.RegisterExample<MessagingBackplaneFacadeExample>("Messaging Backplane Facade", ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.ExternalInfrastructure | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

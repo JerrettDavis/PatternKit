@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using PatternKit.Generators.Messaging;
 using PatternKit.Messaging;
 using PatternKit.Messaging.Mailboxes;
 using PatternKit.Messaging.Reliability;
@@ -25,29 +26,12 @@ public static class BackplaneFacadeDemo
         var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var services = new BackplaneDemoServices(audit, endpoints, notifications, completed);
 
-        await using var host = await BackplaneHost.Create()
-            .UseTransport(() => transport)
-            .UseOutbox(outbox)
-            .UseIdempotencyStore(idempotency)
-            .MapCommand<SubmitOrder, BackplaneOrderAccepted>(
-                static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
-                "orders.priority")
-            .MapDefaultCommand<SubmitOrder, BackplaneOrderAccepted>("orders.standard")
-            .ReceiveEndpoint("orders.standard", endpoint =>
-                endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptStandardOrderAsync))
-            .ReceiveEndpoint("orders.priority", endpoint =>
-                endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptPriorityOrderAsync))
-            .ReceiveEndpoint("billing-service", endpoint =>
-                endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.CapturePaymentAsync))
-            .ReceiveEndpoint("audit-service", endpoint =>
-                endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.AuditSubmittedOrderAsync))
-            .ReceiveEndpoint("fulfillment-service", endpoint =>
-                endpoint.Subscribe<PaymentCaptured>("payments.captured", services.ScheduleShipmentAsync))
-            .ReceiveEndpoint("notification-service", endpoint =>
-            {
-                endpoint.Subscribe<PaymentDeclined>("payments.declined", services.NotifyPaymentDeclinedAsync);
-                endpoint.Subscribe<ShipmentScheduled>("shipments.scheduled", services.NotifyShipmentScheduledAsync);
-            })
+        await using var host = await GeneratedBackplaneTopology.Configure(
+                BackplaneHost.Create()
+                    .UseTransport(() => transport)
+                    .UseOutbox(outbox)
+                    .UseIdempotencyStore(idempotency),
+                services)
             .BuildAsync(cancellationToken).ConfigureAwait(false);
 
         services.AttachClient(host.Client);
@@ -87,6 +71,24 @@ public static class BackplaneFacadeDemo
 
             return await host.Client.RequestAsync<SubmitOrder, BackplaneOrderAccepted>(command, cancellationToken).ConfigureAwait(false);
         }
+    }
+}
+
+/// <summary>Source-generated request/reply and publish/subscribe topology for the backplane demo.</summary>
+[GenerateBackplaneTopology(typeof(BackplaneDemoServices), HostBuilderType = typeof(BackplaneHostBuilder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(BackplaneOrderAccepted), "orders.priority", nameof(BackplaneDemoServices.AcceptPriorityOrderAsync), PredicateMethodName = nameof(IsVipOrder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(BackplaneOrderAccepted), "orders.standard", nameof(BackplaneDemoServices.AcceptStandardOrderAsync))]
+[BackplaneSubscription(typeof(BackplaneOrderSubmitted), "orders.submitted", "billing-service", nameof(BackplaneDemoServices.CapturePaymentAsync))]
+[BackplaneSubscription(typeof(BackplaneOrderSubmitted), "orders.submitted", "audit-service", nameof(BackplaneDemoServices.AuditSubmittedOrderAsync))]
+[BackplaneSubscription(typeof(PaymentCaptured), "payments.captured", "fulfillment-service", nameof(BackplaneDemoServices.ScheduleShipmentAsync))]
+[BackplaneSubscription(typeof(PaymentDeclined), "payments.declined", "notification-service", nameof(BackplaneDemoServices.NotifyPaymentDeclinedAsync))]
+[BackplaneSubscription(typeof(ShipmentScheduled), "shipments.scheduled", "notification-service", nameof(BackplaneDemoServices.NotifyShipmentScheduledAsync))]
+public static partial class GeneratedBackplaneTopology
+{
+    private static bool IsVipOrder(Message<SubmitOrder> message, MessageContext context)
+    {
+        _ = context;
+        return message.Payload.CustomerTier == CustomerTier.Vip;
     }
 }
 
@@ -891,7 +893,7 @@ public sealed class BackplaneOutbox
     }
 }
 
-internal sealed class BackplaneDemoServices
+public sealed class BackplaneDemoServices
 {
     private readonly ConcurrentQueue<string> _audit;
     private readonly ConcurrentDictionary<string, string> _endpoints;
@@ -900,7 +902,7 @@ internal sealed class BackplaneDemoServices
     private BackplaneClient? _client;
     private int _submittedAuditCount;
 
-    internal BackplaneDemoServices(
+    public BackplaneDemoServices(
         ConcurrentQueue<string> audit,
         ConcurrentDictionary<string, string> endpoints,
         ConcurrentQueue<CustomerNotification> notifications,
@@ -912,24 +914,24 @@ internal sealed class BackplaneDemoServices
         _completed = completed;
     }
 
-    internal void AttachClient(BackplaneClient client)
+    public void AttachClient(BackplaneClient client)
     {
         _client = client ?? throw new ArgumentNullException(nameof(client));
     }
 
-    internal ValueTask<BackplaneOrderAccepted> AcceptStandardOrderAsync(
+    public ValueTask<BackplaneOrderAccepted> AcceptStandardOrderAsync(
         Message<SubmitOrder> message,
         MessageContext context,
         CancellationToken cancellationToken)
         => AcceptOrderAsync("orders.standard", message, context, cancellationToken);
 
-    internal ValueTask<BackplaneOrderAccepted> AcceptPriorityOrderAsync(
+    public ValueTask<BackplaneOrderAccepted> AcceptPriorityOrderAsync(
         Message<SubmitOrder> message,
         MessageContext context,
         CancellationToken cancellationToken)
         => AcceptOrderAsync("orders.priority", message, context, cancellationToken);
 
-    internal async ValueTask CapturePaymentAsync(
+    public async ValueTask CapturePaymentAsync(
         Message<BackplaneOrderSubmitted> message,
         MessageContext context,
         CancellationToken cancellationToken)
@@ -952,7 +954,7 @@ internal sealed class BackplaneDemoServices
             cancellationToken).ConfigureAwait(false);
     }
 
-    internal ValueTask AuditSubmittedOrderAsync(
+    public ValueTask AuditSubmittedOrderAsync(
         Message<BackplaneOrderSubmitted> message,
         MessageContext context,
         CancellationToken cancellationToken)
@@ -964,7 +966,7 @@ internal sealed class BackplaneDemoServices
         return default;
     }
 
-    internal async ValueTask ScheduleShipmentAsync(
+    public async ValueTask ScheduleShipmentAsync(
         Message<PaymentCaptured> message,
         MessageContext context,
         CancellationToken cancellationToken)
@@ -977,7 +979,7 @@ internal sealed class BackplaneDemoServices
             cancellationToken).ConfigureAwait(false);
     }
 
-    internal ValueTask NotifyPaymentDeclinedAsync(
+    public ValueTask NotifyPaymentDeclinedAsync(
         Message<PaymentDeclined> message,
         MessageContext context,
         CancellationToken cancellationToken)
@@ -990,7 +992,7 @@ internal sealed class BackplaneDemoServices
         return default;
     }
 
-    internal ValueTask NotifyShipmentScheduledAsync(
+    public ValueTask NotifyShipmentScheduledAsync(
         Message<ShipmentScheduled> message,
         MessageContext context,
         CancellationToken cancellationToken)

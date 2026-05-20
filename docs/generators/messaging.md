@@ -1,6 +1,6 @@
 # Messaging Generators
 
-PatternKit includes nine messaging-oriented source generators:
+PatternKit includes ten messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
@@ -11,6 +11,7 @@ PatternKit includes nine messaging-oriented source generators:
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute> for typed saga/process-manager factories.
 - <xref:PatternKit.Generators.Messaging.GenerateMailboxAttribute> for serialized in-process inbox factories.
 - <xref:PatternKit.Generators.Messaging.GenerateReliabilityPipelineAttribute> for idempotent receiver, inbox, and outbox factories.
+- <xref:PatternKit.Generators.Messaging.GenerateBackplaneTopologyAttribute> for compile-time request/reply and publish/subscribe host topology.
 
 Use these generators when the message topology is known at compile time and should remain explicit, AOT-friendly, and validated by the compiler. They generate factories and fluent builders; they do not discover handlers from assemblies at runtime and they do not replace brokers, durable queues, or workflow engines.
 
@@ -235,6 +236,33 @@ Example files:
 - `src/PatternKit.Examples/Messaging/ReliabilityExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs`
 
+## Generated Backplane Topology
+
+`[GenerateBackplaneTopology]` wires request/reply routes and publish/subscribe endpoints into a `BackplaneHostBuilder` from declarative attributes:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateBackplaneTopology(typeof(OrderBackplaneServices), HostBuilderType = typeof(OrderBackplaneHostBuilder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders.priority", nameof(OrderBackplaneServices.AcceptPriorityAsync), PredicateMethodName = nameof(IsPriority))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders.standard", nameof(OrderBackplaneServices.AcceptStandardAsync))]
+[BackplaneSubscription(typeof(OrderSubmitted), "orders.submitted", "billing-service", nameof(OrderBackplaneServices.CapturePaymentAsync))]
+public static partial class OrderBackplane
+{
+    private static bool IsPriority(Message<SubmitOrder> message, MessageContext context)
+        => message.Payload.CustomerTier == CustomerTier.Vip;
+}
+```
+
+The generated `Configure` method applies content-router request routes before default routes, registers command handlers, and registers topic subscriptions. It keeps broker infrastructure application-owned: the caller still supplies the transport, outbox, idempotency store, service object, and host-builder type used at the composition root.
+
+Example files:
+
+- `src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs`
+- `test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs`
+- `test/PatternKit.Generators.Tests/BackplaneTopologyGeneratorTests.cs`
+
 ## Generated Saga
 
 `[GenerateSaga]` emits a process-manager factory from typed transition methods:
@@ -276,6 +304,7 @@ Example source:
 | `PKSG001`-`PKSG004` | Saga | Non-partial host, missing transitions, invalid transition signatures, or invalid completion checks. |
 | `PKMB001`-`PKMB005` | Mailbox | Non-partial host, missing handler, invalid handler signatures, or invalid configuration. |
 | `PKRP001`-`PKRP005` | Reliability Pipeline | Non-partial host, missing handler, invalid handler/key selector signatures, or invalid configuration. |
+| `PKBT001`-`PKBT005` | Backplane Topology | Non-partial host, missing topology, invalid route/subscription signatures, or duplicate default routes. |
 
 ## Related Runtime Patterns
 
@@ -285,3 +314,4 @@ Example source:
 - [Saga / Process Manager](../patterns/messaging/saga.md)
 - [Mailbox](../patterns/messaging/mailbox.md)
 - [Idempotent Receiver, Inbox, and Outbox](../patterns/messaging/reliability.md)
+- [Messaging Backplane Facade](../examples/messaging-backplane-facade.md)

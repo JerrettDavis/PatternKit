@@ -1,4 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.Messaging;
+using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Messaging;
 using PatternKit.Messaging.Reliability;
 using TinyBDD;
@@ -41,6 +44,50 @@ public sealed class BackplaneFacadeDemoTests
         ScenarioExpect.Single(host.Endpoints[0].Handlers);
         ScenarioExpect.Equal(new BackplaneOrderAccepted("order-builder", "orders.standard", "corr-builder"), response);
         ScenarioExpect.Contains(transport.DeliveryLog, static entry => entry.Contains("orders.standard->orders.standard", StringComparison.Ordinal));
+    }
+
+    [Scenario("GeneratedBackplaneTopology ConfiguresRequestReplyAndPubSubEndpoints")]
+    [Fact]
+    public async Task GeneratedBackplaneTopology_ConfiguresRequestReplyAndPubSubEndpoints()
+    {
+        var transport = new InMemoryBackplaneTransport();
+        var outbox = new BackplaneOutbox();
+        var idempotency = new InMemoryIdempotencyStore();
+        var services = BackplaneFacadeDemoTestServices.Create();
+
+        await using var host = await GeneratedBackplaneTopology.Configure(
+                BackplaneHost.Create()
+                    .UseTransport(() => transport)
+                    .UseOutbox(outbox)
+                    .UseIdempotencyStore(idempotency),
+                services.Services)
+            .BuildAsync();
+
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "orders.standard");
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "orders.priority");
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "billing-service");
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "audit-service");
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "fulfillment-service");
+        ScenarioExpect.Contains(host.Endpoints, static endpoint => endpoint.Name == "notification-service");
+    }
+
+    [Scenario("Messaging backplane facade is importable through IServiceCollection")]
+    [Fact]
+    public async Task Messaging_Backplane_Facade_Is_Importable_Through_IServiceCollection()
+    {
+        var services = new ServiceCollection();
+        services.AddMessagingBackplaneFacadeExample();
+
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+        var example = provider.GetRequiredService<MessagingBackplaneFacadeExample>();
+        var descriptor = provider.GetServices<PatternKitExampleServiceDescriptor>()
+            .Single(descriptor => descriptor.ExampleName == "Messaging Backplane Facade");
+        var summary = await example.RunAsync(CancellationToken.None);
+
+        ScenarioExpect.Equal(4, summary.Accepted.Count);
+        ScenarioExpect.True(descriptor.Integration.HasFlag(ExampleIntegrationSurface.DependencyInjection));
+        ScenarioExpect.True(descriptor.Integration.HasFlag(ExampleIntegrationSurface.SourceGenerator));
+        ScenarioExpect.True(descriptor.Integration.HasFlag(ExampleIntegrationSurface.Messaging));
     }
 
     [Scenario("RunAsync RoutesRequestsAndPublishesEventsThroughBackplane")]
@@ -116,5 +163,17 @@ public sealed class BackplaneFacadeDemoTests
             notification is { OrderId: "order-vip", Kind: "shipment-scheduled", CorrelationId: "corr-order-vip" });
         ScenarioExpect.Contains(summary.Notifications, static notification =>
             notification is { OrderId: "order-declined", Kind: "payment-declined", CorrelationId: "corr-order-declined" });
+    }
+}
+
+internal sealed record BackplaneFacadeDemoTestServices(BackplaneDemoServices Services)
+{
+    internal static BackplaneFacadeDemoTestServices Create()
+    {
+        var audit = new System.Collections.Concurrent.ConcurrentQueue<string>();
+        var endpoints = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
+        var notifications = new System.Collections.Concurrent.ConcurrentQueue<CustomerNotification>();
+        var completed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        return new BackplaneFacadeDemoTestServices(new BackplaneDemoServices(audit, endpoints, notifications, completed));
     }
 }

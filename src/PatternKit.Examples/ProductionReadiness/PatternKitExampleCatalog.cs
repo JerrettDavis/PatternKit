@@ -293,9 +293,9 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs",
             "test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs",
             "docs/examples/messaging-backplane-facade.md",
-            ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.ExternalInfrastructure,
+            ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.ExternalInfrastructure,
             ["Facade", "Mailbox", "Outbox", "IdempotentReceiver"],
-            ["host setup", "request/reply", "pub/sub", "transport boundary"]),
+            ["host setup", "generated request/reply topology", "generated pub/sub topology", "transport boundary"]),
         Descriptor(
             "Prototype Game Character Factory",
             "src/PatternKit.Examples/PrototypeDemo/PrototypeDemo.cs",

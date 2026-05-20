@@ -44,27 +44,32 @@ The example uses `InMemoryBackplaneTransport` for deterministic tests. A product
 The demo now starts from a host builder, which is the shape a production application would usually expose from its composition root:
 
 ```csharp
-await using var host = await BackplaneHost.Create()
-    .UseTransport(() => transport)
-    .UseOutbox(outbox)
-    .UseIdempotencyStore(idempotency)
-    .MapCommand<SubmitOrder, BackplaneOrderAccepted>(
-        static (message, _) => message.Payload.CustomerTier == CustomerTier.Vip,
-        "orders.priority")
-    .MapDefaultCommand<SubmitOrder, BackplaneOrderAccepted>("orders.standard")
-    .ReceiveEndpoint("orders.standard", endpoint =>
-        endpoint.HandleCommand<SubmitOrder, BackplaneOrderAccepted>(services.AcceptStandardOrderAsync))
-    .ReceiveEndpoint("billing-service", endpoint =>
-        endpoint.Subscribe<BackplaneOrderSubmitted>("orders.submitted", services.CapturePaymentAsync))
-    .ReceiveEndpoint("notification-service", endpoint =>
-    {
-        endpoint.Subscribe<PaymentDeclined>("payments.declined", services.NotifyPaymentDeclinedAsync);
-        endpoint.Subscribe<ShipmentScheduled>("shipments.scheduled", services.NotifyShipmentScheduledAsync);
-    })
+await using var host = await GeneratedBackplaneTopology.Configure(
+        BackplaneHost.Create()
+            .UseTransport(() => transport)
+            .UseOutbox(outbox)
+            .UseIdempotencyStore(idempotency),
+        services)
     .BuildAsync(cancellationToken);
 ```
 
 `BackplaneHost` owns the bus, typed client, transport, endpoint subscriptions, outbox, idempotency store, and topology metadata. Application code uses `host.Client`, while advanced integrations can still reach the lower-level `host.Bus`.
+
+The generated topology comes from declarative attributes on a partial class:
+
+```csharp
+[GenerateBackplaneTopology(typeof(BackplaneDemoServices), HostBuilderType = typeof(BackplaneHostBuilder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(BackplaneOrderAccepted), "orders.priority", nameof(BackplaneDemoServices.AcceptPriorityOrderAsync), PredicateMethodName = nameof(IsVipOrder))]
+[BackplaneRequestReply(typeof(SubmitOrder), typeof(BackplaneOrderAccepted), "orders.standard", nameof(BackplaneDemoServices.AcceptStandardOrderAsync))]
+[BackplaneSubscription(typeof(BackplaneOrderSubmitted), "orders.submitted", "billing-service", nameof(BackplaneDemoServices.CapturePaymentAsync))]
+public static partial class GeneratedBackplaneTopology
+{
+    private static bool IsVipOrder(Message<SubmitOrder> message, MessageContext context)
+        => message.Payload.CustomerTier == CustomerTier.Vip;
+}
+```
+
+The same host builder also remains fluent, so applications can mix generated, reviewed topology with environment-specific transport, outbox, idempotency, and observability wiring.
 
 ## Request/Reply
 
@@ -118,7 +123,9 @@ BackplaneHost.Create()
 The tests assert that:
 
 - Standard orders route to `orders.standard` and VIP orders route to `orders.priority`.
+- The generated topology registers request/reply routes and publish/subscribe endpoints.
 - The host builder configures transport, outbox, idempotency, endpoint topology, and the typed client surface.
+- The example can be imported through `IServiceCollection` with `AddMessagingBackplaneFacadeExample`.
 - Duplicate commands replay the original response and do not duplicate outbox side effects.
 - Published events fan out to independent services.
 - Every event is recorded in the outbox before transport dispatch.

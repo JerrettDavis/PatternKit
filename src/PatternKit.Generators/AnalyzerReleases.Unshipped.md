@@ -184,6 +184,11 @@ PKRP002 | PatternKit.Generators.Messaging | Error | Reliability pipeline must de
 PKRP003 | PatternKit.Generators.Messaging | Error | Reliability pipeline handler signature is invalid.
 PKRP004 | PatternKit.Generators.Messaging | Error | Reliability key selector signature is invalid.
 PKRP005 | PatternKit.Generators.Messaging | Error | Reliability pipeline configuration is invalid.
+PKBT001 | PatternKit.Generators.Messaging | Error | Backplane topology type must be partial.
+PKBT002 | PatternKit.Generators.Messaging | Error | Backplane topology must declare at least one request/reply route or subscription.
+PKBT003 | PatternKit.Generators.Messaging | Error | Backplane request/reply declaration is invalid.
+PKBT004 | PatternKit.Generators.Messaging | Error | Backplane subscription declaration is invalid.
+PKBT005 | PatternKit.Generators.Messaging | Error | Backplane request default route is duplicated.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

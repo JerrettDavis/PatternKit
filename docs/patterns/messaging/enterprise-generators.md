@@ -2,7 +2,7 @@
 
 PatternKit source generators remove repetitive registration code for explicit enterprise integration patterns. They do not scan assemblies implicitly; each generated factory is opt-in through attributes on a partial type.
 
-Use generators when routes, recipient lists, splitter/aggregator contracts, routing-slip steps, saga transitions, or mailbox inbox policies are static enough to validate at compile time and you want AOT-friendly factories without reflection.
+Use generators when routes, recipient lists, splitter/aggregator contracts, routing-slip steps, saga transitions, mailbox inbox policies, or request/reply and publish/subscribe host topology are static enough to validate at compile time and you want AOT-friendly factories without reflection.
 
 ## Generated Content Router
 
@@ -79,6 +79,8 @@ Mailbox generation is documented in [Mailbox](mailbox.md). It discovers one `[Ma
 
 Reliability helpers also have a generated path through `[GenerateReliabilityPipeline]`, which emits idempotent receiver, inbox, and outbox factories while keeping durable storage implementation owned by the application.
 
+Backplane topology generation is documented in [Messaging Generators](../../generators/messaging.md#generated-backplane-topology). It discovers `[BackplaneRequestReply]` and `[BackplaneSubscription]` declarations on a partial topology type and emits a public `Configure` method for wiring the declared host-builder type at the application composition root.
+
 ## Diagnostics
 
 | ID | Meaning |
@@ -96,6 +98,7 @@ Reliability helpers also have a generated path through `[GenerateReliabilityPipe
 | `PKRS001`-`PKRS003` | Routing-slip generator validation. |
 | `PKSG001`-`PKSG004` | Saga generator validation. |
 | `PKMB001`-`PKMB005` | Mailbox generator validation. |
+| `PKBT001`-`PKBT005` | Backplane topology generator validation. |
 
 ## Troubleshooting
 
@@ -103,6 +106,7 @@ Reliability helpers also have a generated path through `[GenerateReliabilityPipe
 - Keep route, step, and saga methods `static`; generated factories reference them directly.
 - Use `nameof(PredicateMethod)` in `[ContentRoute]` and `[RecipientListRecipient]` so renames remain compile-time safe.
 - Use unique route and recipient names and orders. Content routers are first-match, and recipient lists are ordered fan-out, so ambiguous ordering should fail at build time.
+- Use one default request/reply route per request type in generated backplane topology; predicate routes are emitted before defaults so first-match routing stays deterministic.
 - Ensure generated code builds under nullable enabled; the tests compile generated examples with Release settings.
 
 ## API
@@ -121,6 +125,9 @@ Reliability helpers also have a generated path through `[GenerateReliabilityPipe
 - <xref:PatternKit.Generators.Messaging.MailboxHandlerAttribute>
 - <xref:PatternKit.Generators.Messaging.MailboxErrorHandlerAttribute>
 - <xref:PatternKit.Generators.Messaging.MailboxEventSinkAttribute>
+- <xref:PatternKit.Generators.Messaging.GenerateBackplaneTopologyAttribute>
+- <xref:PatternKit.Generators.Messaging.BackplaneRequestReplyAttribute>
+- <xref:PatternKit.Generators.Messaging.BackplaneSubscriptionAttribute>
 - <xref:PatternKit.Messaging.Routing.ContentRouter`2>
 - <xref:PatternKit.Messaging.Routing.RecipientList`1>
 
@@ -130,3 +137,5 @@ Reliability helpers also have a generated path through `[GenerateReliabilityPipe
 - `test/PatternKit.Examples.Tests/Messaging/ContentRouterGeneratorExampleTests.cs`
 - `src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs`
+- `src/PatternKit.Examples/Messaging/BackplaneFacadeDemo.cs`
+- `test/PatternKit.Examples.Tests/Messaging/BackplaneFacadeDemoTests.cs`
