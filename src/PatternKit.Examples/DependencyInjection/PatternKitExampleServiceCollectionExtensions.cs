@@ -87,6 +87,7 @@ public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
+public sealed record CqrsDispatcherExample(Func<CancellationToken, ValueTask<CqrsSummary>> RunFluentAsync, Func<IServiceProvider, CancellationToken, ValueTask<CqrsSummary>> RunSourceGeneratedAsync);
 public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, CheckoutServices, CheckoutResult> Run);
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
@@ -125,6 +126,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
             .AddEnterpriseMessagingWorkflowSuiteExample()
+            .AddCqrsDispatcherExample()
             .AddResilientCheckoutMailboxesExample()
             .AddMessagingBackplaneFacadeExample()
             .AddPrototypeGameCharacterFactoryExample()
@@ -337,6 +339,13 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new EnterpriseMessagingWorkflowSuiteExample(MessageEnvelopeExample.Run));
         return services.RegisterExample<EnterpriseMessagingWorkflowSuiteExample>("Enterprise Messaging Workflow Suite", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCqrsDispatcherExample(this IServiceCollection services)
+    {
+        services.AddSourceGeneratedCqrsServices();
+        services.AddSingleton(new CqrsDispatcherExample(CqrsPatternExample.RunFluentAsync, CqrsPatternExample.RunSourceGeneratedAsync));
+        return services.RegisterExample<CqrsDispatcherExample>("CQRS Dispatcher", ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddResilientCheckoutMailboxesExample(this IServiceCollection services)

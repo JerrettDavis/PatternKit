@@ -81,6 +81,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var asyncTemplate = provider.GetRequiredService<TemplateMethodAsyncExample>();
         var routing = provider.GetRequiredService<MessageRouterVisitorExample>();
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
+        var cqrs = provider.GetRequiredService<CqrsDispatcherExample>();
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
@@ -107,6 +108,8 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             .GetResult();
         var state = asyncState.RunAsync(["connect", "ok"]).GetAwaiter().GetResult();
         var asyncResult = asyncTemplate.Pipeline.ExecuteAsync(7, CancellationToken.None).GetAwaiter().GetResult();
+        var cqrsFluent = cqrs.RunFluentAsync(CancellationToken.None).GetAwaiter().GetResult();
+        var cqrsGenerated = cqrs.RunSourceGeneratedAsync(provider, CancellationToken.None).GetAwaiter().GetResult();
         editor.Editor.Insert("hello");
 
         return
@@ -132,6 +135,8 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("async template method formats payloads", asyncResult == "PAYLOAD:7"),
             ("message router visitor aggregates totals", routing.Run().AggregatedTotal == 100m),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
+            ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),
+            ("CQRS generated path matches command writes to query reads", cqrsGenerated.QueryMatchedCommand),
             ("resilient checkout succeeds", checkout.Run(CreateCheckoutRequest(), new PatternKit.Examples.Messaging.CheckoutServices()).Succeeded)
         ];
     }

@@ -55,6 +55,9 @@
 - name: Enterprise Messaging Workflow Suite
   href: enterprise-messaging-workflows.md
 
+- name: CQRS Dispatcher
+  href: cqrs-dispatcher.md
+
 - name: Resilient Checkout and Collaborating Mailboxes
   href: resilient-checkout-and-mailboxes.md
 
