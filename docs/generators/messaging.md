@@ -1,6 +1,6 @@
 # Messaging Generators
 
-PatternKit includes seven messaging-oriented source generators:
+PatternKit includes eight messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
@@ -9,6 +9,7 @@ PatternKit includes seven messaging-oriented source generators:
 - <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute> and <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute> for split/rejoin routing.
 - <xref:PatternKit.Generators.Messaging.GenerateRoutingSlipAttribute> for ordered routing-slip factories.
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute> for typed saga/process-manager factories.
+- <xref:PatternKit.Generators.Messaging.GenerateMailboxAttribute> for serialized in-process inbox factories.
 
 Use these generators when the message topology is known at compile time and should remain explicit, AOT-friendly, and validated by the compiler. They generate factories and fluent builders; they do not discover handlers from assemblies at runtime and they do not replace brokers, durable queues, or workflow engines.
 
@@ -178,6 +179,30 @@ Example files:
 - `src/PatternKit.Examples/Messaging/MessageRoutingExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/MessageRoutingExampleTests.cs`
 
+## Generated Mailbox
+
+`[GenerateMailbox]` creates a `Mailbox<TPayload>` factory from one static `[MailboxHandler]` method. Optional `[MailboxErrorHandler]` and `[MailboxEventSink]` methods wire failure handling and metrics events:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateMailbox(typeof(OrderWork), FactoryName = "CreateWorker", Capacity = 32, BackpressurePolicy = "Wait", ErrorPolicy = "Continue")]
+public static partial class OrderWorkMailbox
+{
+    [MailboxHandler]
+    private static ValueTask Handle(Message<OrderWork> message, MessageContext context, CancellationToken cancellationToken)
+        => ProcessAsync(message.Payload, cancellationToken);
+}
+```
+
+Use generated mailboxes when inbox configuration is static and should be reviewed in code. Keep using fluent builders when capacity or policy is tenant- or environment-defined.
+
+Example files:
+
+- `src/PatternKit.Examples/Messaging/MailboxExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs`
+
 ## Generated Saga
 
 `[GenerateSaga]` emits a process-manager factory from typed transition methods:
@@ -217,6 +242,7 @@ Example source:
 | `PKSA001`-`PKSA006` | Splitter / Aggregator | Non-partial host, missing contract methods, invalid signatures, or invalid duplicate policy. |
 | `PKRS001`-`PKRS003` | Routing Slip | Non-partial host, missing steps, or invalid step signatures. |
 | `PKSG001`-`PKSG004` | Saga | Non-partial host, missing transitions, invalid transition signatures, or invalid completion checks. |
+| `PKMB001`-`PKMB005` | Mailbox | Non-partial host, missing handler, invalid handler signatures, or invalid configuration. |
 
 ## Related Runtime Patterns
 

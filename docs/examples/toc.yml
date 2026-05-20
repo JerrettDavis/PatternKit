@@ -67,6 +67,9 @@
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 
+- name: Generated Mailbox
+  href: generated-mailbox.md
+
 - name: Resilient Checkout and Collaborating Mailboxes
   href: resilient-checkout-and-mailboxes.md
 

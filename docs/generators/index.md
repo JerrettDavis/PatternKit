@@ -70,6 +70,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Splitter / Aggregator**](messaging.md#generated-splitter-and-aggregator) | Split/rejoin message routing factories | `[GenerateSplitter]` / `[GenerateAggregator]` |
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
 | [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
+| [**Mailbox**](messaging.md#generated-mailbox) | Serialized in-process inbox factories | `[GenerateMailbox]` |
 
 ## Quick Reference
 
@@ -154,6 +155,10 @@ public static partial class OrderSplitter { }
 
 [GenerateAggregator(typeof(string), typeof(OrderLine), typeof(decimal))]
 public static partial class OrderLineAggregator { }
+
+// Mailbox - generated serialized inbox factory
+[GenerateMailbox(typeof(OrderWork), Capacity = 32, BackpressurePolicy = "Wait")]
+public static partial class OrderMailbox { }
 
 // Routing slip - generated ordered itinerary factory
 [GenerateRoutingSlip(typeof(Order))]

@@ -2,7 +2,7 @@
 
 PatternKit source generators remove repetitive registration code for explicit enterprise integration patterns. They do not scan assemblies implicitly; each generated factory is opt-in through attributes on a partial type.
 
-Use generators when routes, recipient lists, routing-slip steps, or saga transitions are static enough to validate at compile time and you want AOT-friendly factories without reflection.
+Use generators when routes, recipient lists, splitter/aggregator contracts, routing-slip steps, saga transitions, or mailbox inbox policies are static enough to validate at compile time and you want AOT-friendly factories without reflection.
 
 ## Generated Content Router
 
@@ -75,7 +75,9 @@ Routing-slip generation is documented in [Routing Slip](routing-slip.md). It dis
 
 Saga/process-manager generation is documented in [Saga / Process Manager](saga.md). It discovers `[SagaStep]` transition methods and optional `[SagaCompleteWhen]` completion checks.
 
-Mailbox and reliability helpers stay runtime-only for now. Their registration is already small and lifecycle-sensitive, so a generator would add indirection without removing meaningful boilerplate.
+Mailbox generation is documented in [Mailbox](mailbox.md). It discovers one `[MailboxHandler]` method plus optional error and event hooks, then emits a configured serialized inbox factory.
+
+Reliability helpers stay runtime-only for now. Their registration is still lifecycle-sensitive and is tracked separately.
 
 ## Diagnostics
 
@@ -90,8 +92,10 @@ Mailbox and reliability helpers stay runtime-only for now. Their registration is
 | `PKRL002` | The generated recipient list has no `[RecipientListRecipient]` methods. |
 | `PKRL003` | A recipient handler or referenced predicate has an invalid signature. |
 | `PKRL004` | A recipient name or recipient order is duplicated. |
+| `PKSA001`-`PKSA006` | Splitter/aggregator generator validation. |
 | `PKRS001`-`PKRS003` | Routing-slip generator validation. |
 | `PKSG001`-`PKSG004` | Saga generator validation. |
+| `PKMB001`-`PKMB005` | Mailbox generator validation. |
 
 ## Troubleshooting
 
@@ -113,6 +117,10 @@ Mailbox and reliability helpers stay runtime-only for now. Their registration is
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute>
 - <xref:PatternKit.Generators.Messaging.SagaStepAttribute>
 - <xref:PatternKit.Generators.Messaging.SagaCompleteWhenAttribute>
+- <xref:PatternKit.Generators.Messaging.GenerateMailboxAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxHandlerAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxErrorHandlerAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxEventSinkAttribute>
 - <xref:PatternKit.Messaging.Routing.ContentRouter`2>
 - <xref:PatternKit.Messaging.Routing.RecipientList`1>
 

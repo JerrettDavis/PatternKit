@@ -51,7 +51,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Messaging generator |
 | Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |
 | Enterprise Integration | Saga / Process Manager | `Saga<TState>` | Messaging generator |
-| Enterprise Integration | Mailbox | `Mailbox<TPayload>` | Tracked in [#209](https://github.com/JerrettDavis/PatternKit/issues/209) |
+| Enterprise Integration | Mailbox | `Mailbox<TPayload>` | Messaging generator |
 | Messaging Reliability | Idempotent Receiver | `IdempotentReceiver<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
 | Messaging Reliability | Inbox | `InboxProcessor<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
 | Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |

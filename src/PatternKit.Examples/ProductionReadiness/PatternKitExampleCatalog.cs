@@ -265,6 +265,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Mediator", "Dispatcher", "CQRS"],
             ["command/query separation", "source-generated dispatcher", "DI composition"]),
         Descriptor(
+            "Generated Mailbox",
+            "src/PatternKit.Examples/Messaging/MailboxExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",
+            "docs/examples/generated-mailbox.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Mailbox"],
+            ["serialized inbox", "source-generated factory", "DI composition"]),
+        Descriptor(
             "Resilient Checkout and Collaborating Mailboxes",
             "src/PatternKit.Examples/Messaging/ResilientCheckoutDemo.cs",
             "test/PatternKit.Examples.Tests/Messaging/ResilientCheckoutDemoTests.cs",
