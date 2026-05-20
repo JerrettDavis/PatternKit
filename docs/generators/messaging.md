@@ -1,9 +1,10 @@
 # Messaging Generators
 
-PatternKit includes four messaging-oriented source generators:
+PatternKit includes five messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
+- <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
 - <xref:PatternKit.Generators.Messaging.GenerateRoutingSlipAttribute> for ordered routing-slip factories.
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute> for typed saga/process-manager factories.
 
@@ -88,6 +89,32 @@ Example source:
 - `src/PatternKit.Examples/Messaging/RoutingSlipExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/RoutingSlipExampleTests.cs`
 
+## Generated Recipient List
+
+`[GenerateRecipientList]` creates a `RecipientList<TPayload>` or `AsyncRecipientList<TPayload>` factory from static recipient methods:
+
+```csharp
+[GenerateRecipientList(typeof(Order))]
+public static partial class OrderRecipients
+{
+    private static bool IsPriority(Message<Order> message, MessageContext context)
+        => message.Payload.Priority == "priority";
+
+    [RecipientListRecipient("priority-audit", 10, nameof(IsPriority))]
+    private static void PriorityAudit(Message<Order> message, MessageContext context)
+    {
+        // deliver to audit sink
+    }
+}
+```
+
+The generator orders recipients by `RecipientListRecipientAttribute.Order`, validates predicates and handlers, and emits deterministic diagnostics for missing recipients, non-partial host types, invalid signatures, and duplicate names or order values.
+
+Example files:
+
+- `src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs`
+
 ## Generated Saga
 
 `[GenerateSaga]` emits a process-manager factory from typed transition methods:
@@ -122,6 +149,7 @@ Example source:
 | --- | --- | --- |
 | `PKDSP001`-`PKDSP004` | Dispatcher | Invalid dispatcher configuration or handler registration. |
 | `PKCR001`-`PKCR005` | Content Router | Non-partial host, missing routes, invalid signatures, duplicate defaults, or duplicate route identity. |
+| `PKRL001`-`PKRL004` | Recipient List | Non-partial host, missing recipients, invalid signatures, or duplicate recipient identity. |
 | `PKRS001`-`PKRS003` | Routing Slip | Non-partial host, missing steps, or invalid step signatures. |
 | `PKSG001`-`PKSG004` | Saga | Non-partial host, missing transitions, invalid transition signatures, or invalid completion checks. |
 

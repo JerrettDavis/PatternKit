@@ -333,6 +333,12 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildRouter"
         };
         var route = new ContentRouteAttribute("priority", 4, "IsPriority");
+        var recipientList = new GenerateRecipientListAttribute(typeof(string))
+        {
+            FactoryName = "BuildRecipients",
+            AsyncFactoryName = "BuildRecipientsAsync"
+        };
+        var recipient = new RecipientListRecipientAttribute("priority-audit", 5, "IsPriority");
 
         ScenarioExpect.Equal(typeof(string), flyweight.KeyType);
         ScenarioExpect.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -363,6 +369,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("priority", route.Name);
         ScenarioExpect.Equal(4, route.Order);
         ScenarioExpect.Equal("IsPriority", route.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), recipientList.PayloadType);
+        ScenarioExpect.Equal("BuildRecipients", recipientList.FactoryName);
+        ScenarioExpect.Equal("BuildRecipientsAsync", recipientList.AsyncFactoryName);
+        ScenarioExpect.Equal("priority-audit", recipient.Name);
+        ScenarioExpect.Equal(5, recipient.Order);
+        ScenarioExpect.Equal("IsPriority", recipient.PredicateMethodName);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
@@ -371,6 +383,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRecipientListAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("", 1, "Predicate"));
+        ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("name", 1, ""));
         ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
         ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());

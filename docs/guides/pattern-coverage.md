@@ -46,7 +46,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | --- | --- | --- | --- |
 | Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Tracked in [#215](https://github.com/JerrettDavis/PatternKit/issues/215) |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
-| Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Tracked in [#210](https://github.com/JerrettDavis/PatternKit/issues/210) |
+| Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Messaging generator |
 | Enterprise Integration | Splitter | `Splitter<TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
 | Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
 | Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |

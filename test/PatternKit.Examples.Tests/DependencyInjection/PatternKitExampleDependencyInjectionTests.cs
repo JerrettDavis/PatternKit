@@ -80,6 +80,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var template = provider.GetRequiredService<TemplateMethodSubclassingExample>();
         var asyncTemplate = provider.GetRequiredService<TemplateMethodAsyncExample>();
         var routing = provider.GetRequiredService<MessageRouterVisitorExample>();
+        var generatedRecipients = provider.GetRequiredService<GeneratedRecipientListExample>();
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
         var cqrs = provider.GetRequiredService<CqrsDispatcherExample>();
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
@@ -108,6 +109,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             .GetResult();
         var state = asyncState.RunAsync(["connect", "ok"]).GetAwaiter().GetResult();
         var asyncResult = asyncTemplate.Pipeline.ExecuteAsync(7, CancellationToken.None).GetAwaiter().GetResult();
+        var generatedRecipientList = generatedRecipients.Runner.RunGenerated();
         var cqrsFluent = cqrs.RunFluentAsync(CancellationToken.None).GetAwaiter().GetResult();
         var cqrsGenerated = cqrs.RunSourceGeneratedAsync(provider, CancellationToken.None).GetAwaiter().GetResult();
         editor.Editor.Insert("hello");
@@ -134,6 +136,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("template method counts words", template.Processor.Execute("one two") == 2),
             ("async template method formats payloads", asyncResult == "PAYLOAD:7"),
             ("message router visitor aggregates totals", routing.Run().AggregatedTotal == 100m),
+            ("generated recipient list delivers billing and audit recipients", generatedRecipientList.DeliveredRecipients.Count == 2),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),
             ("CQRS generated path matches command writes to query reads", cqrsGenerated.QueryMatchedCommand),
