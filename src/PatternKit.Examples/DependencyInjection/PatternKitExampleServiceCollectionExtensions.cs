@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PatternKit.Application.Specification;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
@@ -26,6 +27,7 @@ using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
 using PatternKit.Examples.Singleton;
+using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TemplateDemo;
@@ -101,6 +103,7 @@ public sealed record GeneratedReliabilityPipelineExample(ReliabilityExampleRunne
 public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, CheckoutServices, CheckoutResult> Run);
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
+public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -147,6 +150,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddResilientCheckoutMailboxesExample()
             .AddMessagingBackplaneFacadeExample()
             .AddGeneratedInterpreterRulesExample()
+            .AddLoanApprovalSpecificationsExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -435,6 +439,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, decimal>>(),
             sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, bool>>()));
         return services.RegisterExample<GeneratedInterpreterRulesExample>("Generated Interpreter Rules", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddLoanApprovalSpecificationsExample(this IServiceCollection services)
+    {
+        services.AddLoanApprovalSpecifications();
+        services.AddSingleton<LoanApprovalSpecificationsExample>(sp => new(
+            sp.GetRequiredService<SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication>>(),
+            sp.GetRequiredService<LoanApprovalService>()));
+        return services.RegisterExample<LoanApprovalSpecificationsExample>("Loan Approval Specifications", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

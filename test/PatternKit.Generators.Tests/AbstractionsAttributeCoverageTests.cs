@@ -15,6 +15,7 @@ using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
 using PatternKit.Generators.Singleton;
+using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.Visitors;
@@ -120,6 +121,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
         { typeof(SingletonAttribute), AttributeTargets.Class, false, false },
         { typeof(SingletonFactoryAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateSpecificationRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(SpecificationRuleAttribute), AttributeTargets.Method, false, false },
         { typeof(StateMachineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(StateTransitionAttribute), AttributeTargets.Method, true, false },
         { typeof(StateGuardAttribute), AttributeTargets.Method, true, false },
@@ -146,6 +149,23 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(validOn, usage.ValidOn);
         ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
         ScenarioExpect.Equal(inherited, usage.Inherited);
+    }
+
+    [Scenario("Specification Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Specification_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateSpecificationRegistryAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildRegistry"
+        };
+        var rule = new SpecificationRuleAttribute("approved");
+
+        ScenarioExpect.Equal(typeof(string), generator.CandidateType);
+        ScenarioExpect.Equal("BuildRegistry", generator.FactoryMethodName);
+        ScenarioExpect.Equal("approved", rule.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSpecificationRegistryAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new SpecificationRuleAttribute(""));
     }
 
     [Scenario("Interpreter Attributes Expose Defaults And Validation")]

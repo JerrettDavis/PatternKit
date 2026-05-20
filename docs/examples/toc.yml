@@ -67,6 +67,9 @@
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 
+- name: Loan Approval Specifications
+  href: loan-approval-specifications.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

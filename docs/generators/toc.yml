@@ -64,6 +64,9 @@
 - name: Singleton
   href: singleton.md
 
+- name: Specification
+  href: specification.md
+
 - name: State Machine
   href: state-machine.md
 

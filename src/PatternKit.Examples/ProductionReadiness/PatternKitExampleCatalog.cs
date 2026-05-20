@@ -265,6 +265,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Mediator", "Dispatcher", "CQRS"],
             ["command/query separation", "source-generated dispatcher", "DI composition"]),
         Descriptor(
+            "Loan Approval Specifications",
+            "src/PatternKit.Examples/SpecificationDemo/LoanApprovalSpecificationDemo.cs",
+            "test/PatternKit.Examples.Tests/SpecificationDemo/LoanApprovalSpecificationDemoTests.cs",
+            "docs/examples/loan-approval-specifications.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Specification"],
+            ["composable business rules", "source-generated registry", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

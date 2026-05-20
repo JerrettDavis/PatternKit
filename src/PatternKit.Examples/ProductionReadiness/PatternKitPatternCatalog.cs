@@ -543,7 +543,19 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/cqrs-dispatcher.md",
             "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",
-            ["fluent mediator command/query separation", "generated dispatcher", "DI-importable CQRS example"])
+            ["fluent mediator command/query separation", "generated dispatcher", "DI-importable CQRS example"]),
+        Pattern("Specification", PatternFamily.ApplicationArchitecture,
+            "docs/patterns/application/specification.md",
+            "src/PatternKit.Core/Application/Specification/Specification.cs",
+            "test/PatternKit.Tests/Application/Specification/SpecificationTests.cs",
+            "docs/generators/specification.md",
+            "src/PatternKit.Generators/Specification/SpecificationGenerator.cs",
+            "test/PatternKit.Generators.Tests/SpecificationGeneratorTests.cs",
+            null,
+            "docs/examples/loan-approval-specifications.md",
+            "src/PatternKit.Examples/SpecificationDemo/LoanApprovalSpecificationDemo.cs",
+            "test/PatternKit.Examples.Tests/SpecificationDemo/LoanApprovalSpecificationDemoTests.cs",
+            ["fluent specification composition", "generated specification registry", "DI-importable loan approval example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;
