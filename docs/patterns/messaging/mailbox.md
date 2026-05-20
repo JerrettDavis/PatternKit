@@ -78,6 +78,22 @@ var mailbox = Mailbox<OrderWork>.Create(handler)
     .Build();
 ```
 
+## Source-Generated Mailboxes
+
+Use `[GenerateMailbox]` when the inbox shape is stable and should be compile-time validated:
+
+```csharp
+[GenerateMailbox(typeof(OrderWork), FactoryName = "CreateWorker", Capacity = 128, BackpressurePolicy = "Wait", ErrorPolicy = "Continue")]
+public static partial class OrderWorkMailbox
+{
+    [MailboxHandler]
+    private static ValueTask Handle(Message<OrderWork> message, MessageContext context, CancellationToken cancellationToken)
+        => ProcessAsync(message.Payload, cancellationToken);
+}
+```
+
+The generated factory returns `Mailbox<OrderWork>` and applies the configured capacity, backpressure policy, error policy, optional error handler, and optional event sink.
+
 ## Choosing Related Patterns
 
 - Use `Mailbox<TPayload>` when one in-process consumer must serialize work.
@@ -95,6 +111,10 @@ var mailbox = Mailbox<OrderWork>.Create(handler)
 - <xref:PatternKit.Messaging.Mailboxes.MailboxPostStatus>
 - <xref:PatternKit.Messaging.Mailboxes.MailboxEvent>
 - <xref:PatternKit.Messaging.Mailboxes.MailboxEventKind>
+- <xref:PatternKit.Generators.Messaging.GenerateMailboxAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxHandlerAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxErrorHandlerAttribute>
+- <xref:PatternKit.Generators.Messaging.MailboxEventSinkAttribute>
 
 ## Example Source
 

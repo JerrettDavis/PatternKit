@@ -174,6 +174,11 @@ PKME001 | PatternKit.Generators.Messaging | Error | Message envelope type must b
 PKME002 | PatternKit.Generators.Messaging | Error | Message envelope must declare at least one required header.
 PKME003 | PatternKit.Generators.Messaging | Error | Message envelope header configuration is invalid.
 PKME004 | PatternKit.Generators.Messaging | Error | Message envelope header name or generated parameter name is duplicated.
+PKMB001 | PatternKit.Generators.Messaging | Error | Mailbox type must be partial.
+PKMB002 | PatternKit.Generators.Messaging | Error | Mailbox must declare exactly one handler.
+PKMB003 | PatternKit.Generators.Messaging | Error | Mailbox handler signature is invalid.
+PKMB004 | PatternKit.Generators.Messaging | Error | Mailbox optional handler signature is invalid.
+PKMB005 | PatternKit.Generators.Messaging | Error | Mailbox generator configuration is invalid.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.

@@ -20,6 +20,7 @@ Example source:
 | Routing slip | `RoutingSlipExample.cs` | Ordered fulfillment steps with route progress stored in message headers. |
 | Saga/process manager | `SagaExample.cs` | Typed message transitions over explicit saga state and completion rules. |
 | Mailbox | `MailboxExample.cs` | Serialized async inbox processing with explicit lifecycle and error behavior. |
+| Source-generated mailbox | `MailboxExample.cs` | Attribute-driven serialized inbox factories with bounded backpressure and error policy. |
 | Idempotent receiver | `ReliabilityExample.cs` | Duplicate detection around at-least-once message delivery. |
 | Inbox/outbox | `ReliabilityExample.cs` | Explicit handoff records for durable integration boundaries owned by the application. |
 | Source-generated dispatcher | `DispatcherExample.cs` | Compile-time mediator commands, notifications, streams, and paging. |
@@ -69,6 +70,8 @@ The generated factories are AOT-friendly and do not scan assemblies. The runtime
 
 Generated splitter and aggregator contracts follow the same rule: use `[GenerateSplitter]` and `[SplitterProjection]` for a stable split projection, then `[GenerateAggregator]` with `[AggregatorCorrelation]`, `[AggregatorCompletion]`, and `[AggregatorProjection]` for the matching rejoin contract.
 
+Generated mailbox contracts use `[GenerateMailbox]` plus `[MailboxHandler]` when a serialized in-process inbox should have compile-time-validated capacity, backpressure, and error policies.
+
 ## Testing Guidance
 
 The example tests use behavior-oriented assertions:
@@ -92,6 +95,7 @@ The example tests use behavior-oriented assertions:
 - [Routing Slip](../patterns/messaging/routing-slip.md)
 - [Saga / Process Manager](../patterns/messaging/saga.md)
 - [Mailbox](../patterns/messaging/mailbox.md)
+- [Generated Mailbox](generated-mailbox.md)
 - [Idempotent Receiver, Inbox, and Outbox](../patterns/messaging/reliability.md)
 - [Messaging Generators](../generators/messaging.md)
 - [Generated Splitter And Aggregator](generated-splitter-aggregator.md)

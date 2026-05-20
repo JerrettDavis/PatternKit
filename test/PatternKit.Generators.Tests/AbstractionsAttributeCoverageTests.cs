@@ -85,6 +85,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AggregatorCorrelationAttribute), AttributeTargets.Method, false, false },
         { typeof(AggregatorCompletionAttribute), AttributeTargets.Method, false, false },
         { typeof(AggregatorProjectionAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMailboxAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MailboxHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(MailboxErrorHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(MailboxEventSinkAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -356,6 +360,13 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildAggregator",
             DuplicatePolicy = "Replace"
         };
+        var mailbox = new GenerateMailboxAttribute(typeof(string))
+        {
+            FactoryName = "BuildMailbox",
+            Capacity = 4,
+            BackpressurePolicy = "Reject",
+            ErrorPolicy = "Continue"
+        };
         var envelope = new GenerateMessageEnvelopeAttribute(typeof(string))
         {
             FactoryName = "BuildEnvelope",
@@ -409,6 +420,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(decimal), aggregator.ResultType);
         ScenarioExpect.Equal("BuildAggregator", aggregator.FactoryName);
         ScenarioExpect.Equal("Replace", aggregator.DuplicatePolicy);
+        ScenarioExpect.Equal(typeof(string), mailbox.PayloadType);
+        ScenarioExpect.Equal("BuildMailbox", mailbox.FactoryName);
+        ScenarioExpect.Equal(4, mailbox.Capacity);
+        ScenarioExpect.Equal("Reject", mailbox.BackpressurePolicy);
+        ScenarioExpect.Equal("Continue", mailbox.ErrorPolicy);
         ScenarioExpect.Equal(typeof(string), envelope.PayloadType);
         ScenarioExpect.Equal("BuildEnvelope", envelope.FactoryName);
         ScenarioExpect.Equal("BuildContext", envelope.ContextFactoryName);
@@ -431,6 +447,7 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(null!, typeof(int), typeof(decimal)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), null!, typeof(decimal)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), typeof(int), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMailboxAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));
@@ -440,6 +457,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<AggregatorCorrelationAttribute>(new AggregatorCorrelationAttribute());
         ScenarioExpect.IsType<AggregatorCompletionAttribute>(new AggregatorCompletionAttribute());
         ScenarioExpect.IsType<AggregatorProjectionAttribute>(new AggregatorProjectionAttribute());
+        ScenarioExpect.IsType<MailboxHandlerAttribute>(new MailboxHandlerAttribute());
+        ScenarioExpect.IsType<MailboxErrorHandlerAttribute>(new MailboxErrorHandlerAttribute());
+        ScenarioExpect.IsType<MailboxEventSinkAttribute>(new MailboxEventSinkAttribute());
         ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         ScenarioExpect.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         ScenarioExpect.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());
