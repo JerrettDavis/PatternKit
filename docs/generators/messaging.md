@@ -1,6 +1,6 @@
 # Messaging Generators
 
-PatternKit includes eight messaging-oriented source generators:
+PatternKit includes nine messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
@@ -10,6 +10,7 @@ PatternKit includes eight messaging-oriented source generators:
 - <xref:PatternKit.Generators.Messaging.GenerateRoutingSlipAttribute> for ordered routing-slip factories.
 - <xref:PatternKit.Generators.Messaging.GenerateSagaAttribute> for typed saga/process-manager factories.
 - <xref:PatternKit.Generators.Messaging.GenerateMailboxAttribute> for serialized in-process inbox factories.
+- <xref:PatternKit.Generators.Messaging.GenerateReliabilityPipelineAttribute> for idempotent receiver, inbox, and outbox factories.
 
 Use these generators when the message topology is known at compile time and should remain explicit, AOT-friendly, and validated by the compiler. They generate factories and fluent builders; they do not discover handlers from assemblies at runtime and they do not replace brokers, durable queues, or workflow engines.
 
@@ -203,6 +204,37 @@ Example files:
 - `src/PatternKit.Examples/Messaging/MailboxExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs`
 
+## Generated Reliability Pipeline
+
+`[GenerateReliabilityPipeline]` creates factories for the reliability boundary around a static handler:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateReliabilityPipeline(
+    typeof(AcceptOrder),
+    typeof(string),
+    typeof(OrderAccepted),
+    DuplicatePolicy = "ReplayCompleted")]
+public static partial class OrderReliability
+{
+    [ReliabilityHandler]
+    private static ValueTask<string> Handle(
+        Message<AcceptOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+        => new(message.Payload.OrderId);
+}
+```
+
+The generated type emits idempotent receiver, inbox processor, and in-memory outbox factories. Use this path when the reliability boundary is static and should be reviewed in code. Keep using fluent builders when policies, key selectors, or storage wiring are tenant-defined at runtime.
+
+Example files:
+
+- `src/PatternKit.Examples/Messaging/ReliabilityExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs`
+
 ## Generated Saga
 
 `[GenerateSaga]` emits a process-manager factory from typed transition methods:
@@ -243,6 +275,7 @@ Example source:
 | `PKRS001`-`PKRS003` | Routing Slip | Non-partial host, missing steps, or invalid step signatures. |
 | `PKSG001`-`PKSG004` | Saga | Non-partial host, missing transitions, invalid transition signatures, or invalid completion checks. |
 | `PKMB001`-`PKMB005` | Mailbox | Non-partial host, missing handler, invalid handler signatures, or invalid configuration. |
+| `PKRP001`-`PKRP005` | Reliability Pipeline | Non-partial host, missing handler, invalid handler/key selector signatures, or invalid configuration. |
 
 ## Related Runtime Patterns
 

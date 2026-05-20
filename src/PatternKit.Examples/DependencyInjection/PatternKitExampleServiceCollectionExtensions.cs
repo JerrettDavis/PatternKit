@@ -92,6 +92,7 @@ public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<Corpo
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
 public sealed record CqrsDispatcherExample(Func<CancellationToken, ValueTask<CqrsSummary>> RunFluentAsync, Func<IServiceProvider, CancellationToken, ValueTask<CqrsSummary>> RunSourceGeneratedAsync);
 public sealed record GeneratedMailboxExample(MailboxExampleRunner Runner);
+public sealed record GeneratedReliabilityPipelineExample(ReliabilityExampleRunner Runner);
 public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, CheckoutServices, CheckoutResult> Run);
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
@@ -135,6 +136,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddEnterpriseMessagingWorkflowSuiteExample()
             .AddCqrsDispatcherExample()
             .AddGeneratedMailboxExample()
+            .AddGeneratedReliabilityPipelineExample()
             .AddResilientCheckoutMailboxesExample()
             .AddMessagingBackplaneFacadeExample()
             .AddPrototypeGameCharacterFactoryExample()
@@ -388,6 +390,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddSingleton(new MailboxExampleRunner(MailboxExample.RunFluentAsync, MailboxExample.RunGeneratedAsync));
         services.AddSingleton<GeneratedMailboxExample>(sp => new(sp.GetRequiredService<MailboxExampleRunner>()));
         return services.RegisterExample<GeneratedMailboxExample>("Generated Mailbox", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedReliabilityPipelineExample(this IServiceCollection services)
+    {
+        services.AddSingleton(new ReliabilityExampleRunner(ReliabilityExample.RunFluentAsync, ReliabilityExample.RunGeneratedAsync));
+        services.AddSingleton<GeneratedReliabilityPipelineExample>(sp => new(sp.GetRequiredService<ReliabilityExampleRunner>()));
+        return services.RegisterExample<GeneratedReliabilityPipelineExample>("Generated Reliability Pipeline", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddResilientCheckoutMailboxesExample(this IServiceCollection services)

@@ -52,9 +52,9 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |
 | Enterprise Integration | Saga / Process Manager | `Saga<TState>` | Messaging generator |
 | Enterprise Integration | Mailbox | `Mailbox<TPayload>` | Messaging generator |
-| Messaging Reliability | Idempotent Receiver | `IdempotentReceiver<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
-| Messaging Reliability | Inbox | `InboxProcessor<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
-| Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
+| Messaging Reliability | Idempotent Receiver | `IdempotentReceiver<TPayload, TResult>` | Reliability pipeline generator |
+| Messaging Reliability | Inbox | `InboxProcessor<TPayload, TResult>` | Reliability pipeline generator |
+| Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Reliability pipeline generator |
 | Enterprise Integration | Request-Reply | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
 | Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |

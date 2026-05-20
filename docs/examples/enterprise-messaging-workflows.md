@@ -21,8 +21,8 @@ Example source:
 | Saga/process manager | `SagaExample.cs` | Typed message transitions over explicit saga state and completion rules. |
 | Mailbox | `MailboxExample.cs` | Serialized async inbox processing with explicit lifecycle and error behavior. |
 | Source-generated mailbox | `MailboxExample.cs` | Attribute-driven serialized inbox factories with bounded backpressure and error policy. |
-| Idempotent receiver | `ReliabilityExample.cs` | Duplicate detection around at-least-once message delivery. |
-| Inbox/outbox | `ReliabilityExample.cs` | Explicit handoff records for durable integration boundaries owned by the application. |
+| Idempotent receiver | `ReliabilityExample.cs` | Duplicate detection around at-least-once message delivery with fluent and generated factories. |
+| Inbox/outbox | `ReliabilityExample.cs` | Explicit handoff records for durable integration boundaries owned by the application, including a generated reliability pipeline. |
 | Source-generated dispatcher | `DispatcherExample.cs` | Compile-time mediator commands, notifications, streams, and paging. |
 | Source-generated content router | `ContentRouterGeneratorExample.cs` | Attribute-driven content routing without runtime scanning. |
 | Source-generated recipient list | `RecipientListGeneratorExample.cs` | Attribute-driven fan-out without runtime scanning. |
@@ -81,7 +81,7 @@ The example tests use behavior-oriented assertions:
 - Routing-slip tests assert step order and header progress.
 - Saga tests assert transition behavior and completion state.
 - Mailbox tests assert serialized processing and lifecycle semantics.
-- Reliability tests assert duplicate suppression and outbox record creation.
+- Reliability tests assert duplicate suppression, outbox record creation, generated pipeline parity, and DI importability.
 - Generator tests assert that generated factories compile and behave like the equivalent runtime builders.
 - Resilient checkout tests assert rollback, fallback route selection, manual review, and side-effect boundaries.
 - Mailbox collaboration tests assert service handoff, compensation, correlation propagation, and final notification outcomes.

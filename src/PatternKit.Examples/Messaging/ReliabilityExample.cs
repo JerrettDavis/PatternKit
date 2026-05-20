@@ -1,6 +1,7 @@
 using PatternKit.Messaging;
 using PatternKit.Messaging.Mailboxes;
 using PatternKit.Messaging.Reliability;
+using PatternKit.Generators.Messaging;
 
 namespace PatternKit.Examples.Messaging;
 
@@ -10,7 +11,10 @@ namespace PatternKit.Examples.Messaging;
 public static class ReliabilityExample
 {
     /// <summary>Runs an idempotent order inbox and returns dispatched outbox payloads.</summary>
-    public static async ValueTask<IReadOnlyList<string>> RunAsync()
+    public static ValueTask<IReadOnlyList<string>> RunAsync() => RunFluentAsync();
+
+    /// <summary>Runs the fluent idempotent receiver and outbox path.</summary>
+    public static async ValueTask<IReadOnlyList<string>> RunFluentAsync()
     {
         var store = new InMemoryIdempotencyStore();
         var outbox = new InMemoryOutbox<ReliabilityOrderAccepted>();
@@ -54,6 +58,38 @@ public static class ReliabilityExample
 
         return dispatched;
     }
+
+    /// <summary>Runs the generated idempotent receiver, inbox processor, and outbox path.</summary>
+    public static async ValueTask<IReadOnlyList<string>> RunGeneratedAsync()
+    {
+        var store = new InMemoryIdempotencyStore();
+        var inbox = GeneratedReliabilityOrderPipeline.CreateInbox(store);
+        var outbox = GeneratedReliabilityOrderPipeline.CreateOutbox();
+        var dispatched = new List<string>();
+
+        var command = Message<AcceptOrder>
+            .Create(new AcceptOrder("order-42"))
+            .WithIdempotencyKey("accept-order-42");
+
+        var first = await inbox.ProcessAsync(command);
+        _ = await inbox.ProcessAsync(command);
+
+        if (first.Processed)
+        {
+            await outbox.EnqueueAsync(
+                Message<ReliabilityOrderAccepted>.Create(new ReliabilityOrderAccepted(first.Result!)),
+                id: $"accepted-{first.Result}");
+        }
+
+        await outbox.DispatchPendingAsync(new DelegateOutboxDispatcher<ReliabilityOrderAccepted>(
+            (record, _) =>
+            {
+                dispatched.Add(record.Message.Payload.OrderId);
+                return default;
+            }));
+
+        return dispatched;
+    }
 }
 
 /// <summary>Reliability example command payload.</summary>
@@ -61,6 +97,30 @@ public sealed record AcceptOrder(string OrderId);
 
 /// <summary>Reliability example event payload.</summary>
 public sealed record ReliabilityOrderAccepted(string OrderId);
+
+/// <summary>DI-friendly runner exposing fluent and generated reliability paths.</summary>
+public sealed record ReliabilityExampleRunner(
+    Func<ValueTask<IReadOnlyList<string>>> RunFluentAsync,
+    Func<ValueTask<IReadOnlyList<string>>> RunGeneratedAsync);
+
+/// <summary>Source-generated reliability pipeline used by the production-shaped example.</summary>
+[GenerateReliabilityPipeline(
+    typeof(AcceptOrder),
+    typeof(string),
+    typeof(ReliabilityOrderAccepted),
+    DuplicatePolicy = "ReplayCompleted",
+    ReceiverFactoryName = "CreateOrderReceiver",
+    InboxFactoryName = "CreateInbox",
+    OutboxFactoryName = "CreateOutbox")]
+public static partial class GeneratedReliabilityOrderPipeline
+{
+    [ReliabilityHandler]
+    private static ValueTask<string> Handle(
+        Message<AcceptOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+        => new(message.Payload.OrderId);
+}
 
 internal sealed class DelegateOutboxDispatcher<TPayload> : IOutboxDispatcher<TPayload>
 {

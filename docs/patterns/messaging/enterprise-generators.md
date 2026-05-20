@@ -77,7 +77,7 @@ Saga/process-manager generation is documented in [Saga / Process Manager](saga.m
 
 Mailbox generation is documented in [Mailbox](mailbox.md). It discovers one `[MailboxHandler]` method plus optional error and event hooks, then emits a configured serialized inbox factory.
 
-Reliability helpers stay runtime-only for now. Their registration is still lifecycle-sensitive and is tracked separately.
+Reliability helpers also have a generated path through `[GenerateReliabilityPipeline]`, which emits idempotent receiver, inbox, and outbox factories while keeping durable storage implementation owned by the application.
 
 ## Diagnostics
 

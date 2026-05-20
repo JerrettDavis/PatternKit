@@ -78,6 +78,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Generated Mailbox**
   Shows fluent and source-generated serialized inboxes side by side, with an importable `IServiceCollection` extension. See [Generated Mailbox](generated-mailbox.md).
 
+* **Generated Reliability Pipeline**
+  Shows fluent and source-generated idempotent receiver, inbox, and outbox composition side by side, with an importable `IServiceCollection` extension. See [Generated Reliability Pipeline](generated-reliability-pipeline.md).
+
 * **Resilient Checkout and Collaborating Mailboxes**
   Application-shaped messaging demos: checkout route selection, routing-slip execution, command compensation, fallback routes, and service mailboxes collaborating over correlated messages. See [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md).
 

@@ -70,6 +70,9 @@
 - name: Generated Mailbox
   href: generated-mailbox.md
 
+- name: Generated Reliability Pipeline
+  href: generated-reliability-pipeline.md
+
 - name: Resilient Checkout and Collaborating Mailboxes
   href: resilient-checkout-and-mailboxes.md
 
