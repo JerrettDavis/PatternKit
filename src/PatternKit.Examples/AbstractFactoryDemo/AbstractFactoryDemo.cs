@@ -1,4 +1,5 @@
 using PatternKit.Creational.AbstractFactory;
+using PatternKit.Generators.Factories;
 
 namespace PatternKit.Examples.AbstractFactoryDemo;
 
@@ -172,31 +173,13 @@ public static class AbstractFactoryDemo
     /// Each platform (Windows, macOS, Linux) is a separate product family.
     /// </summary>
     public static AbstractFactory<Platform> CreateUIFactory()
-    {
-        return AbstractFactory<Platform>.Create()
-            // Windows family
-            .Family(Platform.Windows)
-                .Product<IButton>(() => new WindowsButton())
-                .Product<ITextBox>(() => new WindowsTextBox())
-                .Product<ICheckBox>(() => new WindowsCheckBox())
-                .Product<IDialog>(() => new WindowsDialog())
+        => GeneratedPlatformWidgetFactory.Create();
 
-            // macOS family
-            .Family(Platform.MacOS)
-                .Product<IButton>(() => new MacButton())
-                .Product<ITextBox>(() => new MacTextBox())
-                .Product<ICheckBox>(() => new MacCheckBox())
-                .Product<IDialog>(() => new MacDialog())
-
-            // Linux family
-            .Family(Platform.Linux)
-                .Product<IButton>(() => new LinuxButton())
-                .Product<ITextBox>(() => new LinuxTextBox())
-                .Product<ICheckBox>(() => new LinuxCheckBox())
-                .Product<IDialog>(() => new LinuxDialog())
-
-            .Build();
-    }
+    /// <summary>
+    /// Creates a platform-specific UI factory through <see cref="IServiceProvider"/> so product constructors can use application services.
+    /// </summary>
+    public static AbstractFactory<Platform> CreateUIFactory(IServiceProvider services)
+        => GeneratedPlatformWidgetFactory.CreateFromServices(services);
 
     // ─────────────────────────────────────────────────────────────────────────
     // Client Code - Platform Agnostic
@@ -290,3 +273,18 @@ public static class AbstractFactoryDemo
         Console.WriteLine("═══════════════════════════════════════════════════════════════");
     }
 }
+
+[GenerateAbstractFactory(typeof(AbstractFactoryDemo.Platform), FactoryMethodName = "Create", ServiceProviderFactoryMethodName = "CreateFromServices")]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Windows, typeof(AbstractFactoryDemo.IButton), typeof(AbstractFactoryDemo.WindowsButton))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Windows, typeof(AbstractFactoryDemo.ITextBox), typeof(AbstractFactoryDemo.WindowsTextBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Windows, typeof(AbstractFactoryDemo.ICheckBox), typeof(AbstractFactoryDemo.WindowsCheckBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Windows, typeof(AbstractFactoryDemo.IDialog), typeof(AbstractFactoryDemo.WindowsDialog))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.MacOS, typeof(AbstractFactoryDemo.IButton), typeof(AbstractFactoryDemo.MacButton))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.MacOS, typeof(AbstractFactoryDemo.ITextBox), typeof(AbstractFactoryDemo.MacTextBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.MacOS, typeof(AbstractFactoryDemo.ICheckBox), typeof(AbstractFactoryDemo.MacCheckBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.MacOS, typeof(AbstractFactoryDemo.IDialog), typeof(AbstractFactoryDemo.MacDialog))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Linux, typeof(AbstractFactoryDemo.IButton), typeof(AbstractFactoryDemo.LinuxButton))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Linux, typeof(AbstractFactoryDemo.ITextBox), typeof(AbstractFactoryDemo.LinuxTextBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Linux, typeof(AbstractFactoryDemo.ICheckBox), typeof(AbstractFactoryDemo.LinuxCheckBox))]
+[AbstractFactoryProduct(AbstractFactoryDemo.Platform.Linux, typeof(AbstractFactoryDemo.IDialog), typeof(AbstractFactoryDemo.LinuxDialog))]
+public static partial class GeneratedPlatformWidgetFactory;

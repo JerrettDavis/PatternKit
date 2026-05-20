@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
+using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
@@ -42,6 +43,7 @@ using PosPaymentKind = PatternKit.Examples.ObserverDemo.PaymentKind;
 using ShowcaseFacade = PatternKit.Examples.PatternShowcase.PatternShowcase.IOrderProcessingFacade;
 using TransactionPipeline = PatternKit.Examples.Chain.TransactionPipeline;
 using VisitorTender = PatternKit.Examples.VisitorDemo.Tender;
+using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 
 namespace PatternKit.Examples.DependencyInjection;
 
@@ -70,6 +72,7 @@ public sealed class CoercerService<T> : ICoercer<T>
 }
 
 public sealed record ProductionReadyExampleIntegrations(IPatternKitExampleCatalog ExampleCatalog, IPatternKitPatternCatalog PatternCatalog);
+public sealed record AbstractFactoryWidgetExample(AbstractFactory<WidgetDemo.Platform> Factory);
 public sealed record AuthLoggingChainExample(ActionChain<HttpRequest> Chain, List<string> Log);
 public sealed record CoercionExample(ICoercer<int> Integers, ICoercer<bool> Booleans, ICoercer<string> Strings);
 public sealed record ComposedNotificationStrategyExample(AsyncStrategy<SendContext, SendResult> Strategy);
@@ -114,6 +117,7 @@ public static class PatternKitExampleServiceCollectionExtensions
     public static IServiceCollection AddPatternKitExamples(this IServiceCollection services, IConfiguration? configuration = null)
         => services
             .AddProductionReadyExampleIntegrations()
+            .AddAbstractFactoryWidgetExample()
             .AddAuthLoggingChainExample()
             .AddStrategyBasedDataCoercionExample()
             .AddComposedNotificationStrategyExample()
@@ -159,6 +163,13 @@ public static class PatternKitExampleServiceCollectionExtensions
                 sp.GetRequiredService<IPatternKitExampleCatalog>(),
                 sp.GetRequiredService<IPatternKitPatternCatalog>()));
         return services.RegisterExample<ProductionReadyExampleIntegrations>("Production-Ready Example Integrations", ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddAbstractFactoryWidgetExample(this IServiceCollection services)
+    {
+        services.AddSingleton(static sp => WidgetDemo.CreateUIFactory(sp));
+        services.AddSingleton<AbstractFactoryWidgetExample>(sp => new(sp.GetRequiredService<AbstractFactory<WidgetDemo.Platform>>()));
+        return services.RegisterExample<AbstractFactoryWidgetExample>("Abstract Factory Widget Families", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddAuthLoggingChainExample(this IServiceCollection services)

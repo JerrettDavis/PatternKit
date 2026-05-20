@@ -297,6 +297,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Facade", "Mailbox", "Outbox", "IdempotentReceiver"],
             ["host setup", "generated request/reply topology", "generated pub/sub topology", "transport boundary"]),
         Descriptor(
+            "Abstract Factory Widget Families",
+            "src/PatternKit.Examples/AbstractFactoryDemo/AbstractFactoryDemo.cs",
+            "test/PatternKit.Examples.Tests/AbstractFactoryDemo/AbstractFactoryDemoTests.cs",
+            "docs/examples/abstract-factory-widget-families.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["AbstractFactory"],
+            ["generated family factory", "platform widgets", "DI composition"]),
+        Descriptor(
             "Prototype Game Character Factory",
             "src/PatternKit.Examples/PrototypeDemo/PrototypeDemo.cs",
             "test/PatternKit.Examples.Tests/PrototypeDemo/PrototypeDemoTests.cs",

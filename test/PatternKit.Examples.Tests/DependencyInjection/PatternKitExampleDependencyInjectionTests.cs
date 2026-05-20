@@ -6,6 +6,7 @@ using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.Strategies.Composed;
 using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
+using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -64,6 +65,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
     private static IReadOnlyList<(string Name, bool Passed)> UseRegisteredExamples(ServiceProvider provider)
     {
         var coercion = provider.GetRequiredService<CoercionExample>();
+        var abstractFactory = provider.GetRequiredService<AbstractFactoryWidgetExample>();
         var notifications = provider.GetRequiredService<ComposedNotificationStrategyExample>();
         var auth = provider.GetRequiredService<AuthLoggingChainExample>();
         var router = provider.GetRequiredService<MinimalWebRequestRouterExample>();
@@ -119,6 +121,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("integer coercer converts text", coercion.Integers.From("42") == 42),
             ("boolean coercer converts text", coercion.Booleans.From("true") == true),
             ("string coercer accepts strings", coercion.Strings.From("patternkit") == "patternkit"),
+            ("abstract factory creates DI-backed widget families", abstractFactory.Factory.GetFamily(WidgetDemo.Platform.Windows).Create<WidgetDemo.IButton>().Render().Contains("Windows", StringComparison.Ordinal)),
             ("notification strategy sends", send.Success),
             ("auth chain logs denied admin requests", auth.Log.Contains("deny: missing auth", StringComparer.Ordinal)),
             ("minimal router returns a successful response", json.StatusCode == 200),

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.AbstractFactoryDemo;
 using static PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 using TinyBDD;
@@ -19,6 +20,31 @@ public sealed class AbstractFactoryDemoTests
         ScenarioExpect.NotNull(winFamily);
         ScenarioExpect.NotNull(macFamily);
         ScenarioExpect.NotNull(linuxFamily);
+    }
+
+    [Scenario("Generated Factory Creates Platform Widget Families")]
+    [Fact]
+    public void Generated_Factory_Creates_Platform_Widget_Families()
+    {
+        var factory = GeneratedPlatformWidgetFactory.Create();
+
+        var windows = factory.GetFamily(Platform.Windows);
+        var linux = factory.GetFamily(Platform.Linux);
+
+        ScenarioExpect.Contains("Windows Button", windows.Create<IButton>().Render());
+        ScenarioExpect.Contains("GTK Button", linux.Create<IButton>().Render());
+    }
+
+    [Scenario("Generated Factory ServiceProvider Overload Creates Platform Widget Families")]
+    [Fact]
+    public void Generated_Factory_ServiceProvider_Overload_Creates_Platform_Widget_Families()
+    {
+        var services = new ServiceCollection().BuildServiceProvider();
+        var factory = CreateUIFactory(services);
+
+        var mac = factory.GetFamily(Platform.MacOS);
+
+        ScenarioExpect.Contains("macOS Button", mac.Create<IButton>().Render());
     }
 
     [Scenario("Windows Family Creates All Widget Types")]
