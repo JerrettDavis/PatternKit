@@ -18,6 +18,35 @@ using var provider = services.BuildServiceProvider(validateScopes: true);
 var catalog = provider.GetRequiredService<IPatternKitExampleCatalog>();
 ```
 
+## Register runnable examples
+
+The examples package also exposes a fluent IoC surface for every catalog entry. Existing applications can import the complete example suite with one call:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Examples.DependencyInjection;
+
+var services = new ServiceCollection()
+    .AddLogging()
+    .AddPatternKitExamples();
+
+using var provider = services.BuildServiceProvider(validateScopes: true);
+
+var pricing = provider.GetRequiredService<PricingCalculatorExample>();
+var catalog = provider.GetRequiredService<IPatternKitExampleCatalog>();
+```
+
+Each example also has its own focused extension, so sample applications can import only the slice they need:
+
+```csharp
+services
+    .AddPricingCalculatorExample()
+    .AddPaymentProcessorDecoratorExample()
+    .AddMessagingBackplaneFacadeExample();
+```
+
+Every extension registers a concrete typed entry point, such as `PricingCalculatorExample`, `EnterpriseFeatureSlicesExample`, `MinimalWebRequestRouterExample`, or `ReactiveTransactionExample`. The companion `PatternKitExampleServiceDescriptor` registrations make the IoC surface auditable: tests compare those descriptors against the production-readiness catalog and resolve every registered example through `IServiceProvider`.
+
 Each `PatternKitExampleDescriptor` includes:
 
 | Field | Purpose |
@@ -84,6 +113,7 @@ Every documented example should satisfy the same baseline contract:
 | Documented in DocFX | `docs/examples/toc.yml` links to the page and documentation tests validate hrefs. |
 | Covered by TinyBDD scenarios | The catalog points to a test file and catalog tests verify it exists. |
 | Importable from the examples package | The catalog is part of `PatternKit.Examples` and is registered through `IServiceCollection`/`IHostApplicationBuilder`. |
+| Has an IoC entry point | `AddPatternKitExamples()` and per-example `Add...Example()` extensions register typed example services through `IServiceCollection`. |
 | Host/tooling friendly where applicable | Integration flags identify examples that demonstrate `IOptions`, DI, generic host, ASP.NET Core, source generators, messaging, or external infrastructure. |
 | Production-shaped behavior called out | `ProductionChecks` records the behaviors each example must keep validating. |
 
