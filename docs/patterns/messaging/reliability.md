@@ -83,6 +83,32 @@ await outbox.DispatchPendingAsync(dispatcher, cancellationToken);
 
 The in-memory outbox records attempts and dispatch timestamps, but it is not durable. A production outbox should persist `OutboxMessage<TPayload>` or an equivalent schema in the same transaction as the business state change, then dispatch records after commit.
 
+## Source-Generated Reliability Pipeline
+
+`[GenerateReliabilityPipeline]` generates the static factories for a stable idempotent receiver, inbox, and outbox contract:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateReliabilityPipeline(
+    typeof(AcceptOrder),
+    typeof(string),
+    typeof(OrderAccepted),
+    DuplicatePolicy = "ReplayCompleted")]
+public static partial class OrderReliability
+{
+    [ReliabilityHandler]
+    private static ValueTask<string> Handle(
+        Message<AcceptOrder> message,
+        MessageContext context,
+        CancellationToken cancellationToken)
+        => new(message.Payload.OrderId);
+}
+```
+
+The generated host exposes receiver, inbox, and outbox factory methods while keeping the handler and optional key selector in source. This makes reliability topology visible during code review and importable through normal `IServiceCollection` registration.
+
 ## Boundaries
 
 - These APIs help with at-least-once processing; they do not provide exactly-once delivery.
@@ -106,6 +132,7 @@ The in-memory outbox records attempts and dispatch timestamps, but it is not dur
 - <xref:PatternKit.Messaging.Reliability.OutboxMessage`1>
 - <xref:PatternKit.Messaging.Reliability.IOutboxDispatcher`1>
 - <xref:PatternKit.Messaging.Reliability.InMemoryOutbox`1>
+- <xref:PatternKit.Generators.Messaging.GenerateReliabilityPipelineAttribute>
 
 ## Example Source
 

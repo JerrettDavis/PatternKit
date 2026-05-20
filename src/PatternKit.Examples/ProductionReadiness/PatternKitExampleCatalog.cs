@@ -273,6 +273,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Mailbox"],
             ["serialized inbox", "source-generated factory", "DI composition"]),
         Descriptor(
+            "Generated Reliability Pipeline",
+            "src/PatternKit.Examples/Messaging/ReliabilityExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ReliabilityExampleTests.cs",
+            "docs/examples/generated-reliability-pipeline.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["IdempotentReceiver", "Inbox", "Outbox"],
+            ["duplicate suppression", "source-generated factories", "DI composition"]),
+        Descriptor(
             "Resilient Checkout and Collaborating Mailboxes",
             "src/PatternKit.Examples/Messaging/ResilientCheckoutDemo.cs",
             "test/PatternKit.Examples.Tests/Messaging/ResilientCheckoutDemoTests.cs",

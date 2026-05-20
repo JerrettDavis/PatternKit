@@ -71,6 +71,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
 | [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
 | [**Mailbox**](messaging.md#generated-mailbox) | Serialized in-process inbox factories | `[GenerateMailbox]` |
+| [**Reliability Pipeline**](messaging.md#generated-reliability-pipeline) | Idempotent receiver, inbox, and outbox factories | `[GenerateReliabilityPipeline]` |
 
 ## Quick Reference
 
@@ -159,6 +160,10 @@ public static partial class OrderLineAggregator { }
 // Mailbox - generated serialized inbox factory
 [GenerateMailbox(typeof(OrderWork), Capacity = 32, BackpressurePolicy = "Wait")]
 public static partial class OrderMailbox { }
+
+// Reliability pipeline - generated idempotent receiver, inbox, and outbox factories
+[GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
+public static partial class OrderReliability { }
 
 // Routing slip - generated ordered itinerary factory
 [GenerateRoutingSlip(typeof(Order))]

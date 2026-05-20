@@ -89,6 +89,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(MailboxHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(MailboxErrorHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(MailboxEventSinkAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateReliabilityPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ReliabilityHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(ReliabilityKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -367,6 +370,14 @@ public sealed class AbstractionsAttributeCoverageTests
             BackpressurePolicy = "Reject",
             ErrorPolicy = "Continue"
         };
+        var reliability = new GenerateReliabilityPipelineAttribute(typeof(string), typeof(int), typeof(decimal))
+        {
+            ReceiverFactoryName = "BuildReceiver",
+            InboxFactoryName = "BuildInbox",
+            OutboxFactoryName = "BuildOutbox",
+            DuplicatePolicy = "ReplayCompleted",
+            MissingKeyPolicy = "Process"
+        };
         var envelope = new GenerateMessageEnvelopeAttribute(typeof(string))
         {
             FactoryName = "BuildEnvelope",
@@ -425,6 +436,14 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(4, mailbox.Capacity);
         ScenarioExpect.Equal("Reject", mailbox.BackpressurePolicy);
         ScenarioExpect.Equal("Continue", mailbox.ErrorPolicy);
+        ScenarioExpect.Equal(typeof(string), reliability.PayloadType);
+        ScenarioExpect.Equal(typeof(int), reliability.ResultType);
+        ScenarioExpect.Equal(typeof(decimal), reliability.OutboxPayloadType);
+        ScenarioExpect.Equal("BuildReceiver", reliability.ReceiverFactoryName);
+        ScenarioExpect.Equal("BuildInbox", reliability.InboxFactoryName);
+        ScenarioExpect.Equal("BuildOutbox", reliability.OutboxFactoryName);
+        ScenarioExpect.Equal("ReplayCompleted", reliability.DuplicatePolicy);
+        ScenarioExpect.Equal("Process", reliability.MissingKeyPolicy);
         ScenarioExpect.Equal(typeof(string), envelope.PayloadType);
         ScenarioExpect.Equal("BuildEnvelope", envelope.FactoryName);
         ScenarioExpect.Equal("BuildContext", envelope.ContextFactoryName);
@@ -448,6 +467,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), null!, typeof(decimal)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregatorAttribute(typeof(string), typeof(int), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMailboxAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(null!, typeof(int), typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(typeof(string), null!, typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReliabilityPipelineAttribute(typeof(string), typeof(int), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));
@@ -460,6 +482,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<MailboxHandlerAttribute>(new MailboxHandlerAttribute());
         ScenarioExpect.IsType<MailboxErrorHandlerAttribute>(new MailboxErrorHandlerAttribute());
         ScenarioExpect.IsType<MailboxEventSinkAttribute>(new MailboxEventSinkAttribute());
+        ScenarioExpect.IsType<ReliabilityHandlerAttribute>(new ReliabilityHandlerAttribute());
+        ScenarioExpect.IsType<ReliabilityKeySelectorAttribute>(new ReliabilityKeySelectorAttribute());
         ScenarioExpect.IsType<FlyweightFactoryAttribute>(new FlyweightFactoryAttribute());
         ScenarioExpect.IsType<IteratorStepAttribute>(new IteratorStepAttribute());
         ScenarioExpect.IsType<TraversalIteratorAttribute>(new TraversalIteratorAttribute());

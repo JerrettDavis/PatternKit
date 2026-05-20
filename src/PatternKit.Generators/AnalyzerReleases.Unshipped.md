@@ -179,6 +179,11 @@ PKMB002 | PatternKit.Generators.Messaging | Error | Mailbox must declare exactly
 PKMB003 | PatternKit.Generators.Messaging | Error | Mailbox handler signature is invalid.
 PKMB004 | PatternKit.Generators.Messaging | Error | Mailbox optional handler signature is invalid.
 PKMB005 | PatternKit.Generators.Messaging | Error | Mailbox generator configuration is invalid.
+PKRP001 | PatternKit.Generators.Messaging | Error | Reliability pipeline type must be partial.
+PKRP002 | PatternKit.Generators.Messaging | Error | Reliability pipeline must declare exactly one handler.
+PKRP003 | PatternKit.Generators.Messaging | Error | Reliability pipeline handler signature is invalid.
+PKRP004 | PatternKit.Generators.Messaging | Error | Reliability key selector signature is invalid.
+PKRP005 | PatternKit.Generators.Messaging | Error | Reliability pipeline configuration is invalid.
 PKRL001 | PatternKit.Generators.Messaging | Error | Recipient list type must be partial.
 PKRL002 | PatternKit.Generators.Messaging | Error | Recipient list must declare at least one recipient.
 PKRL003 | PatternKit.Generators.Messaging | Error | Recipient handler or predicate signature is invalid.
