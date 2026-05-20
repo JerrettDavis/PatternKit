@@ -1,6 +1,8 @@
 # Pattern Coverage
 
-PatternKit tracks the canonical Gang of Four patterns as production surfaces, not just API names. Each pattern should have:
+PatternKit tracks design, integration, messaging, reliability, and architecture patterns as production surfaces, not just API names. The canonical Gang of Four patterns are one baseline, but the catalog is intentionally broader: Enterprise Integration Patterns, cloud architecture patterns, DDD-adjacent application patterns, and messaging reliability patterns can all be included when PatternKit has a credible runtime or generated integration story.
+
+Each pattern should have:
 
 - a fluent runtime path in `PatternKit.Core`
 - TinyBDD coverage for the runtime path
@@ -10,7 +12,7 @@ PatternKit tracks the canonical Gang of Four patterns as production surfaces, no
 
 The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/ProductionReadiness`. The TinyBDD tests in `PatternKitPatternCatalogTests` validate the catalog against the repository so missing files, missing examples, or undocumented generator gaps fail in CI.
 
-## Current GoF Coverage
+## Current GoF Baseline
 
 | Family | Pattern | Fluent path | Source-generated path |
 | --- | --- | --- | --- |
@@ -37,6 +39,36 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Behavioral | Strategy | `Strategy<TIn, TOut>` and variants | Strategy generator |
 | Behavioral | Template Method | `TemplateMethod<T>` and fluent templates | Template Method generator |
 | Behavioral | Visitor | `Visitor<TBase, TResult>` and variants | Visitor generator |
+
+## Enterprise And Architecture Coverage
+
+| Family | Pattern | Fluent/runtime path | Source-generated path |
+| --- | --- | --- | --- |
+| Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Tracked in [#215](https://github.com/JerrettDavis/PatternKit/issues/215) |
+| Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
+| Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Tracked in [#210](https://github.com/JerrettDavis/PatternKit/issues/210) |
+| Enterprise Integration | Splitter | `Splitter<TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
+| Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Tracked in [#211](https://github.com/JerrettDavis/PatternKit/issues/211) |
+| Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |
+| Enterprise Integration | Saga / Process Manager | `Saga<TState>` | Messaging generator |
+| Enterprise Integration | Mailbox | `Mailbox<TPayload>` | Tracked in [#209](https://github.com/JerrettDavis/PatternKit/issues/209) |
+| Messaging Reliability | Idempotent Receiver | `IdempotentReceiver<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
+| Messaging Reliability | Inbox | `InboxProcessor<TPayload, TResult>` | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
+| Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
+| Enterprise Integration | Request-Reply | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
+| Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
+| Application Architecture | CQRS | Mediator/dispatcher command-query split | First-class example tracked in [#212](https://github.com/JerrettDavis/PatternKit/issues/212) |
+
+## Research Baselines
+
+The catalog is allowed to grow beyond GoF when an external catalog describes a recurring enterprise pattern that PatternKit can make concrete:
+
+- Enterprise Integration Patterns: message routing, splitter, aggregator, routing slip, idempotent receiver, and related messaging patterns.
+- Patterns of Enterprise Application Architecture: application and data-access patterns such as Unit of Work, Identity Map, Repository, and Data Mapper.
+- Cloud architecture patterns: retry, circuit breaker, CQRS, external configuration, competing consumers, and related distributed-system patterns.
+- Domain-driven design tactical patterns: aggregate, domain event, specification, repository, bounded context, and process manager.
+
+Entries should still be selective. A pattern belongs in the catalog only when PatternKit can demonstrate a runtime path, a source-generated path or tracked generator issue, documentation, TinyBDD coverage, and an importable example.
 
 ## Adding Or Extending A Pattern
 

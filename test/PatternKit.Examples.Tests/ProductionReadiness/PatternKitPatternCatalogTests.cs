@@ -6,7 +6,7 @@ using Xunit.Abstractions;
 
 namespace PatternKit.Examples.Tests.ProductionReadiness;
 
-[Feature("GoF pattern coverage catalog")]
+[Feature("Pattern coverage catalog")]
 public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     private static readonly string[] CanonicalGofPatterns =
@@ -36,6 +36,24 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Visitor"
     ];
 
+    private static readonly string[] EnterprisePatternAdditions =
+    [
+        "Message Envelope",
+        "Content-Based Router",
+        "Recipient List",
+        "Splitter",
+        "Aggregator",
+        "Routing Slip",
+        "Saga / Process Manager",
+        "Mailbox",
+        "Idempotent Receiver",
+        "Inbox",
+        "Outbox",
+        "Request-Reply",
+        "Publish-Subscribe",
+        "CQRS"
+    ];
+
     [Scenario("Catalog covers every canonical GoF pattern")]
     [Fact]
     public Task Catalog_Covers_Every_Canonical_Gof_Pattern()
@@ -43,14 +61,40 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             .When("reading the catalog entries", catalog => catalog.Patterns)
             .Then("all canonical GoF patterns are represented exactly once", patterns =>
             {
-                ScenarioExpect.Equal(CanonicalGofPatterns.OrderBy(static x => x), patterns.Select(static p => p.Name).OrderBy(static x => x));
-                ScenarioExpect.Equal(CanonicalGofPatterns.Length, patterns.Select(static p => p.Name).Distinct(StringComparer.Ordinal).Count());
+                var canonical = patterns
+                    .Where(pattern => CanonicalGofPatterns.Contains(pattern.Name, StringComparer.Ordinal))
+                    .Select(static p => p.Name)
+                    .OrderBy(static x => x);
+
+                ScenarioExpect.Equal(CanonicalGofPatterns.OrderBy(static x => x), canonical);
+                ScenarioExpect.Equal(patterns.Count, patterns.Select(static p => p.Name).Distinct(StringComparer.Ordinal).Count());
             })
             .And("the catalog keeps the GoF family counts honest", patterns =>
             {
-                ScenarioExpect.Equal(5, patterns.Count(static p => p.Family == PatternFamily.Creational));
-                ScenarioExpect.Equal(7, patterns.Count(static p => p.Family == PatternFamily.Structural));
-                ScenarioExpect.Equal(11, patterns.Count(static p => p.Family == PatternFamily.Behavioral));
+                var canonical = patterns
+                    .Where(pattern => CanonicalGofPatterns.Contains(pattern.Name, StringComparer.Ordinal))
+                    .ToArray();
+
+                ScenarioExpect.Equal(5, canonical.Count(static p => p.Family == PatternFamily.Creational));
+                ScenarioExpect.Equal(7, canonical.Count(static p => p.Family == PatternFamily.Structural));
+                ScenarioExpect.Equal(11, canonical.Count(static p => p.Family == PatternFamily.Behavioral));
+            })
+            .AssertPassed();
+
+    [Scenario("Catalog includes enterprise integration and architecture patterns")]
+    [Fact]
+    public Task Catalog_Includes_Enterprise_Integration_And_Architecture_Patterns()
+        => Given("the PatternKit pattern catalog", () => new PatternKitPatternCatalog())
+            .When("reading the non-GoF pattern entries", catalog => catalog.Patterns
+                .Where(pattern => !CanonicalGofPatterns.Contains(pattern.Name, StringComparer.Ordinal))
+                .ToArray())
+            .Then("enterprise pattern additions are represented", patterns =>
+                ScenarioExpect.Equal(EnterprisePatternAdditions.OrderBy(static x => x), patterns.Select(static p => p.Name).OrderBy(static x => x)))
+            .And("enterprise entries are grouped by integration reliability and architecture families", patterns =>
+            {
+                ScenarioExpect.Equal(10, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
+                ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
+                ScenarioExpect.Equal(1, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
@@ -77,7 +121,17 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(
                 [
                     "Abstract Factory has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/207",
-                    "Interpreter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/206"
+                    "Aggregator has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/211",
+                    "Idempotent Receiver has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
+                    "Inbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
+                    "Interpreter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/206",
+                    "Mailbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/209",
+                    "Message Envelope has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/215",
+                    "Outbox has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/213",
+                    "Publish-Subscribe has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",
+                    "Recipient List has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/210",
+                    "Request-Reply has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/214",
+                    "Splitter has a tracked source-generated gap: https://github.com/JerrettDavis/PatternKit/issues/211"
                 ], tracked);
             })
             .AssertPassed();
@@ -96,8 +150,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 using (provider)
                     return provider.GetRequiredService<IPatternKitPatternCatalog>();
             })
-            .Then("the catalog resolves all GoF patterns", catalog =>
-                ScenarioExpect.Equal(CanonicalGofPatterns.Length, catalog.Patterns.Count))
+            .Then("the catalog resolves GoF and enterprise patterns", catalog =>
+                ScenarioExpect.Equal(CanonicalGofPatterns.Length + EnterprisePatternAdditions.Length, catalog.Patterns.Count))
             .And("all patterns include user-facing integration notes", catalog =>
                 ScenarioExpect.True(catalog.Patterns.All(static pattern => pattern.IntegrationNotes.Count > 0)))
             .AssertPassed();
