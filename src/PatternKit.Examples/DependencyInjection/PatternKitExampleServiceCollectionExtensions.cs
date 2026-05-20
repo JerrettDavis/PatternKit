@@ -267,7 +267,16 @@ public static class PatternKitExampleServiceCollectionExtensions
 
     public static IServiceCollection AddPosAppStateSingletonExample(this IServiceCollection services)
     {
-        services.AddSingleton(_ => PosAppStateDemo.BuildLazy());
+        services.AddSingleton(_ => Singleton<PosAppState>
+            .Create(static () => new PosAppState
+            {
+                Config = StoreConfig.Load(),
+                Pricing = new PricingCache(),
+                Devices = new DeviceRegistry()
+            })
+            .Init(static state => state.Pricing.Prewarm(["SKU-1", "SKU-2", "SKU-3"]))
+            .Init(static state => state.Devices.ConnectAll())
+            .Build());
         services.AddSingleton<PosAppStateSingletonExample>(sp => new(sp.GetRequiredService<Singleton<PosAppState>>()));
         return services.RegisterExample<PosAppStateSingletonExample>("POS App State Singleton", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection);
     }
