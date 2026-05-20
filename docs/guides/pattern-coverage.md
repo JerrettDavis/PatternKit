@@ -57,7 +57,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Messaging Reliability | Outbox | `InMemoryOutbox<TPayload>` and dispatcher contracts | Tracked in [#213](https://github.com/JerrettDavis/PatternKit/issues/213) |
 | Enterprise Integration | Request-Reply | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
 | Enterprise Integration | Publish-Subscribe | Messaging backplane facade example | Tracked in [#214](https://github.com/JerrettDavis/PatternKit/issues/214) |
-| Application Architecture | CQRS | Mediator/dispatcher command-query split | First-class example tracked in [#212](https://github.com/JerrettDavis/PatternKit/issues/212) |
+| Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 
 ## Research Baselines
 

@@ -539,11 +539,11 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/generators/dispatcher.md",
             "src/PatternKit.Generators/Messaging/DispatcherGenerator.cs",
             "test/PatternKit.Generators.Tests/DispatcherGeneratorTests.cs",
-            "https://github.com/JerrettDavis/PatternKit/issues/212",
-            "docs/generators/dispatcher.md",
-            "src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs",
-            "test/PatternKit.Examples.Tests/MediatorDemo/MediatorDemoTests.cs",
-            ["dispatcher command/query separation", "generated dispatcher", "first-class CQRS example tracked"])
+            null,
+            "docs/examples/cqrs-dispatcher.md",
+            "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",
+            ["fluent mediator command/query separation", "generated dispatcher", "DI-importable CQRS example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;
