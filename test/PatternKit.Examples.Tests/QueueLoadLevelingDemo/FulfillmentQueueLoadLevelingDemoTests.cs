@@ -9,14 +9,14 @@ namespace PatternKit.Examples.Tests.QueueLoadLevelingDemo;
 [Feature("Fulfillment queue load leveling example")]
 public sealed class FulfillmentQueueLoadLevelingDemoTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
+    private sealed record QueueLoadLevelingSummaries(
+        FulfillmentQueueSummary Fluent,
+        FulfillmentQueueSummary Generated);
+
     [Scenario("Fluent and generated queue load leveling policies accept fulfillment work")]
     [Fact]
     public Task Fluent_And_Generated_Queue_Load_Leveling_Policies_Accept_Fulfillment_Work()
-        => Given("fulfillment queue load leveling examples", async () => new
-        {
-            Fluent = await FulfillmentQueueLoadLevelingDemo.RunFluentAsync(),
-            Generated = await FulfillmentQueueLoadLevelingDemo.RunGeneratedAsync()
-        })
+        => Given("fulfillment queue load leveling examples", RunBothExamplesAsync)
         .Then("both paths process work", result =>
         {
             ScenarioExpect.True(result.Fluent.Accepted);
@@ -25,6 +25,11 @@ public sealed class FulfillmentQueueLoadLevelingDemoTests(ITestOutputHelper outp
             ScenarioExpect.Equal("fulfillment-queue", result.Generated.PolicyName);
         })
         .AssertPassed();
+
+    private static async Task<QueueLoadLevelingSummaries> RunBothExamplesAsync()
+        => new(
+            await FulfillmentQueueLoadLevelingDemo.RunFluentAsync(),
+            await FulfillmentQueueLoadLevelingDemo.RunGeneratedAsync());
 
     [Scenario("Queue load leveling demo is importable through IServiceCollection")]
     [Fact]
