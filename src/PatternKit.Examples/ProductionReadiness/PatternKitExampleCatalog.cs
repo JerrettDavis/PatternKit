@@ -257,6 +257,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ClaimCheck"],
             ["external payload storage", "source-generated claim check", "DI composition"]),
         Descriptor(
+            "Generated Dead Letter Channel",
+            "src/PatternKit.Examples/Messaging/FulfillmentDeadLetterChannelExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/FulfillmentDeadLetterChannelExampleTests.cs",
+            "docs/examples/generated-dead-letter-channel.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["DeadLetterChannel"],
+            ["failed message capture", "source-generated dead-letter channel", "DI composition"]),
+        Descriptor(
             "Generated Recipient List",
             "src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs",

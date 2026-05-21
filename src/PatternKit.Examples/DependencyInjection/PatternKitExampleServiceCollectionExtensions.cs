@@ -107,6 +107,7 @@ public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
+public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChannelExampleRunner Runner, FulfillmentDeadLetterWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -162,6 +163,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
+            .AddGeneratedDeadLetterChannelExample()
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddPatternsShowcaseExample()
@@ -409,6 +411,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<LargeDocumentClaimCheckExampleRunner>(),
             sp.GetRequiredService<LargeDocumentWorkflow>()));
         return services.RegisterExample<GeneratedClaimCheckExample>("Generated Claim Check", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedDeadLetterChannelExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentDeadLetterChannelExample();
+        services.AddSingleton<GeneratedDeadLetterChannelExample>(sp => new(
+            sp.GetRequiredService<FulfillmentDeadLetterChannelExampleRunner>(),
+            sp.GetRequiredService<FulfillmentDeadLetterWorkflow>()));
+        return services.RegisterExample<GeneratedDeadLetterChannelExample>("Generated Dead Letter Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddGeneratedRecipientListExample(this IServiceCollection services)

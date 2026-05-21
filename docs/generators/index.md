@@ -71,6 +71,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Message Envelope**](messaging.md#generated-message-envelope) | Required message metadata contracts | `[GenerateMessageEnvelope]` |
 | [**Message Translator**](message-translator.md) | Partner and transport event normalization | `[GenerateMessageTranslator]` |
 | [**Claim Check**](claim-check.md) | External payload storage references | `[GenerateClaimCheck]` |
+| [**Dead Letter Channel**](dead-letter-channel.md) | Failed-message capture and replay handoff | `[GenerateDeadLetterChannel]` |
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
 | [**Recipient List**](messaging.md#generated-recipient-list) | Recipient fan-out factories | `[GenerateRecipientList]` |
 | [**Splitter / Aggregator**](messaging.md#generated-splitter-and-aggregator) | Split/rejoin message routing factories | `[GenerateSplitter]` / `[GenerateAggregator]` |
@@ -164,6 +165,14 @@ public static partial class LegacyOrderAcl { }
 // Message translator - partner event normalization
 [GenerateMessageTranslator(typeof(PartnerOrderAccepted), typeof(CommerceOrderAccepted))]
 public static partial class PartnerOrderTranslator { }
+
+// Claim check - external payload storage reference
+[GenerateClaimCheck(typeof(LargeOrderDocument), StoreName = "document-archive")]
+public static partial class LargeDocumentClaims { }
+
+// Dead-letter channel - failed message capture and replay handoff
+[GenerateDeadLetterChannel(typeof(FulfillmentCommand), ChannelName = "fulfillment-dead-letter")]
+public static partial class FulfillmentDeadLetters { }
 
 // Visitor - type-safe double dispatch
 [GenerateVisitor]
