@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PatternKit.Application.AntiCorruption;
 using PatternKit.Application.Specification;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
@@ -15,6 +16,7 @@ using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
+using PatternKit.Examples.AntiCorruptionDemo;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
@@ -124,6 +126,7 @@ public sealed record ReactiveTransactionExample(ReactiveTransaction Transaction)
 public sealed record AsyncConnectionStateMachineExample(Func<string[], ValueTask<(ConnectionStateDemo.Mode Final, List<string> Log)>> RunAsync);
 public sealed record TemplateMethodSubclassingExample(DataProcessor Processor);
 public sealed record TemplateMethodAsyncExample(AsyncDataPipeline Pipeline);
+public sealed record LegacyOrderAntiCorruptionExample(AntiCorruptionLayer<LegacyOrderDto, CommerceOrder> Layer, LegacyOrderImportService Service);
 public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
@@ -176,6 +179,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddAsyncConnectionStateMachineExample()
             .AddTemplateMethodSubclassingExample()
             .AddTemplateMethodAsyncExample()
+            .AddLegacyOrderAntiCorruptionExample()
             .AddInventoryRetryExample()
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
@@ -545,6 +549,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddTransient<AsyncDataPipeline>();
         services.AddTransient<TemplateMethodAsyncExample>(sp => new(sp.GetRequiredService<AsyncDataPipeline>()));
         return services.RegisterExample<TemplateMethodAsyncExample>("Template Method Async", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddLegacyOrderAntiCorruptionExample(this IServiceCollection services)
+    {
+        services.AddLegacyOrderAntiCorruptionDemo();
+        services.AddSingleton<LegacyOrderAntiCorruptionExample>(sp => new(
+            sp.GetRequiredService<AntiCorruptionLayer<LegacyOrderDto, CommerceOrder>>(),
+            sp.GetRequiredService<LegacyOrderImportService>()));
+        return services.RegisterExample<LegacyOrderAntiCorruptionExample>("Legacy Order Anti-Corruption Layer", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddInventoryRetryExample(this IServiceCollection services)

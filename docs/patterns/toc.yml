@@ -323,6 +323,12 @@
           href: cloud/cache-aside.md
         - name: Rate Limiting
           href: cloud/rate-limiting.md
+    - name: Application Architecture
+      items:
+        - name: Anti-Corruption Layer
+          href: application/anti-corruption-layer.md
+        - name: Specification
+          href: application/specification.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:

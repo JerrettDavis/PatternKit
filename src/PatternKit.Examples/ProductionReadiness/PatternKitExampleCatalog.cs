@@ -393,6 +393,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["AsyncTemplate", "AsyncTemplateMethod"],
             ["cancellation", "async storage", "error observation"]),
         Descriptor(
+            "Legacy Order Anti-Corruption Layer",
+            "src/PatternKit.Examples/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemo.cs",
+            "test/PatternKit.Examples.Tests/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemoTests.cs",
+            "docs/examples/legacy-order-anti-corruption-layer.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Anti-Corruption Layer"],
+            ["external model validation", "domain normalization", "DI composition"]),
+        Descriptor(
             "Inventory Retry Policy",
             "src/PatternKit.Examples/RetryDemo/InventoryRetryDemo.cs",
             "test/PatternKit.Examples.Tests/RetryDemo/InventoryRetryDemoTests.cs",

@@ -116,6 +116,10 @@ PKADP015 | PatternKit.Generators.Adapter | Error | Mapping method must be access
 PKADP016 | PatternKit.Generators.Adapter | Error | Static members are not supported
 PKADP017 | PatternKit.Generators.Adapter | Error | Ref-return members are not supported
 PKADP018 | PatternKit.Generators.Adapter | Error | Indexers are not supported
+PKACL001 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer host must be partial.
+PKACL002 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer must declare exactly one translator.
+PKACL003 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer translator signature is invalid.
+PKACL004 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer validation rule signature is invalid.
 PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be partial
 PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
 PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported

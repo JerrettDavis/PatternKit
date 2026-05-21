@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Examples.AntiCorruptionDemo;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
@@ -85,6 +86,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var asyncState = provider.GetRequiredService<AsyncConnectionStateMachineExample>();
         var template = provider.GetRequiredService<TemplateMethodSubclassingExample>();
         var asyncTemplate = provider.GetRequiredService<TemplateMethodAsyncExample>();
+        var antiCorruption = provider.GetRequiredService<LegacyOrderAntiCorruptionExample>();
         var routing = provider.GetRequiredService<MessageRouterVisitorExample>();
         var generatedRecipients = provider.GetRequiredService<GeneratedRecipientListExample>();
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
@@ -149,6 +151,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("async state machine connects", state.Final == PatternKit.Examples.AsyncStateDemo.ConnectionStateDemo.Mode.Connected),
             ("template method counts words", template.Processor.Execute("one two") == 2),
             ("async template method formats payloads", asyncResult == "PAYLOAD:7"),
+            ("generated anti-corruption layer imports legacy orders", antiCorruption.Service.Import(new LegacyOrderDto("ORD-100", 125m, "USD", "cust-42")).Accepted),
             ("message router visitor aggregates totals", routing.Run().AggregatedTotal == 100m),
             ("generated recipient list delivers billing and audit recipients", generatedRecipientList.DeliveredRecipients.Count == 2),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),

@@ -620,7 +620,20 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/loan-approval-specifications.md",
             "src/PatternKit.Examples/SpecificationDemo/LoanApprovalSpecificationDemo.cs",
             "test/PatternKit.Examples.Tests/SpecificationDemo/LoanApprovalSpecificationDemoTests.cs",
-            ["fluent specification composition", "generated specification registry", "DI-importable loan approval example"])
+            ["fluent specification composition", "generated specification registry", "DI-importable loan approval example"]),
+
+        Pattern("Anti-Corruption Layer", PatternFamily.ApplicationArchitecture,
+            "docs/patterns/application/anti-corruption-layer.md",
+            "src/PatternKit.Core/Application/AntiCorruption/AntiCorruptionLayer.cs",
+            "test/PatternKit.Tests/Application/AntiCorruption/AntiCorruptionLayerTests.cs",
+            "docs/generators/anti-corruption-layer.md",
+            "src/PatternKit.Generators/AntiCorruption/AntiCorruptionLayerGenerator.cs",
+            "test/PatternKit.Generators.Tests/AntiCorruptionLayerGeneratorTests.cs",
+            null,
+            "docs/examples/legacy-order-anti-corruption-layer.md",
+            "src/PatternKit.Examples/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemo.cs",
+            "test/PatternKit.Examples.Tests/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemoTests.cs",
+            ["fluent translation boundary", "generated anti-corruption layer", "DI-importable legacy order import example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;
