@@ -120,3 +120,6 @@
 
 - name: Shipping Bulkhead
   href: shipping-bulkhead.md
+
+- name: Product Catalog Cache-Aside
+  href: product-catalog-cache-aside.md

@@ -191,6 +191,10 @@ PKBT004 | PatternKit.Generators.Messaging | Error | Backplane subscription decla
 PKBT005 | PatternKit.Generators.Messaging | Error | Backplane request default route is duplicated.
 PKBH001 | PatternKit.Generators.Bulkhead | Error | Bulkhead policy host must be partial.
 PKBH002 | PatternKit.Generators.Bulkhead | Error | Bulkhead policy configuration is invalid.
+PKCA001 | PatternKit.Generators.CacheAside | Error | Cache-aside policy host must be partial.
+PKCA002 | PatternKit.Generators.CacheAside | Error | Cache-aside policy configuration is invalid.
+PKCA003 | PatternKit.Generators.CacheAside | Error | Cache-aside predicate signature is invalid.
+PKCA004 | PatternKit.Generators.CacheAside | Error | Cache-aside predicate declaration is duplicated.
 PKCB001 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy host must be partial.
 PKCB002 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy configuration is invalid.
 PKCB003 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate signature is invalid.

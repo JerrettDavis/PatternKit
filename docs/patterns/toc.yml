@@ -319,6 +319,8 @@
           href: cloud/circuit-breaker.md
         - name: Bulkhead
           href: cloud/bulkhead.md
+        - name: Cache-Aside
+          href: cloud/cache-aside.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:
