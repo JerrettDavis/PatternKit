@@ -94,6 +94,10 @@ PKDEC006 | PatternKit.Generators.Decorator | Error | Nested types are not suppor
 PKMAP001 | PatternKit.Generators.DataMapping | Error | Data Mapper host must be partial.
 PKMAP002 | PatternKit.Generators.DataMapping | Error | Data Mapper must declare exactly one projection in each direction.
 PKMAP003 | PatternKit.Generators.DataMapping | Error | Data Mapper projection signature is invalid.
+PKDE001 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher host must be partial.
+PKDE002 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher must declare at least one handler.
+PKDE003 | PatternKit.Generators.DomainEvents | Error | Domain Event handler signature is invalid.
+PKDE004 | PatternKit.Generators.DomainEvents | Error | Domain Event handler order is duplicated.
 PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
 PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
 PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)

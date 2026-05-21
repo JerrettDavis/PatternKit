@@ -345,6 +345,8 @@
           href: application/transaction-script.md
         - name: Service Layer
           href: application/service-layer.md
+        - name: Domain Event
+          href: application/domain-event.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

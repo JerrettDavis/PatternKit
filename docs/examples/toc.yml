@@ -97,6 +97,9 @@
 - name: Customer Service Layer Pattern
   href: customer-service-layer-pattern.md
 
+- name: Order Domain Event Pattern
+  href: order-domain-event-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 
