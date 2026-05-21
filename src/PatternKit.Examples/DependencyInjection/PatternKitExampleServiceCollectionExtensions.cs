@@ -6,6 +6,7 @@ using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
+using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
@@ -14,6 +15,7 @@ using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
+using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
@@ -117,6 +119,7 @@ public sealed record AsyncConnectionStateMachineExample(Func<string[], ValueTask
 public sealed record TemplateMethodSubclassingExample(DataProcessor Processor);
 public sealed record TemplateMethodAsyncExample(AsyncDataPipeline Pipeline);
 public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
+public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -164,7 +167,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddAsyncConnectionStateMachineExample()
             .AddTemplateMethodSubclassingExample()
             .AddTemplateMethodAsyncExample()
-            .AddInventoryRetryExample();
+            .AddInventoryRetryExample()
+            .AddFulfillmentCircuitBreakerExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -538,6 +542,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<RetryPolicy<InventoryResponse>>(),
             sp.GetRequiredService<InventoryLookupService>()));
         return services.RegisterExample<InventoryRetryExample>("Inventory Retry Policy", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentCircuitBreakerExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentCircuitBreakerDemo();
+        services.AddSingleton<FulfillmentCircuitBreakerExample>(sp => new(
+            sp.GetRequiredService<CircuitBreakerPolicy<FulfillmentResponse>>(),
+            sp.GetRequiredService<FulfillmentCircuitBreakerService>()));
+        return services.RegisterExample<FulfillmentCircuitBreakerExample>("Fulfillment Circuit Breaker", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     private static IServiceCollection RegisterExample<T>(

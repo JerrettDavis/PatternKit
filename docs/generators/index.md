@@ -82,6 +82,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | Generator | Description | Attribute |
 |---|---|---|
 | [**Retry**](retry.md) | Bounded retry policy factories for transient results and exceptions | `[GenerateRetryPolicy]` |
+| [**Circuit Breaker**](circuit-breaker.md) | Dependency isolation policy factories with open and half-open states | `[GenerateCircuitBreakerPolicy]` |
 
 ## Quick Reference
 
@@ -206,6 +207,10 @@ public static partial class OrderSaga { }
 // Retry - generated bounded retry policy
 [GenerateRetryPolicy(typeof(InventoryResponse), MaxAttempts = 3, BackoffFactor = 2)]
 public static partial class InventoryRetryPolicy { }
+
+// Circuit breaker - generated dependency isolation policy
+[GenerateCircuitBreakerPolicy(typeof(FulfillmentResponse), FailureThreshold = 2, BreakDurationMilliseconds = 30000)]
+public static partial class FulfillmentCircuitBreakerPolicy { }
 ```
 
 ## Examples

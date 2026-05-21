@@ -189,6 +189,10 @@ PKBT002 | PatternKit.Generators.Messaging | Error | Backplane topology must decl
 PKBT003 | PatternKit.Generators.Messaging | Error | Backplane request/reply declaration is invalid.
 PKBT004 | PatternKit.Generators.Messaging | Error | Backplane subscription declaration is invalid.
 PKBT005 | PatternKit.Generators.Messaging | Error | Backplane request default route is duplicated.
+PKCB001 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy host must be partial.
+PKCB002 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy configuration is invalid.
+PKCB003 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate signature is invalid.
+PKCB004 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate declaration is duplicated.
 PKAF001 | PatternKit.Generators.Factories | Error | Abstract factory host must be partial.
 PKAF002 | PatternKit.Generators.Factories | Error | Abstract factory must declare at least one product.
 PKAF003 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is invalid.
