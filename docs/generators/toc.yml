@@ -114,6 +114,9 @@
 - name: Unit of Work
   href: unit-of-work.md
 
+- name: Transaction Script
+  href: transaction-script.md
+
 - name: Visitor Generator
   href: visitor-generator.md
 
