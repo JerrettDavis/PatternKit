@@ -127,6 +127,7 @@ public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChan
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
+public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -199,6 +200,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
+            .AddOrderWireTapExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
@@ -491,6 +493,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageFilter<OrderMessageFilterCommand>>(),
             sp.GetRequiredService<OrderMessageFilterService>()));
         return services.RegisterExample<OrderMessageFilterExampleService>("Order Message Filter", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)
+    {
+        services.AddOrderWireTapDemo();
+        services.AddSingleton<OrderWireTapExampleService>(sp => new(
+            sp.GetRequiredService<WireTap<OrderWireTapEvent>>(),
+            sp.GetRequiredService<OrderWireTapService>()));
+        return services.RegisterExample<OrderWireTapExampleService>("Order Wire Tap", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)

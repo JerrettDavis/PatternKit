@@ -305,6 +305,8 @@
           href: messaging/dead-letter-channel.md
         - name: Message Filter
           href: messaging/message-filter.md
+        - name: Wire Tap
+          href: messaging/wire-tap.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Competing Consumers

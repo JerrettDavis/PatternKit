@@ -76,6 +76,9 @@
 - name: Order Message Filter
   href: order-message-filter.md
 
+- name: Order Wire Tap
+  href: order-wire-tap.md
+
 - name: Fulfillment Competing Consumers
   href: fulfillment-competing-consumers.md
 
