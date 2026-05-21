@@ -11,6 +11,7 @@ using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CacheAside;
 using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.RateLimiting;
+using PatternKit.Cloud.QueueLoadLeveling;
 using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
@@ -43,6 +44,7 @@ using PatternKit.Examples.Pricing;
 using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
+using PatternKit.Examples.QueueLoadLevelingDemo;
 using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.RetryDemo;
@@ -158,6 +160,7 @@ public sealed record LegacyOrderAntiCorruptionExample(AntiCorruptionLayer<Legacy
 public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
+public sealed record FulfillmentQueueLoadLevelingExample(QueueLoadLevelingPolicy<FulfillmentQueueResult> Policy, FulfillmentQueueLoadLevelingService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 
@@ -226,6 +229,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddInventoryRetryExample()
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
+            .AddFulfillmentQueueLoadLevelingExample()
             .AddProductCatalogCacheAsideExample()
             .AddProductSearchRateLimitingExample();
 
@@ -747,6 +751,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<BulkheadPolicy<ShippingAllocation>>(),
             sp.GetRequiredService<ShippingBulkheadService>()));
         return services.RegisterExample<ShippingBulkheadExample>("Shipping Bulkhead", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentQueueLoadLevelingExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentQueueLoadLevelingDemo();
+        services.AddSingleton<FulfillmentQueueLoadLevelingExample>(sp => new(
+            sp.GetRequiredService<QueueLoadLevelingPolicy<FulfillmentQueueResult>>(),
+            sp.GetRequiredService<FulfillmentQueueLoadLevelingService>()));
+        return services.RegisterExample<FulfillmentQueueLoadLevelingExample>("Fulfillment Queue Load Leveling", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddProductCatalogCacheAsideExample(this IServiceCollection services)

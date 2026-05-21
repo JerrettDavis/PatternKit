@@ -325,6 +325,8 @@
           href: cloud/circuit-breaker.md
         - name: Bulkhead
           href: cloud/bulkhead.md
+        - name: Queue-Based Load Leveling
+          href: cloud/queue-load-leveling.md
         - name: Cache-Aside
           href: cloud/cache-aside.md
         - name: Rate Limiting

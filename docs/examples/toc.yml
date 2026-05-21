@@ -169,6 +169,9 @@
 - name: Shipping Bulkhead
   href: shipping-bulkhead.md
 
+- name: Fulfillment Queue Load Leveling
+  href: fulfillment-queue-load-leveling.md
+
 - name: Product Catalog Cache-Aside
   href: product-catalog-cache-aside.md
 

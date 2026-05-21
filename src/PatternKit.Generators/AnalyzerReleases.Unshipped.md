@@ -108,6 +108,8 @@ PKES001 | PatternKit.Generators.EventSourcing | Error | Event Store host must be
 PKFT001 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle host must be partial.
 PKFT002 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle set must declare at least one rule.
 PKFT003 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle rule signature is invalid.
+PKQL001 | PatternKit.Generators.QueueLoadLeveling | Error | Queue Load Leveling policy host must be partial.
+PKQL002 | PatternKit.Generators.QueueLoadLeveling | Error | Queue Load Leveling policy configuration is invalid.
 PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
 PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
 PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)

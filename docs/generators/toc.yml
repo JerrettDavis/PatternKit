@@ -103,6 +103,9 @@
 - name: Rate Limiting
   href: rate-limiting.md
 
+- name: Queue Load Leveling
+  href: queue-load-leveling.md
+
 - name: Repository
   href: repository.md
 

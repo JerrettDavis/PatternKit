@@ -13,6 +13,7 @@ using PatternKit.Examples.Messaging;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.ProductionReadiness;
+using PatternKit.Examples.QueueLoadLevelingDemo;
 using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.ServiceLayerDemo;
@@ -122,6 +123,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
+        var queueLoadLeveling = provider.GetRequiredService<FulfillmentQueueLoadLevelingExample>();
         var productCacheAside = provider.GetRequiredService<ProductCatalogCacheAsideExample>();
         var productRateLimit = provider.GetRequiredService<ProductSearchRateLimitingExample>();
 
@@ -204,6 +206,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
+            ("generated queue load leveling accepts fulfillment work", queueLoadLeveling.Service.EnqueueAsync(new FulfillmentWorkItem("ORDER-QL", "central")).GetAwaiter().GetResult().Accepted),
             ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service)),
             ("generated rate limit rejects product search overflow", RateLimitRejects(productRateLimit.Service))
         ];
