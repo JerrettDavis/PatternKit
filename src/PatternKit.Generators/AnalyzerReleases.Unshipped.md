@@ -214,6 +214,9 @@ PKCB003 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predica
 PKCB004 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate declaration is duplicated.
 PKRLT001 | PatternKit.Generators.RateLimiting | Error | Rate-limit policy host must be partial.
 PKRLT002 | PatternKit.Generators.RateLimiting | Error | Rate-limit policy configuration is invalid.
+PKREP001 | PatternKit.Generators.Repository | Error | Repository host must be partial.
+PKREP002 | PatternKit.Generators.Repository | Error | Repository must declare exactly one key selector.
+PKREP003 | PatternKit.Generators.Repository | Error | Repository key selector signature is invalid.
 PKAF001 | PatternKit.Generators.Factories | Error | Abstract factory host must be partial.
 PKAF002 | PatternKit.Generators.Factories | Error | Abstract factory must declare at least one product.
 PKAF003 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is invalid.

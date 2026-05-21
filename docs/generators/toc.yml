@@ -82,6 +82,9 @@
 - name: Rate Limiting
   href: rate-limiting.md
 
+- name: Repository
+  href: repository.md
+
 - name: Retry
   href: retry.md
 

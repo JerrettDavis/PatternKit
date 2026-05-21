@@ -333,6 +333,8 @@
       items:
         - name: Anti-Corruption Layer
           href: application/anti-corruption-layer.md
+        - name: Repository
+          href: application/repository.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher
