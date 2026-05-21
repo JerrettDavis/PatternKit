@@ -303,6 +303,8 @@
           href: messaging/claim-check.md
         - name: Dead Letter Channel
           href: messaging/dead-letter-channel.md
+        - name: Message Filter
+          href: messaging/message-filter.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Competing Consumers

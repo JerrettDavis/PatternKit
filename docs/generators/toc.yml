@@ -91,6 +91,9 @@
 - name: Claim Check
   href: claim-check.md
 
+- name: Message Filter
+  href: message-filter.md
+
 - name: Competing Consumers
   href: competing-consumers.md
 

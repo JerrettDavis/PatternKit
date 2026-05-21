@@ -49,6 +49,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Claim Check | `ClaimCheck<TPayload>` | Claim Check generator |
 | Enterprise Integration | Dead Letter Channel | `DeadLetterChannel<TPayload>` | Dead Letter Channel generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
+| Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
 | Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Messaging generator |
 | Enterprise Integration | Competing Consumers | `CompetingConsumerGroup<TMessage, TResult>` | Competing Consumers generator |
 | Enterprise Integration | Pipes and Filters | `PipesAndFiltersPipeline<TContext>` | Pipes and Filters generator |

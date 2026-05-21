@@ -284,3 +284,7 @@ PKSA006 | PatternKit.Generators.Messaging | Error | Generated aggregator duplica
 PKCNS001 | PatternKit.Generators.Messaging | Error | Competing Consumers host must be partial.
 PKCNS002 | PatternKit.Generators.Messaging | Error | Competing Consumers configuration is invalid.
 PKPF001 | PatternKit.Generators.Messaging | Error | Pipes and Filters host must be partial.
+PKMF001 | PatternKit.Generators.Messaging | Error | Message filter host type must be partial.
+PKMF002 | PatternKit.Generators.Messaging | Error | Message filter must declare at least one rule.
+PKMF003 | PatternKit.Generators.Messaging | Error | Message filter rule method signature is invalid.
+PKMF004 | PatternKit.Generators.Messaging | Error | Message filter rule name or order is duplicated.
