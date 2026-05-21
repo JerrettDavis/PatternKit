@@ -305,6 +305,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["WireTap"],
             ["audit side channel", "metrics side channel", "source-generated tap factory", "DI composition"]),
         Descriptor(
+            "Fulfillment Control Bus",
+            "src/PatternKit.Examples/Messaging/FulfillmentControlBusExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/FulfillmentControlBusExampleTests.cs",
+            "docs/examples/fulfillment-control-bus.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ControlBus"],
+            ["operational command surface", "source-generated bus factory", "DI composition"]),
+        Descriptor(
             "Fulfillment Competing Consumers",
             "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",

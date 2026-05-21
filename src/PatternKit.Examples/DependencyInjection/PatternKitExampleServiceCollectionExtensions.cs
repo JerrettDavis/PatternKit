@@ -61,6 +61,7 @@ using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
+using PatternKit.Messaging.ControlBus;
 using PatternKit.Messaging.CompetingConsumers;
 using PatternKit.Messaging.PipesAndFilters;
 using PatternKit.Messaging.Transformation;
@@ -131,6 +132,7 @@ public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRun
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
+public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -206,6 +208,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageFilterExample()
             .AddOrderMessageStoreExample()
             .AddOrderWireTapExample()
+            .AddFulfillmentControlBusExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
@@ -517,6 +520,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<WireTap<OrderWireTapEvent>>(),
             sp.GetRequiredService<OrderWireTapService>()));
         return services.RegisterExample<OrderWireTapExampleService>("Order Wire Tap", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentControlBusExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentControlBusDemo();
+        services.AddSingleton<FulfillmentControlBusExampleService>(sp => new(
+            sp.GetRequiredService<ControlBus<FulfillmentControlCommand>>(),
+            sp.GetRequiredService<FulfillmentControlBusService>()));
+        return services.RegisterExample<FulfillmentControlBusExampleService>("Fulfillment Control Bus", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)

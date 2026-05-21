@@ -148,6 +148,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(MessageStoreRetentionAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateWireTapAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(WireTapHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateControlBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ControlBusCommandAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDeadLetterChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -765,6 +767,12 @@ public sealed class AbstractionsAttributeCoverageTests
             TapName = "orders-observability"
         };
         var wireTapHandler = new WireTapHandlerAttribute("audit", 12);
+        var controlBus = new GenerateControlBusAttribute(typeof(string))
+        {
+            FactoryName = "BuildControlBus",
+            BusName = "ops-control"
+        };
+        var controlBusCommand = new ControlBusCommandAttribute("pause", "pause-handler", 13);
         var claimCheck = new GenerateClaimCheckAttribute(typeof(string))
         {
             FactoryName = "BuildClaimCheck",
@@ -898,6 +906,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("orders-observability", wireTap.TapName);
         ScenarioExpect.Equal("audit", wireTapHandler.Name);
         ScenarioExpect.Equal(12, wireTapHandler.Order);
+        ScenarioExpect.Equal(typeof(string), controlBus.CommandType);
+        ScenarioExpect.Equal("BuildControlBus", controlBus.FactoryName);
+        ScenarioExpect.Equal("ops-control", controlBus.BusName);
+        ScenarioExpect.Equal("pause", controlBusCommand.CommandName);
+        ScenarioExpect.Equal("pause-handler", controlBusCommand.HandlerName);
+        ScenarioExpect.Equal(13, controlBusCommand.Order);
         ScenarioExpect.Equal(typeof(string), claimCheck.PayloadType);
         ScenarioExpect.Equal("BuildClaimCheck", claimCheck.FactoryName);
         ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
@@ -977,6 +991,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<MessageStoreRetentionAttribute>(new MessageStoreRetentionAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateWireTapAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new WireTapHandlerAttribute("", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateControlBusAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ControlBusCommandAttribute("", "handler"));
+        ScenarioExpect.Throws<ArgumentException>(() => new ControlBusCommandAttribute("pause", ""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
         ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDeadLetterChannelAttribute(null!));

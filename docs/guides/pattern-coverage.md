@@ -52,6 +52,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
 | Enterprise Integration | Message Store | `MessageStore<TPayload>` | Message Store generator |
 | Enterprise Integration | Wire Tap | `WireTap<TPayload>` | Wire Tap generator |
+| Enterprise Integration | Control Bus | `ControlBus<TCommand>` | Control Bus generator |
 | Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Messaging generator |
 | Enterprise Integration | Competing Consumers | `CompetingConsumerGroup<TMessage, TResult>` | Competing Consumers generator |
 | Enterprise Integration | Pipes and Filters | `PipesAndFiltersPipeline<TContext>` | Pipes and Filters generator |

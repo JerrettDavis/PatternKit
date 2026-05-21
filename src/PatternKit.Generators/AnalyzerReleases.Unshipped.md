@@ -300,3 +300,7 @@ PKMS001 | PatternKit.Generators.Messaging | Error | Message store type must be p
 PKMS002 | PatternKit.Generators.Messaging | Error | Message store identity signature is invalid.
 PKMS003 | PatternKit.Generators.Messaging | Error | Message store retention signature is invalid.
 PKMS004 | PatternKit.Generators.Messaging | Error | Message store hook is duplicated.
+PKCTL001 | PatternKit.Generators.Messaging | Error | Control Bus host type must be partial.
+PKCTL002 | PatternKit.Generators.Messaging | Error | Control Bus must declare at least one handler.
+PKCTL003 | PatternKit.Generators.Messaging | Error | Control Bus handler signature is invalid.
+PKCTL004 | PatternKit.Generators.Messaging | Error | Control Bus command name or order is duplicated.

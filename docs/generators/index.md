@@ -88,6 +88,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Message Filter**](message-filter.md) | Named allow-rule filters for message consumers | `[GenerateMessageFilter]` |
 | [**Message Store**](message-store.md) | Message audit, lookup, and replay store factories | `[GenerateMessageStore]` |
 | [**Wire Tap**](wire-tap.md) | Side-channel message observability factories | `[GenerateWireTap]` |
+| [**Control Bus**](control-bus.md) | Operational command bus factories for message processors | `[GenerateControlBus]` |
 | [**Recipient List**](messaging.md#generated-recipient-list) | Recipient fan-out factories | `[GenerateRecipientList]` |
 | [**Splitter / Aggregator**](messaging.md#generated-splitter-and-aggregator) | Split/rejoin message routing factories | `[GenerateSplitter]` / `[GenerateAggregator]` |
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |
