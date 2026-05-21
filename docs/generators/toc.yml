@@ -100,6 +100,9 @@
 - name: Wire Tap
   href: wire-tap.md
 
+- name: Control Bus
+  href: control-bus.md
+
 - name: Competing Consumers
   href: competing-consumers.md
 

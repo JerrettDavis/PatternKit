@@ -309,6 +309,8 @@
           href: messaging/message-store.md
         - name: Wire Tap
           href: messaging/wire-tap.md
+        - name: Control Bus
+          href: messaging/control-bus.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Competing Consumers
