@@ -46,6 +46,7 @@ using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TemplateDemo;
+using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
@@ -128,6 +129,7 @@ public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Run
 public sealed record CheckoutUnitOfWorkPatternExample(CheckoutUnitOfWorkDemoRunner Runner, CheckoutUnitOfWorkWorkflow Workflow);
 public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Runner, OrderDataMapperWorkflow Workflow);
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
+public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -188,6 +190,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddCheckoutUnitOfWorkPatternExample()
             .AddOrderDataMapperPatternExample()
             .AddOrderIdentityMapPatternExample()
+            .AddOrderTransactionScriptPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -552,6 +555,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderIdentityMapDemo();
         services.AddSingleton<OrderIdentityMapPatternExample>(sp => new(sp.GetRequiredService<OrderIdentityMapDemoRunner>()));
         return services.RegisterExample<OrderIdentityMapPatternExample>("Order Identity Map Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderTransactionScriptPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderTransactionScriptDemo();
+        services.AddSingleton<OrderTransactionScriptPatternExample>(sp => new(sp.GetRequiredService<OrderTransactionScriptDemoRunner>()));
+        return services.RegisterExample<OrderTransactionScriptPatternExample>("Order Transaction Script Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

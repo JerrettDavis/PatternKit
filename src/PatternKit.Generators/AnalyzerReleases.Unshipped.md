@@ -63,6 +63,10 @@ PKTMP004 | PatternKit.Generators.Template | Error | TemplateGenerator
 PKTMP005 | PatternKit.Generators.Template | Error | TemplateGenerator
 PKTMP007 | PatternKit.Generators.Template | Warning | TemplateGenerator
 PKTMP008 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKTS001 | PatternKit.Generators.TransactionScript | Error | Transaction Script host must be partial.
+PKTS002 | PatternKit.Generators.TransactionScript | Error | Transaction Script must declare exactly one handler.
+PKTS003 | PatternKit.Generators.TransactionScript | Error | Transaction Script handler signature is invalid.
+PKTS004 | PatternKit.Generators.TransactionScript | Error | Transaction Script validator signature is invalid.
 PKUOW001 | PatternKit.Generators.UnitOfWork | Error | Unit of work host must be partial.
 PKUOW002 | PatternKit.Generators.UnitOfWork | Error | Unit of work must declare at least one step.
 PKUOW003 | PatternKit.Generators.UnitOfWork | Error | Unit of work step signature is invalid.

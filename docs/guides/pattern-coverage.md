@@ -71,6 +71,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Unit of Work | `UnitOfWork` | Unit of Work generator |
 | Application Architecture | Data Mapper | `DataMapper<TDomain,TData>` | Data Mapper generator |
 | Application Architecture | Identity Map | `IdentityMap<TEntity,TKey>` | Identity Map generator |
+| Application Architecture | Transaction Script | `TransactionScript<TRequest,TResponse>` | Transaction Script generator |
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 
 ## Research Baselines

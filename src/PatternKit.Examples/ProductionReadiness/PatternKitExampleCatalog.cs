@@ -329,6 +329,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["IdentityMap"],
             ["request-scoped identity reuse", "source-generated map factory", "DI composition"]),
         Descriptor(
+            "Order Transaction Script Pattern",
+            "src/PatternKit.Examples/TransactionScriptDemo/OrderTransactionScriptDemo.cs",
+            "test/PatternKit.Examples.Tests/TransactionScriptDemo/OrderTransactionScriptDemoTests.cs",
+            "docs/examples/order-transaction-script-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["TransactionScript"],
+            ["explicit application workflow", "source-generated script factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

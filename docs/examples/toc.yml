@@ -91,6 +91,9 @@
 - name: Order Identity Map Pattern
   href: order-identity-map-pattern.md
 
+- name: Order Transaction Script Pattern
+  href: order-transaction-script-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

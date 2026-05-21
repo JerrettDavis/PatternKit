@@ -26,6 +26,7 @@ using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
+using PatternKit.Generators.TransactionScript;
 using PatternKit.Generators.UnitOfWork;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
@@ -170,6 +171,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(TemplateAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(TemplateStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TemplateHookAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateTransactionScriptAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(TransactionScriptHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(TransactionScriptValidatorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateUnitOfWorkAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(UnitOfWorkStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateVisitorAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, false, false }
@@ -1018,6 +1022,11 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             RollbackMethodName = "UndoPersist"
         };
+        var transactionScript = new GenerateTransactionScriptAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildSubmitOrder",
+            ScriptName = "submit-order"
+        };
 
         ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
         ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
@@ -1049,7 +1058,15 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("persist", unitOfWorkStep.Name);
         ScenarioExpect.Equal(20, unitOfWorkStep.Order);
         ScenarioExpect.Equal("UndoPersist", unitOfWorkStep.RollbackMethodName);
+        ScenarioExpect.Equal(typeof(string), transactionScript.RequestType);
+        ScenarioExpect.Equal(typeof(int), transactionScript.ResponseType);
+        ScenarioExpect.Equal("BuildSubmitOrder", transactionScript.FactoryName);
+        ScenarioExpect.Equal("submit-order", transactionScript.ScriptName);
         ScenarioExpect.Throws<ArgumentException>(() => new UnitOfWorkStepAttribute("", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<TransactionScriptHandlerAttribute>(new TransactionScriptHandlerAttribute());
+        ScenarioExpect.IsType<TransactionScriptValidatorAttribute>(new TransactionScriptValidatorAttribute());
         AssertEnumValues(StateMachineInvalidTriggerPolicy.Throw, StateMachineInvalidTriggerPolicy.Ignore, StateMachineInvalidTriggerPolicy.ReturnFalse);
         AssertEnumValues(StateMachineGuardFailurePolicy.Throw, StateMachineGuardFailurePolicy.Ignore, StateMachineGuardFailurePolicy.ReturnFalse);
         AssertEnumValues(HookPoint.BeforeAll, HookPoint.AfterAll, HookPoint.OnError);
