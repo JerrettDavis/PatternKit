@@ -50,6 +50,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Dead Letter Channel | `DeadLetterChannel<TPayload>` | Dead Letter Channel generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
 | Enterprise Integration | Recipient List | `RecipientList<TPayload>` | Messaging generator |
+| Enterprise Integration | Competing Consumers | `CompetingConsumerGroup<TMessage, TResult>` | Competing Consumers generator |
 | Enterprise Integration | Splitter | `Splitter<TIn, TOut>` | Messaging generator |
 | Enterprise Integration | Aggregator | `Aggregator<TKey, TIn, TOut>` | Messaging generator |
 | Enterprise Integration | Routing Slip | `RoutingSlip<TPayload>` | Messaging generator |

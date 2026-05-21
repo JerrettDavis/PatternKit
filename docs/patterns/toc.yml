@@ -305,6 +305,8 @@
           href: messaging/dead-letter-channel.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
+        - name: Competing Consumers
+          href: messaging/competing-consumers.md
         - name: Routing Slip
           href: messaging/routing-slip.md
         - name: Saga / Process Manager

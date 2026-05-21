@@ -281,3 +281,5 @@ PKSA003 | PatternKit.Generators.Messaging | Error | Generated splitter projectio
 PKSA004 | PatternKit.Generators.Messaging | Error | Generated aggregator host must declare correlation, completion, and projection methods.
 PKSA005 | PatternKit.Generators.Messaging | Error | Generated aggregator method signature is invalid.
 PKSA006 | PatternKit.Generators.Messaging | Error | Generated aggregator duplicate policy is invalid.
+PKCNS001 | PatternKit.Generators.Messaging | Error | Competing Consumers host must be partial.
+PKCNS002 | PatternKit.Generators.Messaging | Error | Competing Consumers configuration is invalid.

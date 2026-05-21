@@ -128,6 +128,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(TraversalChildrenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateCompetingConsumerGroupAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RoutingSlipStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSagaAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SagaStepAttribute), AttributeTargets.Method, false, false },
@@ -358,6 +359,26 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(32, policy.MaxQueueLength);
         ScenarioExpect.Equal(500, policy.QueueTimeoutMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateQueueLoadLevelingPolicyAttribute(null!));
+    }
+
+    [Scenario("Competing Consumers Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void CompetingConsumers_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var group = new GenerateCompetingConsumerGroupAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildFulfillmentConsumers",
+            GroupName = "fulfillment-consumers",
+            MaxConcurrentDeliveries = 4
+        };
+
+        ScenarioExpect.Equal(typeof(string), group.MessageType);
+        ScenarioExpect.Equal(typeof(int), group.ResultType);
+        ScenarioExpect.Equal("BuildFulfillmentConsumers", group.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment-consumers", group.GroupName);
+        ScenarioExpect.Equal(4, group.MaxConcurrentDeliveries);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCompetingConsumerGroupAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCompetingConsumerGroupAttribute(typeof(string), null!));
     }
 
     [Scenario("Circuit Breaker Attributes Expose Defaults And Configuration")]
