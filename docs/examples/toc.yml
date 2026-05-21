@@ -94,6 +94,9 @@
 - name: Order Transaction Script Pattern
   href: order-transaction-script-pattern.md
 
+- name: Customer Service Layer Pattern
+  href: customer-service-layer-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

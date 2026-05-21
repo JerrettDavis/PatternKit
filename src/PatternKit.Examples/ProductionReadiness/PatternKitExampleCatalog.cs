@@ -337,6 +337,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["TransactionScript"],
             ["explicit application workflow", "source-generated script factory", "DI composition"]),
         Descriptor(
+            "Customer Service Layer Pattern",
+            "src/PatternKit.Examples/ServiceLayerDemo/CustomerServiceLayerDemo.cs",
+            "test/PatternKit.Examples.Tests/ServiceLayerDemo/CustomerServiceLayerDemoTests.cs",
+            "docs/examples/customer-service-layer-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ServiceLayer"],
+            ["application operation boundary", "source-generated operation factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

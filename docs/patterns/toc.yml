@@ -343,6 +343,8 @@
           href: application/identity-map.md
         - name: Transaction Script
           href: application/transaction-script.md
+        - name: Service Layer
+          href: application/service-layer.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

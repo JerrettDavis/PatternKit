@@ -22,6 +22,7 @@ using PatternKit.Generators.Proxy;
 using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
+using PatternKit.Generators.ServiceLayer;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
@@ -174,6 +175,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateTransactionScriptAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(TransactionScriptHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(TransactionScriptValidatorAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateServiceLayerOperationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ServiceLayerHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(ServiceLayerRuleAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateUnitOfWorkAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(UnitOfWorkStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateVisitorAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, false, false }
@@ -1027,6 +1031,12 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildSubmitOrder",
             ScriptName = "submit-order"
         };
+        var serviceLayer = new GenerateServiceLayerOperationAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildRegisterCustomer",
+            OperationName = "register-customer"
+        };
+        var serviceLayerRule = new ServiceLayerRuleAttribute("email", "Email is required.", 10);
 
         ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
         ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
@@ -1062,11 +1072,23 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(int), transactionScript.ResponseType);
         ScenarioExpect.Equal("BuildSubmitOrder", transactionScript.FactoryName);
         ScenarioExpect.Equal("submit-order", transactionScript.ScriptName);
+        ScenarioExpect.Equal(typeof(string), serviceLayer.RequestType);
+        ScenarioExpect.Equal(typeof(int), serviceLayer.ResponseType);
+        ScenarioExpect.Equal("BuildRegisterCustomer", serviceLayer.FactoryName);
+        ScenarioExpect.Equal("register-customer", serviceLayer.OperationName);
+        ScenarioExpect.Equal("email", serviceLayerRule.Code);
+        ScenarioExpect.Equal("Email is required.", serviceLayerRule.Message);
+        ScenarioExpect.Equal(10, serviceLayerRule.Order);
         ScenarioExpect.Throws<ArgumentException>(() => new UnitOfWorkStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateServiceLayerOperationAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateServiceLayerOperationAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("", "message", 1));
+        ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("code", "", 1));
         ScenarioExpect.IsType<TransactionScriptHandlerAttribute>(new TransactionScriptHandlerAttribute());
         ScenarioExpect.IsType<TransactionScriptValidatorAttribute>(new TransactionScriptValidatorAttribute());
+        ScenarioExpect.IsType<ServiceLayerHandlerAttribute>(new ServiceLayerHandlerAttribute());
         AssertEnumValues(StateMachineInvalidTriggerPolicy.Throw, StateMachineInvalidTriggerPolicy.Ignore, StateMachineInvalidTriggerPolicy.ReturnFalse);
         AssertEnumValues(StateMachineGuardFailurePolicy.Throw, StateMachineGuardFailurePolicy.Ignore, StateMachineGuardFailurePolicy.ReturnFalse);
         AssertEnumValues(HookPoint.BeforeAll, HookPoint.AfterAll, HookPoint.OnError);
