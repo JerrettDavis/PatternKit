@@ -174,6 +174,9 @@ PKCR002 | PatternKit.Generators.Messaging | Error | Content router must declare 
 PKCR003 | PatternKit.Generators.Messaging | Error | Content route handler or predicate signature is invalid.
 PKCR004 | PatternKit.Generators.Messaging | Error | Content router default handler signature is invalid.
 PKCR005 | PatternKit.Generators.Messaging | Error | Content router route name or order is duplicated.
+PKCC001 | PatternKit.Generators.Messaging | Error | Claim check host must be partial.
+PKCC002 | PatternKit.Generators.Messaging | Error | Claim check must declare exactly one store factory.
+PKCC003 | PatternKit.Generators.Messaging | Error | Claim check store factory signature is invalid.
 PKME001 | PatternKit.Generators.Messaging | Error | Message envelope type must be partial.
 PKME002 | PatternKit.Generators.Messaging | Error | Message envelope must declare at least one required header.
 PKME003 | PatternKit.Generators.Messaging | Error | Message envelope header configuration is invalid.

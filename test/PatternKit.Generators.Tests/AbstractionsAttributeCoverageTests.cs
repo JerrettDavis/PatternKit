@@ -108,6 +108,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateContentRouterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ContentRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSplitterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SplitterProjectionAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAggregatorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -585,6 +587,13 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildRouter"
         };
         var route = new ContentRouteAttribute("priority", 4, "IsPriority");
+        var claimCheck = new GenerateClaimCheckAttribute(typeof(string))
+        {
+            FactoryName = "BuildClaimCheck",
+            ClaimCheckName = "documents",
+            StoreName = "blob-store",
+            ClaimIdPrefix = "doc"
+        };
         var recipientList = new GenerateRecipientListAttribute(typeof(string))
         {
             FactoryName = "BuildRecipients",
@@ -689,6 +698,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("priority", route.Name);
         ScenarioExpect.Equal(4, route.Order);
         ScenarioExpect.Equal("IsPriority", route.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), claimCheck.PayloadType);
+        ScenarioExpect.Equal("BuildClaimCheck", claimCheck.FactoryName);
+        ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
+        ScenarioExpect.Equal("blob-store", claimCheck.StoreName);
+        ScenarioExpect.Equal("doc", claimCheck.ClaimIdPrefix);
         ScenarioExpect.Equal(typeof(string), recipientList.PayloadType);
         ScenarioExpect.Equal("BuildRecipients", recipientList.FactoryName);
         ScenarioExpect.Equal("BuildRecipientsAsync", recipientList.AsyncFactoryName);
@@ -750,6 +764,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
+        ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRecipientListAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("name", 1, ""));

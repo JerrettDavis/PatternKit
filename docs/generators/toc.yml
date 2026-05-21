@@ -67,6 +67,9 @@
 - name: Message Translator
   href: message-translator.md
 
+- name: Claim Check
+  href: claim-check.md
+
 - name: Prototype
   href: prototype.md
 

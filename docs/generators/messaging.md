@@ -1,10 +1,11 @@
 # Messaging Generators
 
-PatternKit includes eleven messaging-oriented source generators:
+PatternKit includes twelve messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageTranslatorAttribute> for partner and transport message normalization.
+- <xref:PatternKit.Generators.Messaging.GenerateClaimCheckAttribute> for external payload storage references.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
 - <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute> and <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute> for split/rejoin routing.
@@ -82,6 +83,27 @@ Example source:
 
 - `src/PatternKit.Examples/Messaging/PartnerEventTranslatorExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/PartnerEventTranslatorExampleTests.cs`
+
+## Generated Claim Check
+
+`[GenerateClaimCheck]` creates a `ClaimCheck<TPayload>` factory with a pluggable payload store:
+
+```csharp
+[GenerateClaimCheck(typeof(LargeOrderDocument), StoreName = "document-archive")]
+public static partial class LargeDocumentClaims
+{
+    [ClaimCheckStoreFactory]
+    private static IClaimCheckStore<LargeOrderDocument> CreateStore()
+        => new InMemoryClaimCheckStore<LargeOrderDocument>();
+}
+```
+
+See [Claim Check Generator](claim-check.md) for diagnostics and examples.
+
+Example source:
+
+- `src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs`
 
 ## Generated Content Router
 

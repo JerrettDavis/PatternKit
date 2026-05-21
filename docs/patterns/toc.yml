@@ -299,6 +299,8 @@
           href: messaging/message-envelope.md
         - name: Message Translator
           href: messaging/message-translator.md
+        - name: Claim Check
+          href: messaging/claim-check.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Routing Slip
