@@ -55,6 +55,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Circuit Breaker",
         "Bulkhead",
         "Cache-Aside",
+        "Rate Limiting",
         "CQRS",
         "Specification"
     ];
@@ -99,7 +100,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             {
                 ScenarioExpect.Equal(10, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
-                ScenarioExpect.Equal(4, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
+                ScenarioExpect.Equal(5, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(2, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();

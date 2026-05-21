@@ -423,7 +423,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/product-catalog-cache-aside.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["Cache-Aside"],
-            ["read-through cache miss handling", "source-generated policy factory", "DI composition"])
+            ["read-through cache miss handling", "source-generated policy factory", "DI composition"]),
+        Descriptor(
+            "Product Search Rate Limiting",
+            "src/PatternKit.Examples/RateLimitingDemo/ProductSearchRateLimitingDemo.cs",
+            "test/PatternKit.Examples.Tests/RateLimitingDemo/ProductSearchRateLimitingDemoTests.cs",
+            "docs/examples/product-search-rate-limiting.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Rate Limiting"],
+            ["tenant partitioning", "source-generated policy factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

@@ -17,6 +17,7 @@ using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
+using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Retry;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
@@ -129,6 +130,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(PrototypeStrategyAttribute), AttributeTargets.Property | AttributeTargets.Field, false, false },
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateRateLimitPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRetryPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RetryResultPredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(RetryExceptionPredicateAttribute), AttributeTargets.Method, false, false },
@@ -181,6 +183,26 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(250, cacheAside.TimeToLiveMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCacheAsidePolicyAttribute(null!));
         ScenarioExpect.IsType<CacheAsidePredicateAttribute>(new CacheAsidePredicateAttribute());
+    }
+
+    [Scenario("Rate Limiting Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void RateLimiting_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var rateLimit = new GenerateRateLimitPolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildSearchLimit",
+            PolicyName = "product-search",
+            PermitLimit = 10,
+            WindowMilliseconds = 1000
+        };
+
+        ScenarioExpect.Equal(typeof(string), rateLimit.ResultType);
+        ScenarioExpect.Equal("BuildSearchLimit", rateLimit.FactoryMethodName);
+        ScenarioExpect.Equal("product-search", rateLimit.PolicyName);
+        ScenarioExpect.Equal(10, rateLimit.PermitLimit);
+        ScenarioExpect.Equal(1000, rateLimit.WindowMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRateLimitPolicyAttribute(null!));
     }
 
     [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]

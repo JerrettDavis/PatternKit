@@ -123,3 +123,6 @@
 
 - name: Product Catalog Cache-Aside
   href: product-catalog-cache-aside.md
+
+- name: Product Search Rate Limiting
+  href: product-search-rate-limiting.md
