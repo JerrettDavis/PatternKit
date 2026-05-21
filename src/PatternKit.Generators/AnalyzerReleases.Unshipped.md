@@ -252,6 +252,9 @@ PKSPEC001 | PatternKit.Generators.Specification | Error | Specification registry
 PKSPEC002 | PatternKit.Generators.Specification | Error | Specification registry must declare at least one rule.
 PKSPEC003 | PatternKit.Generators.Specification | Error | Specification rule signature is invalid.
 PKSPEC004 | PatternKit.Generators.Specification | Error | Specification rule declaration is duplicated.
+PKTDG001 | PatternKit.Generators.TableDataGateway | Error | Table Data Gateway host must be partial.
+PKTDG002 | PatternKit.Generators.TableDataGateway | Error | Table Data Gateway must declare exactly one key selector.
+PKTDG003 | PatternKit.Generators.TableDataGateway | Error | Table Data Gateway key selector signature is invalid.
 PKRET001 | PatternKit.Generators.Retry | Error | Retry policy host must be partial.
 PKRET002 | PatternKit.Generators.Retry | Error | Retry policy configuration is invalid.
 PKRET003 | PatternKit.Generators.Retry | Error | Retry predicate signature is invalid.

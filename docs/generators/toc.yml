@@ -108,6 +108,9 @@
 - name: State Machine
   href: state-machine.md
 
+- name: Table Data Gateway
+  href: table-data-gateway.md
+
 - name: Strategy
   href: strategy.md
 

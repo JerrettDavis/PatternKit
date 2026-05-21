@@ -347,6 +347,8 @@
           href: application/service-layer.md
         - name: Domain Event
           href: application/domain-event.md
+        - name: Table Data Gateway
+          href: application/table-data-gateway.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

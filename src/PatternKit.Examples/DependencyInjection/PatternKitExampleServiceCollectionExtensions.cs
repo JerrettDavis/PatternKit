@@ -47,6 +47,7 @@ using PatternKit.Examples.Singleton;
 using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
+using PatternKit.Examples.TableDataGatewayDemo;
 using PatternKit.Examples.TemplateDemo;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
@@ -134,6 +135,7 @@ public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner R
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
+public sealed record OrderTableDataGatewayPatternExample(OrderTableDataGatewayDemoRunner Runner);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -197,6 +199,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
             .AddOrderDomainEventPatternExample()
+            .AddOrderTableDataGatewayPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -582,6 +585,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderDomainEventDemo();
         services.AddSingleton<OrderDomainEventPatternExample>(sp => new(sp.GetRequiredService<OrderDomainEventDemoRunner>()));
         return services.RegisterExample<OrderDomainEventPatternExample>("Order Domain Event Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderTableDataGatewayPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderTableDataGatewayDemo();
+        services.AddSingleton<OrderTableDataGatewayPatternExample>(sp => new(sp.GetRequiredService<OrderTableDataGatewayDemoRunner>()));
+        return services.RegisterExample<OrderTableDataGatewayPatternExample>("Order Table Data Gateway Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

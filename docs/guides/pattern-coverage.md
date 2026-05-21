@@ -74,6 +74,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Transaction Script | `TransactionScript<TRequest,TResponse>` | Transaction Script generator |
 | Application Architecture | Service Layer | `IServiceOperation<TRequest,TResponse>` and `ServiceLayerOperation<TRequest,TResponse>` | Service Layer generator |
 | Application Architecture | Domain Event | `IDomainEvent` and `DomainEventDispatcher<TEventBase>` | Domain Event generator |
+| Application Architecture | Table Data Gateway | `ITableDataGateway<TRow,TKey>` and `InMemoryTableDataGateway<TRow,TKey>` | Table Data Gateway generator |
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 
 ## Research Baselines

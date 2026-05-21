@@ -100,6 +100,9 @@
 - name: Order Domain Event Pattern
   href: order-domain-event-pattern.md
 
+- name: Order Table Data Gateway Pattern
+  href: order-table-data-gateway-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

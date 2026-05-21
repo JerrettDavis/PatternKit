@@ -27,6 +27,7 @@ using PatternKit.Generators.ServiceLayer;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
+using PatternKit.Generators.TableDataGateway;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.TransactionScript;
 using PatternKit.Generators.UnitOfWork;
@@ -172,6 +173,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(StateGuardAttribute), AttributeTargets.Method, true, false },
         { typeof(StateEntryAttribute), AttributeTargets.Method, true, false },
         { typeof(StateExitAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateTableDataGatewayAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(TableGatewayKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(TemplateAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(TemplateStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TemplateHookAttribute), AttributeTargets.Method, false, false },
@@ -1046,6 +1049,11 @@ public sealed class AbstractionsAttributeCoverageTests
             DispatcherName = "order-events"
         };
         var domainEventHandler = new DomainEventHandlerAttribute(typeof(string), 20);
+        var tableGateway = new GenerateTableDataGatewayAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildOrderTable",
+            TableName = "orders"
+        };
 
         ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
         ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
@@ -1093,6 +1101,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("order-events", domainEvents.DispatcherName);
         ScenarioExpect.Equal(typeof(string), domainEventHandler.EventType);
         ScenarioExpect.Equal(20, domainEventHandler.Order);
+        ScenarioExpect.Equal(typeof(string), tableGateway.RowType);
+        ScenarioExpect.Equal(typeof(int), tableGateway.KeyType);
+        ScenarioExpect.Equal("BuildOrderTable", tableGateway.FactoryName);
+        ScenarioExpect.Equal("orders", tableGateway.TableName);
         ScenarioExpect.Throws<ArgumentException>(() => new UnitOfWorkStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(typeof(string), null!));
@@ -1102,6 +1114,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("code", "", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainEventDispatcherAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new DomainEventHandlerAttribute(null!, 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<TableGatewayKeySelectorAttribute>(new TableGatewayKeySelectorAttribute());
         ScenarioExpect.IsType<TransactionScriptHandlerAttribute>(new TransactionScriptHandlerAttribute());
         ScenarioExpect.IsType<TransactionScriptValidatorAttribute>(new TransactionScriptValidatorAttribute());
         ScenarioExpect.IsType<ServiceLayerHandlerAttribute>(new ServiceLayerHandlerAttribute());
