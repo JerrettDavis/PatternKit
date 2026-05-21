@@ -377,6 +377,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["FeatureToggle"],
             ["contextual rollout rules", "source-generated toggle set factory", "DI composition"]),
         Descriptor(
+            "Order Audit Log Pattern",
+            "src/PatternKit.Examples/AuditLogDemo/OrderAuditLogDemo.cs",
+            "test/PatternKit.Examples.Tests/AuditLogDemo/OrderAuditLogDemoTests.cs",
+            "docs/examples/order-audit-log-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["AuditLog"],
+            ["append-only order audit trail", "source-generated audit log factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

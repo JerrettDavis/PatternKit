@@ -61,6 +61,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Specification**](specification.md) | Named business-rule registries | `[GenerateSpecificationRegistry]` |
 | [**Repository**](repository.md) | In-memory repository factories from key selectors | `[GenerateRepository]` |
 | [**Anti-Corruption Layer**](anti-corruption-layer.md) | External-to-domain translation boundaries with validation | `[GenerateAntiCorruptionLayer]` |
+| [**Audit Log**](audit-log.md) | Append-only audit log factories from key selectors | `[GenerateAuditLog]` |
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
 | [**Identity Map**](identity-map.md) | Scoped object identity caches from key selectors | `[GenerateIdentityMap]` |

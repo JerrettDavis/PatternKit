@@ -36,6 +36,7 @@ using PatternKit.Generators.UnitOfWork;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
+using PatternKit.Generators.AuditLog;
 using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
@@ -59,6 +60,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AntiCorruptionTranslatorAttribute), AttributeTargets.Method, false, false },
         { typeof(AntiCorruptionExternalRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(AntiCorruptionDomainRuleAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateAuditLogAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AuditLogKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAdapterAttribute), AttributeTargets.Class, true, false },
         { typeof(AdapterMapAttribute), AttributeTargets.Method, false, false },
         { typeof(BridgeImplementorAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
@@ -1068,6 +1071,11 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             DefaultEnabled = true
         };
+        var auditLog = new GenerateAuditLogAttribute(typeof(string), typeof(Guid))
+        {
+            FactoryName = "BuildOrderAudit",
+            LogName = "order-audit"
+        };
         var tableGateway = new GenerateTableDataGatewayAttribute(typeof(string), typeof(int))
         {
             FactoryName = "BuildOrderTable",
@@ -1129,6 +1137,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("checkout", featureToggles.SetName);
         ScenarioExpect.Equal("new-checkout", featureToggleRule.Name);
         ScenarioExpect.True(featureToggleRule.DefaultEnabled);
+        ScenarioExpect.Equal(typeof(string), auditLog.EntryType);
+        ScenarioExpect.Equal(typeof(Guid), auditLog.KeyType);
+        ScenarioExpect.Equal("BuildOrderAudit", auditLog.FactoryName);
+        ScenarioExpect.Equal("order-audit", auditLog.LogName);
         ScenarioExpect.Equal(typeof(string), tableGateway.RowType);
         ScenarioExpect.Equal(typeof(int), tableGateway.KeyType);
         ScenarioExpect.Equal("BuildOrderTable", tableGateway.FactoryName);
@@ -1146,9 +1158,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventStoreAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateFeatureToggleSetAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new FeatureToggleRuleAttribute(""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAuditLogAttribute(null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAuditLogAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(typeof(string), null!));
         ScenarioExpect.IsType<TableGatewayKeySelectorAttribute>(new TableGatewayKeySelectorAttribute());
+        ScenarioExpect.IsType<AuditLogKeySelectorAttribute>(new AuditLogKeySelectorAttribute());
         ScenarioExpect.IsType<TransactionScriptHandlerAttribute>(new TransactionScriptHandlerAttribute());
         ScenarioExpect.IsType<TransactionScriptValidatorAttribute>(new TransactionScriptValidatorAttribute());
         ScenarioExpect.IsType<ServiceLayerHandlerAttribute>(new ServiceLayerHandlerAttribute());

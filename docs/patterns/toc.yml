@@ -353,6 +353,8 @@
           href: application/event-sourcing.md
         - name: Feature Toggle
           href: application/feature-toggle.md
+        - name: Audit Log
+          href: application/audit-log.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher
