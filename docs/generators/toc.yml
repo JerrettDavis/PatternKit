@@ -70,6 +70,9 @@
 - name: Claim Check
   href: claim-check.md
 
+- name: Dead Letter Channel
+  href: dead-letter-channel.md
+
 - name: Prototype
   href: prototype.md
 

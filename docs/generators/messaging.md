@@ -1,11 +1,12 @@
 # Messaging Generators
 
-PatternKit includes twelve messaging-oriented source generators:
+PatternKit includes thirteen messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageTranslatorAttribute> for partner and transport message normalization.
 - <xref:PatternKit.Generators.Messaging.GenerateClaimCheckAttribute> for external payload storage references.
+- <xref:PatternKit.Generators.Messaging.GenerateDeadLetterChannelAttribute> for failed-message capture and replay handoff.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
 - <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute> and <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute> for split/rejoin routing.
@@ -104,6 +105,27 @@ Example source:
 
 - `src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs`
+
+## Generated Dead Letter Channel
+
+`[GenerateDeadLetterChannel]` creates a `DeadLetterChannel<TPayload>` factory with a pluggable dead-letter store:
+
+```csharp
+[GenerateDeadLetterChannel(typeof(FulfillmentCommand), ChannelName = "fulfillment-dead-letter")]
+public static partial class FulfillmentDeadLetters
+{
+    [DeadLetterStoreFactory]
+    private static IDeadLetterStore<FulfillmentCommand> CreateStore()
+        => new InMemoryDeadLetterStore<FulfillmentCommand>();
+}
+```
+
+See [Dead Letter Channel Generator](dead-letter-channel.md) for diagnostics and examples.
+
+Example source:
+
+- `src/PatternKit.Examples/Messaging/FulfillmentDeadLetterChannelExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/FulfillmentDeadLetterChannelExampleTests.cs`
 
 ## Generated Content Router
 
@@ -346,6 +368,8 @@ Example source:
 | --- | --- | --- |
 | `PKDSP001`-`PKDSP004` | Dispatcher | Invalid dispatcher configuration or handler registration. |
 | `PKME001`-`PKME004` | Message Envelope | Non-partial host, missing headers, invalid header configuration, or duplicate names. |
+| `PKCC001`-`PKCC003` | Claim Check | Non-partial host, missing store factory, or invalid store factory signature. |
+| `PKDL001`-`PKDL003` | Dead Letter Channel | Non-partial host, missing store factory, or invalid store factory signature. |
 | `PKCR001`-`PKCR005` | Content Router | Non-partial host, missing routes, invalid signatures, duplicate defaults, or duplicate route identity. |
 | `PKRL001`-`PKRL004` | Recipient List | Non-partial host, missing recipients, invalid signatures, or duplicate recipient identity. |
 | `PKSA001`-`PKSA006` | Splitter / Aggregator | Non-partial host, missing contract methods, invalid signatures, or invalid duplicate policy. |
@@ -358,6 +382,7 @@ Example source:
 ## Related Runtime Patterns
 
 - [Message Envelope and Context](../patterns/messaging/message-envelope.md)
+- [Dead Letter Channel](../patterns/messaging/dead-letter-channel.md)
 - [Enterprise Message Routing](../patterns/messaging/message-routing.md)
 - [Routing Slip](../patterns/messaging/routing-slip.md)
 - [Saga / Process Manager](../patterns/messaging/saga.md)

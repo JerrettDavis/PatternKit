@@ -110,6 +110,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateDeadLetterChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(DeadLetterStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSplitterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SplitterProjectionAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAggregatorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -594,6 +596,14 @@ public sealed class AbstractionsAttributeCoverageTests
             StoreName = "blob-store",
             ClaimIdPrefix = "doc"
         };
+        var deadLetter = new GenerateDeadLetterChannelAttribute(typeof(string))
+        {
+            FactoryName = "BuildDeadLetters",
+            ChannelName = "checkout-dead",
+            Source = "checkout.fulfillment",
+            IdPrefix = "checkout",
+            IncludeExceptionDetails = false
+        };
         var recipientList = new GenerateRecipientListAttribute(typeof(string))
         {
             FactoryName = "BuildRecipients",
@@ -703,6 +713,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
         ScenarioExpect.Equal("blob-store", claimCheck.StoreName);
         ScenarioExpect.Equal("doc", claimCheck.ClaimIdPrefix);
+        ScenarioExpect.Equal(typeof(string), deadLetter.PayloadType);
+        ScenarioExpect.Equal("BuildDeadLetters", deadLetter.FactoryName);
+        ScenarioExpect.Equal("checkout-dead", deadLetter.ChannelName);
+        ScenarioExpect.Equal("checkout.fulfillment", deadLetter.Source);
+        ScenarioExpect.Equal("checkout", deadLetter.IdPrefix);
+        ScenarioExpect.False(deadLetter.IncludeExceptionDetails);
         ScenarioExpect.Equal(typeof(string), recipientList.PayloadType);
         ScenarioExpect.Equal("BuildRecipients", recipientList.FactoryName);
         ScenarioExpect.Equal("BuildRecipientsAsync", recipientList.AsyncFactoryName);
@@ -766,6 +782,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
         ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDeadLetterChannelAttribute(null!));
+        ScenarioExpect.IsType<DeadLetterStoreFactoryAttribute>(new DeadLetterStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRecipientListAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new RecipientListRecipientAttribute("name", 1, ""));

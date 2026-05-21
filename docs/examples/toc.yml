@@ -64,6 +64,9 @@
 - name: Generated Claim Check
   href: generated-claim-check.md
 
+- name: Generated Dead Letter Channel
+  href: generated-dead-letter-channel.md
+
 - name: Generated Recipient List
   href: generated-recipient-list.md
 

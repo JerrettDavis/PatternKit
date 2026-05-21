@@ -177,6 +177,9 @@ PKCR005 | PatternKit.Generators.Messaging | Error | Content router route name or
 PKCC001 | PatternKit.Generators.Messaging | Error | Claim check host must be partial.
 PKCC002 | PatternKit.Generators.Messaging | Error | Claim check must declare exactly one store factory.
 PKCC003 | PatternKit.Generators.Messaging | Error | Claim check store factory signature is invalid.
+PKDL001 | PatternKit.Generators.Messaging | Error | Dead-letter channel host must be partial.
+PKDL002 | PatternKit.Generators.Messaging | Error | Dead-letter channel must declare exactly one store factory.
+PKDL003 | PatternKit.Generators.Messaging | Error | Dead-letter store factory signature is invalid.
 PKME001 | PatternKit.Generators.Messaging | Error | Message envelope type must be partial.
 PKME002 | PatternKit.Generators.Messaging | Error | Message envelope must declare at least one required header.
 PKME003 | PatternKit.Generators.Messaging | Error | Message envelope header configuration is invalid.
