@@ -73,6 +73,9 @@
 - name: Identity Map
   href: identity-map.md
 
+- name: Materialized View
+  href: materialized-view.md
+
 - name: Iterator
   href: iterator.md
 

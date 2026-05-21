@@ -78,6 +78,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Event Sourcing | `IEventStore<TEvent,TStreamId>` and `InMemoryEventStore<TEvent,TStreamId>` | Event Sourcing generator |
 | Application Architecture | Feature Toggle | `IFeatureToggleSet<TContext>` and `FeatureToggleSet<TContext>` | Feature Toggle generator |
 | Application Architecture | Audit Log | `IAuditLog<TEntry,TKey>` and `InMemoryAuditLog<TEntry,TKey>` | Audit Log generator |
+| Application Architecture | Materialized View | `IMaterializedView<TState,TEvent>` and `MaterializedView<TState,TEvent>` | Materialized View generator |
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 
 ## Research Baselines

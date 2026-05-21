@@ -112,6 +112,9 @@
 - name: Order Audit Log Pattern
   href: order-audit-log-pattern.md
 
+- name: Order Materialized View Pattern
+  href: order-materialized-view-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

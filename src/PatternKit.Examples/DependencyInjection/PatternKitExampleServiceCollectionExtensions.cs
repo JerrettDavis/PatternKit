@@ -33,6 +33,7 @@ using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.IdentityMapDemo;
+using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
 using PatternKit.Examples.Messaging;
 using PatternKit.Examples.ObserverDemo;
@@ -142,6 +143,7 @@ public sealed record OrderTableDataGatewayPatternExample(OrderTableDataGatewayDe
 public sealed record OrderEventSourcingPatternExample(OrderEventSourcingDemoRunner Runner);
 public sealed record CheckoutFeatureTogglePatternExample(CheckoutFeatureToggleDemoRunner Runner);
 public sealed record OrderAuditLogPatternExample(OrderAuditLogDemoRunner Runner);
+public sealed record OrderMaterializedViewPatternExample(OrderMaterializedViewDemoRunner Runner, OrderMaterializedViewWorkflow Workflow);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -209,6 +211,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderEventSourcingPatternExample()
             .AddCheckoutFeatureTogglePatternExample()
             .AddOrderAuditLogPatternExample()
+            .AddOrderMaterializedViewPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -622,6 +625,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderAuditLogDemo();
         services.AddSingleton<OrderAuditLogPatternExample>(sp => new(sp.GetRequiredService<OrderAuditLogDemoRunner>()));
         return services.RegisterExample<OrderAuditLogPatternExample>("Order Audit Log Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderMaterializedViewPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderMaterializedViewDemo();
+        services.AddSingleton<OrderMaterializedViewPatternExample>(sp => new(
+            sp.GetRequiredService<OrderMaterializedViewDemoRunner>(),
+            sp.GetRequiredService<OrderMaterializedViewWorkflow>()));
+        return services.RegisterExample<OrderMaterializedViewPatternExample>("Order Materialized View Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

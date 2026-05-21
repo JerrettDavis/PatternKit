@@ -385,6 +385,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["AuditLog"],
             ["append-only order audit trail", "source-generated audit log factory", "DI composition"]),
         Descriptor(
+            "Order Materialized View Pattern",
+            "src/PatternKit.Examples/MaterializedViewDemo/OrderMaterializedViewDemo.cs",
+            "test/PatternKit.Examples.Tests/MaterializedViewDemo/OrderMaterializedViewDemoTests.cs",
+            "docs/examples/order-materialized-view-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MaterializedView"],
+            ["event-sourced read model", "source-generated projection factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

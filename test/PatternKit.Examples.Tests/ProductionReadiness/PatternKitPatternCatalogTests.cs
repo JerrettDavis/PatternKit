@@ -72,6 +72,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Event Sourcing",
         "Feature Toggle",
         "Audit Log",
+        "Materialized View",
         "Anti-Corruption Layer"
     ];
 
@@ -116,7 +117,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(13, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(5, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
-                ScenarioExpect.Equal(14, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(15, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
