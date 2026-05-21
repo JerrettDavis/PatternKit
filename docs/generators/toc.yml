@@ -37,6 +37,9 @@
 - name: Decorator
   href: decorator.md
 
+- name: Data Mapper
+  href: data-mapper.md
+
 - name: Dispatcher
   href: dispatcher.md
 

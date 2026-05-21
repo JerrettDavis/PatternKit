@@ -4,6 +4,7 @@ using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
+using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.Messaging;
 using PatternKit.Examples.ObserverDemo;
@@ -102,6 +103,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var specifications = provider.GetRequiredService<LoanApprovalSpecificationsExample>();
         var orderRepository = provider.GetRequiredService<OrderRepositoryPatternExample>();
         var unitOfWork = provider.GetRequiredService<CheckoutUnitOfWorkPatternExample>();
+        var dataMapper = provider.GetRequiredService<OrderDataMapperPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -174,6 +176,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved),
             ("repository example rejects duplicate order keys", orderRepository.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().DuplicateRejected),
             ("unit of work example commits checkout steps", unitOfWork.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().Committed),
+            ("data mapper example rehydrates stored orders", dataMapper.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().LoadedCustomerId == "customer-1"),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),

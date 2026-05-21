@@ -82,6 +82,9 @@ PKDEC003 | PatternKit.Generators.Decorator | Error | Name conflict for generated
 PKDEC004 | PatternKit.Generators.Decorator | Warning | Member is not accessible for decorator generation
 PKDEC005 | PatternKit.Generators.Decorator | Error | Generic contracts are not supported for decorator generation
 PKDEC006 | PatternKit.Generators.Decorator | Error | Nested types are not supported for decorator generation
+PKMAP001 | PatternKit.Generators.DataMapping | Error | Data Mapper host must be partial.
+PKMAP002 | PatternKit.Generators.DataMapping | Error | Data Mapper must declare exactly one projection in each direction.
+PKMAP003 | PatternKit.Generators.DataMapping | Error | Data Mapper projection signature is invalid.
 PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
 PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
 PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)
