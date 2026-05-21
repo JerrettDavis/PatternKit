@@ -6,6 +6,7 @@ using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DependencyInjection;
+using PatternKit.Examples.IdentityMapDemo;
 using PatternKit.Examples.Messaging;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
@@ -104,6 +105,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var orderRepository = provider.GetRequiredService<OrderRepositoryPatternExample>();
         var unitOfWork = provider.GetRequiredService<CheckoutUnitOfWorkPatternExample>();
         var dataMapper = provider.GetRequiredService<OrderDataMapperPatternExample>();
+        var identityMap = provider.GetRequiredService<OrderIdentityMapPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -177,6 +179,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("repository example rejects duplicate order keys", orderRepository.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().DuplicateRejected),
             ("unit of work example commits checkout steps", unitOfWork.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().Committed),
             ("data mapper example rehydrates stored orders", dataMapper.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().LoadedCustomerId == "customer-1"),
+            ("identity map example reuses loaded orders", identityMap.Runner.RunFluent().ReusedInstance),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),

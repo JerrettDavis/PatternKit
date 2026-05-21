@@ -232,6 +232,9 @@ PKINT001 | PatternKit.Generators.Interpreter | Error | Interpreter host must be 
 PKINT002 | PatternKit.Generators.Interpreter | Error | Interpreter must declare at least one rule.
 PKINT003 | PatternKit.Generators.Interpreter | Error | Interpreter rule signature is invalid.
 PKINT004 | PatternKit.Generators.Interpreter | Error | Interpreter rule declaration is duplicated.
+PKIM001 | PatternKit.Generators.IdentityMap | Error | Identity Map host must be partial.
+PKIM002 | PatternKit.Generators.IdentityMap | Error | Identity Map must declare exactly one key selector.
+PKIM003 | PatternKit.Generators.IdentityMap | Error | Identity Map key selector signature is invalid.
 PKSPEC001 | PatternKit.Generators.Specification | Error | Specification registry host must be partial.
 PKSPEC002 | PatternKit.Generators.Specification | Error | Specification registry must declare at least one rule.
 PKSPEC003 | PatternKit.Generators.Specification | Error | Specification rule signature is invalid.

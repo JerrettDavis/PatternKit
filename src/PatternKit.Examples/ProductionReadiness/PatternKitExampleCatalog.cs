@@ -321,6 +321,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["DataMapper"],
             ["domain/data isolation", "source-generated mapper factory", "DI composition"]),
         Descriptor(
+            "Order Identity Map Pattern",
+            "src/PatternKit.Examples/IdentityMapDemo/OrderIdentityMapDemo.cs",
+            "test/PatternKit.Examples.Tests/IdentityMapDemo/OrderIdentityMapDemoTests.cs",
+            "docs/examples/order-identity-map-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["IdentityMap"],
+            ["request-scoped identity reuse", "source-generated map factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",
