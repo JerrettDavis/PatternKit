@@ -129,6 +129,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCompetingConsumerGroupAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GeneratePipesAndFiltersPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RoutingSlipStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSagaAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SagaStepAttribute), AttributeTargets.Method, false, false },
@@ -379,6 +380,22 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(4, group.MaxConcurrentDeliveries);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCompetingConsumerGroupAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCompetingConsumerGroupAttribute(typeof(string), null!));
+    }
+
+    [Scenario("Pipes And Filters Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void PipesAndFilters_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var pipeline = new GeneratePipesAndFiltersPipelineAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildPipeline",
+            PipelineName = "fulfillment-pipeline"
+        };
+
+        ScenarioExpect.Equal(typeof(string), pipeline.ContextType);
+        ScenarioExpect.Equal("BuildPipeline", pipeline.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment-pipeline", pipeline.PipelineName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePipesAndFiltersPipelineAttribute(null!));
     }
 
     [Scenario("Circuit Breaker Attributes Expose Defaults And Configuration")]

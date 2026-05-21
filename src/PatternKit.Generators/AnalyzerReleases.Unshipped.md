@@ -283,3 +283,4 @@ PKSA005 | PatternKit.Generators.Messaging | Error | Generated aggregator method 
 PKSA006 | PatternKit.Generators.Messaging | Error | Generated aggregator duplicate policy is invalid.
 PKCNS001 | PatternKit.Generators.Messaging | Error | Competing Consumers host must be partial.
 PKCNS002 | PatternKit.Generators.Messaging | Error | Competing Consumers configuration is invalid.
+PKPF001 | PatternKit.Generators.Messaging | Error | Pipes and Filters host must be partial.

@@ -211,6 +211,10 @@ public static partial class OrderRouter { }
 [GenerateCompetingConsumerGroup(typeof(OrderWork), typeof(OrderResult), MaxConcurrentDeliveries = 4)]
 public static partial class OrderConsumers { }
 
+// Pipes and filters - generated ordered pipeline builder
+[GeneratePipesAndFiltersPipeline(typeof(OrderContext), PipelineName = "fulfillment")]
+public static partial class OrderPipeline { }
+
 // Splitter and aggregator - generated split/rejoin factories
 [GenerateSplitter(typeof(Order), typeof(OrderLine))]
 public static partial class OrderSplitter { }
