@@ -98,6 +98,9 @@ PKDE001 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher h
 PKDE002 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher must declare at least one handler.
 PKDE003 | PatternKit.Generators.DomainEvents | Error | Domain Event handler signature is invalid.
 PKDE004 | PatternKit.Generators.DomainEvents | Error | Domain Event handler order is duplicated.
+PKAUD001 | PatternKit.Generators.AuditLog | Error | Audit Log host must be partial.
+PKAUD002 | PatternKit.Generators.AuditLog | Error | Audit Log must declare exactly one key selector.
+PKAUD003 | PatternKit.Generators.AuditLog | Error | Audit Log key selector signature is invalid.
 PKES001 | PatternKit.Generators.EventSourcing | Error | Event Store host must be partial.
 PKFT001 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle host must be partial.
 PKFT002 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle set must declare at least one rule.

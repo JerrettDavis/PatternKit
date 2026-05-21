@@ -10,6 +10,9 @@
 - name: Anti-Corruption Layer
   href: anti-corruption-layer.md
 
+- name: Audit Log
+  href: audit-log.md
+
 - name: Builder
   href: builder.md
 

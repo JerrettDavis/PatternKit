@@ -18,6 +18,7 @@ using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AntiCorruptionDemo;
 using PatternKit.Examples.AsyncStateDemo;
+using PatternKit.Examples.AuditLogDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.Chain;
@@ -140,6 +141,7 @@ public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner R
 public sealed record OrderTableDataGatewayPatternExample(OrderTableDataGatewayDemoRunner Runner);
 public sealed record OrderEventSourcingPatternExample(OrderEventSourcingDemoRunner Runner);
 public sealed record CheckoutFeatureTogglePatternExample(CheckoutFeatureToggleDemoRunner Runner);
+public sealed record OrderAuditLogPatternExample(OrderAuditLogDemoRunner Runner);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -206,6 +208,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderTableDataGatewayPatternExample()
             .AddOrderEventSourcingPatternExample()
             .AddCheckoutFeatureTogglePatternExample()
+            .AddOrderAuditLogPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -612,6 +615,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddCheckoutFeatureToggleDemo();
         services.AddSingleton<CheckoutFeatureTogglePatternExample>(sp => new(sp.GetRequiredService<CheckoutFeatureToggleDemoRunner>()));
         return services.RegisterExample<CheckoutFeatureTogglePatternExample>("Checkout Feature Toggle Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderAuditLogPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderAuditLogDemo();
+        services.AddSingleton<OrderAuditLogPatternExample>(sp => new(sp.GetRequiredService<OrderAuditLogDemoRunner>()));
+        return services.RegisterExample<OrderAuditLogPatternExample>("Order Audit Log Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

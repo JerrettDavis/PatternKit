@@ -109,6 +109,9 @@
 - name: Checkout Feature Toggle Pattern
   href: checkout-feature-toggle-pattern.md
 
+- name: Order Audit Log Pattern
+  href: order-audit-log-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 
