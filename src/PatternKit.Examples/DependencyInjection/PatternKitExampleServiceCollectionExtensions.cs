@@ -126,6 +126,7 @@ public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRu
 public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChannelExampleRunner Runner, FulfillmentDeadLetterWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
+public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -197,6 +198,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedDeadLetterChannelExample()
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
+            .AddOrderMessageFilterExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
@@ -480,6 +482,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddMessageRoutingExample();
         services.AddSingleton<GeneratedSplitterAggregatorExample>(sp => new(sp.GetRequiredService<MessageRoutingExampleRunner>()));
         return services.RegisterExample<GeneratedSplitterAggregatorExample>("Generated Splitter and Aggregator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderMessageFilterExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageFilterDemo();
+        services.AddSingleton<OrderMessageFilterExampleService>(sp => new(
+            sp.GetRequiredService<MessageFilter<OrderMessageFilterCommand>>(),
+            sp.GetRequiredService<OrderMessageFilterService>()));
+        return services.RegisterExample<OrderMessageFilterExampleService>("Order Message Filter", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)

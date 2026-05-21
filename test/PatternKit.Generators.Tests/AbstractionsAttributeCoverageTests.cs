@@ -137,6 +137,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateContentRouterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ContentRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMessageFilterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageFilterRuleAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDeadLetterChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -720,6 +722,13 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildRouter"
         };
         var route = new ContentRouteAttribute("priority", 4, "IsPriority");
+        var messageFilter = new GenerateMessageFilterAttribute(typeof(string))
+        {
+            FactoryName = "BuildFilter",
+            FilterName = "orders",
+            RejectionReason = "manual review"
+        };
+        var messageFilterRule = new MessageFilterRuleAttribute("trusted", 9);
         var claimCheck = new GenerateClaimCheckAttribute(typeof(string))
         {
             FactoryName = "BuildClaimCheck",
@@ -839,6 +848,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("priority", route.Name);
         ScenarioExpect.Equal(4, route.Order);
         ScenarioExpect.Equal("IsPriority", route.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), messageFilter.PayloadType);
+        ScenarioExpect.Equal("BuildFilter", messageFilter.FactoryName);
+        ScenarioExpect.Equal("orders", messageFilter.FilterName);
+        ScenarioExpect.Equal("manual review", messageFilter.RejectionReason);
+        ScenarioExpect.Equal("trusted", messageFilterRule.Name);
+        ScenarioExpect.Equal(9, messageFilterRule.Order);
         ScenarioExpect.Equal(typeof(string), claimCheck.PayloadType);
         ScenarioExpect.Equal("BuildClaimCheck", claimCheck.FactoryName);
         ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
@@ -911,6 +926,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentRouterAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("", 1, "Predicate"));
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageFilterAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageFilterRuleAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
         ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDeadLetterChannelAttribute(null!));

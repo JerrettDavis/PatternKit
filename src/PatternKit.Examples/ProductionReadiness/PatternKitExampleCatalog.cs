@@ -281,6 +281,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Splitter", "Aggregator"],
             ["split/rejoin routing", "source-generated factories", "DI composition"]),
         Descriptor(
+            "Order Message Filter",
+            "src/PatternKit.Examples/Messaging/OrderMessageFilterExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageFilterExampleTests.cs",
+            "docs/examples/order-message-filter.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["MessageFilter"],
+            ["fraud-screening allow rules", "source-generated filter", "DI composition"]),
+        Descriptor(
             "Fulfillment Competing Consumers",
             "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",
