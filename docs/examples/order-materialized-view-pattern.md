@@ -7,7 +7,7 @@ It demonstrates:
 - fluent `MaterializedView<OrderReadModel,OrderReadModelEvent>` construction
 - generated materialized view factory with `[GenerateMaterializedView]`
 - deterministic projection handler ordering
-- scoped `IMaterializedView<OrderReadModel,OrderReadModelEvent>` registration through `IServiceCollection`
+- singleton `IMaterializedView<OrderReadModel,OrderReadModelEvent>` registration through `IServiceCollection`
 
 ```csharp
 var services = new ServiceCollection();
@@ -20,7 +20,7 @@ var workflow = scope.ServiceProvider.GetRequiredService<OrderMaterializedViewWor
 var summary = await workflow.BuildReadModelAsync(events);
 ```
 
-The registered view is scoped so importing applications can compose projection workflows with event stores, inboxes, hosted consumers, tenant services, or ASP.NET Core request services.
+The registered view is singleton because it is stateless; importing applications can register consuming projection workflows with the lifetime that matches their event store, inbox, hosted consumer, tenant, or ASP.NET Core request services.
 
 Files:
 

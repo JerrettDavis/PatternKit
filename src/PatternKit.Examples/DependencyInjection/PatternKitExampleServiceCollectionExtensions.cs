@@ -630,7 +630,7 @@ public static class PatternKitExampleServiceCollectionExtensions
     public static IServiceCollection AddOrderMaterializedViewPatternExample(this IServiceCollection services)
     {
         services.AddOrderMaterializedViewDemo();
-        services.AddScoped<OrderMaterializedViewPatternExample>(sp => new(
+        services.AddSingleton<OrderMaterializedViewPatternExample>(sp => new(
             sp.GetRequiredService<OrderMaterializedViewDemoRunner>(),
             sp.GetRequiredService<OrderMaterializedViewWorkflow>()));
         return services.RegisterExample<OrderMaterializedViewPatternExample>("Order Materialized View Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);

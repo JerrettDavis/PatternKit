@@ -147,8 +147,8 @@ public static class OrderMaterializedViewServiceCollectionExtensions
 {
     public static IServiceCollection AddOrderMaterializedViewDemo(this IServiceCollection services)
     {
-        services.AddScoped<IMaterializedView<OrderReadModel, OrderReadModelEvent>>(_ => OrderMaterializedViewPolicies.CreateFluentView());
-        services.AddScoped<OrderMaterializedViewWorkflow>();
+        services.AddSingleton<IMaterializedView<OrderReadModel, OrderReadModelEvent>>(_ => OrderMaterializedViewPolicies.CreateFluentView());
+        services.AddSingleton<OrderMaterializedViewWorkflow>();
         services.AddSingleton(new OrderMaterializedViewDemoRunner(
             OrderMaterializedViewDemo.RunFluentAsync,
             OrderMaterializedViewDemo.RunGeneratedAsync));
