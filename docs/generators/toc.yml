@@ -117,6 +117,9 @@
 - name: Transaction Script
   href: transaction-script.md
 
+- name: Service Layer
+  href: service-layer.md
+
 - name: Visitor Generator
   href: visitor-generator.md
 

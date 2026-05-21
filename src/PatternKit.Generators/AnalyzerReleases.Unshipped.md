@@ -67,6 +67,11 @@ PKTS001 | PatternKit.Generators.TransactionScript | Error | Transaction Script h
 PKTS002 | PatternKit.Generators.TransactionScript | Error | Transaction Script must declare exactly one handler.
 PKTS003 | PatternKit.Generators.TransactionScript | Error | Transaction Script handler signature is invalid.
 PKTS004 | PatternKit.Generators.TransactionScript | Error | Transaction Script validator signature is invalid.
+PKSL001 | PatternKit.Generators.ServiceLayer | Error | Service Layer host must be partial.
+PKSL002 | PatternKit.Generators.ServiceLayer | Error | Service Layer operation must declare exactly one handler.
+PKSL003 | PatternKit.Generators.ServiceLayer | Error | Service Layer handler signature is invalid.
+PKSL004 | PatternKit.Generators.ServiceLayer | Error | Service Layer rule signature is invalid.
+PKSL005 | PatternKit.Generators.ServiceLayer | Error | Service Layer rule order is duplicated.
 PKUOW001 | PatternKit.Generators.UnitOfWork | Error | Unit of work host must be partial.
 PKUOW002 | PatternKit.Generators.UnitOfWork | Error | Unit of work must declare at least one step.
 PKUOW003 | PatternKit.Generators.UnitOfWork | Error | Unit of work step signature is invalid.

@@ -13,6 +13,7 @@ using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
+using PatternKit.Examples.ServiceLayerDemo;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
@@ -108,6 +109,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var dataMapper = provider.GetRequiredService<OrderDataMapperPatternExample>();
         var identityMap = provider.GetRequiredService<OrderIdentityMapPatternExample>();
         var transactionScript = provider.GetRequiredService<OrderTransactionScriptPatternExample>();
+        var serviceLayer = provider.GetRequiredService<CustomerServiceLayerPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -183,6 +185,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("data mapper example rehydrates stored orders", dataMapper.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().LoadedCustomerId == "customer-1"),
             ("identity map example reuses loaded orders", identityMap.Runner.RunFluent().ReusedInstance),
             ("transaction script example submits orders", transactionScript.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Submitted),
+            ("service layer example registers customers", serviceLayer.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Registered),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
