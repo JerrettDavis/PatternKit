@@ -69,6 +69,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Domain Event**](domain-event.md) | Domain event dispatcher factories | `[GenerateDomainEventDispatcher]` |
 | [**Table Data Gateway**](table-data-gateway.md) | Row gateway factories from key selectors | `[GenerateTableDataGateway]` |
 | [**Event Sourcing**](event-sourcing.md) | Append-only event store factories | `[GenerateEventStore]` |
+| [**Feature Toggle**](feature-toggle.md) | Contextual feature toggle factories | `[GenerateFeatureToggleSet]` |
 | [**Template Method**](template-method-generator.md) | Template method skeletons with hook points | `[Template]` |
 | [**Visitor**](visitor-generator.md) | Type-safe visitor implementations | `[GenerateVisitor]` |
 

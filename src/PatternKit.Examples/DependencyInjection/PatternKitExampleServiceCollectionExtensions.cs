@@ -27,6 +27,7 @@ using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.EventSourcingDemo;
+using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
@@ -138,6 +139,7 @@ public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemo
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
 public sealed record OrderTableDataGatewayPatternExample(OrderTableDataGatewayDemoRunner Runner);
 public sealed record OrderEventSourcingPatternExample(OrderEventSourcingDemoRunner Runner);
+public sealed record CheckoutFeatureTogglePatternExample(CheckoutFeatureToggleDemoRunner Runner);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -203,6 +205,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderDomainEventPatternExample()
             .AddOrderTableDataGatewayPatternExample()
             .AddOrderEventSourcingPatternExample()
+            .AddCheckoutFeatureTogglePatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -602,6 +605,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderEventSourcingDemo();
         services.AddSingleton<OrderEventSourcingPatternExample>(sp => new(sp.GetRequiredService<OrderEventSourcingDemoRunner>()));
         return services.RegisterExample<OrderEventSourcingPatternExample>("Order Event Sourcing Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddCheckoutFeatureTogglePatternExample(this IServiceCollection services)
+    {
+        services.AddCheckoutFeatureToggleDemo();
+        services.AddSingleton<CheckoutFeatureTogglePatternExample>(sp => new(sp.GetRequiredService<CheckoutFeatureToggleDemoRunner>()));
+        return services.RegisterExample<CheckoutFeatureTogglePatternExample>("Checkout Feature Toggle Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

@@ -369,6 +369,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["EventSourcing"],
             ["append-only stream", "source-generated event store factory", "DI composition"]),
         Descriptor(
+            "Checkout Feature Toggle Pattern",
+            "src/PatternKit.Examples/FeatureToggleDemo/CheckoutFeatureToggleDemo.cs",
+            "test/PatternKit.Examples.Tests/FeatureToggleDemo/CheckoutFeatureToggleDemoTests.cs",
+            "docs/examples/checkout-feature-toggle-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["FeatureToggle"],
+            ["contextual rollout rules", "source-generated toggle set factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",
