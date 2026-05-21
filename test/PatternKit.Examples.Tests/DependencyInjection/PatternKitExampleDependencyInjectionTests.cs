@@ -8,6 +8,7 @@ using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.IdentityMapDemo;
+using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.Messaging;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
@@ -117,6 +118,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var eventSourcing = provider.GetRequiredService<OrderEventSourcingPatternExample>();
         var featureToggles = provider.GetRequiredService<CheckoutFeatureTogglePatternExample>();
         var auditLog = provider.GetRequiredService<OrderAuditLogPatternExample>();
+        var materializedView = provider.GetRequiredService<OrderMaterializedViewPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -198,6 +200,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("event sourcing example replays paid order streams", eventSourcing.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Paid),
             ("feature toggle example evaluates checkout features", featureToggles.Runner.RunFluent().NewCheckoutEnabled),
             ("audit log example records order actions", auditLog.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().EntryCount == 2),
+            ("materialized view example builds shipped order read models", materializedView.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Status == "Shipped"),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),

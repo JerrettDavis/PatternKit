@@ -355,6 +355,8 @@
           href: application/feature-toggle.md
         - name: Audit Log
           href: application/audit-log.md
+        - name: Materialized View
+          href: application/materialized-view.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

@@ -18,6 +18,7 @@ using PatternKit.Generators.Factories;
 using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
+using PatternKit.Generators.MaterializedViews;
 using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
@@ -116,6 +117,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(InterpreterNonTerminalAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateIdentityMapAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(IdentityMapKeySelectorAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMaterializedViewAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MaterializedViewHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(IteratorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(IteratorStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalIteratorAttribute), AttributeTargets.Class, false, false },
@@ -1076,6 +1079,15 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildOrderAudit",
             LogName = "order-audit"
         };
+        var materializedView = new GenerateMaterializedViewAttribute(typeof(int), typeof(string))
+        {
+            FactoryName = "BuildOrderReadModel",
+            ViewName = "order-read-model"
+        };
+        var materializedViewHandler = new MaterializedViewHandlerAttribute(typeof(string))
+        {
+            Order = 30
+        };
         var tableGateway = new GenerateTableDataGatewayAttribute(typeof(string), typeof(int))
         {
             FactoryName = "BuildOrderTable",
@@ -1141,6 +1153,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(Guid), auditLog.KeyType);
         ScenarioExpect.Equal("BuildOrderAudit", auditLog.FactoryName);
         ScenarioExpect.Equal("order-audit", auditLog.LogName);
+        ScenarioExpect.Equal(typeof(int), materializedView.StateType);
+        ScenarioExpect.Equal(typeof(string), materializedView.EventType);
+        ScenarioExpect.Equal("BuildOrderReadModel", materializedView.FactoryName);
+        ScenarioExpect.Equal("order-read-model", materializedView.ViewName);
+        ScenarioExpect.Equal(typeof(string), materializedViewHandler.EventType);
+        ScenarioExpect.Equal(30, materializedViewHandler.Order);
         ScenarioExpect.Equal(typeof(string), tableGateway.RowType);
         ScenarioExpect.Equal(typeof(int), tableGateway.KeyType);
         ScenarioExpect.Equal("BuildOrderTable", tableGateway.FactoryName);
@@ -1160,6 +1178,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new FeatureToggleRuleAttribute(""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAuditLogAttribute(null!, typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAuditLogAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMaterializedViewAttribute(null!, typeof(string)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMaterializedViewAttribute(typeof(int), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new MaterializedViewHandlerAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(typeof(string), null!));
         ScenarioExpect.IsType<TableGatewayKeySelectorAttribute>(new TableGatewayKeySelectorAttribute());

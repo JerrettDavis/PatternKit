@@ -101,6 +101,9 @@ PKDE004 | PatternKit.Generators.DomainEvents | Error | Domain Event handler orde
 PKAUD001 | PatternKit.Generators.AuditLog | Error | Audit Log host must be partial.
 PKAUD002 | PatternKit.Generators.AuditLog | Error | Audit Log must declare exactly one key selector.
 PKAUD003 | PatternKit.Generators.AuditLog | Error | Audit Log key selector signature is invalid.
+PKMV001 | PatternKit.Generators.MaterializedViews | Error | Materialized View host must be partial.
+PKMV002 | PatternKit.Generators.MaterializedViews | Error | Materialized View requires handlers.
+PKMV003 | PatternKit.Generators.MaterializedViews | Error | Materialized View handler signature is invalid.
 PKES001 | PatternKit.Generators.EventSourcing | Error | Event Store host must be partial.
 PKFT001 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle host must be partial.
 PKFT002 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle set must declare at least one rule.
