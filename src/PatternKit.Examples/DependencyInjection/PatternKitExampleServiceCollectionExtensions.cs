@@ -7,6 +7,7 @@ using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Cloud.Bulkhead;
+using PatternKit.Cloud.CacheAside;
 using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
@@ -15,6 +16,7 @@ using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.BulkheadDemo;
+using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.CircuitBreakerDemo;
@@ -123,6 +125,7 @@ public sealed record TemplateMethodAsyncExample(AsyncDataPipeline Pipeline);
 public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
+public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -172,7 +175,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddTemplateMethodAsyncExample()
             .AddInventoryRetryExample()
             .AddFulfillmentCircuitBreakerExample()
-            .AddShippingBulkheadExample();
+            .AddShippingBulkheadExample()
+            .AddProductCatalogCacheAsideExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -564,6 +568,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<BulkheadPolicy<ShippingAllocation>>(),
             sp.GetRequiredService<ShippingBulkheadService>()));
         return services.RegisterExample<ShippingBulkheadExample>("Shipping Bulkhead", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddProductCatalogCacheAsideExample(this IServiceCollection services)
+    {
+        services.AddProductCatalogCacheAsideDemo();
+        services.AddSingleton<ProductCatalogCacheAsideExample>(sp => new(
+            sp.GetRequiredService<CacheAsidePolicy<ProductReadModel>>(),
+            sp.GetRequiredService<ProductCatalogCacheAsideService>()));
+        return services.RegisterExample<ProductCatalogCacheAsideExample>("Product Catalog Cache-Aside", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     private static IServiceCollection RegisterExample<T>(

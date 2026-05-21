@@ -415,7 +415,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/shipping-bulkhead.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["Bulkhead"],
-            ["concurrency isolation", "source-generated policy factory", "DI composition"])
+            ["concurrency isolation", "source-generated policy factory", "DI composition"]),
+        Descriptor(
+            "Product Catalog Cache-Aside",
+            "src/PatternKit.Examples/CacheAsideDemo/ProductCatalogCacheAsideDemo.cs",
+            "test/PatternKit.Examples.Tests/CacheAsideDemo/ProductCatalogCacheAsideDemoTests.cs",
+            "docs/examples/product-catalog-cache-aside.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Cache-Aside"],
+            ["read-through cache miss handling", "source-generated policy factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

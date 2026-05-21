@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.BulkheadDemo;
+using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.ObserverDemo;
@@ -93,6 +94,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
+        var productCacheAside = provider.GetRequiredService<ProductCatalogCacheAsideExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -156,8 +158,15 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
-            ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded)
+            ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
+            ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service))
         ];
+    }
+
+    private static bool CacheAsideHits(ProductCatalogCacheAsideService service)
+    {
+        _ = service.FindAsync("SKU-42").GetAwaiter().GetResult();
+        return service.FindAsync("SKU-42").GetAwaiter().GetResult().CacheHit;
     }
 
     private static bool CircuitBreakerOpens(FulfillmentCircuitBreakerService service)

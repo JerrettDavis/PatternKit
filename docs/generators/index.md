@@ -84,6 +84,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Retry**](retry.md) | Bounded retry policy factories for transient results and exceptions | `[GenerateRetryPolicy]` |
 | [**Circuit Breaker**](circuit-breaker.md) | Dependency isolation policy factories with open and half-open states | `[GenerateCircuitBreakerPolicy]` |
 | [**Bulkhead**](bulkhead.md) | Bounded concurrency and queue isolation policy factories | `[GenerateBulkheadPolicy]` |
+| [**Cache-Aside**](cache-aside.md) | Read-through cache policy factories with TTL and cache predicates | `[GenerateCacheAsidePolicy]` |
 
 ## Quick Reference
 
@@ -216,6 +217,10 @@ public static partial class FulfillmentCircuitBreakerPolicy { }
 // Bulkhead - generated bounded concurrency policy
 [GenerateBulkheadPolicy(typeof(ShippingAllocation), MaxConcurrency = 4, MaxQueueLength = 16, QueueTimeoutMilliseconds = 250)]
 public static partial class ShippingBulkheadPolicy { }
+
+// Cache-aside - generated read-through cache policy
+[GenerateCacheAsidePolicy(typeof(ProductReadModel), TimeToLiveMilliseconds = 300000)]
+public static partial class ProductCatalogCachePolicy { }
 ```
 
 ## Examples

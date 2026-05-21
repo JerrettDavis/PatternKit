@@ -16,6 +16,9 @@
 - name: Bulkhead
   href: bulkhead.md
 
+- name: Cache-Aside
+  href: cache-aside.md
+
 - name: Chain
   href: chain.md
 

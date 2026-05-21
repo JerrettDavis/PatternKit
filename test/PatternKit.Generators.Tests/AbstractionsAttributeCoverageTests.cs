@@ -1,6 +1,7 @@
 using PatternKit.Generators.Adapter;
 using PatternKit.Generators.Bridge;
 using PatternKit.Generators.Bulkhead;
+using PatternKit.Generators.CacheAside;
 using PatternKit.Generators.Chain;
 using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Command;
@@ -48,6 +49,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(BridgeAbstractionAttribute), AttributeTargets.Class, false, false },
         { typeof(BridgeIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
         { typeof(GenerateBulkheadPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateCacheAsidePolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(CacheAsidePredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ChainHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainDefaultAttribute), AttributeTargets.Method, false, false },
@@ -159,6 +162,25 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(validOn, usage.ValidOn);
         ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
         ScenarioExpect.Equal(inherited, usage.Inherited);
+    }
+
+    [Scenario("Cache Aside Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void CacheAside_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var cacheAside = new GenerateCacheAsidePolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildProductCache",
+            PolicyName = "products",
+            TimeToLiveMilliseconds = 250
+        };
+
+        ScenarioExpect.Equal(typeof(string), cacheAside.ResultType);
+        ScenarioExpect.Equal("BuildProductCache", cacheAside.FactoryMethodName);
+        ScenarioExpect.Equal("products", cacheAside.PolicyName);
+        ScenarioExpect.Equal(250, cacheAside.TimeToLiveMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCacheAsidePolicyAttribute(null!));
+        ScenarioExpect.IsType<CacheAsidePredicateAttribute>(new CacheAsidePredicateAttribute());
     }
 
     [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]

@@ -60,6 +60,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Retry | `RetryPolicy<T>` | Retry generator |
 | Cloud Architecture | Circuit Breaker | `CircuitBreakerPolicy<T>` | Circuit Breaker generator |
 | Cloud Architecture | Bulkhead | `BulkheadPolicy<T>` | Bulkhead generator |
+| Cloud Architecture | Cache-Aside | `CacheAsidePolicy<T>` | Cache-Aside generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 | Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
 
