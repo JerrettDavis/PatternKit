@@ -305,6 +305,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Repository"],
             ["collection-like persistence boundary", "source-generated repository factory", "DI composition"]),
         Descriptor(
+            "Checkout Unit of Work Pattern",
+            "src/PatternKit.Examples/UnitOfWorkDemo/CheckoutUnitOfWorkDemo.cs",
+            "test/PatternKit.Examples.Tests/UnitOfWorkDemo/CheckoutUnitOfWorkDemoTests.cs",
+            "docs/examples/checkout-unit-of-work-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["UnitOfWork"],
+            ["ordered commit boundary", "source-generated unit of work", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

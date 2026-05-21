@@ -24,6 +24,7 @@ using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
+using PatternKit.Generators.UnitOfWork;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
@@ -162,6 +163,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(TemplateAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(TemplateStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TemplateHookAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateUnitOfWorkAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(UnitOfWorkStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateVisitorAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, false, false }
     };
 
@@ -979,6 +982,14 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             StepOrder = 3
         };
+        var unitOfWork = new GenerateUnitOfWorkAttribute
+        {
+            FactoryName = "BuildCheckout"
+        };
+        var unitOfWorkStep = new UnitOfWorkStepAttribute("persist", 20)
+        {
+            RollbackMethodName = "UndoPersist"
+        };
 
         ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
         ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
@@ -1006,6 +1017,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.True(step.Optional);
         ScenarioExpect.Equal(HookPoint.OnError, hook.HookPoint);
         ScenarioExpect.Equal(3, hook.StepOrder);
+        ScenarioExpect.Equal("BuildCheckout", unitOfWork.FactoryName);
+        ScenarioExpect.Equal("persist", unitOfWorkStep.Name);
+        ScenarioExpect.Equal(20, unitOfWorkStep.Order);
+        ScenarioExpect.Equal("UndoPersist", unitOfWorkStep.RollbackMethodName);
+        ScenarioExpect.Throws<ArgumentException>(() => new UnitOfWorkStepAttribute("", 1));
         AssertEnumValues(StateMachineInvalidTriggerPolicy.Throw, StateMachineInvalidTriggerPolicy.Ignore, StateMachineInvalidTriggerPolicy.ReturnFalse);
         AssertEnumValues(StateMachineGuardFailurePolicy.Throw, StateMachineGuardFailurePolicy.Ignore, StateMachineGuardFailurePolicy.ReturnFalse);
         AssertEnumValues(HookPoint.BeforeAll, HookPoint.AfterAll, HookPoint.OnError);

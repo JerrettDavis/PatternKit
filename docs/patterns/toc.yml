@@ -335,6 +335,8 @@
           href: application/anti-corruption-layer.md
         - name: Repository
           href: application/repository.md
+        - name: Unit of Work
+          href: application/unit-of-work.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

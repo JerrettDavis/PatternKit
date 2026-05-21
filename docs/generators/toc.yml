@@ -105,6 +105,9 @@
 - name: Template Method
   href: template-method-generator.md
 
+- name: Unit of Work
+  href: unit-of-work.md
+
 - name: Visitor Generator
   href: visitor-generator.md
 

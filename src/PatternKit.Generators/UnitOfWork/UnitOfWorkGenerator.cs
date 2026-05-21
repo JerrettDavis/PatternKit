@@ -1,0 +1,170 @@
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace PatternKit.Generators.UnitOfWork;
+
+[Generator]
+public sealed class UnitOfWorkGenerator : IIncrementalGenerator
+{
+    private const string GenerateAttributeName = "PatternKit.Generators.UnitOfWork.GenerateUnitOfWorkAttribute";
+    private const string StepAttributeName = "PatternKit.Generators.UnitOfWork.UnitOfWorkStepAttribute";
+
+    private static readonly DiagnosticDescriptor MustBePartial = new(
+        "PKUOW001", "Unit of work host must be partial",
+        "Type '{0}' is marked with [GenerateUnitOfWork] but is not declared as partial",
+        "PatternKit.Generators.UnitOfWork", DiagnosticSeverity.Error, true);
+
+    private static readonly DiagnosticDescriptor MissingSteps = new(
+        "PKUOW002", "Unit of work has no steps",
+        "Type '{0}' must declare at least one [UnitOfWorkStep] method",
+        "PatternKit.Generators.UnitOfWork", DiagnosticSeverity.Error, true);
+
+    private static readonly DiagnosticDescriptor InvalidStep = new(
+        "PKUOW003", "Unit of work step signature is invalid",
+        "Unit-of-work step '{0}' must be static and return ValueTask with one CancellationToken parameter",
+        "PatternKit.Generators.UnitOfWork", DiagnosticSeverity.Error, true);
+
+    private static readonly DiagnosticDescriptor DuplicateStep = new(
+        "PKUOW004", "Unit of work step is duplicated",
+        "Unit-of-work step names and orders must be unique",
+        "PatternKit.Generators.UnitOfWork", DiagnosticSeverity.Error, true);
+
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        var candidates = context.SyntaxProvider.ForAttributeWithMetadataName(
+            GenerateAttributeName,
+            static (node, _) => node is TypeDeclarationSyntax,
+            static (ctx, _) => (Type: (INamedTypeSymbol)ctx.TargetSymbol, Node: (TypeDeclarationSyntax)ctx.TargetNode, Attributes: ctx.Attributes));
+
+        context.RegisterSourceOutput(candidates, static (spc, candidate) =>
+        {
+            var attr = candidate.Attributes.FirstOrDefault(static a => a.AttributeClass?.ToDisplayString() == GenerateAttributeName);
+            if (attr is not null)
+                Generate(spc, candidate.Type, candidate.Node, attr);
+        });
+    }
+
+    private static void Generate(SourceProductionContext context, INamedTypeSymbol type, TypeDeclarationSyntax node, AttributeData attribute)
+    {
+        if (!node.Modifiers.Any(static modifier => modifier.Text == "partial"))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(MustBePartial, node.Identifier.GetLocation(), type.Name));
+            return;
+        }
+
+        var steps = GetSteps(type);
+        if (steps.Count == 0)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(MissingSteps, node.Identifier.GetLocation(), type.Name));
+            return;
+        }
+
+        if (steps.Select(static s => s.Name).Distinct().Count() != steps.Count || steps.Select(static s => s.Order).Distinct().Count() != steps.Count)
+        {
+            context.ReportDiagnostic(Diagnostic.Create(DuplicateStep, node.Identifier.GetLocation()));
+            return;
+        }
+
+        foreach (var step in steps)
+        {
+            if (!IsStep(step.Commit) || (step.Rollback is not null && !IsStep(step.Rollback)))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(InvalidStep, step.Commit.Locations.FirstOrDefault(), step.Commit.Name));
+                return;
+            }
+        }
+
+        context.AddSource($"{type.Name}.UnitOfWork.g.cs", SourceText.From(
+            GenerateSource(type, steps.OrderBy(static s => s.Order).ToArray(), GetNamedString(attribute, "FactoryName") ?? "Create"),
+            Encoding.UTF8));
+    }
+
+    private static List<StepConfig> GetSteps(INamedTypeSymbol type)
+    {
+        var methods = type.GetMembers().OfType<IMethodSymbol>().ToArray();
+        return methods.SelectMany(method => method.GetAttributes()
+                .Where(static attr => attr.AttributeClass?.ToDisplayString() == StepAttributeName)
+                .Select(attr => new StepConfig(
+                    method,
+                    attr.ConstructorArguments[0].Value?.ToString() ?? method.Name,
+                    (int)(attr.ConstructorArguments[1].Value ?? 0),
+                    GetNamedString(attr, "RollbackMethodName"))))
+            .Select(step => step with { Rollback = step.RollbackName is null ? null : methods.FirstOrDefault(m => m.Name == step.RollbackName) })
+            .ToList();
+    }
+
+    private static string GenerateSource(INamedTypeSymbol type, IReadOnlyList<StepConfig> steps, string factoryName)
+    {
+        var ns = type.ContainingNamespace.IsGlobalNamespace ? null : type.ContainingNamespace.ToDisplayString();
+        var sb = new StringBuilder();
+        sb.AppendLine("// <auto-generated/>");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine();
+        if (ns is not null)
+        {
+            sb.Append("namespace ").Append(ns).AppendLine(";");
+            sb.AppendLine();
+        }
+
+        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        if (type.IsStatic)
+            sb.Append("static ");
+        else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
+            sb.Append("abstract ");
+        else if (type.IsSealed && type.TypeKind == TypeKind.Class)
+            sb.Append("sealed ");
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
+        sb.AppendLine("{");
+        sb.Append("    public static global::PatternKit.Application.UnitOfWork.UnitOfWork ").Append(factoryName).AppendLine("()");
+        sb.AppendLine("    {");
+        sb.AppendLine("        var builder = global::PatternKit.Application.UnitOfWork.UnitOfWork.Create();");
+        foreach (var step in steps)
+        {
+            sb.Append("        builder.Enlist(\"").Append(Escape(step.Name)).Append("\", ").Append(step.Commit.Name);
+            if (step.Rollback is not null)
+                sb.Append(", ").Append(step.Rollback.Name);
+            sb.AppendLine(");");
+        }
+        sb.AppendLine("        return builder.Build();");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
+    private static bool IsStep(IMethodSymbol method)
+        => method.IsStatic
+        && !method.IsGenericMethod
+        && method.ReturnType.ToDisplayString() == "System.Threading.Tasks.ValueTask"
+        && method.Parameters.Length == 1
+        && method.Parameters[0].Type.ToDisplayString() == "System.Threading.CancellationToken";
+
+    private static string? GetNamedString(AttributeData attribute, string name)
+        => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;
+
+    private static string Escape(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    private static string GetAccessibility(Accessibility accessibility)
+        => accessibility switch
+        {
+            Accessibility.Public => "public",
+            Accessibility.Internal => "internal",
+            Accessibility.Private => "private",
+            Accessibility.Protected => "protected",
+            Accessibility.ProtectedAndInternal => "private protected",
+            Accessibility.ProtectedOrInternal => "protected internal",
+            _ => "internal"
+        };
+
+    private sealed record StepConfig(
+        IMethodSymbol Commit,
+        string Name,
+        int Order,
+        string? RollbackName)
+    {
+        public IMethodSymbol? Rollback { get; init; }
+    }
+}
