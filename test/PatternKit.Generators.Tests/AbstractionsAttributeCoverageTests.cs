@@ -1,5 +1,6 @@
 using PatternKit.Generators.Adapter;
 using PatternKit.Generators.Bridge;
+using PatternKit.Generators.Bulkhead;
 using PatternKit.Generators.Chain;
 using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Command;
@@ -46,6 +47,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(BridgeImplementorAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(BridgeAbstractionAttribute), AttributeTargets.Class, false, false },
         { typeof(BridgeIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateBulkheadPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ChainAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ChainHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainDefaultAttribute), AttributeTargets.Method, false, false },
@@ -157,6 +159,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(validOn, usage.ValidOn);
         ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
         ScenarioExpect.Equal(inherited, usage.Inherited);
+    }
+
+    [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Bulkhead_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var bulkhead = new GenerateBulkheadPolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildFulfillmentPolicy",
+            PolicyName = "fulfillment",
+            MaxConcurrency = 4,
+            MaxQueueLength = 8,
+            QueueTimeoutMilliseconds = 250
+        };
+
+        ScenarioExpect.Equal(typeof(string), bulkhead.ResultType);
+        ScenarioExpect.Equal("BuildFulfillmentPolicy", bulkhead.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment", bulkhead.PolicyName);
+        ScenarioExpect.Equal(4, bulkhead.MaxConcurrency);
+        ScenarioExpect.Equal(8, bulkhead.MaxQueueLength);
+        ScenarioExpect.Equal(250, bulkhead.QueueTimeoutMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBulkheadPolicyAttribute(null!));
     }
 
     [Scenario("Circuit Breaker Attributes Expose Defaults And Configuration")]

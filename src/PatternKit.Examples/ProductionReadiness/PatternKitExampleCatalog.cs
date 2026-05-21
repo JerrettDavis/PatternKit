@@ -407,7 +407,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/fulfillment-circuit-breaker.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["Circuit Breaker"],
-            ["dependency isolation", "source-generated policy factory", "DI composition"])
+            ["dependency isolation", "source-generated policy factory", "DI composition"]),
+        Descriptor(
+            "Shipping Bulkhead",
+            "src/PatternKit.Examples/BulkheadDemo/ShippingBulkheadDemo.cs",
+            "test/PatternKit.Examples.Tests/BulkheadDemo/ShippingBulkheadDemoTests.cs",
+            "docs/examples/shipping-bulkhead.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Bulkhead"],
+            ["concurrency isolation", "source-generated policy factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;
