@@ -313,6 +313,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["UnitOfWork"],
             ["ordered commit boundary", "source-generated unit of work", "DI composition"]),
         Descriptor(
+            "Order Data Mapper Pattern",
+            "src/PatternKit.Examples/DataMapperDemo/OrderDataMapperDemo.cs",
+            "test/PatternKit.Examples.Tests/DataMapperDemo/OrderDataMapperDemoTests.cs",
+            "docs/examples/order-data-mapper-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["DataMapper"],
+            ["domain/data isolation", "source-generated mapper factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

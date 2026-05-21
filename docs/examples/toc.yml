@@ -85,6 +85,9 @@
 - name: Checkout Unit of Work Pattern
   href: checkout-unit-of-work-pattern.md
 
+- name: Order Data Mapper Pattern
+  href: order-data-mapper-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

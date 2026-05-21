@@ -7,6 +7,7 @@ using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Command;
 using PatternKit.Generators.Composite;
 using PatternKit.Generators.Composer;
+using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
@@ -79,6 +80,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ComposeIgnoreAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDecoratorAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(DecoratorIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateDataMapperAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(DataMapperToDataAttribute), AttributeTargets.Method, false, false },
+        { typeof(DataMapperToDomainAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
         { typeof(FacadeMapAttribute), AttributeTargets.Method, false, false },
@@ -246,6 +250,10 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             FactoryName = "BuildRepository"
         };
+        var dataMapper = new GenerateDataMapperAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildMapper"
+        };
 
         ScenarioExpect.Equal(typeof(string), rateLimit.ResultType);
         ScenarioExpect.Equal("BuildSearchLimit", rateLimit.FactoryMethodName);
@@ -256,9 +264,16 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(string), repository.EntityType);
         ScenarioExpect.Equal(typeof(Guid), repository.KeyType);
         ScenarioExpect.Equal("BuildRepository", repository.FactoryName);
+        ScenarioExpect.Equal(typeof(string), dataMapper.DomainType);
+        ScenarioExpect.Equal(typeof(int), dataMapper.DataType);
+        ScenarioExpect.Equal("BuildMapper", dataMapper.FactoryName);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(null!, typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDataMapperAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDataMapperAttribute(typeof(string), null!));
         ScenarioExpect.IsType<RepositoryKeySelectorAttribute>(new RepositoryKeySelectorAttribute());
+        ScenarioExpect.IsType<DataMapperToDataAttribute>(new DataMapperToDataAttribute());
+        ScenarioExpect.IsType<DataMapperToDomainAttribute>(new DataMapperToDomainAttribute());
     }
 
     [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]

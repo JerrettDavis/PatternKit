@@ -337,6 +337,8 @@
           href: application/repository.md
         - name: Unit of Work
           href: application/unit-of-work.md
+        - name: Data Mapper
+          href: application/data-mapper.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher
