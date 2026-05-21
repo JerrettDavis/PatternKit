@@ -12,15 +12,16 @@ public sealed class CheckoutUnitOfWorkDemoTests(ITestOutputHelper output) : Tiny
     [Scenario("Fluent and generated unit of work commit ordered steps")]
     [Fact]
     public Task Fluent_And_Generated_Unit_Of_Work_Commit_Ordered_Steps()
-        => Given("fluent and generated checkout units of work", async () => new
-            {
-                Fluent = await CheckoutUnitOfWorkDemo.RunFluentAsync(),
-                Generated = await CheckoutUnitOfWorkDemo.RunGeneratedAsync()
-            })
+        => Given(
+            "fluent and generated checkout units of work",
+            (Func<Task<CheckoutCommitSummaries>>)(async () => new CheckoutCommitSummaries(
+                await CheckoutUnitOfWorkDemo.RunFluentAsync(),
+                await CheckoutUnitOfWorkDemo.RunGeneratedAsync())))
             .Then("both paths commit the same ordered steps", result =>
             {
                 ScenarioExpect.True(result.Fluent.Committed);
                 ScenarioExpect.True(result.Generated.Committed);
+                ScenarioExpect.Equal(["reserve", "capture"], result.Fluent.Log);
                 ScenarioExpect.Equal(["reserve", "capture"], result.Generated.Log);
             })
             .AssertPassed();
@@ -52,4 +53,8 @@ public sealed class CheckoutUnitOfWorkDemoTests(ITestOutputHelper output) : Tiny
             })
             .Then("the workflow commits", summary => ScenarioExpect.True(summary.Committed))
             .AssertPassed();
+
+    private sealed record CheckoutCommitSummaries(
+        CheckoutUnitOfWorkSummary Fluent,
+        CheckoutUnitOfWorkSummary Generated);
 }
