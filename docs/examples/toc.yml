@@ -114,3 +114,6 @@
 
 - name: Inventory Retry Policy
   href: inventory-retry-policy.md
+
+- name: Fulfillment Circuit Breaker
+  href: fulfillment-circuit-breaker.md

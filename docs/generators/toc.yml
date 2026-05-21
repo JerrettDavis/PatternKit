@@ -64,6 +64,9 @@
 - name: Retry
   href: retry.md
 
+- name: Circuit Breaker
+  href: circuit-breaker.md
+
 - name: Singleton
   href: singleton.md
 

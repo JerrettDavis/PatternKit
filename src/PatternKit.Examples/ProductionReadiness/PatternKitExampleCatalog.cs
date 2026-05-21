@@ -399,7 +399,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/inventory-retry-policy.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["Retry"],
-            ["transient result retry", "source-generated policy factory", "DI composition"])
+            ["transient result retry", "source-generated policy factory", "DI composition"]),
+        Descriptor(
+            "Fulfillment Circuit Breaker",
+            "src/PatternKit.Examples/CircuitBreakerDemo/FulfillmentCircuitBreakerDemo.cs",
+            "test/PatternKit.Examples.Tests/CircuitBreakerDemo/FulfillmentCircuitBreakerDemoTests.cs",
+            "docs/examples/fulfillment-circuit-breaker.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Circuit Breaker"],
+            ["dependency isolation", "source-generated policy factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

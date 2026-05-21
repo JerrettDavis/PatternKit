@@ -1,6 +1,7 @@
 using PatternKit.Generators.Adapter;
 using PatternKit.Generators.Bridge;
 using PatternKit.Generators.Chain;
+using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Command;
 using PatternKit.Generators.Composite;
 using PatternKit.Generators.Composer;
@@ -49,6 +50,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ChainHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainTerminalAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateCircuitBreakerPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(CircuitBreakerResultPredicateAttribute), AttributeTargets.Method, false, false },
+        { typeof(CircuitBreakerExceptionPredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(CommandAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CommandHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(CommandHostAttribute), AttributeTargets.Class, false, false },
@@ -153,6 +157,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(validOn, usage.ValidOn);
         ScenarioExpect.Equal(allowMultiple, usage.AllowMultiple);
         ScenarioExpect.Equal(inherited, usage.Inherited);
+    }
+
+    [Scenario("Circuit Breaker Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void CircuitBreaker_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var breaker = new GenerateCircuitBreakerPolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildFulfillmentPolicy",
+            PolicyName = "fulfillment",
+            FailureThreshold = 2,
+            BreakDurationMilliseconds = 500
+        };
+
+        ScenarioExpect.Equal(typeof(string), breaker.ResultType);
+        ScenarioExpect.Equal("BuildFulfillmentPolicy", breaker.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment", breaker.PolicyName);
+        ScenarioExpect.Equal(2, breaker.FailureThreshold);
+        ScenarioExpect.Equal(500, breaker.BreakDurationMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCircuitBreakerPolicyAttribute(null!));
+        ScenarioExpect.IsType<CircuitBreakerResultPredicateAttribute>(new CircuitBreakerResultPredicateAttribute());
+        ScenarioExpect.IsType<CircuitBreakerExceptionPredicateAttribute>(new CircuitBreakerExceptionPredicateAttribute());
     }
 
     [Scenario("Specification Attributes Expose Defaults And Validation")]
