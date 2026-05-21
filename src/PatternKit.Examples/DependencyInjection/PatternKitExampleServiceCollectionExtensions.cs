@@ -60,6 +60,7 @@ using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
+using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.CompetingConsumers;
 using PatternKit.Messaging.PipesAndFilters;
 using PatternKit.Messaging.Transformation;
@@ -128,6 +129,7 @@ public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChan
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
+public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
@@ -202,6 +204,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
+            .AddOrderMessageStoreExample()
             .AddOrderWireTapExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
@@ -496,6 +499,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageFilter<OrderMessageFilterCommand>>(),
             sp.GetRequiredService<OrderMessageFilterService>()));
         return services.RegisterExample<OrderMessageFilterExampleService>("Order Message Filter", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderMessageStoreExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageStoreDemo();
+        services.AddSingleton<OrderMessageStoreExampleService>(sp => new(
+            sp.GetRequiredService<MessageStore<OrderMessageStoreEvent>>(),
+            sp.GetRequiredService<OrderMessageStoreService>()));
+        return services.RegisterExample<OrderMessageStoreExampleService>("Order Message Store", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

@@ -296,3 +296,7 @@ PKECS001 | PatternKit.Generators.Cloud | Error | External Configuration Store ho
 PKECS002 | PatternKit.Generators.Cloud | Error | External Configuration Store loader is invalid.
 PKECS003 | PatternKit.Generators.Cloud | Error | External Configuration Store validator signature is invalid.
 PKECS004 | PatternKit.Generators.Cloud | Error | External Configuration Store validator order is duplicated.
+PKMS001 | PatternKit.Generators.Messaging | Error | Message store type must be partial.
+PKMS002 | PatternKit.Generators.Messaging | Error | Message store identity signature is invalid.
+PKMS003 | PatternKit.Generators.Messaging | Error | Message store retention signature is invalid.
+PKMS004 | PatternKit.Generators.Messaging | Error | Message store hook is duplicated.

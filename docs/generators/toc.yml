@@ -94,6 +94,9 @@
 - name: Message Filter
   href: message-filter.md
 
+- name: Message Store
+  href: message-store.md
+
 - name: Wire Tap
   href: wire-tap.md
 

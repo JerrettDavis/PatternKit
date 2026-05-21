@@ -143,6 +143,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageFilterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageFilterRuleAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMessageStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageStoreIdentityAttribute), AttributeTargets.Method, false, false },
+        { typeof(MessageStoreRetentionAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateWireTapAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(WireTapHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -751,6 +754,11 @@ public sealed class AbstractionsAttributeCoverageTests
             RejectionReason = "manual review"
         };
         var messageFilterRule = new MessageFilterRuleAttribute("trusted", 9);
+        var messageStore = new GenerateMessageStoreAttribute(typeof(string))
+        {
+            FactoryName = "BuildStore",
+            StoreName = "order-audit"
+        };
         var wireTap = new GenerateWireTapAttribute(typeof(string))
         {
             FactoryName = "BuildTap",
@@ -882,6 +890,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("manual review", messageFilter.RejectionReason);
         ScenarioExpect.Equal("trusted", messageFilterRule.Name);
         ScenarioExpect.Equal(9, messageFilterRule.Order);
+        ScenarioExpect.Equal(typeof(string), messageStore.PayloadType);
+        ScenarioExpect.Equal("BuildStore", messageStore.FactoryName);
+        ScenarioExpect.Equal("order-audit", messageStore.StoreName);
         ScenarioExpect.Equal(typeof(string), wireTap.PayloadType);
         ScenarioExpect.Equal("BuildTap", wireTap.FactoryName);
         ScenarioExpect.Equal("orders-observability", wireTap.TapName);
@@ -961,6 +972,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageFilterAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageFilterRuleAttribute("", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageStoreAttribute(null!));
+        ScenarioExpect.IsType<MessageStoreIdentityAttribute>(new MessageStoreIdentityAttribute());
+        ScenarioExpect.IsType<MessageStoreRetentionAttribute>(new MessageStoreRetentionAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateWireTapAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new WireTapHandlerAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
