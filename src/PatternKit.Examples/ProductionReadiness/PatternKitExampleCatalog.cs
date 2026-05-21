@@ -361,6 +361,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["TableDataGateway"],
             ["row-oriented table boundary", "source-generated gateway factory", "DI composition"]),
         Descriptor(
+            "Order Event Sourcing Pattern",
+            "src/PatternKit.Examples/EventSourcingDemo/OrderEventSourcingDemo.cs",
+            "test/PatternKit.Examples.Tests/EventSourcingDemo/OrderEventSourcingDemoTests.cs",
+            "docs/examples/order-event-sourcing-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["EventSourcing"],
+            ["append-only stream", "source-generated event store factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

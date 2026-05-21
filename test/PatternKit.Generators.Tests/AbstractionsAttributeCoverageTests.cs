@@ -10,6 +10,7 @@ using PatternKit.Generators.Composer;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
+using PatternKit.Generators.EventSourcing;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
@@ -90,6 +91,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(DataMapperToDomainAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDomainEventDispatcherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DomainEventHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateEventStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
         { typeof(FacadeMapAttribute), AttributeTargets.Method, false, false },
@@ -1049,6 +1051,11 @@ public sealed class AbstractionsAttributeCoverageTests
             DispatcherName = "order-events"
         };
         var domainEventHandler = new DomainEventHandlerAttribute(typeof(string), 20);
+        var eventStore = new GenerateEventStoreAttribute(typeof(string), typeof(Guid))
+        {
+            FactoryName = "BuildOrderEvents",
+            StoreName = "order-events"
+        };
         var tableGateway = new GenerateTableDataGatewayAttribute(typeof(string), typeof(int))
         {
             FactoryName = "BuildOrderTable",
@@ -1101,6 +1108,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("order-events", domainEvents.DispatcherName);
         ScenarioExpect.Equal(typeof(string), domainEventHandler.EventType);
         ScenarioExpect.Equal(20, domainEventHandler.Order);
+        ScenarioExpect.Equal(typeof(string), eventStore.EventType);
+        ScenarioExpect.Equal(typeof(Guid), eventStore.StreamIdType);
+        ScenarioExpect.Equal("BuildOrderEvents", eventStore.FactoryName);
+        ScenarioExpect.Equal("order-events", eventStore.StoreName);
         ScenarioExpect.Equal(typeof(string), tableGateway.RowType);
         ScenarioExpect.Equal(typeof(int), tableGateway.KeyType);
         ScenarioExpect.Equal("BuildOrderTable", tableGateway.FactoryName);
@@ -1114,6 +1125,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("code", "", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainEventDispatcherAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new DomainEventHandlerAttribute(null!, 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventStoreAttribute(null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventStoreAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(typeof(string), null!));
         ScenarioExpect.IsType<TableGatewayKeySelectorAttribute>(new TableGatewayKeySelectorAttribute());

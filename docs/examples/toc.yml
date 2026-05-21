@@ -103,6 +103,9 @@
 - name: Order Table Data Gateway Pattern
   href: order-table-data-gateway-pattern.md
 
+- name: Order Event Sourcing Pattern
+  href: order-event-sourcing-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

@@ -43,6 +43,9 @@
 - name: Domain Event
   href: domain-event.md
 
+- name: Event Sourcing
+  href: event-sourcing.md
+
 - name: Dispatcher
   href: dispatcher.md
 
