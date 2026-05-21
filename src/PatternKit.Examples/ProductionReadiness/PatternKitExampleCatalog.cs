@@ -353,6 +353,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["DomainEvent"],
             ["aggregate event dispatch", "source-generated dispatcher factory", "DI composition"]),
         Descriptor(
+            "Order Table Data Gateway Pattern",
+            "src/PatternKit.Examples/TableDataGatewayDemo/OrderTableDataGatewayDemo.cs",
+            "test/PatternKit.Examples.Tests/TableDataGatewayDemo/OrderTableDataGatewayDemoTests.cs",
+            "docs/examples/order-table-data-gateway-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["TableDataGateway"],
+            ["row-oriented table boundary", "source-generated gateway factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

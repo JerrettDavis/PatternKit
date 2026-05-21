@@ -16,6 +16,7 @@ using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.ServiceLayerDemo;
 using PatternKit.Examples.Strategies.Composed;
+using PatternKit.Examples.TableDataGatewayDemo;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
@@ -112,6 +113,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var transactionScript = provider.GetRequiredService<OrderTransactionScriptPatternExample>();
         var serviceLayer = provider.GetRequiredService<CustomerServiceLayerPatternExample>();
         var domainEvents = provider.GetRequiredService<OrderDomainEventPatternExample>();
+        var tableGateway = provider.GetRequiredService<OrderTableDataGatewayPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -189,6 +191,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("transaction script example submits orders", transactionScript.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Submitted),
             ("service layer example registers customers", serviceLayer.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Registered),
             ("domain event example dispatches order events", domainEvents.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Dispatched),
+            ("table data gateway example queries order rows", tableGateway.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().ClosedOrderCount == 1),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
