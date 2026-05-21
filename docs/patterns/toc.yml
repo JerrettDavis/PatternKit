@@ -349,6 +349,8 @@
           href: application/domain-event.md
         - name: Table Data Gateway
           href: application/table-data-gateway.md
+        - name: Event Sourcing
+          href: application/event-sourcing.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

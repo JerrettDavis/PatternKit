@@ -98,6 +98,7 @@ PKDE001 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher h
 PKDE002 | PatternKit.Generators.DomainEvents | Error | Domain Event dispatcher must declare at least one handler.
 PKDE003 | PatternKit.Generators.DomainEvents | Error | Domain Event handler signature is invalid.
 PKDE004 | PatternKit.Generators.DomainEvents | Error | Domain Event handler order is duplicated.
+PKES001 | PatternKit.Generators.EventSourcing | Error | Event Store host must be partial.
 PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
 PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
 PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)
