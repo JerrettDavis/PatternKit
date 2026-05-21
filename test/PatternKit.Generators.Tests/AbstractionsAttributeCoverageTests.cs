@@ -25,6 +25,7 @@ using PatternKit.Generators.State;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
+using PatternKit.Generators.AntiCorruption;
 using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
@@ -44,6 +45,10 @@ public sealed class AbstractionsAttributeCoverageTests
 
     public static TheoryData<Type, AttributeTargets, bool, bool> AttributeUsageCases => new()
     {
+        { typeof(GenerateAntiCorruptionLayerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AntiCorruptionTranslatorAttribute), AttributeTargets.Method, false, false },
+        { typeof(AntiCorruptionExternalRuleAttribute), AttributeTargets.Method, true, false },
+        { typeof(AntiCorruptionDomainRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateAdapterAttribute), AttributeTargets.Class, true, false },
         { typeof(AdapterMapAttribute), AttributeTargets.Method, false, false },
         { typeof(BridgeImplementorAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
@@ -183,6 +188,33 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(250, cacheAside.TimeToLiveMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCacheAsidePolicyAttribute(null!));
         ScenarioExpect.IsType<CacheAsidePredicateAttribute>(new CacheAsidePredicateAttribute());
+    }
+
+    [Scenario("Anti Corruption Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void AntiCorruption_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateAntiCorruptionLayerAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildAcl",
+            LayerName = "orders",
+            SourceSystem = "legacy-erp"
+        };
+        var external = new AntiCorruptionExternalRuleAttribute("external invalid");
+        var domain = new AntiCorruptionDomainRuleAttribute("domain invalid");
+
+        ScenarioExpect.Equal(typeof(string), generator.ExternalType);
+        ScenarioExpect.Equal(typeof(int), generator.DomainType);
+        ScenarioExpect.Equal("BuildAcl", generator.FactoryMethodName);
+        ScenarioExpect.Equal("orders", generator.LayerName);
+        ScenarioExpect.Equal("legacy-erp", generator.SourceSystem);
+        ScenarioExpect.Equal("external invalid", external.RejectionReason);
+        ScenarioExpect.Equal("domain invalid", domain.RejectionReason);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAntiCorruptionLayerAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAntiCorruptionLayerAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionExternalRuleAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionDomainRuleAttribute(" "));
+        ScenarioExpect.IsType<AntiCorruptionTranslatorAttribute>(new AntiCorruptionTranslatorAttribute());
     }
 
     [Scenario("Rate Limiting Attributes Expose Defaults And Configuration")]

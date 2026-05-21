@@ -59,6 +59,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**State Machine**](state-machine.md) | Deterministic finite state machines | `[StateMachine]` |
 | [**Strategy**](strategy.md) | Predicate-based dispatch with fluent builder | `[GenerateStrategy]` |
 | [**Specification**](specification.md) | Named business-rule registries | `[GenerateSpecificationRegistry]` |
+| [**Anti-Corruption Layer**](anti-corruption-layer.md) | External-to-domain translation boundaries with validation | `[GenerateAntiCorruptionLayer]` |
 | [**Template Method**](template-method-generator.md) | Template method skeletons with hook points | `[Template]` |
 | [**Visitor**](visitor-generator.md) | Type-safe visitor implementations | `[GenerateVisitor]` |
 
@@ -153,6 +154,10 @@ public static partial class PricingRules { }
 // Template Method - algorithm skeleton
 [Template]
 public abstract partial class DataProcessor { }
+
+// Anti-corruption layer - external model boundary
+[GenerateAntiCorruptionLayer(typeof(LegacyOrderDto), typeof(CommerceOrder))]
+public static partial class LegacyOrderAcl { }
 
 // Visitor - type-safe double dispatch
 [GenerateVisitor]

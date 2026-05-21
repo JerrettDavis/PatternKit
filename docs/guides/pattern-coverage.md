@@ -64,6 +64,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Rate Limiting | `RateLimitPolicy<T>` | Rate Limiting generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 | Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
+| Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 
 ## Research Baselines
 

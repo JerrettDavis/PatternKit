@@ -112,6 +112,9 @@
 - name: Template Method (Async)
   href: template-method-async-demo.md
 
+- name: Legacy Order Anti-Corruption Layer
+  href: legacy-order-anti-corruption-layer.md
+
 - name: Inventory Retry Policy
   href: inventory-retry-policy.md
 
