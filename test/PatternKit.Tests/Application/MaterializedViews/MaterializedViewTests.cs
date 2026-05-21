@@ -37,6 +37,22 @@ public sealed class MaterializedViewTests(ITestOutputHelper output) : TinyBddXun
             ScenarioExpect.Equal(["first", "second"], state.Steps))
         .AssertPassed();
 
+    [Scenario("Materialized view supports async and base event handlers")]
+    [Fact]
+    public Task Materialized_View_Supports_Async_And_Base_Event_Handlers()
+        => Given("a materialized view with async and base handlers", () => MaterializedView<ProjectionState, ProjectionEvent>.Create("projection")
+            .WithAsyncHandler<ProjectionEvent>((state, _, cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return new ValueTask<ProjectionState>(state.Append("base"));
+            })
+            .WithHandler<ProjectionChildEvent>((state, _) => state.Append("child"))
+            .Build())
+        .When("projecting a derived event", view => view.ProjectAsync(new ProjectionState(Array.Empty<string>()), [new ProjectionChildEvent()]).AsTask())
+        .Then("both compatible handlers run", state =>
+            ScenarioExpect.Equal(["base", "child"], state.Steps))
+        .AssertPassed();
+
     [Scenario("Materialized view validates configuration")]
     [Fact]
     public Task Materialized_View_Validates_Configuration()
@@ -48,7 +64,23 @@ public sealed class MaterializedViewTests(ITestOutputHelper output) : TinyBddXun
                 .WithHandler<OrderPlaced>(null!)))
         .And("empty handler sets are rejected", _ =>
             ScenarioExpect.Throws<InvalidOperationException>(() => MaterializedView<OrderReadModel, OrderEvent>.Create("orders").Build()))
+        .And("null event streams are rejected", _ => AssertNullEventStreamRejectedAsync())
+        .And("null events are rejected", _ => AssertNullEventRejectedAsync())
         .AssertPassed();
+
+    private static Task AssertNullEventStreamRejectedAsync()
+        => ScenarioExpect.ThrowsAsync<ArgumentNullException>(() => MaterializedView<OrderReadModel, OrderEvent>.Create("orders")
+            .WithHandler<OrderPlaced>((state, _) => state)
+            .Build()
+            .ProjectAsync(new OrderReadModel("", ""), null!)
+            .AsTask());
+
+    private static Task AssertNullEventRejectedAsync()
+        => ScenarioExpect.ThrowsAsync<ArgumentException>(() => MaterializedView<OrderReadModel, OrderEvent>.Create("orders")
+            .WithHandler<OrderPlaced>((state, _) => state)
+            .Build()
+            .ProjectAsync(new OrderReadModel("", ""), [null!])
+            .AsTask());
 
     private abstract record OrderEvent(string OrderId);
 
@@ -58,7 +90,9 @@ public sealed class MaterializedViewTests(ITestOutputHelper output) : TinyBddXun
 
     private sealed record OrderReadModel(string OrderId, string Status);
 
-    private sealed record ProjectionEvent;
+    private record ProjectionEvent;
+
+    private sealed record ProjectionChildEvent : ProjectionEvent;
 
     private sealed record ProjectionState(IReadOnlyList<string> Steps)
     {

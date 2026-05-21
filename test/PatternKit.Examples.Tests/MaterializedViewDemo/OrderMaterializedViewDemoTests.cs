@@ -1,4 +1,5 @@
 using PatternKit.Examples.MaterializedViewDemo;
+using Microsoft.Extensions.DependencyInjection;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -29,6 +30,34 @@ public sealed class OrderMaterializedViewDemoTests(ITestOutputHelper output) : T
             ScenarioExpect.Equal("order-read-model", summary.ViewName);
             ScenarioExpect.Equal("Shipped", summary.Status);
             ScenarioExpect.Equal(3, summary.ChangeCount);
+        })
+        .AssertPassed();
+
+    [Scenario("Materialized view workflow is importable through IServiceCollection")]
+    [Fact]
+    public Task Materialized_View_Workflow_Is_Importable_Through_IServiceCollection()
+        => Given("an importing app service provider", () =>
+        {
+            var services = new ServiceCollection();
+            services.AddOrderMaterializedViewDemo();
+            return services.BuildServiceProvider(validateScopes: true);
+        })
+        .When("resolving and running the workflow", provider =>
+        {
+            using (provider)
+            {
+                var workflow = provider.GetRequiredService<OrderMaterializedViewWorkflow>();
+                return workflow.BuildReadModelAsync([
+                    new OrderPlacedForReadModel("order-di", "customer-di", 42m, DateTimeOffset.UtcNow),
+                    new OrderPaymentCapturedForReadModel("order-di", "payment-di", DateTimeOffset.UtcNow)
+                ]).AsTask();
+            }
+        })
+        .Then("the workflow projects the supplied events", summary =>
+        {
+            ScenarioExpect.Equal("order-di", summary.OrderId);
+            ScenarioExpect.Equal("Paid", summary.Status);
+            ScenarioExpect.Equal(2, summary.ChangeCount);
         })
         .AssertPassed();
 }

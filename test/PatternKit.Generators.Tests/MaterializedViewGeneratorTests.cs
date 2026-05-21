@@ -38,6 +38,36 @@ public sealed partial class MaterializedViewGeneratorTests(ITestOutputHelper out
             ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics)))
         .AssertPassed();
 
+    [Scenario("Generator emits async materialized view handlers")]
+    [Fact]
+    public Task Generator_Emits_Async_Materialized_View_Handlers()
+        => Given("a valid materialized view declaration with async handler", () => Compile("""
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.MaterializedViews;
+            public abstract record OrderEvent(string OrderId);
+            public sealed record OrderPaid(string OrderId) : OrderEvent(OrderId);
+            public sealed record OrderState(string OrderId);
+            [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent), FactoryName = "CreateProjection")]
+            internal partial struct OrderProjection
+            {
+                [MaterializedViewHandler(typeof(OrderPaid), Order = 20)]
+                private static ValueTask<OrderState> ApplyPaid(OrderState state, OrderPaid @event, CancellationToken cancellationToken)
+                    => new(new OrderState(@event.OrderId));
+            }
+            """))
+        .Then("generated source uses async handler registration", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            var source = ScenarioExpect.Single(result.GeneratedSources);
+            ScenarioExpect.Contains("internal partial struct OrderProjection", source);
+            ScenarioExpect.Contains(".WithAsyncHandler<global::OrderPaid>(ApplyPaid, 20)", source);
+            ScenarioExpect.Contains("CreateProjection()", source);
+        })
+        .And("generated source compiles", result =>
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics)))
+        .AssertPassed();
+
     [Scenario("Generator reports invalid materialized view declarations")]
     [Fact]
     public Task Generator_Reports_Invalid_Materialized_View_Declarations()
@@ -50,6 +80,20 @@ public sealed partial class MaterializedViewGeneratorTests(ITestOutputHelper out
             """))
         .Then("the partial diagnostic is reported", result =>
             ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKMV001"))
+        .AssertPassed();
+
+    [Scenario("Generator reports materialized view declarations without handlers")]
+    [Fact]
+    public Task Generator_Reports_Materialized_View_Declarations_Without_Handlers()
+        => Given("a partial materialized view declaration without handlers", () => Compile("""
+            using PatternKit.Generators.MaterializedViews;
+            public abstract record OrderEvent(string OrderId);
+            public sealed record OrderState(string OrderId);
+            [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+            public static partial class OrderProjection;
+            """))
+        .Then("the missing handlers diagnostic is reported", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKMV002"))
         .AssertPassed();
 
     [Scenario("Generator reports invalid materialized view handlers")]
