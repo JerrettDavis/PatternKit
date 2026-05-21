@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.ApiGateway;
+using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.ObserverDemo;
@@ -91,6 +92,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var specifications = provider.GetRequiredService<LoanApprovalSpecificationsExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
+        var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -153,7 +155,8 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated interpreter evaluates VIP eligibility", interpreter.Eligibility.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.VipEligibilityRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 150m, CustomerTier = "Gold" })),
             ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
-            ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service))
+            ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
+            ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded)
         ];
     }
 

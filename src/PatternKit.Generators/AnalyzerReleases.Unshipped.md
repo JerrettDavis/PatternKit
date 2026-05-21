@@ -189,6 +189,8 @@ PKBT002 | PatternKit.Generators.Messaging | Error | Backplane topology must decl
 PKBT003 | PatternKit.Generators.Messaging | Error | Backplane request/reply declaration is invalid.
 PKBT004 | PatternKit.Generators.Messaging | Error | Backplane subscription declaration is invalid.
 PKBT005 | PatternKit.Generators.Messaging | Error | Backplane request default route is duplicated.
+PKBH001 | PatternKit.Generators.Bulkhead | Error | Bulkhead policy host must be partial.
+PKBH002 | PatternKit.Generators.Bulkhead | Error | Bulkhead policy configuration is invalid.
 PKCB001 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy host must be partial.
 PKCB002 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy configuration is invalid.
 PKCB003 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate signature is invalid.
