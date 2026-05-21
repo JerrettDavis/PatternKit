@@ -599,7 +599,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/product-search-rate-limiting.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["Rate Limiting"],
-            ["tenant partitioning", "source-generated policy factory", "DI composition"])
+            ["tenant partitioning", "source-generated policy factory", "DI composition"]),
+        Descriptor(
+            "Tenant External Configuration Store",
+            "src/PatternKit.Examples/ExternalConfigurationStoreDemo/TenantExternalConfigurationStoreDemo.cs",
+            "test/PatternKit.Examples.Tests/ExternalConfigurationStoreDemo/TenantExternalConfigurationStoreDemoTests.cs",
+            "docs/examples/tenant-external-configuration-store.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["External Configuration Store"],
+            ["central settings provider", "typed validation", "source-generated store factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

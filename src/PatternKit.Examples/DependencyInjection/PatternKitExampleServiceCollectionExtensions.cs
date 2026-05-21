@@ -29,6 +29,7 @@ using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.EventSourcingDemo;
+using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
@@ -169,6 +170,7 @@ public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> 
 public sealed record FulfillmentQueueLoadLevelingExample(QueueLoadLevelingPolicy<FulfillmentQueueResult> Policy, FulfillmentQueueLoadLevelingService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
+public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -241,7 +243,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddShippingBulkheadExample()
             .AddFulfillmentQueueLoadLevelingExample()
             .AddProductCatalogCacheAsideExample()
-            .AddProductSearchRateLimitingExample();
+            .AddProductSearchRateLimitingExample()
+            .AddTenantExternalConfigurationStoreExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -824,6 +827,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<RateLimitPolicy<SearchResponse>>(),
             sp.GetRequiredService<ProductSearchRateLimitService>()));
         return services.RegisterExample<ProductSearchRateLimitingExample>("Product Search Rate Limiting", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddTenantExternalConfigurationStoreExample(this IServiceCollection services)
+    {
+        services.AddTenantExternalConfigurationStoreDemo();
+        services.AddSingleton<TenantExternalConfigurationStoreExample>(sp => new(
+            sp.GetRequiredService<TenantExternalConfigurationStoreDemoRunner>(),
+            sp.GetRequiredService<TenantExternalConfigurationService>()));
+        return services.RegisterExample<TenantExternalConfigurationStoreExample>("Tenant External Configuration Store", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

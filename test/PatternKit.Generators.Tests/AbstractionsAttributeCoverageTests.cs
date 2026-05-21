@@ -4,6 +4,7 @@ using PatternKit.Generators.Bulkhead;
 using PatternKit.Generators.CacheAside;
 using PatternKit.Generators.Chain;
 using PatternKit.Generators.CircuitBreaker;
+using PatternKit.Generators.Cloud;
 using PatternKit.Generators.Command;
 using PatternKit.Generators.Composite;
 using PatternKit.Generators.Composer;
@@ -72,6 +73,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateBulkheadPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCacheAsidePolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CacheAsidePredicateAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateExternalConfigurationStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ExternalConfigurationLoaderAttribute), AttributeTargets.Method, false, false },
+        { typeof(ExternalConfigurationValidatorAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ChainHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(ChainDefaultAttribute), AttributeTargets.Method, false, false },
@@ -235,13 +239,29 @@ public sealed class AbstractionsAttributeCoverageTests
             PolicyName = "products",
             TimeToLiveMilliseconds = 250
         };
+        var externalConfig = new GenerateExternalConfigurationStoreAttribute(typeof(string))
+        {
+            FactoryName = "BuildTenantConfig",
+            StoreName = "tenant-config",
+            CacheMilliseconds = 1000
+        };
+        var externalValidator = new ExternalConfigurationValidatorAttribute("Endpoint is required.", 10);
 
         ScenarioExpect.Equal(typeof(string), cacheAside.ResultType);
         ScenarioExpect.Equal("BuildProductCache", cacheAside.FactoryMethodName);
         ScenarioExpect.Equal("products", cacheAside.PolicyName);
         ScenarioExpect.Equal(250, cacheAside.TimeToLiveMilliseconds);
+        ScenarioExpect.Equal(typeof(string), externalConfig.SettingsType);
+        ScenarioExpect.Equal("BuildTenantConfig", externalConfig.FactoryName);
+        ScenarioExpect.Equal("tenant-config", externalConfig.StoreName);
+        ScenarioExpect.Equal(1000, externalConfig.CacheMilliseconds);
+        ScenarioExpect.Equal("Endpoint is required.", externalValidator.RejectionReason);
+        ScenarioExpect.Equal(10, externalValidator.Order);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCacheAsidePolicyAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateExternalConfigurationStoreAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ExternalConfigurationValidatorAttribute("", 1));
         ScenarioExpect.IsType<CacheAsidePredicateAttribute>(new CacheAsidePredicateAttribute());
+        ScenarioExpect.IsType<ExternalConfigurationLoaderAttribute>(new ExternalConfigurationLoaderAttribute());
     }
 
     [Scenario("Anti Corruption Attributes Expose Defaults And Validation")]

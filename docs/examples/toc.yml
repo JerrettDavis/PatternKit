@@ -189,3 +189,6 @@
 
 - name: Product Search Rate Limiting
   href: product-search-rate-limiting.md
+
+- name: Tenant External Configuration Store
+  href: tenant-external-configuration-store.md

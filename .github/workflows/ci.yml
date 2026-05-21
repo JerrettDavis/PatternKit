@@ -73,7 +73,7 @@ jobs:
             -assemblyfilters:"+PatternKit*;-*Tests*" \
             -filefilters:"-**/*.Tests/*;-**/*Tests*/**"
           echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_ENV
-          cat coverage-report/Summary.txt >> $GITHUB_ENV
+          sed -n '1,60p' coverage-report/Summary.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Upload coverage HTML report

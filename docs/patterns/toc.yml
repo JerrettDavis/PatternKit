@@ -339,6 +339,8 @@
           href: cloud/cache-aside.md
         - name: Rate Limiting
           href: cloud/rate-limiting.md
+        - name: External Configuration Store
+          href: cloud/external-configuration-store.md
     - name: Application Architecture
       items:
         - name: Anti-Corruption Layer
