@@ -39,6 +39,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
     private static readonly string[] EnterprisePatternAdditions =
     [
         "Message Envelope",
+        "Message Translator",
         "Content-Based Router",
         "Recipient List",
         "Splitter",
@@ -99,7 +100,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(EnterprisePatternAdditions.OrderBy(static x => x), patterns.Select(static p => p.Name).OrderBy(static x => x)))
             .And("enterprise entries are grouped by integration reliability and architecture families", patterns =>
             {
-                ScenarioExpect.Equal(10, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
+                ScenarioExpect.Equal(11, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(5, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));

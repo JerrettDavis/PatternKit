@@ -1,9 +1,10 @@
 # Messaging Generators
 
-PatternKit includes ten messaging-oriented source generators:
+PatternKit includes eleven messaging-oriented source generators:
 
 - <xref:PatternKit.Generators.Messaging.GenerateDispatcherAttribute> for source-generated mediator dispatchers.
 - <xref:PatternKit.Generators.Messaging.GenerateMessageEnvelopeAttribute> for required message-envelope contracts.
+- <xref:PatternKit.Generators.Messaging.GenerateMessageTranslatorAttribute> for partner and transport message normalization.
 - <xref:PatternKit.Generators.Messaging.GenerateContentRouterAttribute> for content-based message routers.
 - <xref:PatternKit.Generators.Messaging.GenerateRecipientListAttribute> for recipient-list fan-out.
 - <xref:PatternKit.Generators.Messaging.GenerateSplitterAttribute> and <xref:PatternKit.Generators.Messaging.GenerateAggregatorAttribute> for split/rejoin routing.
@@ -55,6 +56,32 @@ Example source:
 
 - `src/PatternKit.Examples/Messaging/MessageEnvelopeExample.cs`
 - `test/PatternKit.Examples.Tests/Messaging/MessageEnvelopeExampleTests.cs`
+
+## Generated Message Translator
+
+`[GenerateMessageTranslator]` creates a `MessageTranslator<TInput,TOutput>` factory from one static handler method:
+
+```csharp
+using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
+
+[GenerateMessageTranslator(typeof(PartnerOrderAccepted), typeof(CommerceOrderAccepted))]
+[MessageTranslatorDropHeader("raw-signature")]
+[MessageTranslatorHeader(MessageHeaderNames.ContentType, "application/vnd.myapp.order+json")]
+public static partial class PartnerOrderTranslator
+{
+    [MessageTranslatorHandler]
+    private static CommerceOrderAccepted Translate(Message<PartnerOrderAccepted> message, MessageContext context)
+        => new($"commerce-{message.Payload.ExternalOrderId}", message.Payload.Amount, message.Payload.PartnerId);
+}
+```
+
+The generated factory preserves headers by default, then applies declared drop/set policies. See [Message Translator Generator](message-translator.md) for diagnostics and examples.
+
+Example source:
+
+- `src/PatternKit.Examples/Messaging/PartnerEventTranslatorExample.cs`
+- `test/PatternKit.Examples.Tests/Messaging/PartnerEventTranslatorExampleTests.cs`
 
 ## Generated Content Router
 

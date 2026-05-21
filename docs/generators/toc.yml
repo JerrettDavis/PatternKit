@@ -64,6 +64,9 @@
 - name: Messaging Generators
   href: messaging.md
 
+- name: Message Translator
+  href: message-translator.md
+
 - name: Prototype
   href: prototype.md
 

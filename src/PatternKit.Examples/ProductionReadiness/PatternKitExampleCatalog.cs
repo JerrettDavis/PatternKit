@@ -241,6 +241,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageEnvelope"],
             ["required headers", "source-generated factory", "DI composition"]),
         Descriptor(
+            "Generated Message Translator",
+            "src/PatternKit.Examples/Messaging/PartnerEventTranslatorExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/PartnerEventTranslatorExampleTests.cs",
+            "docs/examples/generated-message-translator.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["MessageTranslator"],
+            ["partner event normalization", "source-generated translator", "DI composition"]),
+        Descriptor(
             "Generated Recipient List",
             "src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs",

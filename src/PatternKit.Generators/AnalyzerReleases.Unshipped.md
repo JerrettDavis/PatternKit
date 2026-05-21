@@ -178,6 +178,9 @@ PKME001 | PatternKit.Generators.Messaging | Error | Message envelope type must b
 PKME002 | PatternKit.Generators.Messaging | Error | Message envelope must declare at least one required header.
 PKME003 | PatternKit.Generators.Messaging | Error | Message envelope header configuration is invalid.
 PKME004 | PatternKit.Generators.Messaging | Error | Message envelope header name or generated parameter name is duplicated.
+PKMT001 | PatternKit.Generators.Messaging | Error | Message translator host must be partial.
+PKMT002 | PatternKit.Generators.Messaging | Error | Message translator must declare exactly one handler.
+PKMT003 | PatternKit.Generators.Messaging | Error | Message translator handler signature is invalid.
 PKMB001 | PatternKit.Generators.Messaging | Error | Mailbox type must be partial.
 PKMB002 | PatternKit.Generators.Messaging | Error | Mailbox must declare exactly one handler.
 PKMB003 | PatternKit.Generators.Messaging | Error | Mailbox handler signature is invalid.

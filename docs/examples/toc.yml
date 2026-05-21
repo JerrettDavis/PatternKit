@@ -58,6 +58,9 @@
 - name: Generated Message Envelope
   href: generated-message-envelope.md
 
+- name: Generated Message Translator
+  href: generated-message-translator.md
+
 - name: Generated Recipient List
   href: generated-recipient-list.md
 

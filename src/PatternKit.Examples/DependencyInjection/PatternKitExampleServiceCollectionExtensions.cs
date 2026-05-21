@@ -45,6 +45,7 @@ using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TemplateDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
+using PatternKit.Messaging.Transformation;
 using PatternKit.Structural.Decorator;
 using PatternKit.Structural.Proxy;
 using CheckoutRequest = PatternKit.Examples.Messaging.CheckoutRequest;
@@ -104,6 +105,7 @@ public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
+public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -157,6 +159,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
             .AddGeneratedMessageEnvelopeExample()
+            .AddGeneratedMessageTranslatorExample()
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddPatternsShowcaseExample()
@@ -386,6 +389,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddMessageEnvelopeExample();
         services.AddSingleton<GeneratedMessageEnvelopeExample>(sp => new(sp.GetRequiredService<MessageEnvelopeExampleRunner>()));
         return services.RegisterExample<GeneratedMessageEnvelopeExample>("Generated Message Envelope", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedMessageTranslatorExample(this IServiceCollection services)
+    {
+        services.AddPartnerEventTranslatorExample();
+        services.AddSingleton<GeneratedMessageTranslatorExample>(sp => new(
+            sp.GetRequiredService<PartnerEventTranslatorExampleRunner>(),
+            sp.GetRequiredService<PartnerOrderImportService>()));
+        return services.RegisterExample<GeneratedMessageTranslatorExample>("Generated Message Translator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddGeneratedRecipientListExample(this IServiceCollection services)
