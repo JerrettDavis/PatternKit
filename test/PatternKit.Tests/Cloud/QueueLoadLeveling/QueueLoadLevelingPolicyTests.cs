@@ -73,15 +73,51 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
             ScenarioExpect.Throws<ArgumentNullException>(() => QueueLoadLevelingPolicy<string>.Create().Build().Execute(null!)))
         .AssertPassed();
 
+    [Scenario("Queue load leveling times out queued work")]
+    [Fact]
+    public Task Queue_Load_Leveling_Times_Out_Queued_Work()
+        => Given("a queue load leveling policy with a short queue timeout", () => QueueLoadLevelingPolicy<string>.Create("fulfillment")
+            .WithMaxConcurrentWorkers(1)
+            .WithMaxQueueLength(1)
+            .WithQueueTimeout(TimeSpan.FromMilliseconds(1))
+            .Build())
+        .When("queued work cannot acquire a worker before the timeout", policy => TimeoutQueuedWorkAsync(policy))
+        .Then("the queued work reports a timeout", result =>
+        {
+            ScenarioExpect.False(result.Accepted);
+            ScenarioExpect.False(result.Rejected);
+            ScenarioExpect.True(result.TimedOut);
+            ScenarioExpect.True(result.Queued);
+        })
+        .AssertPassed();
+
+    [Scenario("Queue load leveling honors cancellation before enqueueing")]
+    [Fact]
+    public Task Queue_Load_Leveling_Honors_Cancellation_Before_Enqueueing()
+        => Given("a queue load leveling policy and canceled token", () => new
+        {
+            Policy = QueueLoadLevelingPolicy<string>.Create("fulfillment").Build(),
+            Cancellation = new CancellationToken(canceled: true)
+        })
+        .Then("cancellation is propagated", state =>
+            ScenarioExpect.Throws<OperationCanceledException>(() => state.Policy
+                .ExecuteAsync(_ => new ValueTask<string>("canceled"), state.Cancellation)
+                .AsTask()
+                .GetAwaiter()
+                .GetResult()))
+        .AssertPassed();
+
     private static async Task<QueueLoadLevelingResult<string>> QueueBehindBusyWorkerAsync(QueueLoadLevelingPolicy<string> policy)
     {
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var first = policy.ExecuteAsync(async _ =>
         {
+            entered.SetResult();
             await release.Task;
             return "first";
         }).AsTask();
-        await Task.Delay(25);
+        await entered.Task;
         var second = policy.ExecuteAsync(_ => new ValueTask<string>("second")).AsTask();
         release.SetResult();
         await first;
@@ -91,15 +127,34 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
     private static async Task<QueueLoadLevelingResult<string>> RejectOverflowAsync(QueueLoadLevelingPolicy<string> policy)
     {
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var first = policy.ExecuteAsync(async _ =>
         {
+            entered.SetResult();
             await release.Task;
             return "first";
         }).AsTask();
-        await Task.Delay(25);
+        await entered.Task;
         var rejected = await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
         release.SetResult();
         await first;
         return rejected;
+    }
+
+    private static async Task<QueueLoadLevelingResult<string>> TimeoutQueuedWorkAsync(QueueLoadLevelingPolicy<string> policy)
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = policy.ExecuteAsync(async _ =>
+        {
+            entered.SetResult();
+            await release.Task;
+            return "first";
+        }).AsTask();
+        await entered.Task;
+        var timedOut = await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
+        release.SetResult();
+        await first;
+        return timedOut;
     }
 }

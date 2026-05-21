@@ -56,6 +56,44 @@ public sealed partial class QueueLoadLevelingPolicyGeneratorTests(ITestOutputHel
         })
         .AssertPassed();
 
+    [Scenario("Generates queue load leveling policies with defaults and escaped names")]
+    [Fact]
+    public Task Generates_Queue_Load_Leveling_Policies_With_Defaults_And_Escaped_Names()
+        => Given("queue load leveling declarations with generator defaults", () => new[]
+        {
+            Compile("""
+                using PatternKit.Generators.QueueLoadLeveling;
+                [GenerateQueueLoadLevelingPolicy(typeof(string))]
+                internal partial struct QueueDefaults;
+                """),
+            Compile("""
+                using PatternKit.Generators.QueueLoadLeveling;
+                namespace Demo;
+                [GenerateQueueLoadLevelingPolicy(typeof(string), PolicyName = "queue\"" + "\\level")]
+                public abstract partial class EscapedQueue;
+                """)
+        })
+        .Then("the generated sources preserve host shape and configured names", results =>
+        {
+            var defaultSource = ScenarioExpect.Single(results[0].GeneratedSources);
+            ScenarioExpect.Empty(results[0].Diagnostics);
+            ScenarioExpect.Contains("internal partial struct QueueDefaults", defaultSource);
+            ScenarioExpect.Contains("Create()", defaultSource);
+            ScenarioExpect.Contains("QueueLoadLevelingPolicy<string>.Create(\"queue-load-leveling\")", defaultSource);
+            ScenarioExpect.Contains(".WithMaxConcurrentWorkers(1)", defaultSource);
+            ScenarioExpect.Contains(".WithMaxQueueLength(100)", defaultSource);
+            ScenarioExpect.Contains(".WithQueueTimeout(global::System.TimeSpan.FromMilliseconds(30000))", defaultSource);
+            ScenarioExpect.True(results[0].EmitSuccess, string.Join(Environment.NewLine, results[0].EmitDiagnostics));
+
+            var escapedSource = ScenarioExpect.Single(results[1].GeneratedSources);
+            ScenarioExpect.Empty(results[1].Diagnostics);
+            ScenarioExpect.Contains("namespace Demo;", escapedSource);
+            ScenarioExpect.Contains("public abstract partial class EscapedQueue", escapedSource);
+            ScenarioExpect.Contains("Create(\"queue\\\"\\\\level\")", escapedSource);
+            ScenarioExpect.True(results[1].EmitSuccess, string.Join(Environment.NewLine, results[1].EmitDiagnostics));
+        })
+        .AssertPassed();
+
     private static GeneratorResult Compile(string source)
     {
         var compilation = RoslynTestHelpers.CreateCompilation(
