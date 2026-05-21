@@ -288,3 +288,7 @@ PKMF001 | PatternKit.Generators.Messaging | Error | Message filter host type mus
 PKMF002 | PatternKit.Generators.Messaging | Error | Message filter must declare at least one rule.
 PKMF003 | PatternKit.Generators.Messaging | Error | Message filter rule method signature is invalid.
 PKMF004 | PatternKit.Generators.Messaging | Error | Message filter rule name or order is duplicated.
+PKWT001 | PatternKit.Generators.Messaging | Error | Wire Tap host type must be partial.
+PKWT002 | PatternKit.Generators.Messaging | Error | Wire Tap must declare at least one handler.
+PKWT003 | PatternKit.Generators.Messaging | Error | Wire Tap handler signature is invalid.
+PKWT004 | PatternKit.Generators.Messaging | Error | Wire Tap handler name or order is duplicated.

@@ -103,6 +103,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var competingConsumers = provider.GetRequiredService<FulfillmentCompetingConsumersExampleService>();
         var pipesAndFilters = provider.GetRequiredService<FulfillmentPipesAndFiltersExampleService>();
         var messageFilter = provider.GetRequiredService<OrderMessageFilterExampleService>();
+        var wireTap = provider.GetRequiredService<OrderWireTapExampleService>();
         var generatedTranslator = provider.GetRequiredService<GeneratedMessageTranslatorExample>();
         var generatedClaimCheck = provider.GetRequiredService<GeneratedClaimCheckExample>();
         var generatedDeadLetters = provider.GetRequiredService<GeneratedDeadLetterChannelExample>();
@@ -190,6 +191,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated competing consumers dispatch fulfillment work", competingConsumers.Service.DispatchAsync(new FulfillmentConsumerWork("ORDER-CC", "central")).GetAwaiter().GetResult().Accepted),
             ("generated pipes and filters publish fulfillment work", pipesAndFilters.Service.ProcessAsync("ORDER-PF").GetAwaiter().GetResult().Value.Published),
             ("generated message filter screens trusted orders", messageFilter.Service.Screen(new("ORDER-MF", "trusted", 250m, true)).Accepted),
+            ("generated wire tap records observability side channels", wireTap.Service.Publish(new("ORDER-WT", "tenant-a", 125m)).InvokedTaps.Count == 2),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),
             ("CQRS generated path matches command writes to query reads", cqrsGenerated.QueryMatchedCommand),

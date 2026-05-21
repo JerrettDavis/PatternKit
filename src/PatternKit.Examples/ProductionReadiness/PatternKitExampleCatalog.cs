@@ -289,6 +289,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageFilter"],
             ["fraud-screening allow rules", "source-generated filter", "DI composition"]),
         Descriptor(
+            "Order Wire Tap",
+            "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",
+            "docs/examples/order-wire-tap.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["WireTap"],
+            ["audit side channel", "metrics side channel", "source-generated tap factory", "DI composition"]),
+        Descriptor(
             "Fulfillment Competing Consumers",
             "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",

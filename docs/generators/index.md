@@ -86,6 +86,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Dead Letter Channel**](dead-letter-channel.md) | Failed-message capture and replay handoff | `[GenerateDeadLetterChannel]` |
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
 | [**Message Filter**](message-filter.md) | Named allow-rule filters for message consumers | `[GenerateMessageFilter]` |
+| [**Wire Tap**](wire-tap.md) | Side-channel message observability factories | `[GenerateWireTap]` |
 | [**Recipient List**](messaging.md#generated-recipient-list) | Recipient fan-out factories | `[GenerateRecipientList]` |
 | [**Splitter / Aggregator**](messaging.md#generated-splitter-and-aggregator) | Split/rejoin message routing factories | `[GenerateSplitter]` / `[GenerateAggregator]` |
 | [**Routing Slip**](messaging.md#generated-routing-slip) | Ordered message itinerary factories | `[GenerateRoutingSlip]` |

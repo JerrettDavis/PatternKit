@@ -94,6 +94,9 @@
 - name: Message Filter
   href: message-filter.md
 
+- name: Wire Tap
+  href: wire-tap.md
+
 - name: Competing Consumers
   href: competing-consumers.md
 
