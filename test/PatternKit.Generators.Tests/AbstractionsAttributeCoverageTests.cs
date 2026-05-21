@@ -23,6 +23,7 @@ using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
+using PatternKit.Generators.QueueLoadLeveling;
 using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
@@ -169,6 +170,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(PrototypeStrategyAttribute), AttributeTargets.Property | AttributeTargets.Field, false, false },
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateQueueLoadLevelingPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRateLimitPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRepositoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RepositoryKeySelectorAttribute), AttributeTargets.Method, false, false },
@@ -334,6 +336,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(8, bulkhead.MaxQueueLength);
         ScenarioExpect.Equal(250, bulkhead.QueueTimeoutMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBulkheadPolicyAttribute(null!));
+    }
+
+    [Scenario("Queue Load Leveling Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void QueueLoadLeveling_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var policy = new GenerateQueueLoadLevelingPolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildFulfillmentQueue",
+            PolicyName = "fulfillment-queue",
+            MaxConcurrentWorkers = 2,
+            MaxQueueLength = 32,
+            QueueTimeoutMilliseconds = 500
+        };
+
+        ScenarioExpect.Equal(typeof(string), policy.ResultType);
+        ScenarioExpect.Equal("BuildFulfillmentQueue", policy.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment-queue", policy.PolicyName);
+        ScenarioExpect.Equal(2, policy.MaxConcurrentWorkers);
+        ScenarioExpect.Equal(32, policy.MaxQueueLength);
+        ScenarioExpect.Equal(500, policy.QueueTimeoutMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateQueueLoadLevelingPolicyAttribute(null!));
     }
 
     [Scenario("Circuit Breaker Attributes Expose Defaults And Configuration")]

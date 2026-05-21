@@ -545,6 +545,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Bulkhead"],
             ["concurrency isolation", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Fulfillment Queue Load Leveling",
+            "src/PatternKit.Examples/QueueLoadLevelingDemo/FulfillmentQueueLoadLevelingDemo.cs",
+            "test/PatternKit.Examples.Tests/QueueLoadLevelingDemo/FulfillmentQueueLoadLevelingDemoTests.cs",
+            "docs/examples/fulfillment-queue-load-leveling.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Queue-Based Load Leveling"],
+            ["bounded worker queue", "source-generated policy factory", "DI composition"]),
+        Descriptor(
             "Product Catalog Cache-Aside",
             "src/PatternKit.Examples/CacheAsideDemo/ProductCatalogCacheAsideDemo.cs",
             "test/PatternKit.Examples.Tests/CacheAsideDemo/ProductCatalogCacheAsideDemoTests.cs",
