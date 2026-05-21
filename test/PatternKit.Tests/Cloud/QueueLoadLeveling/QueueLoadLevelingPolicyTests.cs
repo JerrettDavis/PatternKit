@@ -79,7 +79,7 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
         => Given("a queue load leveling policy with a short queue timeout", () => QueueLoadLevelingPolicy<string>.Create("fulfillment")
             .WithMaxConcurrentWorkers(1)
             .WithMaxQueueLength(1)
-            .WithQueueTimeout(TimeSpan.FromMilliseconds(1))
+            .WithQueueTimeout(TimeSpan.Zero)
             .Build())
         .When("queued work cannot acquire a worker before the timeout", policy => TimeoutQueuedWorkAsync(policy))
         .Then("the queued work reports a timeout", result =>
@@ -118,10 +118,20 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
             return "first";
         }).AsTask();
         await entered.Task;
-        var second = policy.ExecuteAsync(_ => new ValueTask<string>("second")).AsTask();
-        release.SetResult();
-        await first;
-        return await second;
+        try
+        {
+            var second = policy.ExecuteAsync(_ => new ValueTask<string>("second")).AsTask();
+            ScenarioExpect.True(SpinWait.SpinUntil(() => policy.QueuedCount == 1, TimeSpan.FromSeconds(1)));
+            release.SetResult();
+            await first;
+            return await second;
+        }
+        finally
+        {
+            if (!first.IsCompleted)
+                release.TrySetResult();
+            await first;
+        }
     }
 
     private static async Task<QueueLoadLevelingResult<string>> RejectOverflowAsync(QueueLoadLevelingPolicy<string> policy)
@@ -135,10 +145,15 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
             return "first";
         }).AsTask();
         await entered.Task;
-        var rejected = await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
-        release.SetResult();
-        await first;
-        return rejected;
+        try
+        {
+            return await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
+        }
+        finally
+        {
+            release.TrySetResult();
+            await first;
+        }
     }
 
     private static async Task<QueueLoadLevelingResult<string>> TimeoutQueuedWorkAsync(QueueLoadLevelingPolicy<string> policy)
@@ -152,9 +167,14 @@ public sealed class QueueLoadLevelingPolicyTests(ITestOutputHelper output) : Tin
             return "first";
         }).AsTask();
         await entered.Task;
-        var timedOut = await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
-        release.SetResult();
-        await first;
-        return timedOut;
+        try
+        {
+            return await policy.ExecuteAsync(_ => new ValueTask<string>("second"));
+        }
+        finally
+        {
+            release.TrySetResult();
+            await first;
+        }
     }
 }
