@@ -281,6 +281,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Splitter", "Aggregator"],
             ["split/rejoin routing", "source-generated factories", "DI composition"]),
         Descriptor(
+            "Fulfillment Competing Consumers",
+            "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",
+            "docs/examples/fulfillment-competing-consumers.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["CompetingConsumers"],
+            ["shared work stream", "source-generated builder", "DI composition"]),
+        Descriptor(
             "CQRS Dispatcher",
             "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",

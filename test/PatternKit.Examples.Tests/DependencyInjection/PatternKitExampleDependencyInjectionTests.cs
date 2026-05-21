@@ -100,6 +100,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var antiCorruption = provider.GetRequiredService<LegacyOrderAntiCorruptionExample>();
         var routing = provider.GetRequiredService<MessageRouterVisitorExample>();
         var generatedRecipients = provider.GetRequiredService<GeneratedRecipientListExample>();
+        var competingConsumers = provider.GetRequiredService<FulfillmentCompetingConsumersExampleService>();
         var generatedTranslator = provider.GetRequiredService<GeneratedMessageTranslatorExample>();
         var generatedClaimCheck = provider.GetRequiredService<GeneratedClaimCheckExample>();
         var generatedDeadLetters = provider.GetRequiredService<GeneratedDeadLetterChannelExample>();
@@ -184,6 +185,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated claim check restores large document payloads", generatedClaimCheck.Workflow.Process(LargeDocumentClaimCheckExample.CreateDocumentMessage("doc-100")).Restored),
             ("generated dead-letter channel prepares replay handoff", generatedDeadLetters.Workflow.Capture(FulfillmentDeadLetterChannelExample.CreateCommand("order-100"), "adapter failed").ReadyForReplay),
             ("generated recipient list delivers billing and audit recipients", generatedRecipientList.DeliveredRecipients.Count == 2),
+            ("generated competing consumers dispatch fulfillment work", competingConsumers.Service.DispatchAsync(new FulfillmentConsumerWork("ORDER-CC", "central")).GetAwaiter().GetResult().Accepted),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),
             ("CQRS generated path matches command writes to query reads", cqrsGenerated.QueryMatchedCommand),

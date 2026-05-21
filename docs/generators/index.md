@@ -207,6 +207,10 @@ public static partial class OrderAcceptedEnvelope { }
 [GenerateContentRouter(typeof(Order), typeof(string))]
 public static partial class OrderRouter { }
 
+// Competing consumers - generated shared work group builder
+[GenerateCompetingConsumerGroup(typeof(OrderWork), typeof(OrderResult), MaxConcurrentDeliveries = 4)]
+public static partial class OrderConsumers { }
+
 // Splitter and aggregator - generated split/rejoin factories
 [GenerateSplitter(typeof(Order), typeof(OrderLine))]
 public static partial class OrderSplitter { }

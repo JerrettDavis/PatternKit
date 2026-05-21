@@ -59,6 +59,7 @@ using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
+using PatternKit.Messaging.CompetingConsumers;
 using PatternKit.Messaging.Transformation;
 using PatternKit.Structural.Decorator;
 using PatternKit.Structural.Proxy;
@@ -124,6 +125,7 @@ public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRu
 public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChannelExampleRunner Runner, FulfillmentDeadLetterWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
+public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
@@ -193,6 +195,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedDeadLetterChannelExample()
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
+            .AddFulfillmentCompetingConsumersExample()
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
             .AddEnterpriseMessagingWorkflowSuiteExample()
@@ -474,6 +477,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddMessageRoutingExample();
         services.AddSingleton<GeneratedSplitterAggregatorExample>(sp => new(sp.GetRequiredService<MessageRoutingExampleRunner>()));
         return services.RegisterExample<GeneratedSplitterAggregatorExample>("Generated Splitter and Aggregator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentCompetingConsumersDemo();
+        services.AddSingleton<FulfillmentCompetingConsumersExampleService>(sp => new(
+            sp.GetRequiredService<CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult>>(),
+            sp.GetRequiredService<FulfillmentCompetingConsumerService>()));
+        return services.RegisterExample<FulfillmentCompetingConsumersExampleService>("Fulfillment Competing Consumers", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPatternsShowcaseExample(this IServiceCollection services)

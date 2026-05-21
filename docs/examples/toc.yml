@@ -73,6 +73,9 @@
 - name: Generated Splitter and Aggregator
   href: generated-splitter-aggregator.md
 
+- name: Fulfillment Competing Consumers
+  href: fulfillment-competing-consumers.md
+
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 
