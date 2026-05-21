@@ -297,6 +297,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Specification"],
             ["composable business rules", "source-generated registry", "DI composition"]),
         Descriptor(
+            "Order Repository Pattern",
+            "src/PatternKit.Examples/RepositoryDemo/OrderRepositoryDemo.cs",
+            "test/PatternKit.Examples.Tests/RepositoryDemo/OrderRepositoryDemoTests.cs",
+            "docs/examples/order-repository-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Repository"],
+            ["collection-like persistence boundary", "source-generated repository factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

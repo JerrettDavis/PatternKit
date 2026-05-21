@@ -18,6 +18,7 @@ using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
 using PatternKit.Generators.RateLimiting;
+using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
@@ -144,6 +145,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
         { typeof(GenerateRateLimitPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateRepositoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(RepositoryKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateRetryPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(RetryResultPredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(RetryExceptionPredicateAttribute), AttributeTargets.Method, false, false },
@@ -236,6 +239,10 @@ public sealed class AbstractionsAttributeCoverageTests
             PermitLimit = 10,
             WindowMilliseconds = 1000
         };
+        var repository = new GenerateRepositoryAttribute(typeof(string), typeof(Guid))
+        {
+            FactoryName = "BuildRepository"
+        };
 
         ScenarioExpect.Equal(typeof(string), rateLimit.ResultType);
         ScenarioExpect.Equal("BuildSearchLimit", rateLimit.FactoryMethodName);
@@ -243,6 +250,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(10, rateLimit.PermitLimit);
         ScenarioExpect.Equal(1000, rateLimit.WindowMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRateLimitPolicyAttribute(null!));
+        ScenarioExpect.Equal(typeof(string), repository.EntityType);
+        ScenarioExpect.Equal(typeof(Guid), repository.KeyType);
+        ScenarioExpect.Equal("BuildRepository", repository.FactoryName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<RepositoryKeySelectorAttribute>(new RepositoryKeySelectorAttribute());
     }
 
     [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]

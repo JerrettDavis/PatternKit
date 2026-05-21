@@ -79,6 +79,9 @@
 - name: Loan Approval Specifications
   href: loan-approval-specifications.md
 
+- name: Order Repository Pattern
+  href: order-repository-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

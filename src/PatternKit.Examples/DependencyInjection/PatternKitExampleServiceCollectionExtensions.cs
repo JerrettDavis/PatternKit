@@ -37,6 +37,7 @@ using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
 using PatternKit.Examples.RateLimitingDemo;
+using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.RetryDemo;
 using PatternKit.Examples.Singleton;
 using PatternKit.Examples.SpecificationDemo;
@@ -120,6 +121,7 @@ public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, Che
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
+public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -176,6 +178,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddMessagingBackplaneFacadeExample()
             .AddGeneratedInterpreterRulesExample()
             .AddLoanApprovalSpecificationsExample()
+            .AddOrderRepositoryPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -506,6 +509,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication>>(),
             sp.GetRequiredService<LoanApprovalService>()));
         return services.RegisterExample<LoanApprovalSpecificationsExample>("Loan Approval Specifications", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderRepositoryPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderRepositoryDemo();
+        services.AddSingleton<OrderRepositoryPatternExample>(sp => new(
+            sp.GetRequiredService<OrderRepositoryDemoRunner>(),
+            sp.GetRequiredService<OrderRepositoryWorkflow>()));
+        return services.RegisterExample<OrderRepositoryPatternExample>("Order Repository Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

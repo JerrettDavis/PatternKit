@@ -10,6 +10,7 @@ using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.ProductionReadiness;
 using PatternKit.Examples.RateLimitingDemo;
+using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.Strategies.Composed;
 using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
 using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
@@ -98,6 +99,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
         var interpreter = provider.GetRequiredService<GeneratedInterpreterRulesExample>();
         var specifications = provider.GetRequiredService<LoanApprovalSpecificationsExample>();
+        var orderRepository = provider.GetRequiredService<OrderRepositoryPatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -168,6 +170,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated interpreter computes tier discounts", interpreter.Pricing.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.TierDiscountRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 100m, CustomerTier = "Gold" }) == 10m),
             ("generated interpreter evaluates VIP eligibility", interpreter.Eligibility.Interpret(PatternKit.Examples.InterpreterDemo.InterpreterDemo.VipEligibilityRule, new PatternKit.Examples.InterpreterDemo.InterpreterDemo.PricingContext { CartTotal = 150m, CustomerTier = "Gold" })),
             ("generated specification registry approves prime loans", specifications.Service.Evaluate(PatternKit.Examples.SpecificationDemo.LoanApprovalSpecificationDemo.CreatePrimeApplication()).Approved),
+            ("repository example rejects duplicate order keys", orderRepository.Workflow.RunAsync().AsTask().GetAwaiter().GetResult().DuplicateRejected),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
