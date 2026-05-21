@@ -46,6 +46,9 @@
 - name: Event Sourcing
   href: event-sourcing.md
 
+- name: Feature Toggle
+  href: feature-toggle.md
+
 - name: Dispatcher
   href: dispatcher.md
 

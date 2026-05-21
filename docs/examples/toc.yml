@@ -106,6 +106,9 @@
 - name: Order Event Sourcing Pattern
   href: order-event-sourcing-pattern.md
 
+- name: Checkout Feature Toggle Pattern
+  href: checkout-feature-toggle-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

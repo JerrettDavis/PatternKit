@@ -351,6 +351,8 @@
           href: application/table-data-gateway.md
         - name: Event Sourcing
           href: application/event-sourcing.md
+        - name: Feature Toggle
+          href: application/feature-toggle.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

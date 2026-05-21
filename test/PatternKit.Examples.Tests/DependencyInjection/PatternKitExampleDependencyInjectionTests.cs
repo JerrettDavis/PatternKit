@@ -115,6 +115,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var domainEvents = provider.GetRequiredService<OrderDomainEventPatternExample>();
         var tableGateway = provider.GetRequiredService<OrderTableDataGatewayPatternExample>();
         var eventSourcing = provider.GetRequiredService<OrderEventSourcingPatternExample>();
+        var featureToggles = provider.GetRequiredService<CheckoutFeatureTogglePatternExample>();
         var inventoryRetry = provider.GetRequiredService<InventoryRetryExample>();
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
@@ -194,6 +195,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("domain event example dispatches order events", domainEvents.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Dispatched),
             ("table data gateway example queries order rows", tableGateway.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().ClosedOrderCount == 1),
             ("event sourcing example replays paid order streams", eventSourcing.Runner.RunFluentAsync().AsTask().GetAwaiter().GetResult().Paid),
+            ("feature toggle example evaluates checkout features", featureToggles.Runner.RunFluent().NewCheckoutEnabled),
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),

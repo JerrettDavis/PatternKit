@@ -12,6 +12,7 @@ using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
 using PatternKit.Generators.EventSourcing;
 using PatternKit.Generators.Facade;
+using PatternKit.Generators.FeatureToggles;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
 using PatternKit.Generators.IdentityMap;
@@ -96,6 +97,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
         { typeof(FacadeMapAttribute), AttributeTargets.Method, false, false },
         { typeof(FacadeIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateFeatureToggleSetAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(FeatureToggleRuleAttribute), AttributeTargets.Method, false, false },
         { typeof(FlyweightAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(FlyweightFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAbstractFactoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -1056,6 +1059,15 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildOrderEvents",
             StoreName = "order-events"
         };
+        var featureToggles = new GenerateFeatureToggleSetAttribute(typeof(string))
+        {
+            FactoryName = "BuildCheckoutToggles",
+            SetName = "checkout"
+        };
+        var featureToggleRule = new FeatureToggleRuleAttribute("new-checkout")
+        {
+            DefaultEnabled = true
+        };
         var tableGateway = new GenerateTableDataGatewayAttribute(typeof(string), typeof(int))
         {
             FactoryName = "BuildOrderTable",
@@ -1112,6 +1124,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(Guid), eventStore.StreamIdType);
         ScenarioExpect.Equal("BuildOrderEvents", eventStore.FactoryName);
         ScenarioExpect.Equal("order-events", eventStore.StoreName);
+        ScenarioExpect.Equal(typeof(string), featureToggles.ContextType);
+        ScenarioExpect.Equal("BuildCheckoutToggles", featureToggles.FactoryName);
+        ScenarioExpect.Equal("checkout", featureToggles.SetName);
+        ScenarioExpect.Equal("new-checkout", featureToggleRule.Name);
+        ScenarioExpect.True(featureToggleRule.DefaultEnabled);
         ScenarioExpect.Equal(typeof(string), tableGateway.RowType);
         ScenarioExpect.Equal(typeof(int), tableGateway.KeyType);
         ScenarioExpect.Equal("BuildOrderTable", tableGateway.FactoryName);
@@ -1127,6 +1144,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new DomainEventHandlerAttribute(null!, 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventStoreAttribute(null!, typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventStoreAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateFeatureToggleSetAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new FeatureToggleRuleAttribute(""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTableDataGatewayAttribute(typeof(string), null!));
         ScenarioExpect.IsType<TableGatewayKeySelectorAttribute>(new TableGatewayKeySelectorAttribute());
