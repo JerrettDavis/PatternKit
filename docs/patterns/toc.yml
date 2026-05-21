@@ -297,6 +297,8 @@
       items:
         - name: Message Envelope and Context
           href: messaging/message-envelope.md
+        - name: Message Translator
+          href: messaging/message-translator.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Routing Slip

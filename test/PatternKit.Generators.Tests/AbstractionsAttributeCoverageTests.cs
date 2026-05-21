@@ -126,6 +126,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(BackplaneSubscriptionAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(GenerateMessageEnvelopeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageEnvelopeHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(GenerateMessageTranslatorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageTranslatorHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(MessageTranslatorDropHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(MessageTranslatorHeaderAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(ObserverAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ObserverHubAttribute), AttributeTargets.Class, false, false },
         { typeof(ObservedEventAttribute), AttributeTargets.Property, false, false },
@@ -630,6 +634,14 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             ParameterName = "tenantId"
         };
+        var translator = new GenerateMessageTranslatorAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildTranslator",
+            TranslatorName = "orders",
+            PreserveHeaders = false
+        };
+        var translatorDrop = new MessageTranslatorDropHeaderAttribute("raw-signature");
+        var translatorHeader = new MessageTranslatorHeaderAttribute("content-type", "application/vnd.demo+json");
 
         ScenarioExpect.Equal(typeof(string), flyweight.KeyType);
         ScenarioExpect.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -722,6 +734,14 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("tenant-id", envelopeHeader.Name);
         ScenarioExpect.Equal(typeof(string), envelopeHeader.ValueType);
         ScenarioExpect.Equal("tenantId", envelopeHeader.ParameterName);
+        ScenarioExpect.Equal(typeof(string), translator.InputType);
+        ScenarioExpect.Equal(typeof(int), translator.OutputType);
+        ScenarioExpect.Equal("BuildTranslator", translator.FactoryName);
+        ScenarioExpect.Equal("orders", translator.TranslatorName);
+        ScenarioExpect.False(translator.PreserveHeaders);
+        ScenarioExpect.Equal("raw-signature", translatorDrop.Name);
+        ScenarioExpect.Equal("content-type", translatorHeader.Name);
+        ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));
@@ -754,6 +774,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageEnvelopeAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageEnvelopeHeaderAttribute("", typeof(string)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageEnvelopeHeaderAttribute("tenant-id", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageTranslatorAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageTranslatorAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageTranslatorDropHeaderAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageTranslatorHeaderAttribute("", "value"));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new MessageTranslatorHeaderAttribute("content-type", null!));
+        ScenarioExpect.IsType<MessageTranslatorHandlerAttribute>(new MessageTranslatorHandlerAttribute());
         ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());
         ScenarioExpect.IsType<SplitterProjectionAttribute>(new SplitterProjectionAttribute());
