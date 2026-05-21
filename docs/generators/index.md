@@ -66,6 +66,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Identity Map**](identity-map.md) | Scoped object identity caches from key selectors | `[GenerateIdentityMap]` |
 | [**Transaction Script**](transaction-script.md) | Typed application workflow factories | `[GenerateTransactionScript]` |
 | [**Service Layer**](service-layer.md) | Application operation boundary factories | `[GenerateServiceLayerOperation]` |
+| [**Domain Event**](domain-event.md) | Domain event dispatcher factories | `[GenerateDomainEventDispatcher]` |
 | [**Template Method**](template-method-generator.md) | Template method skeletons with hook points | `[Template]` |
 | [**Visitor**](visitor-generator.md) | Type-safe visitor implementations | `[GenerateVisitor]` |
 

@@ -24,6 +24,7 @@ using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DataMapperDemo;
+using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
@@ -132,6 +133,7 @@ public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Run
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
+public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -194,6 +196,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderIdentityMapPatternExample()
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
+            .AddOrderDomainEventPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -572,6 +575,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddCustomerServiceLayerDemo();
         services.AddSingleton<CustomerServiceLayerPatternExample>(sp => new(sp.GetRequiredService<CustomerServiceLayerDemoRunner>()));
         return services.RegisterExample<CustomerServiceLayerPatternExample>("Customer Service Layer Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderDomainEventPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderDomainEventDemo();
+        services.AddSingleton<OrderDomainEventPatternExample>(sp => new(sp.GetRequiredService<OrderDomainEventDemoRunner>()));
+        return services.RegisterExample<OrderDomainEventPatternExample>("Order Domain Event Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)

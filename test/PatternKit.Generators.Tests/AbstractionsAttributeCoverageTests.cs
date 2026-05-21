@@ -9,6 +9,7 @@ using PatternKit.Generators.Composite;
 using PatternKit.Generators.Composer;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
+using PatternKit.Generators.DomainEvents;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
@@ -86,6 +87,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateDataMapperAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DataMapperToDataAttribute), AttributeTargets.Method, false, false },
         { typeof(DataMapperToDomainAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateDomainEventDispatcherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(DomainEventHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
         { typeof(FacadeMapAttribute), AttributeTargets.Method, false, false },
@@ -1037,6 +1040,12 @@ public sealed class AbstractionsAttributeCoverageTests
             OperationName = "register-customer"
         };
         var serviceLayerRule = new ServiceLayerRuleAttribute("email", "Email is required.", 10);
+        var domainEvents = new GenerateDomainEventDispatcherAttribute(typeof(string))
+        {
+            FactoryName = "BuildOrderEvents",
+            DispatcherName = "order-events"
+        };
+        var domainEventHandler = new DomainEventHandlerAttribute(typeof(string), 20);
 
         ScenarioExpect.Equal(typeof(TestState), stateMachine.StateType);
         ScenarioExpect.Equal(typeof(TestTrigger), stateMachine.TriggerType);
@@ -1079,6 +1088,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("email", serviceLayerRule.Code);
         ScenarioExpect.Equal("Email is required.", serviceLayerRule.Message);
         ScenarioExpect.Equal(10, serviceLayerRule.Order);
+        ScenarioExpect.Equal(typeof(string), domainEvents.EventBaseType);
+        ScenarioExpect.Equal("BuildOrderEvents", domainEvents.FactoryName);
+        ScenarioExpect.Equal("order-events", domainEvents.DispatcherName);
+        ScenarioExpect.Equal(typeof(string), domainEventHandler.EventType);
+        ScenarioExpect.Equal(20, domainEventHandler.Order);
         ScenarioExpect.Throws<ArgumentException>(() => new UnitOfWorkStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateTransactionScriptAttribute(typeof(string), null!));
@@ -1086,6 +1100,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateServiceLayerOperationAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("", "message", 1));
         ScenarioExpect.Throws<ArgumentException>(() => new ServiceLayerRuleAttribute("code", "", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainEventDispatcherAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new DomainEventHandlerAttribute(null!, 1));
         ScenarioExpect.IsType<TransactionScriptHandlerAttribute>(new TransactionScriptHandlerAttribute());
         ScenarioExpect.IsType<TransactionScriptValidatorAttribute>(new TransactionScriptValidatorAttribute());
         ScenarioExpect.IsType<ServiceLayerHandlerAttribute>(new ServiceLayerHandlerAttribute());

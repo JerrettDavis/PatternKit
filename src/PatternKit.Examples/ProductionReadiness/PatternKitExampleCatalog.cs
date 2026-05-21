@@ -345,6 +345,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ServiceLayer"],
             ["application operation boundary", "source-generated operation factory", "DI composition"]),
         Descriptor(
+            "Order Domain Event Pattern",
+            "src/PatternKit.Examples/DomainEventDemo/OrderDomainEventDemo.cs",
+            "test/PatternKit.Examples.Tests/DomainEventDemo/OrderDomainEventDemoTests.cs",
+            "docs/examples/order-domain-event-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["DomainEvent"],
+            ["aggregate event dispatch", "source-generated dispatcher factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",
