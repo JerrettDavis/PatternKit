@@ -70,6 +70,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Queue-Based Load Leveling | `QueueLoadLevelingPolicy<T>` | Queue Load Leveling generator |
 | Cloud Architecture | Cache-Aside | `CacheAsidePolicy<T>` | Cache-Aside generator |
 | Cloud Architecture | Rate Limiting | `RateLimitPolicy<T>` | Rate Limiting generator |
+| Cloud Architecture | External Configuration Store | `ExternalConfigurationStore<TSettings>` | External Configuration Store generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 | Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
 | Application Architecture | Repository | `IRepository<TEntity,TKey>` and `InMemoryRepository<TEntity,TKey>` | Repository generator |

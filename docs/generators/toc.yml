@@ -115,6 +115,9 @@
 - name: Rate Limiting
   href: rate-limiting.md
 
+- name: External Configuration Store
+  href: external-configuration-store.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

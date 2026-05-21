@@ -105,6 +105,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Queue Load Leveling**](queue-load-leveling.md) | Bounded worker queue policy factories | `[GenerateQueueLoadLevelingPolicy]` |
 | [**Cache-Aside**](cache-aside.md) | Read-through cache policy factories with TTL and cache predicates | `[GenerateCacheAsidePolicy]` |
 | [**Rate Limiting**](rate-limiting.md) | Key-partitioned fixed-window rate limit policy factories | `[GenerateRateLimitPolicy]` |
+| [**External Configuration Store**](external-configuration-store.md) | Typed centralized configuration loaders | `[GenerateExternalConfigurationStore]` |
 
 ## Quick Reference
 

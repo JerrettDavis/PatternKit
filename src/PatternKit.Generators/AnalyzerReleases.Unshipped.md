@@ -292,3 +292,7 @@ PKWT001 | PatternKit.Generators.Messaging | Error | Wire Tap host type must be p
 PKWT002 | PatternKit.Generators.Messaging | Error | Wire Tap must declare at least one handler.
 PKWT003 | PatternKit.Generators.Messaging | Error | Wire Tap handler signature is invalid.
 PKWT004 | PatternKit.Generators.Messaging | Error | Wire Tap handler name or order is duplicated.
+PKECS001 | PatternKit.Generators.Cloud | Error | External Configuration Store host type must be partial.
+PKECS002 | PatternKit.Generators.Cloud | Error | External Configuration Store loader is invalid.
+PKECS003 | PatternKit.Generators.Cloud | Error | External Configuration Store validator signature is invalid.
+PKECS004 | PatternKit.Generators.Cloud | Error | External Configuration Store validator order is duplicated.

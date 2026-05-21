@@ -7,6 +7,7 @@ using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.DomainEventDemo;
+using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.IdentityMapDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.Messaging;
@@ -130,6 +131,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var queueLoadLeveling = provider.GetRequiredService<FulfillmentQueueLoadLevelingExample>();
         var productCacheAside = provider.GetRequiredService<ProductCatalogCacheAsideExample>();
         var productRateLimit = provider.GetRequiredService<ProductSearchRateLimitingExample>();
+        var externalConfiguration = provider.GetRequiredService<TenantExternalConfigurationStoreExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -216,7 +218,8 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
             ("generated queue load leveling accepts fulfillment work", queueLoadLeveling.Service.EnqueueAsync(new FulfillmentWorkItem("ORDER-QL", "central")).GetAwaiter().GetResult().Accepted),
             ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service)),
-            ("generated rate limit rejects product search overflow", RateLimitRejects(productRateLimit.Service))
+            ("generated rate limit rejects product search overflow", RateLimitRejects(productRateLimit.Service)),
+            ("generated external configuration store loads tenant settings", externalConfiguration.Service.LoadAsync().AsTask().GetAwaiter().GetResult().Loaded)
         ];
     }
 
