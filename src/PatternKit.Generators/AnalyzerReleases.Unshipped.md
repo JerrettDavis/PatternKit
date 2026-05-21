@@ -199,6 +199,8 @@ PKCB001 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy 
 PKCB002 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker policy configuration is invalid.
 PKCB003 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate signature is invalid.
 PKCB004 | PatternKit.Generators.CircuitBreaker | Error | Circuit breaker predicate declaration is duplicated.
+PKRLT001 | PatternKit.Generators.RateLimiting | Error | Rate-limit policy host must be partial.
+PKRLT002 | PatternKit.Generators.RateLimiting | Error | Rate-limit policy configuration is invalid.
 PKAF001 | PatternKit.Generators.Factories | Error | Abstract factory host must be partial.
 PKAF002 | PatternKit.Generators.Factories | Error | Abstract factory must declare at least one product.
 PKAF003 | PatternKit.Generators.Factories | Error | Abstract factory product declaration is invalid.

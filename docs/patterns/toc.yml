@@ -321,6 +321,8 @@
           href: cloud/bulkhead.md
         - name: Cache-Aside
           href: cloud/cache-aside.md
+        - name: Rate Limiting
+          href: cloud/rate-limiting.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:

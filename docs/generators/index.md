@@ -85,6 +85,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Circuit Breaker**](circuit-breaker.md) | Dependency isolation policy factories with open and half-open states | `[GenerateCircuitBreakerPolicy]` |
 | [**Bulkhead**](bulkhead.md) | Bounded concurrency and queue isolation policy factories | `[GenerateBulkheadPolicy]` |
 | [**Cache-Aside**](cache-aside.md) | Read-through cache policy factories with TTL and cache predicates | `[GenerateCacheAsidePolicy]` |
+| [**Rate Limiting**](rate-limiting.md) | Key-partitioned fixed-window rate limit policy factories | `[GenerateRateLimitPolicy]` |
 
 ## Quick Reference
 
@@ -221,6 +222,10 @@ public static partial class ShippingBulkheadPolicy { }
 // Cache-aside - generated read-through cache policy
 [GenerateCacheAsidePolicy(typeof(ProductReadModel), TimeToLiveMilliseconds = 300000)]
 public static partial class ProductCatalogCachePolicy { }
+
+// Rate limiting - generated tenant or key budget policy
+[GenerateRateLimitPolicy(typeof(SearchResponse), PermitLimit = 2, WindowMilliseconds = 60000)]
+public static partial class ProductSearchRateLimitPolicy { }
 ```
 
 ## Examples

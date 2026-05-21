@@ -7,6 +7,7 @@ using PatternKit.Examples.DependencyInjection;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.ProductionReadiness;
+using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.Strategies.Composed;
 using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
 using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
@@ -95,6 +96,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var fulfillmentBreaker = provider.GetRequiredService<FulfillmentCircuitBreakerExample>();
         var shippingBulkhead = provider.GetRequiredService<ShippingBulkheadExample>();
         var productCacheAside = provider.GetRequiredService<ProductCatalogCacheAsideExample>();
+        var productRateLimit = provider.GetRequiredService<ProductSearchRateLimitingExample>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -159,8 +161,16 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated retry policy recovers inventory lookups", inventoryRetry.Service.CheckAsync("SKU-42").GetAwaiter().GetResult().Available),
             ("generated circuit breaker isolates fulfillment outages", CircuitBreakerOpens(fulfillmentBreaker.Service)),
             ("generated bulkhead reserves shipping allocations", shippingBulkhead.Service.ReserveAsync("ORDER-100").GetAwaiter().GetResult().Succeeded),
-            ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service))
+            ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service)),
+            ("generated rate limit rejects product search overflow", RateLimitRejects(productRateLimit.Service))
         ];
+    }
+
+    private static bool RateLimitRejects(ProductSearchRateLimitService service)
+    {
+        _ = service.SearchAsync("tenant-a", "boots").GetAwaiter().GetResult();
+        _ = service.SearchAsync("tenant-a", "jackets").GetAwaiter().GetResult();
+        return service.SearchAsync("tenant-a", "hats").GetAwaiter().GetResult().Rejected;
     }
 
     private static bool CacheAsideHits(ProductCatalogCacheAsideService service)

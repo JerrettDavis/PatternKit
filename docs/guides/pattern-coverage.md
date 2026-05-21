@@ -61,6 +61,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Circuit Breaker | `CircuitBreakerPolicy<T>` | Circuit Breaker generator |
 | Cloud Architecture | Bulkhead | `BulkheadPolicy<T>` | Bulkhead generator |
 | Cloud Architecture | Cache-Aside | `CacheAsidePolicy<T>` | Cache-Aside generator |
+| Cloud Architecture | Rate Limiting | `RateLimitPolicy<T>` | Rate Limiting generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 | Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
 

@@ -67,6 +67,9 @@
 - name: Proxy
   href: proxy.md
 
+- name: Rate Limiting
+  href: rate-limiting.md
+
 - name: Retry
   href: retry.md
 
