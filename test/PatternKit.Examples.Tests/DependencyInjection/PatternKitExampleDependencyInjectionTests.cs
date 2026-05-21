@@ -91,6 +91,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var routing = provider.GetRequiredService<MessageRouterVisitorExample>();
         var generatedRecipients = provider.GetRequiredService<GeneratedRecipientListExample>();
         var generatedTranslator = provider.GetRequiredService<GeneratedMessageTranslatorExample>();
+        var generatedClaimCheck = provider.GetRequiredService<GeneratedClaimCheckExample>();
         var envelope = provider.GetRequiredService<EnterpriseMessagingWorkflowSuiteExample>();
         var cqrs = provider.GetRequiredService<CqrsDispatcherExample>();
         var checkout = provider.GetRequiredService<ResilientCheckoutMailboxesExample>();
@@ -156,6 +157,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated anti-corruption layer imports legacy orders", antiCorruption.Service.Import(new LegacyOrderDto("ORD-100", 125m, "USD", "cust-42")).Accepted),
             ("message router visitor aggregates totals", routing.Run().AggregatedTotal == 100m),
             ("generated message translator normalizes partner events", generatedTranslator.Service.Import(PartnerEventTranslatorExample.CreatePartnerMessage("partner-a", "EXT-100", 125m)).Accepted),
+            ("generated claim check restores large document payloads", generatedClaimCheck.Workflow.Process(LargeDocumentClaimCheckExample.CreateDocumentMessage("doc-100")).Restored),
             ("generated recipient list delivers billing and audit recipients", generatedRecipientList.DeliveredRecipients.Count == 2),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),

@@ -249,6 +249,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageTranslator"],
             ["partner event normalization", "source-generated translator", "DI composition"]),
         Descriptor(
+            "Generated Claim Check",
+            "src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs",
+            "docs/examples/generated-claim-check.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["ClaimCheck"],
+            ["external payload storage", "source-generated claim check", "DI composition"]),
+        Descriptor(
             "Generated Recipient List",
             "src/PatternKit.Examples/Messaging/RecipientListGeneratorExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/RecipientListGeneratorExampleTests.cs",

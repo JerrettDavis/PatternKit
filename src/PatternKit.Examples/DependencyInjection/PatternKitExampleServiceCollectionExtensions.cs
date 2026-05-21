@@ -106,6 +106,7 @@ public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
+public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -160,6 +161,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddMessageRouterVisitorExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
+            .AddGeneratedClaimCheckExample()
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddPatternsShowcaseExample()
@@ -398,6 +400,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<PartnerEventTranslatorExampleRunner>(),
             sp.GetRequiredService<PartnerOrderImportService>()));
         return services.RegisterExample<GeneratedMessageTranslatorExample>("Generated Message Translator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddGeneratedClaimCheckExample(this IServiceCollection services)
+    {
+        services.AddLargeDocumentClaimCheckExample();
+        services.AddSingleton<GeneratedClaimCheckExample>(sp => new(
+            sp.GetRequiredService<LargeDocumentClaimCheckExampleRunner>(),
+            sp.GetRequiredService<LargeDocumentWorkflow>()));
+        return services.RegisterExample<GeneratedClaimCheckExample>("Generated Claim Check", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddGeneratedRecipientListExample(this IServiceCollection services)
