@@ -60,6 +60,7 @@ using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.CompetingConsumers;
+using PatternKit.Messaging.PipesAndFilters;
 using PatternKit.Messaging.Transformation;
 using PatternKit.Structural.Decorator;
 using PatternKit.Structural.Proxy;
@@ -126,6 +127,7 @@ public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChan
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
+public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
 public sealed record SourceGeneratorApplicationSuiteExample(Func<ValueTask<CorporateApp>> BuildProductionAsync);
 public sealed record EnterpriseMessagingWorkflowSuiteExample(Func<Summary> Run);
@@ -196,6 +198,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddFulfillmentCompetingConsumersExample()
+            .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
             .AddSourceGeneratorApplicationSuiteExample()
             .AddEnterpriseMessagingWorkflowSuiteExample()
@@ -486,6 +489,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult>>(),
             sp.GetRequiredService<FulfillmentCompetingConsumerService>()));
         return services.RegisterExample<FulfillmentCompetingConsumersExampleService>("Fulfillment Competing Consumers", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentPipesAndFiltersExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentPipesAndFiltersDemo();
+        services.AddSingleton<FulfillmentPipesAndFiltersExampleService>(sp => new(
+            sp.GetRequiredService<PipesAndFiltersPipeline<FulfillmentPipelineContext>>(),
+            sp.GetRequiredService<FulfillmentPipesAndFiltersService>()));
+        return services.RegisterExample<FulfillmentPipesAndFiltersExampleService>("Fulfillment Pipes and Filters", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddPatternsShowcaseExample(this IServiceCollection services)

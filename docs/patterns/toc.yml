@@ -307,6 +307,8 @@
           href: messaging/message-routing.md
         - name: Competing Consumers
           href: messaging/competing-consumers.md
+        - name: Pipes and Filters
+          href: messaging/pipes-and-filters.md
         - name: Routing Slip
           href: messaging/routing-slip.md
         - name: Saga / Process Manager

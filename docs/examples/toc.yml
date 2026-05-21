@@ -76,6 +76,9 @@
 - name: Fulfillment Competing Consumers
   href: fulfillment-competing-consumers.md
 
+- name: Fulfillment Pipes and Filters
+  href: fulfillment-pipes-and-filters.md
+
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 

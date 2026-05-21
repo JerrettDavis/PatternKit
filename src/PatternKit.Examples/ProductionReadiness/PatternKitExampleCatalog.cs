@@ -289,6 +289,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["CompetingConsumers"],
             ["shared work stream", "source-generated builder", "DI composition"]),
         Descriptor(
+            "Fulfillment Pipes and Filters",
+            "src/PatternKit.Examples/Messaging/FulfillmentPipesAndFiltersExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/FulfillmentPipesAndFiltersExampleTests.cs",
+            "docs/examples/fulfillment-pipes-and-filters.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["PipesAndFilters"],
+            ["ordered workflow filters", "source-generated builder", "DI composition"]),
+        Descriptor(
             "CQRS Dispatcher",
             "src/PatternKit.Examples/Messaging/CqrsPatternExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/CqrsPatternExampleTests.cs",

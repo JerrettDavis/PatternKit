@@ -94,6 +94,9 @@
 - name: Competing Consumers
   href: competing-consumers.md
 
+- name: Pipes and Filters
+  href: pipes-and-filters.md
+
 - name: Dead Letter Channel
   href: dead-letter-channel.md
 
