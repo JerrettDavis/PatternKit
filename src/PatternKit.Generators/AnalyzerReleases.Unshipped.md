@@ -63,6 +63,10 @@ PKTMP004 | PatternKit.Generators.Template | Error | TemplateGenerator
 PKTMP005 | PatternKit.Generators.Template | Error | TemplateGenerator
 PKTMP007 | PatternKit.Generators.Template | Warning | TemplateGenerator
 PKTMP008 | PatternKit.Generators.Template | Error | TemplateGenerator
+PKUOW001 | PatternKit.Generators.UnitOfWork | Error | Unit of work host must be partial.
+PKUOW002 | PatternKit.Generators.UnitOfWork | Error | Unit of work must declare at least one step.
+PKUOW003 | PatternKit.Generators.UnitOfWork | Error | Unit of work step signature is invalid.
+PKUOW004 | PatternKit.Generators.UnitOfWork | Error | Unit of work step name or order is duplicated.
 PKVIS001 | PatternKit.Generators.Visitor | Warning | No concrete types found for visitor generation
 PKVIS002 | PatternKit.Generators.Visitor | Error | Type must be partial for Accept method generation
 PKVIS004 | PatternKit.Generators.Visitor | Error | Derived type must be partial for Accept method generation

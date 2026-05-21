@@ -44,6 +44,7 @@ using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TemplateDemo;
+using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Transformation;
@@ -122,6 +123,7 @@ public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, Val
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
+public sealed record CheckoutUnitOfWorkPatternExample(CheckoutUnitOfWorkDemoRunner Runner, CheckoutUnitOfWorkWorkflow Workflow);
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
@@ -179,6 +181,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedInterpreterRulesExample()
             .AddLoanApprovalSpecificationsExample()
             .AddOrderRepositoryPatternExample()
+            .AddCheckoutUnitOfWorkPatternExample()
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
@@ -518,6 +521,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<OrderRepositoryDemoRunner>(),
             sp.GetRequiredService<OrderRepositoryWorkflow>()));
         return services.RegisterExample<OrderRepositoryPatternExample>("Order Repository Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddCheckoutUnitOfWorkPatternExample(this IServiceCollection services)
+    {
+        services.AddCheckoutUnitOfWorkDemo();
+        services.AddSingleton<CheckoutUnitOfWorkPatternExample>(sp => new(
+            sp.GetRequiredService<CheckoutUnitOfWorkDemoRunner>(),
+            sp.GetRequiredService<CheckoutUnitOfWorkWorkflow>()));
+        return services.RegisterExample<CheckoutUnitOfWorkPatternExample>("Checkout Unit of Work Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddPrototypeGameCharacterFactoryExample(this IServiceCollection services)
