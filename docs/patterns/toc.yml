@@ -339,6 +339,8 @@
           href: application/unit-of-work.md
         - name: Data Mapper
           href: application/data-mapper.md
+        - name: Identity Map
+          href: application/identity-map.md
         - name: Specification
           href: application/specification.md
     - name: Type-Dispatcher

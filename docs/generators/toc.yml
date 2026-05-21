@@ -58,6 +58,9 @@
 - name: Interpreter
   href: interpreter.md
 
+- name: Identity Map
+  href: identity-map.md
+
 - name: Iterator
   href: iterator.md
 

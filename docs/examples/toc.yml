@@ -88,6 +88,9 @@
 - name: Order Data Mapper Pattern
   href: order-data-mapper-pattern.md
 
+- name: Order Identity Map Pattern
+  href: order-identity-map-pattern.md
+
 - name: Generated Mailbox
   href: generated-mailbox.md
 

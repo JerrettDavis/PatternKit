@@ -12,6 +12,7 @@ using PatternKit.Generators.Decorator;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
+using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
 using PatternKit.Generators.Messaging;
@@ -99,6 +100,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateInterpreterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(InterpreterTerminalAttribute), AttributeTargets.Method, true, false },
         { typeof(InterpreterNonTerminalAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateIdentityMapAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(IdentityMapKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(IteratorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(IteratorStepAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalIteratorAttribute), AttributeTargets.Class, false, false },
@@ -254,6 +257,10 @@ public sealed class AbstractionsAttributeCoverageTests
         {
             FactoryName = "BuildMapper"
         };
+        var identityMap = new GenerateIdentityMapAttribute(typeof(string), typeof(Guid))
+        {
+            FactoryName = "BuildIdentityMap"
+        };
 
         ScenarioExpect.Equal(typeof(string), rateLimit.ResultType);
         ScenarioExpect.Equal("BuildSearchLimit", rateLimit.FactoryMethodName);
@@ -267,13 +274,19 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(string), dataMapper.DomainType);
         ScenarioExpect.Equal(typeof(int), dataMapper.DataType);
         ScenarioExpect.Equal("BuildMapper", dataMapper.FactoryName);
+        ScenarioExpect.Equal(typeof(string), identityMap.EntityType);
+        ScenarioExpect.Equal(typeof(Guid), identityMap.KeyType);
+        ScenarioExpect.Equal("BuildIdentityMap", identityMap.FactoryName);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(null!, typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRepositoryAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDataMapperAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDataMapperAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateIdentityMapAttribute(null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateIdentityMapAttribute(typeof(string), null!));
         ScenarioExpect.IsType<RepositoryKeySelectorAttribute>(new RepositoryKeySelectorAttribute());
         ScenarioExpect.IsType<DataMapperToDataAttribute>(new DataMapperToDataAttribute());
         ScenarioExpect.IsType<DataMapperToDomainAttribute>(new DataMapperToDomainAttribute());
+        ScenarioExpect.IsType<IdentityMapKeySelectorAttribute>(new IdentityMapKeySelectorAttribute());
     }
 
     [Scenario("Bulkhead Attributes Expose Defaults And Configuration")]
