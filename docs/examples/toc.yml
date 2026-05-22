@@ -241,5 +241,8 @@
 - name: Customer Dashboard Gateway Aggregation
   href: customer-dashboard-gateway-aggregation.md
 
+- name: Product Gateway Routing
+  href: product-gateway-routing.md
+
 - name: Checkout Strangler Fig Migration
   href: checkout-strangler-fig.md

@@ -163,6 +163,9 @@
 - name: Gateway Aggregation
   href: gateway-aggregation.md
 
+- name: Gateway Routing
+  href: gateway-routing.md
+
 - name: Strangler Fig
   href: strangler-fig.md
 

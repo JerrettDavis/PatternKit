@@ -743,7 +743,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/checkout-strangler-fig.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Strangler Fig"],
-            ["legacy fallback", "source-generated migration router", "ASP.NET Core endpoint mapping"])
+            ["legacy fallback", "source-generated migration router", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Product Gateway Routing",
+            "src/PatternKit.Examples/GatewayRoutingDemo/ProductGatewayRoutingDemo.cs",
+            "test/PatternKit.Examples.Tests/GatewayRoutingDemo/ProductGatewayRoutingDemoTests.cs",
+            "docs/examples/product-gateway-routing.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Gateway Routing"],
+            ["path-based downstream dispatch", "source-generated gateway router", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

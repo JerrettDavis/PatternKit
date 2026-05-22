@@ -373,6 +373,8 @@
           href: cloud/external-configuration-store.md
         - name: Gateway Aggregation
           href: cloud/gateway-aggregation.md
+        - name: Gateway Routing
+          href: cloud/gateway-routing.md
         - name: Strangler Fig
           href: cloud/strangler-fig.md
     - name: Application Architecture

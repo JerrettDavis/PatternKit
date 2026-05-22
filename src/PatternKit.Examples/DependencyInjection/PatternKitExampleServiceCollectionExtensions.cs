@@ -38,6 +38,7 @@ using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.GatewayAggregationDemo;
+using PatternKit.Examples.GatewayRoutingDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.HealthEndpointMonitoringDemo;
@@ -204,6 +205,7 @@ public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResp
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
 public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
 public sealed record CheckoutStranglerFigExample(CheckoutStranglerFigDemoRunner Runner, CheckoutMigrationService Service);
+public sealed record ProductGatewayRoutingExample(ProductGatewayRoutingDemoRunner Runner, ProductGatewayRoutingService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -294,7 +296,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddProductSearchRateLimitingExample()
             .AddTenantExternalConfigurationStoreExample()
             .AddCustomerDashboardGatewayAggregationExample()
-            .AddCheckoutStranglerFigExample();
+            .AddCheckoutStranglerFigExample()
+            .AddProductGatewayRoutingExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1039,6 +1042,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CheckoutStranglerFigDemoRunner>(),
             sp.GetRequiredService<CheckoutMigrationService>()));
         return services.RegisterExample<CheckoutStranglerFigExample>("Checkout Strangler Fig Migration", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddProductGatewayRoutingExample(this IServiceCollection services)
+    {
+        services.AddProductGatewayRoutingDemo();
+        services.AddSingleton<ProductGatewayRoutingExample>(sp => new(
+            sp.GetRequiredService<ProductGatewayRoutingDemoRunner>(),
+            sp.GetRequiredService<ProductGatewayRoutingService>()));
+        return services.RegisterExample<ProductGatewayRoutingExample>("Product Gateway Routing", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     private static IServiceCollection RegisterExample<T>(
