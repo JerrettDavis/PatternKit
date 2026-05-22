@@ -214,6 +214,9 @@
 - name: Fulfillment Queue Load Leveling
   href: fulfillment-queue-load-leveling.md
 
+- name: Fulfillment Priority Queue
+  href: fulfillment-priority-queue.md
+
 - name: Product Catalog Cache-Aside
   href: product-catalog-cache-aside.md
 

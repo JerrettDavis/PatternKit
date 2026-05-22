@@ -151,6 +151,9 @@
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 
+- name: Priority Queue
+  href: priority-queue.md
+
 - name: Repository
   href: repository.md
 

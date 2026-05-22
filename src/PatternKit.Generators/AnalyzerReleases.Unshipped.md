@@ -110,6 +110,9 @@ PKFT002 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle set must
 PKFT003 | PatternKit.Generators.FeatureToggles | Error | Feature Toggle rule signature is invalid.
 PKQL001 | PatternKit.Generators.QueueLoadLeveling | Error | Queue Load Leveling policy host must be partial.
 PKQL002 | PatternKit.Generators.QueueLoadLeveling | Error | Queue Load Leveling policy configuration is invalid.
+PKPQ001 | PatternKit.Generators.PriorityQueue | Error | Priority Queue host must be partial.
+PKPQ002 | PatternKit.Generators.PriorityQueue | Error | Priority Queue must declare exactly one priority selector.
+PKPQ003 | PatternKit.Generators.PriorityQueue | Error | Priority Queue priority selector signature is invalid.
 PKPRO001 | PatternKit.Generators.Prototype | Error | Type marked with [Prototype] must be partial
 PKPRO002 | PatternKit.Generators.Prototype | Error | Cannot construct clone target (no supported clone construction path)
 PKPRO003 | PatternKit.Generators.Prototype | Warning | Unsafe reference capture (mutable reference types)

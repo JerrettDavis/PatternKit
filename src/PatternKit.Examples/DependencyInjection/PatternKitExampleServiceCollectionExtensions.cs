@@ -10,6 +10,7 @@ using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CacheAside;
 using PatternKit.Cloud.CircuitBreaker;
+using PatternKit.Cloud.PriorityQueue;
 using PatternKit.Cloud.RateLimiting;
 using PatternKit.Cloud.QueueLoadLeveling;
 using PatternKit.Cloud.Retry;
@@ -43,6 +44,7 @@ using PatternKit.Examples.PatternShowcase;
 using PatternKit.Examples.PointOfSale;
 using PatternKit.Examples.Pricing;
 using PatternKit.Examples.ProductionReadiness;
+using PatternKit.Examples.PriorityQueueDemo;
 using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
 using PatternKit.Examples.QueueLoadLevelingDemo;
@@ -185,6 +187,7 @@ public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
 public sealed record FulfillmentQueueLoadLevelingExample(QueueLoadLevelingPolicy<FulfillmentQueueResult> Policy, FulfillmentQueueLoadLevelingService Service);
+public sealed record FulfillmentPriorityQueueExample(PriorityQueuePolicy<FulfillmentPriorityWork, int> Queue, FulfillmentPriorityQueueService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
@@ -269,6 +272,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
             .AddFulfillmentQueueLoadLevelingExample()
+            .AddFulfillmentPriorityQueueExample()
             .AddProductCatalogCacheAsideExample()
             .AddProductSearchRateLimitingExample()
             .AddTenantExternalConfigurationStoreExample();
@@ -926,6 +930,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<QueueLoadLevelingPolicy<FulfillmentQueueResult>>(),
             sp.GetRequiredService<FulfillmentQueueLoadLevelingService>()));
         return services.RegisterExample<FulfillmentQueueLoadLevelingExample>("Fulfillment Queue Load Leveling", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentPriorityQueueExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentPriorityQueueDemo();
+        services.AddSingleton<FulfillmentPriorityQueueExample>(sp => new(
+            sp.GetRequiredService<PriorityQueuePolicy<FulfillmentPriorityWork, int>>(),
+            sp.GetRequiredService<FulfillmentPriorityQueueService>()));
+        return services.RegisterExample<FulfillmentPriorityQueueExample>("Fulfillment Priority Queue", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddProductCatalogCacheAsideExample(this IServiceCollection services)
