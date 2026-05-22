@@ -45,6 +45,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Family | Pattern | Fluent/runtime path | Source-generated path |
 | --- | --- | --- | --- |
 | Enterprise Integration | Message Channel | `MessageChannel<TPayload>` | Message Channel generator |
+| Enterprise Integration | Polling Consumer | `PollingConsumer<TPayload>` | Polling Consumer generator |
 | Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Messaging generator |
 | Enterprise Integration | Message Translator | `MessageTranslator<TInput, TOutput>` | Message Translator generator |
 | Enterprise Integration | Claim Check | `ClaimCheck<TPayload>` | Claim Check generator |

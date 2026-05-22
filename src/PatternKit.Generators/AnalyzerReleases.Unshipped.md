@@ -314,3 +314,6 @@ PKRSEQ002 | PatternKit.Generators.Messaging | Error | Resequencer must declare e
 PKRSEQ003 | PatternKit.Generators.Messaging | Error | Resequencer sequence selector signature is invalid.
 PKCHN001 | PatternKit.Generators.Messaging | Error | Message Channel host type must be partial.
 PKCHN002 | PatternKit.Generators.Messaging | Error | Message Channel capacity is invalid.
+PKPOLL001 | PatternKit.Generators.Messaging | Error | Polling Consumer host type must be partial.
+PKPOLL002 | PatternKit.Generators.Messaging | Error | Polling Consumer must declare exactly one source.
+PKPOLL003 | PatternKit.Generators.Messaging | Error | Polling Consumer source signature is invalid.
