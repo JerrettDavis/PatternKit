@@ -103,6 +103,9 @@
 - name: Control Bus
   href: control-bus.md
 
+- name: Scatter-Gather
+  href: scatter-gather.md
+
 - name: Competing Consumers
   href: competing-consumers.md
 

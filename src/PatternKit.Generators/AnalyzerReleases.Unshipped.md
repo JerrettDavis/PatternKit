@@ -304,3 +304,8 @@ PKCTL001 | PatternKit.Generators.Messaging | Error | Control Bus host type must 
 PKCTL002 | PatternKit.Generators.Messaging | Error | Control Bus must declare at least one handler.
 PKCTL003 | PatternKit.Generators.Messaging | Error | Control Bus handler signature is invalid.
 PKCTL004 | PatternKit.Generators.Messaging | Error | Control Bus command name or order is duplicated.
+PKSCG001 | PatternKit.Generators.Messaging | Error | Scatter-Gather host type must be partial.
+PKSCG002 | PatternKit.Generators.Messaging | Error | Scatter-Gather must declare at least one recipient.
+PKSCG003 | PatternKit.Generators.Messaging | Error | Scatter-Gather recipient signature is invalid.
+PKSCG004 | PatternKit.Generators.Messaging | Error | Scatter-Gather aggregator signature is invalid.
+PKSCG005 | PatternKit.Generators.Messaging | Error | Scatter-Gather recipient name or order is duplicated.

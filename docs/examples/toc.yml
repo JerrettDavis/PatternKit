@@ -85,6 +85,9 @@
 - name: Fulfillment Control Bus
   href: fulfillment-control-bus.md
 
+- name: Supplier Quote Scatter-Gather
+  href: supplier-quote-scatter-gather.md
+
 - name: Fulfillment Competing Consumers
   href: fulfillment-competing-consumers.md
 

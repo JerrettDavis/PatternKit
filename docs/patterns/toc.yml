@@ -311,6 +311,8 @@
           href: messaging/wire-tap.md
         - name: Control Bus
           href: messaging/control-bus.md
+        - name: Scatter-Gather
+          href: messaging/scatter-gather.md
         - name: Enterprise Message Routing
           href: messaging/message-routing.md
         - name: Competing Consumers

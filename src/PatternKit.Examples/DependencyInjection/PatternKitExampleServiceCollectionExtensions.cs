@@ -133,6 +133,7 @@ public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessage
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
+public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -209,6 +210,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageStoreExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
+            .AddSupplierQuoteScatterGatherExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
@@ -529,6 +531,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<ControlBus<FulfillmentControlCommand>>(),
             sp.GetRequiredService<FulfillmentControlBusService>()));
         return services.RegisterExample<FulfillmentControlBusExampleService>("Fulfillment Control Bus", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddSupplierQuoteScatterGatherExample(this IServiceCollection services)
+    {
+        services.AddSupplierQuoteScatterGatherDemo();
+        services.AddSingleton<SupplierQuoteScatterGatherExampleService>(sp => new(
+            sp.GetRequiredService<ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary>>(),
+            sp.GetRequiredService<SupplierQuoteService>()));
+        return services.RegisterExample<SupplierQuoteScatterGatherExampleService>("Supplier Quote Scatter-Gather", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)
