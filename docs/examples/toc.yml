@@ -82,6 +82,9 @@
 - name: Order Canonical Data Model
   href: order-canonical-data-model.md
 
+- name: Inventory Event-Carried State Transfer
+  href: inventory-event-carried-state-transfer.md
+
 - name: Generated Claim Check
   href: generated-claim-check.md
 

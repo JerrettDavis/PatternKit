@@ -12,6 +12,7 @@ using PatternKit.Generators.Composer;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
+using PatternKit.Generators.EventCarriedStateTransfer;
 using PatternKit.Generators.EventSourcing;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.FeatureToggles;
@@ -78,6 +79,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(CacheAsidePredicateAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateCanonicalDataModelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CanonicalDataModelMapperAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateEventCarriedStateTransferAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(EventCarriedStateKeyAttribute), AttributeTargets.Method, false, false },
+        { typeof(EventCarriedStateVersionAttribute), AttributeTargets.Method, false, false },
+        { typeof(EventCarriedStateMapperAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateExternalConfigurationStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ExternalConfigurationLoaderAttribute), AttributeTargets.Method, false, false },
         { typeof(ExternalConfigurationValidatorAttribute), AttributeTargets.Method, false, false },
@@ -414,6 +419,29 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCanonicalDataModelAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCanonicalDataModelAttribute(typeof(string), null!));
         ScenarioExpect.IsType<CanonicalDataModelMapperAttribute>(new CanonicalDataModelMapperAttribute());
+    }
+
+    [Scenario("Event-Carried State Transfer Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void EventCarriedStateTransfer_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var transfer = new GenerateEventCarriedStateTransferAttribute(typeof(string), typeof(Guid), typeof(int))
+        {
+            FactoryMethodName = "BuildInventoryState",
+            TransferName = "inventory-state"
+        };
+
+        ScenarioExpect.Equal(typeof(string), transfer.EventType);
+        ScenarioExpect.Equal(typeof(Guid), transfer.KeyType);
+        ScenarioExpect.Equal(typeof(int), transfer.StateType);
+        ScenarioExpect.Equal("BuildInventoryState", transfer.FactoryMethodName);
+        ScenarioExpect.Equal("inventory-state", transfer.TransferName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventCarriedStateTransferAttribute(null!, typeof(Guid), typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventCarriedStateTransferAttribute(typeof(string), null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventCarriedStateTransferAttribute(typeof(string), typeof(Guid), null!));
+        ScenarioExpect.IsType<EventCarriedStateKeyAttribute>(new EventCarriedStateKeyAttribute());
+        ScenarioExpect.IsType<EventCarriedStateVersionAttribute>(new EventCarriedStateVersionAttribute());
+        ScenarioExpect.IsType<EventCarriedStateMapperAttribute>(new EventCarriedStateMapperAttribute());
     }
 
     [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]

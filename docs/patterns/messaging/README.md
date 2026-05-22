@@ -56,6 +56,12 @@ Service activators invoke application service operations from typed messages whi
 
 [Learn More](service-activator.md)
 
+## Event-Carried State Transfer
+
+Event-carried state transfer publishes enough state in an event for subscribers to update local read models without calling back into the source service.
+
+[Learn More](event-carried-state-transfer.md)
+
 ## Idempotent Receiver, Inbox, and Outbox
 
 Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.

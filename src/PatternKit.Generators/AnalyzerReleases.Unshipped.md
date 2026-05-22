@@ -334,6 +334,9 @@ PKCAD005 | PatternKit.Generators.Messaging | Error | Channel Adapter outbound tr
 PKCDM001 | PatternKit.Generators.CanonicalDataModel | Error | Canonical Data Model host must be partial.
 PKCDM002 | PatternKit.Generators.CanonicalDataModel | Error | Canonical Data Model mapper is missing.
 PKCDM003 | PatternKit.Generators.CanonicalDataModel | Error | Canonical Data Model mapper signature is invalid.
+PKECST001 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer host must be partial.
+PKECST002 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer methods are missing.
+PKECST003 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer method signature is invalid.
 PKGWY001 | PatternKit.Generators.Messaging | Error | Messaging Gateway host type must be partial.
 PKGWY002 | PatternKit.Generators.Messaging | Error | Messaging Gateway must declare exactly one handler.
 PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler signature is invalid.
