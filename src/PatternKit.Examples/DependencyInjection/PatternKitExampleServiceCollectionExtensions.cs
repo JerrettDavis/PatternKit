@@ -61,6 +61,7 @@ using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Consumers;
+using PatternKit.Messaging.Adapters;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.ControlBus;
@@ -128,6 +129,7 @@ public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
 public sealed record WarehousePollingConsumerExampleService(PollingConsumer<ReplenishmentRequest> Consumer, WarehousePollingConsumerService Service);
 public sealed record OrderEventDrivenConsumerExampleService(EventDrivenConsumer<OrderAcceptedEvent> Consumer, OrderEventDrivenConsumerService Service);
+public sealed record ErpChannelAdapterExampleService(ChannelAdapter<ErpOrderDocument, OrderIntegrationMessage> Adapter, ErpChannelAdapterService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
@@ -209,6 +211,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddInventoryMessageChannelExample()
             .AddWarehousePollingConsumerExample()
             .AddOrderEventDrivenConsumerExample()
+            .AddErpChannelAdapterExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
@@ -484,6 +487,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<EventDrivenConsumer<OrderAcceptedEvent>>(),
             sp.GetRequiredService<OrderEventDrivenConsumerService>()));
         return services.RegisterExample<OrderEventDrivenConsumerExampleService>("Order Event-Driven Consumer", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddErpChannelAdapterExample(this IServiceCollection services)
+    {
+        services.AddErpChannelAdapterDemo();
+        services.AddSingleton<ErpChannelAdapterExampleService>(sp => new(
+            sp.GetRequiredService<ChannelAdapter<ErpOrderDocument, OrderIntegrationMessage>>(),
+            sp.GetRequiredService<ErpChannelAdapterService>()));
+        return services.RegisterExample<ErpChannelAdapterExampleService>("ERP Channel Adapter", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)

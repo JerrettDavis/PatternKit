@@ -55,6 +55,9 @@
 - name: Order Event-Driven Consumer
   href: order-event-driven-consumer.md
 
+- name: ERP Channel Adapter
+  href: erp-channel-adapter.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 

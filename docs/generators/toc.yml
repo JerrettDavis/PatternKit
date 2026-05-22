@@ -94,6 +94,9 @@
 - name: Event-Driven Consumer
   href: event-driven-consumer.md
 
+- name: Channel Adapter
+  href: channel-adapter.md
+
 - name: Message Translator
   href: message-translator.md
 

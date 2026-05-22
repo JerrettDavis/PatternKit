@@ -233,6 +233,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["EventDrivenConsumer"],
             ["push-based order workflow", "source-generated event handler factory", "DI composition"]),
         Descriptor(
+            "ERP Channel Adapter",
+            "src/PatternKit.Examples/Messaging/ErpChannelAdapterExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ErpChannelAdapterExampleTests.cs",
+            "docs/examples/erp-channel-adapter.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ChannelAdapter", "MessageChannel"],
+            ["external ERP DTO bridge", "source-generated adapter factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",
