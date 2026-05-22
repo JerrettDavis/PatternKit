@@ -60,6 +60,7 @@ using PatternKit.Examples.RetryDemo;
 using PatternKit.Examples.ServiceLayerDemo;
 using PatternKit.Examples.Singleton;
 using PatternKit.Examples.SpecificationDemo;
+using PatternKit.Examples.StranglerFigDemo;
 using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TableDataGatewayDemo;
@@ -202,6 +203,7 @@ public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductRea
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
 public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
+public sealed record CheckoutStranglerFigExample(CheckoutStranglerFigDemoRunner Runner, CheckoutMigrationService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -291,7 +293,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddProductCatalogCacheAsideExample()
             .AddProductSearchRateLimitingExample()
             .AddTenantExternalConfigurationStoreExample()
-            .AddCustomerDashboardGatewayAggregationExample();
+            .AddCustomerDashboardGatewayAggregationExample()
+            .AddCheckoutStranglerFigExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1027,6 +1030,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CustomerDashboardGatewayAggregationDemoRunner>(),
             sp.GetRequiredService<CustomerDashboardGatewayService>()));
         return services.RegisterExample<CustomerDashboardGatewayAggregationExample>("Customer Dashboard Gateway Aggregation", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddCheckoutStranglerFigExample(this IServiceCollection services)
+    {
+        services.AddCheckoutStranglerFigDemo();
+        services.AddSingleton<CheckoutStranglerFigExample>(sp => new(
+            sp.GetRequiredService<CheckoutStranglerFigDemoRunner>(),
+            sp.GetRequiredService<CheckoutMigrationService>()));
+        return services.RegisterExample<CheckoutStranglerFigExample>("Checkout Strangler Fig Migration", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     private static IServiceCollection RegisterExample<T>(

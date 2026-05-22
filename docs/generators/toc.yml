@@ -163,6 +163,9 @@
 - name: Gateway Aggregation
   href: gateway-aggregation.md
 
+- name: Strangler Fig
+  href: strangler-fig.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

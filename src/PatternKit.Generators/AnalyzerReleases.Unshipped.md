@@ -306,6 +306,10 @@ PKGA001 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation
 PKGA002 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation members are missing.
 PKGA003 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation method signature is invalid.
 PKGA004 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation fetch is duplicated.
+PKSF001 | PatternKit.Generators.StranglerFig | Error | Strangler Fig host must be partial.
+PKSF002 | PatternKit.Generators.StranglerFig | Error | Strangler Fig members are missing.
+PKSF003 | PatternKit.Generators.StranglerFig | Error | Strangler Fig method signature is invalid.
+PKSF004 | PatternKit.Generators.StranglerFig | Error | Strangler Fig route is duplicated.
 PKMS001 | PatternKit.Generators.Messaging | Error | Message store type must be partial.
 PKMS002 | PatternKit.Generators.Messaging | Error | Message store identity signature is invalid.
 PKMS003 | PatternKit.Generators.Messaging | Error | Message store retention signature is invalid.
