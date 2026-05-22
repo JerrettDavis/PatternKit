@@ -141,6 +141,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ChannelAdapterOutboundAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessagingGatewayAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessagingGatewayHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateServiceActivatorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ServiceActivatorHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCompetingConsumerGroupAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePipesAndFiltersPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -775,6 +777,11 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildGateway",
             GatewayName = "payments"
         };
+        var serviceActivator = new GenerateServiceActivatorAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildActivator",
+            ActivatorName = "inventory"
+        };
         var routingSlip = new GenerateRoutingSlipAttribute(typeof(string))
         {
             FactoryName = "Build",
@@ -951,6 +958,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(int), messagingGateway.ResponseType);
         ScenarioExpect.Equal("BuildGateway", messagingGateway.FactoryName);
         ScenarioExpect.Equal("payments", messagingGateway.GatewayName);
+        ScenarioExpect.Equal(typeof(string), serviceActivator.RequestType);
+        ScenarioExpect.Equal(typeof(int), serviceActivator.ResponseType);
+        ScenarioExpect.Equal("BuildActivator", serviceActivator.FactoryName);
+        ScenarioExpect.Equal("inventory", serviceActivator.ActivatorName);
         ScenarioExpect.Equal(typeof(string), routingSlip.PayloadType);
         ScenarioExpect.Equal("Build", routingSlip.FactoryName);
         ScenarioExpect.Equal("BuildAsync", routingSlip.AsyncFactoryName);
@@ -1075,6 +1086,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingGatewayAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingGatewayAttribute(typeof(string), null!));
         ScenarioExpect.IsType<MessagingGatewayHandlerAttribute>(new MessagingGatewayHandlerAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateServiceActivatorAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateServiceActivatorAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<ServiceActivatorHandlerAttribute>(new ServiceActivatorHandlerAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));

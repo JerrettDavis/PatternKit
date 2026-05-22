@@ -100,6 +100,9 @@
 - name: Messaging Gateway
   href: messaging-gateway.md
 
+- name: Service Activator
+  href: service-activator.md
+
 - name: Message Translator
   href: message-translator.md
 

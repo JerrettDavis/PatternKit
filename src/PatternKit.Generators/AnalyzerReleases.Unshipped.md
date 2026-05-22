@@ -328,3 +328,6 @@ PKCAD005 | PatternKit.Generators.Messaging | Error | Channel Adapter outbound tr
 PKGWY001 | PatternKit.Generators.Messaging | Error | Messaging Gateway host type must be partial.
 PKGWY002 | PatternKit.Generators.Messaging | Error | Messaging Gateway must declare exactly one handler.
 PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler signature is invalid.
+PKSVA001 | PatternKit.Generators.Messaging | Error | Service Activator host type must be partial.
+PKSVA002 | PatternKit.Generators.Messaging | Error | Service Activator must declare exactly one handler.
+PKSVA003 | PatternKit.Generators.Messaging | Error | Service Activator handler signature is invalid.

@@ -249,6 +249,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessagingGateway", "MessageChannel"],
             ["typed authorization gateway", "source-generated gateway factory", "DI composition"]),
         Descriptor(
+            "Inventory Service Activator",
+            "src/PatternKit.Examples/Messaging/InventoryServiceActivatorExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/InventoryServiceActivatorExampleTests.cs",
+            "docs/examples/inventory-service-activator.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ServiceActivator"],
+            ["message-to-service operation", "source-generated activator factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",

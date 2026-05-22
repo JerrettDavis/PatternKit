@@ -62,6 +62,7 @@ using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Consumers;
 using PatternKit.Messaging.Adapters;
+using PatternKit.Messaging.Activation;
 using PatternKit.Messaging.Gateways;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
@@ -132,6 +133,7 @@ public sealed record WarehousePollingConsumerExampleService(PollingConsumer<Repl
 public sealed record OrderEventDrivenConsumerExampleService(EventDrivenConsumer<OrderAcceptedEvent> Consumer, OrderEventDrivenConsumerService Service);
 public sealed record ErpChannelAdapterExampleService(ChannelAdapter<ErpOrderDocument, OrderIntegrationMessage> Adapter, ErpChannelAdapterService Service);
 public sealed record PaymentMessagingGatewayExampleService(MessagingGateway<PaymentAuthorizationRequest, PaymentAuthorizationDecision> Gateway, PaymentMessagingGatewayService Service);
+public sealed record InventoryServiceActivatorExampleService(ServiceActivator<InventoryReservationRequest, InventoryReservationResult> Activator, InventoryServiceActivatorService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
@@ -215,6 +217,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderEventDrivenConsumerExample()
             .AddErpChannelAdapterExample()
             .AddPaymentMessagingGatewayExample()
+            .AddInventoryServiceActivatorExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
@@ -508,6 +511,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessagingGateway<PaymentAuthorizationRequest, PaymentAuthorizationDecision>>(),
             sp.GetRequiredService<PaymentMessagingGatewayService>()));
         return services.RegisterExample<PaymentMessagingGatewayExampleService>("Payment Messaging Gateway", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddInventoryServiceActivatorExample(this IServiceCollection services)
+    {
+        services.AddInventoryServiceActivatorDemo();
+        services.AddSingleton<InventoryServiceActivatorExampleService>(sp => new(
+            sp.GetRequiredService<ServiceActivator<InventoryReservationRequest, InventoryReservationResult>>(),
+            sp.GetRequiredService<InventoryServiceActivatorService>()));
+        return services.RegisterExample<InventoryServiceActivatorExampleService>("Inventory Service Activator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)
