@@ -246,3 +246,6 @@
 
 - name: Checkout Strangler Fig Migration
   href: checkout-strangler-fig.md
+
+- name: Order Telemetry Sidecar
+  href: order-telemetry-sidecar.md

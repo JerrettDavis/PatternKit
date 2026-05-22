@@ -169,6 +169,9 @@
 - name: Strangler Fig
   href: strangler-fig.md
 
+- name: Sidecar
+  href: sidecar.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

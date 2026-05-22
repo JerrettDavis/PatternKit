@@ -124,6 +124,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Gateway Aggregation**](gateway-aggregation.md) | API gateway response composition factories | `[GenerateGatewayAggregation]` |
 | [**Gateway Routing**](gateway-routing.md) | API gateway route dispatch factories | `[GenerateGatewayRouting]` |
 | [**Strangler Fig**](strangler-fig.md) | Legacy-to-modern migration routing factories | `[GenerateStranglerFig]` |
+| [**Sidecar**](sidecar.md) | Companion behavior pipeline factories | `[GenerateSidecar]` |
 
 ## Quick Reference
 
@@ -308,6 +309,10 @@ public static partial class ProductGatewayRouting { }
 // Strangler Fig - generated legacy-to-modern migration routing
 [GenerateStranglerFig(typeof(CheckoutMigrationRequest), typeof(CheckoutMigrationResponse))]
 public static partial class CheckoutMigration { }
+
+// Sidecar - generated companion behavior around a primary handler
+[GenerateSidecar(typeof(OrderTelemetryRequest), typeof(OrderTelemetryResponse))]
+public static partial class OrderTelemetrySidecar { }
 ```
 
 ## Examples

@@ -751,7 +751,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/product-gateway-routing.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Gateway Routing"],
-            ["path-based downstream dispatch", "source-generated gateway router", "ASP.NET Core endpoint mapping"])
+            ["path-based downstream dispatch", "source-generated gateway router", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Order Telemetry Sidecar",
+            "src/PatternKit.Examples/SidecarDemo/OrderTelemetrySidecarDemo.cs",
+            "test/PatternKit.Examples.Tests/SidecarDemo/OrderTelemetrySidecarDemoTests.cs",
+            "docs/examples/order-telemetry-sidecar.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Sidecar"],
+            ["trace context enrichment", "source-generated sidecar factory", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;
