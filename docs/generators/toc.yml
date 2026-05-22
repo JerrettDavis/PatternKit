@@ -97,6 +97,9 @@
 - name: Channel Adapter
   href: channel-adapter.md
 
+- name: Messaging Gateway
+  href: messaging-gateway.md
+
 - name: Message Translator
   href: message-translator.md
 

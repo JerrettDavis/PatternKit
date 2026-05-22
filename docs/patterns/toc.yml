@@ -303,6 +303,8 @@
           href: messaging/event-driven-consumer.md
         - name: Channel Adapter
           href: messaging/channel-adapter.md
+        - name: Messaging Gateway
+          href: messaging/messaging-gateway.md
         - name: Message Envelope and Context
           href: messaging/message-envelope.md
         - name: Message Translator

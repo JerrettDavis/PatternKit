@@ -325,3 +325,6 @@ PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declar
 PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.
 PKCAD004 | PatternKit.Generators.Messaging | Error | Channel Adapter inbound translator signature is invalid.
 PKCAD005 | PatternKit.Generators.Messaging | Error | Channel Adapter outbound translator signature is invalid.
+PKGWY001 | PatternKit.Generators.Messaging | Error | Messaging Gateway host type must be partial.
+PKGWY002 | PatternKit.Generators.Messaging | Error | Messaging Gateway must declare exactly one handler.
+PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler signature is invalid.
