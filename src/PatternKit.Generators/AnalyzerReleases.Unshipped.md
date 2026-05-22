@@ -320,3 +320,8 @@ PKPOLL003 | PatternKit.Generators.Messaging | Error | Polling Consumer source si
 PKEVT001 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer host type must be partial.
 PKEVT002 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer must declare at least one handler.
 PKEVT003 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer handler signature is invalid.
+PKCAD001 | PatternKit.Generators.Messaging | Error | Channel Adapter host type must be partial.
+PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one inbound translator.
+PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.
+PKCAD004 | PatternKit.Generators.Messaging | Error | Channel Adapter inbound translator signature is invalid.
+PKCAD005 | PatternKit.Generators.Messaging | Error | Channel Adapter outbound translator signature is invalid.

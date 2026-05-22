@@ -69,6 +69,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Order Event-Driven Consumer**
   Shows fluent and source-generated push consumers side by side, with an importable `IServiceCollection` extension. See [Order Event-Driven Consumer](order-event-driven-consumer.md).
 
+* **ERP Channel Adapter**
+  Shows fluent and source-generated external DTO adapters over PatternKit message channels, with an importable `IServiceCollection` extension. See [ERP Channel Adapter](erp-channel-adapter.md).
+
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 
