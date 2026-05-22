@@ -379,6 +379,8 @@
           href: cloud/strangler-fig.md
         - name: Sidecar
           href: cloud/sidecar.md
+        - name: Backends for Frontends
+          href: cloud/backends-for-frontends.md
     - name: Application Architecture
       items:
         - name: Anti-Corruption Layer

@@ -306,6 +306,10 @@ PKGA001 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation
 PKGA002 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation members are missing.
 PKGA003 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation method signature is invalid.
 PKGA004 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation fetch is duplicated.
+PKBFF001 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends host must be partial.
+PKBFF002 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends members are missing.
+PKBFF003 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends method signature is invalid.
+PKBFF004 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends frontend is duplicated.
 PKGR001 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing host must be partial.
 PKGR002 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing members are missing.
 PKGR003 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing method signature is invalid.
