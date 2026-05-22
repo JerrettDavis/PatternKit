@@ -306,6 +306,11 @@ PKGA001 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation
 PKGA002 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation members are missing.
 PKGA003 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation method signature is invalid.
 PKGA004 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation fetch is duplicated.
+PKGR001 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing host must be partial.
+PKGR002 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing members are missing.
+PKGR003 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing method signature is invalid.
+PKGR004 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing route is duplicated.
+PKGR005 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing handler is missing.
 PKSF001 | PatternKit.Generators.StranglerFig | Error | Strangler Fig host must be partial.
 PKSF002 | PatternKit.Generators.StranglerFig | Error | Strangler Fig members are missing.
 PKSF003 | PatternKit.Generators.StranglerFig | Error | Strangler Fig method signature is invalid.

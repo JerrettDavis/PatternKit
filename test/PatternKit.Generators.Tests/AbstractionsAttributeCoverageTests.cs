@@ -20,6 +20,7 @@ using PatternKit.Generators.FeatureToggles;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
 using PatternKit.Generators.GatewayAggregation;
+using PatternKit.Generators.GatewayRouting;
 using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
@@ -225,6 +226,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateGatewayAggregationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayAggregationFetchAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayAggregationComposerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateGatewayRoutingAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
+        { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GatewayRouteFallbackAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateStranglerFigAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(StranglerFigRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(StranglerFigLegacyAttribute), AttributeTargets.Method, false, false },
@@ -503,6 +508,33 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayAggregationAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new GatewayAggregationFetchAttribute(""));
         ScenarioExpect.IsType<GatewayAggregationComposerAttribute>(new GatewayAggregationComposerAttribute());
+    }
+
+    [Scenario("Gateway Routing Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void GatewayRouting_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var gateway = new GenerateGatewayRoutingAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildGateway",
+            GatewayName = "product-gateway"
+        };
+        var route = new GatewayRouteAttribute("inventory");
+        var handler = new GatewayRouteHandlerAttribute("inventory");
+        var fallback = new GatewayRouteFallbackAttribute("not-found");
+
+        ScenarioExpect.Equal(typeof(string), gateway.RequestType);
+        ScenarioExpect.Equal(typeof(int), gateway.ResponseType);
+        ScenarioExpect.Equal("BuildGateway", gateway.FactoryMethodName);
+        ScenarioExpect.Equal("product-gateway", gateway.GatewayName);
+        ScenarioExpect.Equal("inventory", route.Name);
+        ScenarioExpect.Equal("inventory", handler.Name);
+        ScenarioExpect.Equal("not-found", fallback.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayRoutingAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayRoutingAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteHandlerAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteFallbackAttribute(""));
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]

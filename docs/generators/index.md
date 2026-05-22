@@ -122,6 +122,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Rate Limiting**](rate-limiting.md) | Key-partitioned fixed-window rate limit policy factories | `[GenerateRateLimitPolicy]` |
 | [**External Configuration Store**](external-configuration-store.md) | Typed centralized configuration loaders | `[GenerateExternalConfigurationStore]` |
 | [**Gateway Aggregation**](gateway-aggregation.md) | API gateway response composition factories | `[GenerateGatewayAggregation]` |
+| [**Gateway Routing**](gateway-routing.md) | API gateway route dispatch factories | `[GenerateGatewayRouting]` |
 | [**Strangler Fig**](strangler-fig.md) | Legacy-to-modern migration routing factories | `[GenerateStranglerFig]` |
 
 ## Quick Reference
@@ -299,6 +300,10 @@ public static partial class ProductSearchRateLimitPolicy { }
 // Gateway aggregation - generated downstream response composition
 [GenerateGatewayAggregation(typeof(CustomerDashboardRequest), typeof(CustomerDashboardResponse))]
 public static partial class CustomerDashboardGateway { }
+
+// Gateway routing - generated route dispatch
+[GenerateGatewayRouting(typeof(ProductGatewayRequest), typeof(ProductGatewayResponse))]
+public static partial class ProductGatewayRouting { }
 
 // Strangler Fig - generated legacy-to-modern migration routing
 [GenerateStranglerFig(typeof(CheckoutMigrationRequest), typeof(CheckoutMigrationResponse))]
