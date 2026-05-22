@@ -377,6 +377,8 @@
           href: cloud/gateway-routing.md
         - name: Strangler Fig
           href: cloud/strangler-fig.md
+        - name: Sidecar
+          href: cloud/sidecar.md
     - name: Application Architecture
       items:
         - name: Anti-Corruption Layer

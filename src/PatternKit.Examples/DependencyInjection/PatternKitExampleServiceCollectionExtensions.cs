@@ -59,6 +59,7 @@ using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.RetryDemo;
 using PatternKit.Examples.ServiceLayerDemo;
+using PatternKit.Examples.SidecarDemo;
 using PatternKit.Examples.Singleton;
 using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.StranglerFigDemo;
@@ -206,6 +207,7 @@ public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfi
 public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
 public sealed record CheckoutStranglerFigExample(CheckoutStranglerFigDemoRunner Runner, CheckoutMigrationService Service);
 public sealed record ProductGatewayRoutingExample(ProductGatewayRoutingDemoRunner Runner, ProductGatewayRoutingService Service);
+public sealed record OrderTelemetrySidecarExample(OrderTelemetrySidecarDemoRunner Runner, OrderTelemetrySidecarService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -297,7 +299,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddTenantExternalConfigurationStoreExample()
             .AddCustomerDashboardGatewayAggregationExample()
             .AddCheckoutStranglerFigExample()
-            .AddProductGatewayRoutingExample();
+            .AddProductGatewayRoutingExample()
+            .AddOrderTelemetrySidecarExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1051,6 +1054,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<ProductGatewayRoutingDemoRunner>(),
             sp.GetRequiredService<ProductGatewayRoutingService>()));
         return services.RegisterExample<ProductGatewayRoutingExample>("Product Gateway Routing", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddOrderTelemetrySidecarExample(this IServiceCollection services)
+    {
+        services.AddOrderTelemetrySidecarDemo();
+        services.AddSingleton<OrderTelemetrySidecarExample>(sp => new(
+            sp.GetRequiredService<OrderTelemetrySidecarDemoRunner>(),
+            sp.GetRequiredService<OrderTelemetrySidecarService>()));
+        return services.RegisterExample<OrderTelemetrySidecarExample>("Order Telemetry Sidecar", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     private static IServiceCollection RegisterExample<T>(

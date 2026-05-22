@@ -36,6 +36,7 @@ using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
 using PatternKit.Generators.ServiceLayer;
+using PatternKit.Generators.Sidecar;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
@@ -230,6 +231,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteFallbackAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateSidecarAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(SidecarBeforeAttribute), AttributeTargets.Method, false, false },
+        { typeof(SidecarAfterAttribute), AttributeTargets.Method, false, false },
+        { typeof(SidecarHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateStranglerFigAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(StranglerFigRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(StranglerFigLegacyAttribute), AttributeTargets.Method, false, false },
@@ -535,6 +540,31 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteHandlerAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new GatewayRouteFallbackAttribute(""));
+    }
+
+    [Scenario("Sidecar Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Sidecar_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var sidecar = new GenerateSidecarAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildOrderSidecar",
+            SidecarName = "order-sidecar"
+        };
+        var before = new SidecarBeforeAttribute("trace");
+        var after = new SidecarAfterAttribute("metrics");
+
+        ScenarioExpect.Equal(typeof(string), sidecar.RequestType);
+        ScenarioExpect.Equal(typeof(int), sidecar.ResponseType);
+        ScenarioExpect.Equal("BuildOrderSidecar", sidecar.FactoryMethodName);
+        ScenarioExpect.Equal("order-sidecar", sidecar.SidecarName);
+        ScenarioExpect.Equal("trace", before.Name);
+        ScenarioExpect.Equal("metrics", after.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSidecarAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSidecarAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new SidecarBeforeAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new SidecarAfterAttribute(""));
+        ScenarioExpect.IsType<SidecarHandlerAttribute>(new SidecarHandlerAttribute());
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]
