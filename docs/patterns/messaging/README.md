@@ -32,6 +32,12 @@ Bounded or unbounded in-process inboxes serialize async message handling through
 
 [Learn More](mailbox.md)
 
+## Event-Driven Consumer
+
+Push-based consumers handle messages when a broker callback, background service, webhook, in-memory bus, or application event source delivers them.
+
+[Learn More](event-driven-consumer.md)
+
 ## Idempotent Receiver, Inbox, and Outbox
 
 Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.

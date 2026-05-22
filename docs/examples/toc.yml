@@ -52,6 +52,9 @@
 - name: Warehouse Polling Consumer
   href: warehouse-polling-consumer.md
 
+- name: Order Event-Driven Consumer
+  href: order-event-driven-consumer.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 

@@ -225,6 +225,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["PollingConsumer", "MessageChannel"],
             ["pull-based replenishment workflow", "source-generated polling consumer factory", "DI composition"]),
         Descriptor(
+            "Order Event-Driven Consumer",
+            "src/PatternKit.Examples/Messaging/OrderEventDrivenConsumerExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderEventDrivenConsumerExampleTests.cs",
+            "docs/examples/order-event-driven-consumer.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["EventDrivenConsumer"],
+            ["push-based order workflow", "source-generated event handler factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",

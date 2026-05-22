@@ -40,6 +40,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
     [
         "Message Channel",
         "Polling Consumer",
+        "Event-Driven Consumer",
         "Message Envelope",
         "Message Translator",
         "Claim Check",
@@ -126,7 +127,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(EnterprisePatternAdditions.OrderBy(static x => x), patterns.Select(static p => p.Name).OrderBy(static x => x)))
             .And("enterprise entries are grouped by integration reliability and architecture families", patterns =>
             {
-                ScenarioExpect.Equal(23, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
+                ScenarioExpect.Equal(24, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(7, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(15, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));

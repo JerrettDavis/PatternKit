@@ -127,6 +127,7 @@ public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
 public sealed record WarehousePollingConsumerExampleService(PollingConsumer<ReplenishmentRequest> Consumer, WarehousePollingConsumerService Service);
+public sealed record OrderEventDrivenConsumerExampleService(EventDrivenConsumer<OrderAcceptedEvent> Consumer, OrderEventDrivenConsumerService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
@@ -207,6 +208,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddMessageRouterVisitorExample()
             .AddInventoryMessageChannelExample()
             .AddWarehousePollingConsumerExample()
+            .AddOrderEventDrivenConsumerExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
@@ -473,6 +475,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<PollingConsumer<ReplenishmentRequest>>(),
             sp.GetRequiredService<WarehousePollingConsumerService>()));
         return services.RegisterExample<WarehousePollingConsumerExampleService>("Warehouse Polling Consumer", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderEventDrivenConsumerExample(this IServiceCollection services)
+    {
+        services.AddOrderEventDrivenConsumerDemo();
+        services.AddSingleton<OrderEventDrivenConsumerExampleService>(sp => new(
+            sp.GetRequiredService<EventDrivenConsumer<OrderAcceptedEvent>>(),
+            sp.GetRequiredService<OrderEventDrivenConsumerService>()));
+        return services.RegisterExample<OrderEventDrivenConsumerExampleService>("Order Event-Driven Consumer", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)
