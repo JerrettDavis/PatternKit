@@ -50,6 +50,12 @@ Messaging gateways expose typed request/response methods while hiding message en
 
 [Learn More](messaging-gateway.md)
 
+## Service Activator
+
+Service activators invoke application service operations from typed messages while preserving message context and response envelopes.
+
+[Learn More](service-activator.md)
+
 ## Idempotent Receiver, Inbox, and Outbox
 
 Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.

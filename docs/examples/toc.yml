@@ -61,6 +61,9 @@
 - name: Payment Messaging Gateway
   href: payment-messaging-gateway.md
 
+- name: Inventory Service Activator
+  href: inventory-service-activator.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 
