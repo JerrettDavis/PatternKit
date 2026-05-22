@@ -59,6 +59,7 @@ using PatternKit.Examples.TemplateDemo;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
+using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.ControlBus;
@@ -123,6 +124,7 @@ public sealed record PosTenderVisitorExample(TypeDispatcher<VisitorTender, strin
 public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
+public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
@@ -201,6 +203,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddApiExceptionMappingVisitorExample()
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
+            .AddInventoryMessageChannelExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
@@ -449,6 +452,15 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new MessageRoutingExampleRunner(MessageRoutingExample.RunFluent, MessageRoutingExample.RunGenerated));
         return services;
+    }
+
+    public static IServiceCollection AddInventoryMessageChannelExample(this IServiceCollection services)
+    {
+        services.AddInventoryMessageChannelDemo();
+        services.AddSingleton<InventoryMessageChannelExampleService>(sp => new(
+            sp.GetRequiredService<MessageChannel<InventoryAdjustment>>(),
+            sp.GetRequiredService<InventoryMessageChannelService>()));
+        return services.RegisterExample<InventoryMessageChannelExampleService>("Inventory Message Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)

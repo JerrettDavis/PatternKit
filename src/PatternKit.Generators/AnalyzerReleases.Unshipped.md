@@ -312,3 +312,5 @@ PKSCG005 | PatternKit.Generators.Messaging | Error | Scatter-Gather recipient na
 PKRSEQ001 | PatternKit.Generators.Messaging | Error | Resequencer host type must be partial.
 PKRSEQ002 | PatternKit.Generators.Messaging | Error | Resequencer must declare exactly one sequence selector.
 PKRSEQ003 | PatternKit.Generators.Messaging | Error | Resequencer sequence selector signature is invalid.
+PKCHN001 | PatternKit.Generators.Messaging | Error | Message Channel host type must be partial.
+PKCHN002 | PatternKit.Generators.Messaging | Error | Message Channel capacity is invalid.

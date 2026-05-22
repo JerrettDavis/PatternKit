@@ -80,6 +80,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | Generator | Description | Attribute |
 |---|---|---|
 | [**Dispatcher**](dispatcher.md) | Mediator pattern with commands, notifications, and streams | `[GenerateDispatcher]` |
+| [**Message Channel**](message-channel.md) | Typed channel factories for in-process message queues | `[GenerateMessageChannel]` |
 | [**Message Envelope**](messaging.md#generated-message-envelope) | Required message metadata contracts | `[GenerateMessageEnvelope]` |
 | [**Message Translator**](message-translator.md) | Partner and transport event normalization | `[GenerateMessageTranslator]` |
 | [**Claim Check**](claim-check.md) | External payload storage references | `[GenerateClaimCheck]` |
