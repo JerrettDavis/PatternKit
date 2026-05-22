@@ -134,6 +134,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePollingConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(PollingConsumerSourceAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateEventDrivenConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(EventDrivenConsumerHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCompetingConsumerGroupAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePipesAndFiltersPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -752,6 +754,12 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildPoller",
             ConsumerName = "inventory-poller"
         };
+        var eventDrivenConsumer = new GenerateEventDrivenConsumerAttribute(typeof(string))
+        {
+            FactoryName = "BuildConsumer",
+            ConsumerName = "order-events"
+        };
+        var eventDrivenHandler = new EventDrivenConsumerHandlerAttribute("audit");
         var routingSlip = new GenerateRoutingSlipAttribute(typeof(string))
         {
             FactoryName = "Build",
@@ -916,6 +924,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(string), pollingConsumer.PayloadType);
         ScenarioExpect.Equal("BuildPoller", pollingConsumer.FactoryName);
         ScenarioExpect.Equal("inventory-poller", pollingConsumer.ConsumerName);
+        ScenarioExpect.Equal(typeof(string), eventDrivenConsumer.PayloadType);
+        ScenarioExpect.Equal("BuildConsumer", eventDrivenConsumer.FactoryName);
+        ScenarioExpect.Equal("order-events", eventDrivenConsumer.ConsumerName);
+        ScenarioExpect.Equal("audit", eventDrivenHandler.Name);
         ScenarioExpect.Equal(typeof(string), routingSlip.PayloadType);
         ScenarioExpect.Equal("Build", routingSlip.FactoryName);
         ScenarioExpect.Equal("BuildAsync", routingSlip.AsyncFactoryName);
@@ -1031,6 +1043,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePollingConsumerAttribute(null!));
         ScenarioExpect.IsType<PollingConsumerSourceAttribute>(new PollingConsumerSourceAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventDrivenConsumerAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new EventDrivenConsumerHandlerAttribute(""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));

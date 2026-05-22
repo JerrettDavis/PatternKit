@@ -91,6 +91,9 @@
 - name: Polling Consumer
   href: polling-consumer.md
 
+- name: Event-Driven Consumer
+  href: event-driven-consumer.md
+
 - name: Message Translator
   href: message-translator.md
 

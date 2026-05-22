@@ -317,3 +317,6 @@ PKCHN002 | PatternKit.Generators.Messaging | Error | Message Channel capacity is
 PKPOLL001 | PatternKit.Generators.Messaging | Error | Polling Consumer host type must be partial.
 PKPOLL002 | PatternKit.Generators.Messaging | Error | Polling Consumer must declare exactly one source.
 PKPOLL003 | PatternKit.Generators.Messaging | Error | Polling Consumer source signature is invalid.
+PKEVT001 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer host type must be partial.
+PKEVT002 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer must declare at least one handler.
+PKEVT003 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer handler signature is invalid.

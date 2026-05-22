@@ -66,6 +66,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Enterprise Messaging Workflow Suite**
   End-to-end messaging examples for envelopes, content routing, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, outboxes, and generated messaging factories. See [Enterprise Messaging Workflow Suite](enterprise-messaging-workflows.md).
 
+* **Order Event-Driven Consumer**
+  Shows fluent and source-generated push consumers side by side, with an importable `IServiceCollection` extension. See [Order Event-Driven Consumer](order-event-driven-consumer.md).
+
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 
