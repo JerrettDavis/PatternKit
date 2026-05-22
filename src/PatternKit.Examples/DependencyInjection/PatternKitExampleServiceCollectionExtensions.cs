@@ -10,6 +10,7 @@ using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CacheAside;
 using PatternKit.Cloud.CircuitBreaker;
+using PatternKit.Cloud.HealthEndpointMonitoring;
 using PatternKit.Cloud.PriorityQueue;
 using PatternKit.Cloud.RateLimiting;
 using PatternKit.Cloud.QueueLoadLeveling;
@@ -35,6 +36,7 @@ using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
+using PatternKit.Examples.HealthEndpointMonitoringDemo;
 using PatternKit.Examples.IdentityMapDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
@@ -187,6 +189,7 @@ public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
 public sealed record FulfillmentQueueLoadLevelingExample(QueueLoadLevelingPolicy<FulfillmentQueueResult> Policy, FulfillmentQueueLoadLevelingService Service);
+public sealed record FulfillmentHealthEndpointExample(HealthEndpoint<FulfillmentHealthSnapshot> Endpoint, FulfillmentHealthEndpointService Service);
 public sealed record FulfillmentPriorityQueueExample(PriorityQueuePolicy<FulfillmentPriorityWork, int> Queue, FulfillmentPriorityQueueService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
@@ -272,6 +275,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
             .AddFulfillmentQueueLoadLevelingExample()
+            .AddFulfillmentHealthEndpointExample()
             .AddFulfillmentPriorityQueueExample()
             .AddProductCatalogCacheAsideExample()
             .AddProductSearchRateLimitingExample()
@@ -939,6 +943,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<PriorityQueuePolicy<FulfillmentPriorityWork, int>>(),
             sp.GetRequiredService<FulfillmentPriorityQueueService>()));
         return services.RegisterExample<FulfillmentPriorityQueueExample>("Fulfillment Priority Queue", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddFulfillmentHealthEndpointExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentHealthEndpointDemo();
+        services.AddSingleton<FulfillmentHealthEndpointExample>(sp => new(
+            sp.GetRequiredService<HealthEndpoint<FulfillmentHealthSnapshot>>(),
+            sp.GetRequiredService<FulfillmentHealthEndpointService>()));
+        return services.RegisterExample<FulfillmentHealthEndpointExample>("Fulfillment Health Endpoint Monitoring", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     public static IServiceCollection AddProductCatalogCacheAsideExample(this IServiceCollection services)

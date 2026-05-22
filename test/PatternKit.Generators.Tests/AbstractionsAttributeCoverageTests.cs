@@ -19,6 +19,7 @@ using PatternKit.Generators.Factories;
 using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
+using PatternKit.Generators.HealthEndpointMonitoring;
 using PatternKit.Generators.MaterializedViews;
 using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
@@ -203,6 +204,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(PrototypeStrategyAttribute), AttributeTargets.Property | AttributeTargets.Field, false, false },
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GenerateHealthEndpointAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(HealthEndpointCheckAttribute), AttributeTargets.Method, false, false },
         { typeof(GeneratePriorityQueueAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(PriorityQueuePrioritySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateQueueLoadLevelingPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -408,6 +411,26 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePriorityQueueAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePriorityQueueAttribute(typeof(string), null!));
         ScenarioExpect.IsType<PriorityQueuePrioritySelectorAttribute>(new PriorityQueuePrioritySelectorAttribute());
+    }
+
+    [Scenario("Health Endpoint Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void HealthEndpoint_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var endpoint = new GenerateHealthEndpointAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildFulfillmentHealth",
+            EndpointName = "fulfillment-health"
+        };
+        var check = new HealthEndpointCheckAttribute("database") { Order = 2 };
+
+        ScenarioExpect.Equal(typeof(string), endpoint.ContextType);
+        ScenarioExpect.Equal("BuildFulfillmentHealth", endpoint.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment-health", endpoint.EndpointName);
+        ScenarioExpect.Equal("database", check.Name);
+        ScenarioExpect.Equal(2, check.Order);
+        ScenarioExpect.Null(new HealthEndpointCheckAttribute().Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateHealthEndpointAttribute(null!));
     }
 
     [Scenario("Queue Load Leveling Attributes Expose Defaults And Configuration")]

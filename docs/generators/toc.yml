@@ -67,6 +67,9 @@
 - name: Flyweight
   href: flyweight.md
 
+- name: Health Endpoint Monitoring
+  href: health-endpoint-monitoring.md
+
 - name: Interpreter
   href: interpreter.md
 
