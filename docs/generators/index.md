@@ -90,6 +90,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Message Translator**](message-translator.md) | Partner and transport event normalization | `[GenerateMessageTranslator]` |
 | [**Canonical Data Model**](canonical-data-model.md) | Source-to-canonical contract normalization | `[GenerateCanonicalDataModel]` |
 | [**Event-Carried State Transfer**](event-carried-state-transfer.md) | State-rich event projection factories | `[GenerateEventCarriedStateTransfer]` |
+| [**Event Notification**](event-notification.md) | Compact event notification factories | `[GenerateEventNotification]` |
 | [**Claim Check**](claim-check.md) | External payload storage references | `[GenerateClaimCheck]` |
 | [**Dead Letter Channel**](dead-letter-channel.md) | Failed-message capture and replay handoff | `[GenerateDeadLetterChannel]` |
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
@@ -199,6 +200,10 @@ public static partial class PartnerOrderTranslator { }
 // Event-carried state transfer - state-rich projection events
 [GenerateEventCarriedStateTransfer(typeof(InventoryAdjustedEvent), typeof(string), typeof(InventoryReadModel))]
 public static partial class InventoryStateTransfer { }
+
+// Event notification - compact event signals
+[GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+public static partial class OrderAcceptedNotification { }
 
 // Claim check - external payload storage reference
 [GenerateClaimCheck(typeof(LargeOrderDocument), StoreName = "document-archive")]

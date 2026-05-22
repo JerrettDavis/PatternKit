@@ -315,6 +315,8 @@
           href: messaging/canonical-data-model.md
         - name: Event-Carried State Transfer
           href: messaging/event-carried-state-transfer.md
+        - name: Event Notification
+          href: messaging/event-notification.md
         - name: Claim Check
           href: messaging/claim-check.md
         - name: Dead Letter Channel

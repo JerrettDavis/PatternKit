@@ -31,6 +31,9 @@
 - name: Event-Carried State Transfer
   href: event-carried-state-transfer.md
 
+- name: Event Notification
+  href: event-notification.md
+
 - name: Chain
   href: chain.md
 

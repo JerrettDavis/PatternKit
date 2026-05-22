@@ -313,6 +313,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Event-Carried State Transfer"],
             ["inventory read-model projection", "source-generated state transfer", "DI composition"]),
         Descriptor(
+            "Order Event Notification",
+            "src/PatternKit.Examples/EventNotificationDemo/OrderEventNotificationDemo.cs",
+            "test/PatternKit.Examples.Tests/EventNotificationDemo/OrderEventNotificationDemoTests.cs",
+            "docs/examples/order-event-notification.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Event Notification"],
+            ["compact order notification", "source-generated notification", "DI composition"]),
+        Descriptor(
             "Generated Claim Check",
             "src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs",

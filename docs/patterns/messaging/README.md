@@ -62,6 +62,12 @@ Event-carried state transfer publishes enough state in an event for subscribers 
 
 [Learn More](event-carried-state-transfer.md)
 
+## Event Notification
+
+Event notification publishes compact event signals with keys, correlation IDs, and metadata when subscribers do not need a full state payload.
+
+[Learn More](event-notification.md)
+
 ## Idempotent Receiver, Inbox, and Outbox
 
 Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.

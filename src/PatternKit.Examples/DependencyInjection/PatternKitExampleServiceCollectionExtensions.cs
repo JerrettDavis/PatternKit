@@ -33,6 +33,7 @@ using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.EventSourcingDemo;
 using PatternKit.Examples.EventCarriedStateTransferDemo;
+using PatternKit.Examples.EventNotificationDemo;
 using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
@@ -144,6 +145,7 @@ public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunne
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record CanonicalOrderDataModelExample(CanonicalOrderDemoRunner Runner, CanonicalOrderImportService Service);
 public sealed record InventoryEventCarriedStateTransferExample(InventoryEventCarriedStateTransferDemoRunner Runner, InventoryProjectionService Service);
+public sealed record OrderEventNotificationExample(OrderEventNotificationDemoRunner Runner, OrderNotificationService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
 public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChannelExampleRunner Runner, FulfillmentDeadLetterWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
@@ -232,6 +234,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedMessageTranslatorExample()
             .AddCanonicalOrderDataModelExample()
             .AddInventoryEventCarriedStateTransferExample()
+            .AddOrderEventNotificationExample()
             .AddGeneratedClaimCheckExample()
             .AddGeneratedDeadLetterChannelExample()
             .AddGeneratedRecipientListExample()
@@ -568,6 +571,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<InventoryEventCarriedStateTransferDemoRunner>(),
             sp.GetRequiredService<InventoryProjectionService>()));
         return services.RegisterExample<InventoryEventCarriedStateTransferExample>("Inventory Event-Carried State Transfer", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderEventNotificationExample(this IServiceCollection services)
+    {
+        services.AddOrderEventNotificationDemo();
+        services.AddSingleton<OrderEventNotificationExample>(sp => new(
+            sp.GetRequiredService<OrderEventNotificationDemoRunner>(),
+            sp.GetRequiredService<OrderNotificationService>()));
+        return services.RegisterExample<OrderEventNotificationExample>("Order Event Notification", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedClaimCheckExample(this IServiceCollection services)

@@ -337,6 +337,10 @@ PKCDM003 | PatternKit.Generators.CanonicalDataModel | Error | Canonical Data Mod
 PKECST001 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer host must be partial.
 PKECST002 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer methods are missing.
 PKECST003 | PatternKit.Generators.EventCarriedStateTransfer | Error | Event-Carried State Transfer method signature is invalid.
+PKEN001 | PatternKit.Generators.EventNotification | Error | Event Notification host must be partial.
+PKEN002 | PatternKit.Generators.EventNotification | Error | Event Notification key selector is missing.
+PKEN003 | PatternKit.Generators.EventNotification | Error | Event Notification method signature is invalid.
+PKEN004 | PatternKit.Generators.EventNotification | Error | Event Notification metadata is duplicated.
 PKGWY001 | PatternKit.Generators.Messaging | Error | Messaging Gateway host type must be partial.
 PKGWY002 | PatternKit.Generators.Messaging | Error | Messaging Gateway must declare exactly one handler.
 PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler signature is invalid.

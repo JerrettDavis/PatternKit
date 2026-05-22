@@ -13,6 +13,7 @@ using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
 using PatternKit.Generators.EventCarriedStateTransfer;
+using PatternKit.Generators.EventNotification;
 using PatternKit.Generators.EventSourcing;
 using PatternKit.Generators.Facade;
 using PatternKit.Generators.FeatureToggles;
@@ -83,6 +84,11 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(EventCarriedStateKeyAttribute), AttributeTargets.Method, false, false },
         { typeof(EventCarriedStateVersionAttribute), AttributeTargets.Method, false, false },
         { typeof(EventCarriedStateMapperAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateEventNotificationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(EventNotificationKeyAttribute), AttributeTargets.Method, false, false },
+        { typeof(EventNotificationCorrelationAttribute), AttributeTargets.Method, false, false },
+        { typeof(EventNotificationRuleAttribute), AttributeTargets.Method, false, false },
+        { typeof(EventNotificationMetadataAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateExternalConfigurationStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ExternalConfigurationLoaderAttribute), AttributeTargets.Method, false, false },
         { typeof(ExternalConfigurationValidatorAttribute), AttributeTargets.Method, false, false },
@@ -442,6 +448,30 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<EventCarriedStateKeyAttribute>(new EventCarriedStateKeyAttribute());
         ScenarioExpect.IsType<EventCarriedStateVersionAttribute>(new EventCarriedStateVersionAttribute());
         ScenarioExpect.IsType<EventCarriedStateMapperAttribute>(new EventCarriedStateMapperAttribute());
+    }
+
+    [Scenario("Event Notification Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void EventNotification_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var notification = new GenerateEventNotificationAttribute(typeof(string), typeof(Guid))
+        {
+            FactoryMethodName = "BuildOrderAccepted",
+            NotificationName = "order-accepted"
+        };
+        var metadata = new EventNotificationMetadataAttribute("source");
+
+        ScenarioExpect.Equal(typeof(string), notification.EventType);
+        ScenarioExpect.Equal(typeof(Guid), notification.KeyType);
+        ScenarioExpect.Equal("BuildOrderAccepted", notification.FactoryMethodName);
+        ScenarioExpect.Equal("order-accepted", notification.NotificationName);
+        ScenarioExpect.Equal("source", metadata.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventNotificationAttribute(null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventNotificationAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new EventNotificationMetadataAttribute(""));
+        ScenarioExpect.IsType<EventNotificationKeyAttribute>(new EventNotificationKeyAttribute());
+        ScenarioExpect.IsType<EventNotificationCorrelationAttribute>(new EventNotificationCorrelationAttribute());
+        ScenarioExpect.IsType<EventNotificationRuleAttribute>(new EventNotificationRuleAttribute());
     }
 
     [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]

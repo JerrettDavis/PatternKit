@@ -54,6 +54,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Message Translator | `MessageTranslator<TInput, TOutput>` | Message Translator generator |
 | Enterprise Integration | Canonical Data Model | `CanonicalDataModel<TCanonical>` | Canonical Data Model generator |
 | Enterprise Integration | Event-Carried State Transfer | `EventCarriedStateTransfer<TEvent,TKey,TState>` | Event-Carried State Transfer generator |
+| Enterprise Integration | Event Notification | `EventNotification<TEvent,TKey>` | Event Notification generator |
 | Enterprise Integration | Claim Check | `ClaimCheck<TPayload>` | Claim Check generator |
 | Enterprise Integration | Dead Letter Channel | `DeadLetterChannel<TPayload>` | Dead Letter Channel generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
