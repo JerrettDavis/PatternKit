@@ -106,6 +106,9 @@
 - name: Scatter-Gather
   href: scatter-gather.md
 
+- name: Resequencer
+  href: resequencer.md
+
 - name: Competing Consumers
   href: competing-consumers.md
 

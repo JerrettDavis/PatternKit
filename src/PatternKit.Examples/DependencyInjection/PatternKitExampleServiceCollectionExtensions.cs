@@ -134,6 +134,7 @@ public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageSt
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
+public sealed record ShipmentResequencerExampleService(Resequencer<ShipmentEvent> Resequencer, ShipmentResequencerService Service);
 public sealed record FulfillmentCompetingConsumersExampleService(CompetingConsumerGroup<FulfillmentConsumerWork, FulfillmentConsumerResult> Group, FulfillmentCompetingConsumerService Service);
 public sealed record FulfillmentPipesAndFiltersExampleService(PipesAndFiltersPipeline<FulfillmentPipelineContext> Pipeline, FulfillmentPipesAndFiltersService Service);
 public sealed record PatternsShowcaseExample(ShowcaseFacade Facade);
@@ -211,6 +212,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
+            .AddShipmentResequencerExample()
             .AddFulfillmentCompetingConsumersExample()
             .AddFulfillmentPipesAndFiltersExample()
             .AddPatternsShowcaseExample()
@@ -540,6 +542,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary>>(),
             sp.GetRequiredService<SupplierQuoteService>()));
         return services.RegisterExample<SupplierQuoteScatterGatherExampleService>("Supplier Quote Scatter-Gather", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddShipmentResequencerExample(this IServiceCollection services)
+    {
+        services.AddShipmentResequencerDemo();
+        services.AddSingleton<ShipmentResequencerExampleService>(sp => new(
+            sp.GetRequiredService<Resequencer<ShipmentEvent>>(),
+            sp.GetRequiredService<ShipmentResequencerService>()));
+        return services.RegisterExample<ShipmentResequencerExampleService>("Shipment Resequencer", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddFulfillmentCompetingConsumersExample(this IServiceCollection services)
