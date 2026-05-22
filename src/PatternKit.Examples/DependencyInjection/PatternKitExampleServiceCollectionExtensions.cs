@@ -45,6 +45,7 @@ using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.HealthEndpointMonitoringDemo;
 using PatternKit.Examples.IdentityMapDemo;
+using PatternKit.Examples.LeaderElectionDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
 using PatternKit.Examples.Messaging;
@@ -212,6 +213,7 @@ public sealed record ProductGatewayRoutingExample(ProductGatewayRoutingDemoRunne
 public sealed record OrderTelemetrySidecarExample(OrderTelemetrySidecarDemoRunner Runner, OrderTelemetrySidecarService Service);
 public sealed record CommerceBackendsForFrontendsExample(CommerceBackendsForFrontendsDemoRunner Runner, CommerceBackendsForFrontendsService Service);
 public sealed record InventoryAmbassadorExample(InventoryAmbassadorDemoRunner Runner, InventoryAmbassadorService Service);
+public sealed record WarehouseLeaderElectionExample(WarehouseLeaderElectionDemoRunner Runner, WarehouseLeaderElectionService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -306,7 +308,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddProductGatewayRoutingExample()
             .AddOrderTelemetrySidecarExample()
             .AddCommerceBackendsForFrontendsExample()
-            .AddInventoryAmbassadorExample();
+            .AddInventoryAmbassadorExample()
+            .AddWarehouseLeaderElectionExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1087,6 +1090,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<InventoryAmbassadorDemoRunner>(),
             sp.GetRequiredService<InventoryAmbassadorService>()));
         return services.RegisterExample<InventoryAmbassadorExample>("Inventory Ambassador", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddWarehouseLeaderElectionExample(this IServiceCollection services)
+    {
+        services.AddWarehouseLeaderElectionDemo();
+        services.AddSingleton<WarehouseLeaderElectionExample>(sp => new(
+            sp.GetRequiredService<WarehouseLeaderElectionDemoRunner>(),
+            sp.GetRequiredService<WarehouseLeaderElectionService>()));
+        return services.RegisterExample<WarehouseLeaderElectionExample>("Warehouse Leader Election", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

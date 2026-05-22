@@ -178,6 +178,9 @@
 - name: Ambassador
   href: ambassador.md
 
+- name: Leader Election
+  href: leader-election.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

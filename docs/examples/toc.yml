@@ -255,3 +255,6 @@
 
 - name: Inventory Ambassador
   href: inventory-ambassador.md
+
+- name: Warehouse Leader Election
+  href: warehouse-leader-election.md

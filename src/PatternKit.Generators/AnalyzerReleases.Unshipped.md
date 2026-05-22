@@ -314,6 +314,10 @@ PKAMB001 | PatternKit.Generators.Ambassador | Error | Ambassador host must be pa
 PKAMB002 | PatternKit.Generators.Ambassador | Error | Ambassador members are missing.
 PKAMB003 | PatternKit.Generators.Ambassador | Error | Ambassador method signature is invalid.
 PKAMB004 | PatternKit.Generators.Ambassador | Error | Ambassador telemetry is duplicated.
+PKLE001 | PatternKit.Generators.LeaderElection | Error | Leader Election host must be partial.
+PKLE002 | PatternKit.Generators.LeaderElection | Error | Leader Election members are missing.
+PKLE003 | PatternKit.Generators.LeaderElection | Error | Leader Election method signature is invalid.
+PKLE004 | PatternKit.Generators.LeaderElection | Error | Leader Election lease duration is invalid.
 PKGR001 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing host must be partial.
 PKGR002 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing members are missing.
 PKGR003 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing method signature is invalid.
