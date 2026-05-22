@@ -49,6 +49,9 @@
 - name: Inventory Message Channel
   href: inventory-message-channel.md
 
+- name: Warehouse Polling Consumer
+  href: warehouse-polling-consumer.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 

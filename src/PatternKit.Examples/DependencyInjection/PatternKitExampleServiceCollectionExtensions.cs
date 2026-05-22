@@ -60,6 +60,7 @@ using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Channels;
+using PatternKit.Messaging.Consumers;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.ControlBus;
@@ -125,6 +126,7 @@ public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
+public sealed record WarehousePollingConsumerExampleService(PollingConsumer<ReplenishmentRequest> Consumer, WarehousePollingConsumerService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
@@ -204,6 +206,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
             .AddInventoryMessageChannelExample()
+            .AddWarehousePollingConsumerExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
             .AddGeneratedClaimCheckExample()
@@ -461,6 +464,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageChannel<InventoryAdjustment>>(),
             sp.GetRequiredService<InventoryMessageChannelService>()));
         return services.RegisterExample<InventoryMessageChannelExampleService>("Inventory Message Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddWarehousePollingConsumerExample(this IServiceCollection services)
+    {
+        services.AddWarehousePollingConsumerDemo();
+        services.AddSingleton<WarehousePollingConsumerExampleService>(sp => new(
+            sp.GetRequiredService<PollingConsumer<ReplenishmentRequest>>(),
+            sp.GetRequiredService<WarehousePollingConsumerService>()));
+        return services.RegisterExample<WarehousePollingConsumerExampleService>("Warehouse Polling Consumer", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedMessageEnvelopeExample(this IServiceCollection services)

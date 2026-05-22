@@ -297,6 +297,8 @@
       items:
         - name: Message Channel
           href: messaging/message-channel.md
+        - name: Polling Consumer
+          href: messaging/polling-consumer.md
         - name: Message Envelope and Context
           href: messaging/message-envelope.md
         - name: Message Translator

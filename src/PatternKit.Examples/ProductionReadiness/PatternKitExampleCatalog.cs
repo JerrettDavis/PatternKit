@@ -217,6 +217,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageChannel"],
             ["typed queue boundary", "source-generated channel factory", "DI composition"]),
         Descriptor(
+            "Warehouse Polling Consumer",
+            "src/PatternKit.Examples/Messaging/WarehousePollingConsumerExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/WarehousePollingConsumerExampleTests.cs",
+            "docs/examples/warehouse-polling-consumer.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["PollingConsumer", "MessageChannel"],
+            ["pull-based replenishment workflow", "source-generated polling consumer factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",

@@ -88,6 +88,9 @@
 - name: Message Channel
   href: message-channel.md
 
+- name: Polling Consumer
+  href: polling-consumer.md
+
 - name: Message Translator
   href: message-translator.md
 
