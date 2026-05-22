@@ -49,6 +49,7 @@ using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
 using PatternKit.Generators.AuditLog;
+using PatternKit.Generators.Ambassador;
 using PatternKit.Generators.BackendsForFrontends;
 using TinyBDD;
 
@@ -232,6 +233,12 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(FrontendSelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(FrontendHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(FrontendFallbackAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateAmbassadorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AmbassadorTransformAttribute), AttributeTargets.Method, false, false },
+        { typeof(AmbassadorConnectionPolicyAttribute), AttributeTargets.Method, false, false },
+        { typeof(AmbassadorTelemetryAttribute), AttributeTargets.Method, false, false },
+        { typeof(AmbassadorCallAttribute), AttributeTargets.Method, false, false },
+        { typeof(AmbassadorFallbackAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateGatewayRoutingAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
@@ -595,6 +602,31 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new FrontendSelectorAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new FrontendHandlerAttribute(""));
         ScenarioExpect.IsType<FrontendFallbackAttribute>(new FrontendFallbackAttribute());
+    }
+
+    [Scenario("Ambassador Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Ambassador_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var ambassador = new GenerateAmbassadorAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildInventoryAmbassador",
+            AmbassadorName = "inventory-ambassador"
+        };
+        var telemetry = new AmbassadorTelemetryAttribute("trace");
+
+        ScenarioExpect.Equal(typeof(string), ambassador.RequestType);
+        ScenarioExpect.Equal(typeof(int), ambassador.ResponseType);
+        ScenarioExpect.Equal("BuildInventoryAmbassador", ambassador.FactoryMethodName);
+        ScenarioExpect.Equal("inventory-ambassador", ambassador.AmbassadorName);
+        ScenarioExpect.Equal("trace", telemetry.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAmbassadorAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAmbassadorAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new AmbassadorTelemetryAttribute(""));
+        ScenarioExpect.IsType<AmbassadorTransformAttribute>(new AmbassadorTransformAttribute());
+        ScenarioExpect.IsType<AmbassadorConnectionPolicyAttribute>(new AmbassadorConnectionPolicyAttribute());
+        ScenarioExpect.IsType<AmbassadorCallAttribute>(new AmbassadorCallAttribute());
+        ScenarioExpect.IsType<AmbassadorFallbackAttribute>(new AmbassadorFallbackAttribute());
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]

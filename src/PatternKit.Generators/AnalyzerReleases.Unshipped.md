@@ -310,6 +310,10 @@ PKBFF001 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Fro
 PKBFF002 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends members are missing.
 PKBFF003 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends method signature is invalid.
 PKBFF004 | PatternKit.Generators.BackendsForFrontends | Error | Backends for Frontends frontend is duplicated.
+PKAMB001 | PatternKit.Generators.Ambassador | Error | Ambassador host must be partial.
+PKAMB002 | PatternKit.Generators.Ambassador | Error | Ambassador members are missing.
+PKAMB003 | PatternKit.Generators.Ambassador | Error | Ambassador method signature is invalid.
+PKAMB004 | PatternKit.Generators.Ambassador | Error | Ambassador telemetry is duplicated.
 PKGR001 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing host must be partial.
 PKGR002 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing members are missing.
 PKGR003 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing method signature is invalid.

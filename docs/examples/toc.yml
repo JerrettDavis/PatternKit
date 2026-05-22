@@ -252,3 +252,6 @@
 
 - name: Commerce Backends for Frontends
   href: commerce-backends-for-frontends.md
+
+- name: Inventory Ambassador
+  href: inventory-ambassador.md

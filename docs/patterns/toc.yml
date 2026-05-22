@@ -381,6 +381,8 @@
           href: cloud/sidecar.md
         - name: Backends for Frontends
           href: cloud/backends-for-frontends.md
+        - name: Ambassador
+          href: cloud/ambassador.md
     - name: Application Architecture
       items:
         - name: Anti-Corruption Layer
