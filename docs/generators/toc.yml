@@ -85,6 +85,9 @@
 - name: Messaging Generators
   href: messaging.md
 
+- name: Message Channel
+  href: message-channel.md
+
 - name: Message Translator
   href: message-translator.md
 

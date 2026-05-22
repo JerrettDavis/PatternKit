@@ -131,6 +131,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(BreadthFirstAttribute), AttributeTargets.Method, false, false },
         { typeof(TraversalChildrenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
+        { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRoutingSlipAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCompetingConsumerGroupAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePipesAndFiltersPipelineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -737,6 +738,13 @@ public sealed class AbstractionsAttributeCoverageTests
             IncludeStreaming = false,
             Visibility = GeneratedVisibility.Internal
         };
+        var messageChannel = new GenerateMessageChannelAttribute(typeof(string))
+        {
+            FactoryName = "BuildChannel",
+            ChannelName = "inventory",
+            Capacity = 12,
+            BackpressurePolicy = "DropOldest"
+        };
         var routingSlip = new GenerateRoutingSlipAttribute(typeof(string))
         {
             FactoryName = "Build",
@@ -893,6 +901,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.True(dispatcher.IncludeObjectOverloads);
         ScenarioExpect.False(dispatcher.IncludeStreaming);
         ScenarioExpect.Equal(GeneratedVisibility.Internal, dispatcher.Visibility);
+        ScenarioExpect.Equal(typeof(string), messageChannel.PayloadType);
+        ScenarioExpect.Equal("BuildChannel", messageChannel.FactoryName);
+        ScenarioExpect.Equal("inventory", messageChannel.ChannelName);
+        ScenarioExpect.Equal(12, messageChannel.Capacity);
+        ScenarioExpect.Equal("DropOldest", messageChannel.BackpressurePolicy);
         ScenarioExpect.Equal(typeof(string), routingSlip.PayloadType);
         ScenarioExpect.Equal("Build", routingSlip.FactoryName);
         ScenarioExpect.Equal("BuildAsync", routingSlip.AsyncFactoryName);
@@ -1005,6 +1018,7 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("raw-signature", translatorDrop.Name);
         ScenarioExpect.Equal("content-type", translatorHeader.Name);
         ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateRoutingSlipAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new RoutingSlipStepAttribute("", 1));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSagaAttribute(null!));

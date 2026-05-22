@@ -46,6 +46,9 @@
 - name: Visitor — Message Router (Background Worker)
   href: message-router-visitor.md
 
+- name: Inventory Message Channel
+  href: inventory-message-channel.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 

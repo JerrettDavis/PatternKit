@@ -209,6 +209,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Visitor", "ContentRouter"],
             ["message dispatch", "route fallback", "typed handlers"]),
         Descriptor(
+            "Inventory Message Channel",
+            "src/PatternKit.Examples/Messaging/InventoryMessageChannelExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/InventoryMessageChannelExampleTests.cs",
+            "docs/examples/inventory-message-channel.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MessageChannel"],
+            ["typed queue boundary", "source-generated channel factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",

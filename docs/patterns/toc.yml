@@ -295,6 +295,8 @@
     - name: Messaging
       href: messaging/README.md
       items:
+        - name: Message Channel
+          href: messaging/message-channel.md
         - name: Message Envelope and Context
           href: messaging/message-envelope.md
         - name: Message Translator
