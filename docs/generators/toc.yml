@@ -25,6 +25,9 @@
 - name: Cache-Aside
   href: cache-aside.md
 
+- name: Canonical Data Model
+  href: canonical-data-model.md
+
 - name: Chain
   href: chain.md
 

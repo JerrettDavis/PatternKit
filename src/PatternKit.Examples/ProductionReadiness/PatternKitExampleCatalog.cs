@@ -297,6 +297,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageTranslator"],
             ["partner event normalization", "source-generated translator", "DI composition"]),
         Descriptor(
+            "Order Canonical Data Model",
+            "src/PatternKit.Examples/CanonicalDataModelDemo/OrderCanonicalDataModelDemo.cs",
+            "test/PatternKit.Examples.Tests/CanonicalDataModelDemo/OrderCanonicalDataModelDemoTests.cs",
+            "docs/examples/order-canonical-data-model.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Canonical Data Model"],
+            ["partner order normalization", "source-generated canonical adapter", "DI composition"]),
+        Descriptor(
             "Generated Claim Check",
             "src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs",

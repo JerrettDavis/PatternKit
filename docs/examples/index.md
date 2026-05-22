@@ -87,6 +87,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 
+* **Order Canonical Data Model**
+  Shows fluent and source-generated order normalization into an application-owned canonical contract, with an importable `IServiceCollection` extension. See [Order Canonical Data Model](order-canonical-data-model.md).
+
 * **Generated Recipient List**
   Shows fluent and source-generated recipient-list fan-out side by side, with an importable `IServiceCollection` extension. See [Generated Recipient List](generated-recipient-list.md).
 
