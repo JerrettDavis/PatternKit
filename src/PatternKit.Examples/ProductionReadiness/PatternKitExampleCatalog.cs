@@ -759,7 +759,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/order-telemetry-sidecar.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Sidecar"],
-            ["trace context enrichment", "source-generated sidecar factory", "ASP.NET Core endpoint mapping"])
+            ["trace context enrichment", "source-generated sidecar factory", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Commerce Backends for Frontends",
+            "src/PatternKit.Examples/BackendsForFrontendsDemo/CommerceBackendsForFrontendsDemo.cs",
+            "test/PatternKit.Examples.Tests/BackendsForFrontendsDemo/CommerceBackendsForFrontendsDemoTests.cs",
+            "docs/examples/commerce-backends-for-frontends.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Backends for Frontends"],
+            ["client-specific response shaping", "source-generated BFF factory", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

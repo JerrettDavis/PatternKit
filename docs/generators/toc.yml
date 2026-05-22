@@ -172,6 +172,9 @@
 - name: Sidecar
   href: sidecar.md
 
+- name: Backends for Frontends
+  href: backends-for-frontends.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

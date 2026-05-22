@@ -49,6 +49,7 @@ using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
 using PatternKit.Generators.AuditLog;
+using PatternKit.Generators.BackendsForFrontends;
 using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
@@ -227,6 +228,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateGatewayAggregationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayAggregationFetchAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayAggregationComposerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateBackendsForFrontendsAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(FrontendSelectorAttribute), AttributeTargets.Method, false, false },
+        { typeof(FrontendHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(FrontendFallbackAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateGatewayRoutingAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
@@ -565,6 +570,31 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new SidecarBeforeAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new SidecarAfterAttribute(""));
         ScenarioExpect.IsType<SidecarHandlerAttribute>(new SidecarHandlerAttribute());
+    }
+
+    [Scenario("Backends for Frontends Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Backends_For_Frontends_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var bff = new GenerateBackendsForFrontendsAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildCommerceBff",
+            GatewayName = "commerce-bff"
+        };
+        var selector = new FrontendSelectorAttribute("mobile");
+        var handler = new FrontendHandlerAttribute("mobile");
+
+        ScenarioExpect.Equal(typeof(string), bff.RequestType);
+        ScenarioExpect.Equal(typeof(int), bff.ResponseType);
+        ScenarioExpect.Equal("BuildCommerceBff", bff.FactoryMethodName);
+        ScenarioExpect.Equal("commerce-bff", bff.GatewayName);
+        ScenarioExpect.Equal("mobile", selector.Name);
+        ScenarioExpect.Equal("mobile", handler.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBackendsForFrontendsAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBackendsForFrontendsAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new FrontendSelectorAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new FrontendHandlerAttribute(""));
+        ScenarioExpect.IsType<FrontendFallbackAttribute>(new FrontendFallbackAttribute());
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]

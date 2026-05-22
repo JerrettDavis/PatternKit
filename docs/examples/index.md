@@ -169,6 +169,7 @@ dotnet test PatternKit.slnx -c Release
 * **Product Gateway Routing:** `ProductGatewayRoutingDemo` (+ `ProductGatewayRoutingDemoTests`) — fluent and generated downstream route dispatch with DI and ASP.NET Core mapping.
 * **Checkout Strangler Fig Migration:** `CheckoutStranglerFigDemo` (+ `CheckoutStranglerFigDemoTests`) — fluent and generated legacy-to-modern checkout routing with DI and ASP.NET Core mapping.
 * **Order Telemetry Sidecar:** `OrderTelemetrySidecarDemo` (+ `OrderTelemetrySidecarDemoTests`) — fluent and generated companion telemetry behavior with DI and ASP.NET Core mapping.
+* **Commerce Backends for Frontends:** `CommerceBackendsForFrontendsDemo` (+ `CommerceBackendsForFrontendsDemoTests`) — fluent and generated client-specific facade shaping with DI and ASP.NET Core mapping.
 * **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
