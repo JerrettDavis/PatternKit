@@ -24,6 +24,7 @@ using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.AuditLogDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
+using PatternKit.Examples.CanonicalDataModelDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.CircuitBreakerDemo;
@@ -140,6 +141,7 @@ public sealed record PaymentMessagingGatewayExampleService(MessagingGateway<Paym
 public sealed record InventoryServiceActivatorExampleService(ServiceActivator<InventoryReservationRequest, InventoryReservationResult> Activator, InventoryServiceActivatorService Service);
 public sealed record GeneratedMessageEnvelopeExample(MessageEnvelopeExampleRunner Runner);
 public sealed record GeneratedMessageTranslatorExample(PartnerEventTranslatorExampleRunner Runner, PartnerOrderImportService Service);
+public sealed record CanonicalOrderDataModelExample(CanonicalOrderDemoRunner Runner, CanonicalOrderImportService Service);
 public sealed record GeneratedClaimCheckExample(LargeDocumentClaimCheckExampleRunner Runner, LargeDocumentWorkflow Workflow);
 public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChannelExampleRunner Runner, FulfillmentDeadLetterWorkflow Workflow);
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
@@ -226,6 +228,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddInventoryServiceActivatorExample()
             .AddGeneratedMessageEnvelopeExample()
             .AddGeneratedMessageTranslatorExample()
+            .AddCanonicalOrderDataModelExample()
             .AddGeneratedClaimCheckExample()
             .AddGeneratedDeadLetterChannelExample()
             .AddGeneratedRecipientListExample()
@@ -544,6 +547,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<PartnerEventTranslatorExampleRunner>(),
             sp.GetRequiredService<PartnerOrderImportService>()));
         return services.RegisterExample<GeneratedMessageTranslatorExample>("Generated Message Translator", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCanonicalOrderDataModelExample(this IServiceCollection services)
+    {
+        services.AddCanonicalOrderDataModelDemo();
+        services.AddSingleton<CanonicalOrderDataModelExample>(sp => new(
+            sp.GetRequiredService<CanonicalOrderDemoRunner>(),
+            sp.GetRequiredService<CanonicalOrderImportService>()));
+        return services.RegisterExample<CanonicalOrderDataModelExample>("Order Canonical Data Model", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddGeneratedClaimCheckExample(this IServiceCollection services)

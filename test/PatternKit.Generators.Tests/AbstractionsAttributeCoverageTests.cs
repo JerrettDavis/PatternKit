@@ -2,6 +2,7 @@ using PatternKit.Generators.Adapter;
 using PatternKit.Generators.Bridge;
 using PatternKit.Generators.Bulkhead;
 using PatternKit.Generators.CacheAside;
+using PatternKit.Generators.CanonicalDataModel;
 using PatternKit.Generators.Chain;
 using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Cloud;
@@ -75,6 +76,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateBulkheadPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCacheAsidePolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CacheAsidePredicateAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateCanonicalDataModelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(CanonicalDataModelMapperAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateExternalConfigurationStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ExternalConfigurationLoaderAttribute), AttributeTargets.Method, false, false },
         { typeof(ExternalConfigurationValidatorAttribute), AttributeTargets.Method, false, false },
@@ -390,6 +393,27 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(8, bulkhead.MaxQueueLength);
         ScenarioExpect.Equal(250, bulkhead.QueueTimeoutMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBulkheadPolicyAttribute(null!));
+    }
+
+    [Scenario("Canonical Data Model Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void CanonicalDataModel_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var model = new GenerateCanonicalDataModelAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildCanonicalOrders",
+            ModelName = "commerce-orders",
+            AdapterName = "partner-orders"
+        };
+
+        ScenarioExpect.Equal(typeof(string), model.SourceType);
+        ScenarioExpect.Equal(typeof(int), model.CanonicalType);
+        ScenarioExpect.Equal("BuildCanonicalOrders", model.FactoryMethodName);
+        ScenarioExpect.Equal("commerce-orders", model.ModelName);
+        ScenarioExpect.Equal("partner-orders", model.AdapterName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCanonicalDataModelAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCanonicalDataModelAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<CanonicalDataModelMapperAttribute>(new CanonicalDataModelMapperAttribute());
     }
 
     [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]

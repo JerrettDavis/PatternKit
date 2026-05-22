@@ -79,6 +79,9 @@
 - name: Generated Message Translator
   href: generated-message-translator.md
 
+- name: Order Canonical Data Model
+  href: order-canonical-data-model.md
+
 - name: Generated Claim Check
   href: generated-claim-check.md
 
