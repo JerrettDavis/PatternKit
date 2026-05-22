@@ -85,6 +85,9 @@
 - name: Inventory Event-Carried State Transfer
   href: inventory-event-carried-state-transfer.md
 
+- name: Order Event Notification
+  href: order-event-notification.md
+
 - name: Generated Claim Check
   href: generated-claim-check.md
 
