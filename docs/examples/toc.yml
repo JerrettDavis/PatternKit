@@ -88,6 +88,9 @@
 - name: Supplier Quote Scatter-Gather
   href: supplier-quote-scatter-gather.md
 
+- name: Shipment Resequencer
+  href: shipment-resequencer.md
+
 - name: Fulfillment Competing Consumers
   href: fulfillment-competing-consumers.md
 

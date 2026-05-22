@@ -153,6 +153,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateScatterGatherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ScatterGatherRecipientAttribute), AttributeTargets.Method, false, false },
         { typeof(ScatterGatherAggregatorAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateResequencerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ResequencerSequenceAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDeadLetterChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -782,6 +784,12 @@ public sealed class AbstractionsAttributeCoverageTests
             Name = "supplier-quotes"
         };
         var scatterRecipient = new ScatterGatherRecipientAttribute("regional", 14, "CanQuote");
+        var resequencer = new GenerateResequencerAttribute(typeof(string))
+        {
+            FactoryName = "BuildResequencer",
+            Name = "shipment-events",
+            StartsAt = 10
+        };
         var claimCheck = new GenerateClaimCheckAttribute(typeof(string))
         {
             FactoryName = "BuildClaimCheck",
@@ -929,6 +937,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("regional", scatterRecipient.Name);
         ScenarioExpect.Equal(14, scatterRecipient.Order);
         ScenarioExpect.Equal("CanQuote", scatterRecipient.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), resequencer.PayloadType);
+        ScenarioExpect.Equal("BuildResequencer", resequencer.FactoryName);
+        ScenarioExpect.Equal("shipment-events", resequencer.Name);
+        ScenarioExpect.Equal(10, resequencer.StartsAt);
         ScenarioExpect.Equal(typeof(string), claimCheck.PayloadType);
         ScenarioExpect.Equal("BuildClaimCheck", claimCheck.FactoryName);
         ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
@@ -1016,6 +1028,8 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateScatterGatherAttribute(typeof(string), typeof(int), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ScatterGatherRecipientAttribute(""));
         ScenarioExpect.IsType<ScatterGatherAggregatorAttribute>(new ScatterGatherAggregatorAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateResequencerAttribute(null!));
+        ScenarioExpect.IsType<ResequencerSequenceAttribute>(new ResequencerSequenceAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
         ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDeadLetterChannelAttribute(null!));

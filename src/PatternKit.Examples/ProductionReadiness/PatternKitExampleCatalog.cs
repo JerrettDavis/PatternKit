@@ -321,6 +321,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ScatterGather"],
             ["supplier quote fan-out", "source-generated scatter-gather factory", "DI composition"]),
         Descriptor(
+            "Shipment Resequencer",
+            "src/PatternKit.Examples/Messaging/ShipmentResequencerExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ShipmentResequencerExampleTests.cs",
+            "docs/examples/shipment-resequencer.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Resequencer"],
+            ["out-of-order shipment buffering", "source-generated resequencer factory", "DI composition"]),
+        Descriptor(
             "Fulfillment Competing Consumers",
             "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",

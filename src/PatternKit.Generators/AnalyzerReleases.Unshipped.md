@@ -309,3 +309,6 @@ PKSCG002 | PatternKit.Generators.Messaging | Error | Scatter-Gather must declare
 PKSCG003 | PatternKit.Generators.Messaging | Error | Scatter-Gather recipient signature is invalid.
 PKSCG004 | PatternKit.Generators.Messaging | Error | Scatter-Gather aggregator signature is invalid.
 PKSCG005 | PatternKit.Generators.Messaging | Error | Scatter-Gather recipient name or order is duplicated.
+PKRSEQ001 | PatternKit.Generators.Messaging | Error | Resequencer host type must be partial.
+PKRSEQ002 | PatternKit.Generators.Messaging | Error | Resequencer must declare exactly one sequence selector.
+PKRSEQ003 | PatternKit.Generators.Messaging | Error | Resequencer sequence selector signature is invalid.
