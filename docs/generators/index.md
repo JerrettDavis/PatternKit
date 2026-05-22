@@ -128,6 +128,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Backends for Frontends**](backends-for-frontends.md) | Client-specific facade factories | `[GenerateBackendsForFrontends]` |
 | [**Ambassador**](ambassador.md) | Outbound connectivity wrapper factories | `[GenerateAmbassador]` |
 | [**Leader Election**](leader-election.md) | Lease-backed active worker factories | `[GenerateLeaderElection]` |
+| [**Scheduler Agent Supervisor**](scheduler-agent-supervisor.md) | Scheduled worker supervision factories | `[GenerateSchedulerAgentSupervisor]` |
 
 ## Quick Reference
 

@@ -258,3 +258,6 @@
 
 - name: Warehouse Leader Election
   href: warehouse-leader-election.md
+
+- name: Warehouse Scheduler Agent Supervisor
+  href: warehouse-scheduler-agent-supervisor.md
