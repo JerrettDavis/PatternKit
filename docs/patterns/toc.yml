@@ -355,6 +355,8 @@
           href: cloud/bulkhead.md
         - name: Queue-Based Load Leveling
           href: cloud/queue-load-leveling.md
+        - name: Health Endpoint Monitoring
+          href: cloud/health-endpoint-monitoring.md
         - name: Priority Queue
           href: cloud/priority-queue.md
         - name: Cache-Aside

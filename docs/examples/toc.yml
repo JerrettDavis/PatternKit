@@ -115,6 +115,9 @@
 - name: Fulfillment Pipes and Filters
   href: fulfillment-pipes-and-filters.md
 
+- name: Fulfillment Health Endpoint Monitoring
+  href: fulfillment-health-endpoint-monitoring.md
+
 - name: CQRS Dispatcher
   href: cqrs-dispatcher.md
 

@@ -81,6 +81,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Fulfillment Priority Queue**
   Shows fluent and source-generated business-priority queues with an importable `IServiceCollection` extension. See [Fulfillment Priority Queue](fulfillment-priority-queue.md).
 
+* **Fulfillment Health Endpoint Monitoring**
+  Shows fluent and source-generated health checks with `IServiceCollection`, Generic Host-friendly services, and ASP.NET Core route mapping. See [Fulfillment Health Endpoint Monitoring](fulfillment-health-endpoint-monitoring.md).
+
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 

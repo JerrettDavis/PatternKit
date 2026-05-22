@@ -665,6 +665,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Queue-Based Load Leveling"],
             ["bounded worker queue", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Fulfillment Health Endpoint Monitoring",
+            "src/PatternKit.Examples/HealthEndpointMonitoringDemo/FulfillmentHealthEndpointDemo.cs",
+            "test/PatternKit.Examples.Tests/HealthEndpointMonitoringDemo/FulfillmentHealthEndpointDemoTests.cs",
+            "docs/examples/fulfillment-health-endpoint-monitoring.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Health Endpoint Monitoring"],
+            ["dependency health report", "source-generated endpoint factory", "DI and ASP.NET Core composition"]),
+        Descriptor(
             "Fulfillment Priority Queue",
             "src/PatternKit.Examples/PriorityQueueDemo/FulfillmentPriorityQueueDemo.cs",
             "test/PatternKit.Examples.Tests/PriorityQueueDemo/FulfillmentPriorityQueueDemoTests.cs",
