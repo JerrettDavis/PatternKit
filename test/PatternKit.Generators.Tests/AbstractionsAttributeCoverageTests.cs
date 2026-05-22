@@ -25,6 +25,7 @@ using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
 using PatternKit.Generators.HealthEndpointMonitoring;
+using PatternKit.Generators.LeaderElection;
 using PatternKit.Generators.MaterializedViews;
 using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
@@ -239,6 +240,11 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AmbassadorTelemetryAttribute), AttributeTargets.Method, false, false },
         { typeof(AmbassadorCallAttribute), AttributeTargets.Method, false, false },
         { typeof(AmbassadorFallbackAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateLeaderElectionAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(LeaderCandidateIdAttribute), AttributeTargets.Method, false, false },
+        { typeof(LeaderAcquiredAttribute), AttributeTargets.Method, false, false },
+        { typeof(LeaderRenewedAttribute), AttributeTargets.Method, false, false },
+        { typeof(LeaderReleasedAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateGatewayRoutingAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
@@ -627,6 +633,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<AmbassadorConnectionPolicyAttribute>(new AmbassadorConnectionPolicyAttribute());
         ScenarioExpect.IsType<AmbassadorCallAttribute>(new AmbassadorCallAttribute());
         ScenarioExpect.IsType<AmbassadorFallbackAttribute>(new AmbassadorFallbackAttribute());
+    }
+
+    [Scenario("Leader Election Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Leader_Election_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var leader = new GenerateLeaderElectionAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildLeader",
+            ElectionName = "orders-leader",
+            LeaseDurationMilliseconds = 5000
+        };
+
+        ScenarioExpect.Equal(typeof(string), leader.ContextType);
+        ScenarioExpect.Equal("BuildLeader", leader.FactoryMethodName);
+        ScenarioExpect.Equal("orders-leader", leader.ElectionName);
+        ScenarioExpect.Equal(5000, leader.LeaseDurationMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateLeaderElectionAttribute(null!));
+        ScenarioExpect.IsType<LeaderCandidateIdAttribute>(new LeaderCandidateIdAttribute());
+        ScenarioExpect.IsType<LeaderAcquiredAttribute>(new LeaderAcquiredAttribute());
+        ScenarioExpect.IsType<LeaderRenewedAttribute>(new LeaderRenewedAttribute());
+        ScenarioExpect.IsType<LeaderReleasedAttribute>(new LeaderReleasedAttribute());
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]

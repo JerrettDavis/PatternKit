@@ -383,6 +383,8 @@
           href: cloud/backends-for-frontends.md
         - name: Ambassador
           href: cloud/ambassador.md
+        - name: Leader Election
+          href: cloud/leader-election.md
     - name: Application Architecture
       items:
         - name: Anti-Corruption Layer

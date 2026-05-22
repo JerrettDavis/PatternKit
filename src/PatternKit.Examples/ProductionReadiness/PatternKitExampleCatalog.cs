@@ -775,7 +775,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/inventory-ambassador.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Ambassador"],
-            ["outbound call wrapping", "source-generated ambassador factory", "ASP.NET Core endpoint mapping"])
+            ["outbound call wrapping", "source-generated ambassador factory", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Warehouse Leader Election",
+            "src/PatternKit.Examples/LeaderElectionDemo/WarehouseLeaderElectionDemo.cs",
+            "test/PatternKit.Examples.Tests/LeaderElectionDemo/WarehouseLeaderElectionDemoTests.cs",
+            "docs/examples/warehouse-leader-election.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Leader Election"],
+            ["single active worker lease", "source-generated candidate factory", "Generic Host hosted service"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;
