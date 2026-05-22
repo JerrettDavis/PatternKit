@@ -313,6 +313,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ControlBus"],
             ["operational command surface", "source-generated bus factory", "DI composition"]),
         Descriptor(
+            "Supplier Quote Scatter-Gather",
+            "src/PatternKit.Examples/Messaging/SupplierQuoteScatterGatherExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/SupplierQuoteScatterGatherExampleTests.cs",
+            "docs/examples/supplier-quote-scatter-gather.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ScatterGather"],
+            ["supplier quote fan-out", "source-generated scatter-gather factory", "DI composition"]),
+        Descriptor(
             "Fulfillment Competing Consumers",
             "src/PatternKit.Examples/Messaging/FulfillmentCompetingConsumersExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/FulfillmentCompetingConsumersExampleTests.cs",

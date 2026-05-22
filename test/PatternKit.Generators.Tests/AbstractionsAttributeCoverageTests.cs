@@ -150,6 +150,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(WireTapHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateControlBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ControlBusCommandAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateScatterGatherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ScatterGatherRecipientAttribute), AttributeTargets.Method, false, false },
+        { typeof(ScatterGatherAggregatorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateClaimCheckAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(ClaimCheckStoreFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDeadLetterChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -773,6 +776,12 @@ public sealed class AbstractionsAttributeCoverageTests
             BusName = "ops-control"
         };
         var controlBusCommand = new ControlBusCommandAttribute("pause", "pause-handler", 13);
+        var scatterGather = new GenerateScatterGatherAttribute(typeof(string), typeof(int), typeof(decimal))
+        {
+            FactoryName = "BuildScatterGather",
+            Name = "supplier-quotes"
+        };
+        var scatterRecipient = new ScatterGatherRecipientAttribute("regional", 14, "CanQuote");
         var claimCheck = new GenerateClaimCheckAttribute(typeof(string))
         {
             FactoryName = "BuildClaimCheck",
@@ -912,6 +921,14 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("pause", controlBusCommand.CommandName);
         ScenarioExpect.Equal("pause-handler", controlBusCommand.HandlerName);
         ScenarioExpect.Equal(13, controlBusCommand.Order);
+        ScenarioExpect.Equal(typeof(string), scatterGather.RequestType);
+        ScenarioExpect.Equal(typeof(int), scatterGather.ResponseType);
+        ScenarioExpect.Equal(typeof(decimal), scatterGather.ResultType);
+        ScenarioExpect.Equal("BuildScatterGather", scatterGather.FactoryName);
+        ScenarioExpect.Equal("supplier-quotes", scatterGather.Name);
+        ScenarioExpect.Equal("regional", scatterRecipient.Name);
+        ScenarioExpect.Equal(14, scatterRecipient.Order);
+        ScenarioExpect.Equal("CanQuote", scatterRecipient.PredicateMethodName);
         ScenarioExpect.Equal(typeof(string), claimCheck.PayloadType);
         ScenarioExpect.Equal("BuildClaimCheck", claimCheck.FactoryName);
         ScenarioExpect.Equal("documents", claimCheck.ClaimCheckName);
@@ -994,6 +1011,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateControlBusAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ControlBusCommandAttribute("", "handler"));
         ScenarioExpect.Throws<ArgumentException>(() => new ControlBusCommandAttribute("pause", ""));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateScatterGatherAttribute(null!, typeof(int), typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateScatterGatherAttribute(typeof(string), null!, typeof(decimal)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateScatterGatherAttribute(typeof(string), typeof(int), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ScatterGatherRecipientAttribute(""));
+        ScenarioExpect.IsType<ScatterGatherAggregatorAttribute>(new ScatterGatherAggregatorAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateClaimCheckAttribute(null!));
         ScenarioExpect.IsType<ClaimCheckStoreFactoryAttribute>(new ClaimCheckStoreFactoryAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDeadLetterChannelAttribute(null!));
