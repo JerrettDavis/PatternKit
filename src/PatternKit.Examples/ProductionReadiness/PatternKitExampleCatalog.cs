@@ -735,7 +735,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/customer-dashboard-gateway-aggregation.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Gateway Aggregation"],
-            ["downstream dashboard composition", "source-generated gateway aggregation", "ASP.NET Core endpoint mapping"])
+            ["downstream dashboard composition", "source-generated gateway aggregation", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Checkout Strangler Fig Migration",
+            "src/PatternKit.Examples/StranglerFigDemo/CheckoutStranglerFigDemo.cs",
+            "test/PatternKit.Examples.Tests/StranglerFigDemo/CheckoutStranglerFigDemoTests.cs",
+            "docs/examples/checkout-strangler-fig.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Strangler Fig"],
+            ["legacy fallback", "source-generated migration router", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

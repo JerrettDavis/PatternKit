@@ -240,3 +240,6 @@
 
 - name: Customer Dashboard Gateway Aggregation
   href: customer-dashboard-gateway-aggregation.md
+
+- name: Checkout Strangler Fig Migration
+  href: checkout-strangler-fig.md

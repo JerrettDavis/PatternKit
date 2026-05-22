@@ -38,6 +38,7 @@ using PatternKit.Generators.ServiceLayer;
 using PatternKit.Generators.Singleton;
 using PatternKit.Generators.Specification;
 using PatternKit.Generators.State;
+using PatternKit.Generators.StranglerFig;
 using PatternKit.Generators.TableDataGateway;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.TransactionScript;
@@ -224,6 +225,10 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateGatewayAggregationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayAggregationFetchAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayAggregationComposerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateStranglerFigAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(StranglerFigRouteAttribute), AttributeTargets.Method, false, false },
+        { typeof(StranglerFigLegacyAttribute), AttributeTargets.Method, false, false },
+        { typeof(StranglerFigModernAttribute), AttributeTargets.Method, false, false },
         { typeof(GeneratePriorityQueueAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(PriorityQueuePrioritySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateQueueLoadLevelingPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -498,6 +503,29 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayAggregationAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new GatewayAggregationFetchAttribute(""));
         ScenarioExpect.IsType<GatewayAggregationComposerAttribute>(new GatewayAggregationComposerAttribute());
+    }
+
+    [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void StranglerFig_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var migration = new GenerateStranglerFigAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildCheckoutMigration",
+            MigrationName = "checkout-strangler"
+        };
+        var route = new StranglerFigRouteAttribute("enterprise-tenant");
+
+        ScenarioExpect.Equal(typeof(string), migration.RequestType);
+        ScenarioExpect.Equal(typeof(int), migration.ResponseType);
+        ScenarioExpect.Equal("BuildCheckoutMigration", migration.FactoryMethodName);
+        ScenarioExpect.Equal("checkout-strangler", migration.MigrationName);
+        ScenarioExpect.Equal("enterprise-tenant", route.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateStranglerFigAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateStranglerFigAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new StranglerFigRouteAttribute(""));
+        ScenarioExpect.IsType<StranglerFigLegacyAttribute>(new StranglerFigLegacyAttribute());
+        ScenarioExpect.IsType<StranglerFigModernAttribute>(new StranglerFigModernAttribute());
     }
 
     [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]

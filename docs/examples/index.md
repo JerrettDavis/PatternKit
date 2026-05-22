@@ -166,6 +166,7 @@ dotnet test PatternKit.slnx -c Release
 * **Resilient Checkout:** `ResilientCheckoutDemo` (+ `ResilientCheckoutDemoTests`) — fallback checkout routes with compensation.
 * **Collaborating Mailboxes:** `ServiceCollaborationMailboxDemo` (+ `ServiceCollaborationMailboxDemoTests`) — inventory, payment, shipping, and notification services collaborating through serialized mailboxes.
 * **Messaging Backplane Facade:** `BackplaneFacadeDemo` (+ `BackplaneFacadeDemoTests`) — host setup, request/reply, pub/sub, outbox, idempotency, and mailbox-backed transport subscribers.
+* **Checkout Strangler Fig Migration:** `CheckoutStranglerFigDemo` (+ `CheckoutStranglerFigDemoTests`) — fluent and generated legacy-to-modern checkout routing with DI and ASP.NET Core mapping.
 * **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
