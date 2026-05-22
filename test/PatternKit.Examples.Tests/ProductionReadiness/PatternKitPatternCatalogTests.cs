@@ -85,6 +85,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Gateway Routing",
         "Sidecar",
         "Backends for Frontends",
+        "Ambassador",
         "CQRS",
         "Specification",
         "Repository",
@@ -142,7 +143,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             {
                 ScenarioExpect.Equal(30, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
-                ScenarioExpect.Equal(14, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
+                ScenarioExpect.Equal(15, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(15, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();

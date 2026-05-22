@@ -767,7 +767,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/commerce-backends-for-frontends.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
             ["Backends for Frontends"],
-            ["client-specific response shaping", "source-generated BFF factory", "ASP.NET Core endpoint mapping"])
+            ["client-specific response shaping", "source-generated BFF factory", "ASP.NET Core endpoint mapping"]),
+        Descriptor(
+            "Inventory Ambassador",
+            "src/PatternKit.Examples/AmbassadorDemo/InventoryAmbassadorDemo.cs",
+            "test/PatternKit.Examples.Tests/AmbassadorDemo/InventoryAmbassadorDemoTests.cs",
+            "docs/examples/inventory-ambassador.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Ambassador"],
+            ["outbound call wrapping", "source-generated ambassador factory", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

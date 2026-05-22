@@ -19,6 +19,7 @@ using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
+using PatternKit.Examples.AmbassadorDemo;
 using PatternKit.Examples.AntiCorruptionDemo;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.AuditLogDemo;
@@ -210,6 +211,7 @@ public sealed record CheckoutStranglerFigExample(CheckoutStranglerFigDemoRunner 
 public sealed record ProductGatewayRoutingExample(ProductGatewayRoutingDemoRunner Runner, ProductGatewayRoutingService Service);
 public sealed record OrderTelemetrySidecarExample(OrderTelemetrySidecarDemoRunner Runner, OrderTelemetrySidecarService Service);
 public sealed record CommerceBackendsForFrontendsExample(CommerceBackendsForFrontendsDemoRunner Runner, CommerceBackendsForFrontendsService Service);
+public sealed record InventoryAmbassadorExample(InventoryAmbassadorDemoRunner Runner, InventoryAmbassadorService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -303,7 +305,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddCheckoutStranglerFigExample()
             .AddProductGatewayRoutingExample()
             .AddOrderTelemetrySidecarExample()
-            .AddCommerceBackendsForFrontendsExample();
+            .AddCommerceBackendsForFrontendsExample()
+            .AddInventoryAmbassadorExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1075,6 +1078,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CommerceBackendsForFrontendsDemoRunner>(),
             sp.GetRequiredService<CommerceBackendsForFrontendsService>()));
         return services.RegisterExample<CommerceBackendsForFrontendsExample>("Commerce Backends for Frontends", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
+    }
+
+    public static IServiceCollection AddInventoryAmbassadorExample(this IServiceCollection services)
+    {
+        services.AddInventoryAmbassadorDemo();
+        services.AddSingleton<InventoryAmbassadorExample>(sp => new(
+            sp.GetRequiredService<InventoryAmbassadorDemoRunner>(),
+            sp.GetRequiredService<InventoryAmbassadorService>()));
+        return services.RegisterExample<InventoryAmbassadorExample>("Inventory Ambassador", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     private static IServiceCollection RegisterExample<T>(

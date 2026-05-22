@@ -126,6 +126,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Strangler Fig**](strangler-fig.md) | Legacy-to-modern migration routing factories | `[GenerateStranglerFig]` |
 | [**Sidecar**](sidecar.md) | Companion behavior pipeline factories | `[GenerateSidecar]` |
 | [**Backends for Frontends**](backends-for-frontends.md) | Client-specific facade factories | `[GenerateBackendsForFrontends]` |
+| [**Ambassador**](ambassador.md) | Outbound connectivity wrapper factories | `[GenerateAmbassador]` |
 
 ## Quick Reference
 
