@@ -318,6 +318,11 @@ PKLE001 | PatternKit.Generators.LeaderElection | Error | Leader Election host mu
 PKLE002 | PatternKit.Generators.LeaderElection | Error | Leader Election members are missing.
 PKLE003 | PatternKit.Generators.LeaderElection | Error | Leader Election method signature is invalid.
 PKLE004 | PatternKit.Generators.LeaderElection | Error | Leader Election lease duration is invalid.
+PKSAS001 | PatternKit.Generators.SchedulerAgentSupervisor | Error | Scheduler Agent Supervisor host must be partial.
+PKSAS002 | PatternKit.Generators.SchedulerAgentSupervisor | Error | Scheduler Agent Supervisor agents are missing.
+PKSAS003 | PatternKit.Generators.SchedulerAgentSupervisor | Error | Scheduler Agent Supervisor method signature is invalid.
+PKSAS004 | PatternKit.Generators.SchedulerAgentSupervisor | Error | Scheduler Agent Supervisor configuration is invalid.
+PKSAS005 | PatternKit.Generators.SchedulerAgentSupervisor | Error | Scheduler Agent Supervisor agent is duplicated.
 PKGR001 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing host must be partial.
 PKGR002 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing members are missing.
 PKGR003 | PatternKit.Generators.GatewayRouting | Error | Gateway Routing method signature is invalid.

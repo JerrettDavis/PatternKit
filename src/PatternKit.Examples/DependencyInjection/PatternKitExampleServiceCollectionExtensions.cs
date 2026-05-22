@@ -61,6 +61,7 @@ using PatternKit.Examples.QueueLoadLevelingDemo;
 using PatternKit.Examples.RateLimitingDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.RetryDemo;
+using PatternKit.Examples.SchedulerAgentSupervisorDemo;
 using PatternKit.Examples.ServiceLayerDemo;
 using PatternKit.Examples.SidecarDemo;
 using PatternKit.Examples.Singleton;
@@ -214,6 +215,7 @@ public sealed record OrderTelemetrySidecarExample(OrderTelemetrySidecarDemoRunne
 public sealed record CommerceBackendsForFrontendsExample(CommerceBackendsForFrontendsDemoRunner Runner, CommerceBackendsForFrontendsService Service);
 public sealed record InventoryAmbassadorExample(InventoryAmbassadorDemoRunner Runner, InventoryAmbassadorService Service);
 public sealed record WarehouseLeaderElectionExample(WarehouseLeaderElectionDemoRunner Runner, WarehouseLeaderElectionService Service);
+public sealed record WarehouseSchedulerAgentSupervisorExample(WarehouseSchedulerDemoRunner Runner, WarehouseSchedulerService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -309,7 +311,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderTelemetrySidecarExample()
             .AddCommerceBackendsForFrontendsExample()
             .AddInventoryAmbassadorExample()
-            .AddWarehouseLeaderElectionExample();
+            .AddWarehouseLeaderElectionExample()
+            .AddWarehouseSchedulerAgentSupervisorExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1099,6 +1102,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<WarehouseLeaderElectionDemoRunner>(),
             sp.GetRequiredService<WarehouseLeaderElectionService>()));
         return services.RegisterExample<WarehouseLeaderElectionExample>("Warehouse Leader Election", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddWarehouseSchedulerAgentSupervisorExample(this IServiceCollection services)
+    {
+        services.AddWarehouseSchedulerAgentSupervisorDemo();
+        services.AddSingleton<WarehouseSchedulerAgentSupervisorExample>(sp => new(
+            sp.GetRequiredService<WarehouseSchedulerDemoRunner>(),
+            sp.GetRequiredService<WarehouseSchedulerService>()));
+        return services.RegisterExample<WarehouseSchedulerAgentSupervisorExample>("Warehouse Scheduler Agent Supervisor", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

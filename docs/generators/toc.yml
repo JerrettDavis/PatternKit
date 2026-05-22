@@ -181,6 +181,9 @@
 - name: Leader Election
   href: leader-election.md
 
+- name: Scheduler Agent Supervisor
+  href: scheduler-agent-supervisor.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

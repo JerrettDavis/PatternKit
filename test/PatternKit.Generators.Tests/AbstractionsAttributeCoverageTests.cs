@@ -36,6 +36,7 @@ using PatternKit.Generators.QueueLoadLeveling;
 using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
+using PatternKit.Generators.SchedulerAgentSupervisor;
 using PatternKit.Generators.ServiceLayer;
 using PatternKit.Generators.Sidecar;
 using PatternKit.Generators.Singleton;
@@ -245,6 +246,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(LeaderAcquiredAttribute), AttributeTargets.Method, false, false },
         { typeof(LeaderRenewedAttribute), AttributeTargets.Method, false, false },
         { typeof(LeaderReleasedAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateSchedulerAgentSupervisorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(SchedulerAgentAttribute), AttributeTargets.Method, false, false },
+        { typeof(SchedulerRetryWhenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateGatewayRoutingAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GatewayRouteAttribute), AttributeTargets.Method, false, false },
         { typeof(GatewayRouteHandlerAttribute), AttributeTargets.Method, false, false },
@@ -655,6 +659,32 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<LeaderAcquiredAttribute>(new LeaderAcquiredAttribute());
         ScenarioExpect.IsType<LeaderRenewedAttribute>(new LeaderRenewedAttribute());
         ScenarioExpect.IsType<LeaderReleasedAttribute>(new LeaderReleasedAttribute());
+    }
+
+    [Scenario("Scheduler Agent Supervisor Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Scheduler_Agent_Supervisor_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var scheduler = new GenerateSchedulerAgentSupervisorAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildScheduler",
+            SupervisorName = "orders-scheduler",
+            MaxAttempts = 5,
+            RetryDelayMilliseconds = 250
+        };
+        var agent = new SchedulerAgentAttribute("release-agent");
+
+        ScenarioExpect.Equal(typeof(string), scheduler.WorkType);
+        ScenarioExpect.Equal(typeof(int), scheduler.ResultType);
+        ScenarioExpect.Equal("BuildScheduler", scheduler.FactoryMethodName);
+        ScenarioExpect.Equal("orders-scheduler", scheduler.SupervisorName);
+        ScenarioExpect.Equal(5, scheduler.MaxAttempts);
+        ScenarioExpect.Equal(250, scheduler.RetryDelayMilliseconds);
+        ScenarioExpect.Equal("release-agent", agent.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSchedulerAgentSupervisorAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSchedulerAgentSupervisorAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new SchedulerAgentAttribute(""));
+        ScenarioExpect.IsType<SchedulerRetryWhenAttribute>(new SchedulerRetryWhenAttribute());
     }
 
     [Scenario("Strangler Fig Attributes Expose Defaults And Configuration")]

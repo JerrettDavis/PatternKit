@@ -783,7 +783,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/warehouse-leader-election.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["Leader Election"],
-            ["single active worker lease", "source-generated candidate factory", "Generic Host hosted service"])
+            ["single active worker lease", "source-generated candidate factory", "Generic Host hosted service"]),
+        Descriptor(
+            "Warehouse Scheduler Agent Supervisor",
+            "src/PatternKit.Examples/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemo.cs",
+            "test/PatternKit.Examples.Tests/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemoTests.cs",
+            "docs/examples/warehouse-scheduler-agent-supervisor.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Scheduler Agent Supervisor"],
+            ["scheduled work dispatch", "source-generated supervisor factory", "Generic Host hosted service"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

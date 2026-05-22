@@ -172,6 +172,7 @@ dotnet test PatternKit.slnx -c Release
 * **Commerce Backends for Frontends:** `CommerceBackendsForFrontendsDemo` (+ `CommerceBackendsForFrontendsDemoTests`) — fluent and generated client-specific facade shaping with DI and ASP.NET Core mapping.
 * **Inventory Ambassador:** `InventoryAmbassadorDemo` (+ `InventoryAmbassadorDemoTests`) — fluent and generated outbound connectivity wrapper with DI and ASP.NET Core mapping.
 * **Warehouse Leader Election:** `WarehouseLeaderElectionDemo` (+ `WarehouseLeaderElectionDemoTests`) — fluent and generated active worker lease coordination with DI and Generic Host mapping.
+* **Warehouse Scheduler Agent Supervisor:** `WarehouseSchedulerAgentSupervisorDemo` (+ `WarehouseSchedulerAgentSupervisorDemoTests`) — fluent and generated scheduled worker supervision with DI and Generic Host mapping.
 * **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
