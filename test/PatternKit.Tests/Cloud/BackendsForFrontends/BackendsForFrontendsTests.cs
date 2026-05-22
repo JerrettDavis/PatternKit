@@ -51,6 +51,35 @@ public sealed class BackendsForFrontendsTests(ITestOutputHelper output) : TinyBd
                 .Frontend("WEB", MatchWeb, HandleWeb)))
         .And("null requests are rejected", _ =>
             ScenarioExpect.Throws<ArgumentNullException>(() => CreateBff().Dispatch(null!)))
+        .And("null delegates are rejected", _ =>
+        {
+            ScenarioExpect.Throws<ArgumentNullException>(() => BackendsForFrontends<ClientRequest, ClientResponse>.Create()
+                .Frontend("web", null!, HandleWeb));
+            ScenarioExpect.Throws<ArgumentNullException>(() => BackendsForFrontends<ClientRequest, ClientResponse>.Create()
+                .Frontend("web", MatchWeb, null!));
+            ScenarioExpect.Throws<ArgumentNullException>(() => BackendsForFrontends<ClientRequest, ClientResponse>.Create()
+                .Fallback(null!));
+        })
+        .And("unmatched requests without a fallback are explicit failures", _ =>
+        {
+            var result = BackendsForFrontends<ClientRequest, ClientResponse>.Create("commerce-bff")
+                .Frontend("web", MatchWeb, HandleWeb)
+                .Build()
+                .Dispatch(new ClientRequest("mobile", "C-100"));
+            ScenarioExpect.True(result.Failed);
+            ScenarioExpect.Null(result.FrontendName);
+            ScenarioExpect.Contains("No frontend matched", result.Exception!.Message);
+        })
+        .And("null responses are explicit failures", _ =>
+        {
+            var result = BackendsForFrontends<ClientRequest, ClientResponse>.Create("commerce-bff")
+                .Frontend("web", MatchWeb, static _ => null!)
+                .Build()
+                .Dispatch(new ClientRequest("web", "C-100"));
+            ScenarioExpect.True(result.Failed);
+            ScenarioExpect.Equal("web", result.FrontendName);
+            ScenarioExpect.Contains("returned null", result.Exception!.Message);
+        })
         .And("handler failures are explicit result failures", _ =>
         {
             var bff = BackendsForFrontends<ClientRequest, ClientResponse>.Create("commerce-bff")
@@ -60,6 +89,11 @@ public sealed class BackendsForFrontendsTests(ITestOutputHelper output) : TinyBd
             ScenarioExpect.True(result.Failed);
             ScenarioExpect.Equal("web", result.FrontendName);
             ScenarioExpect.Contains("backend unavailable", result.Exception!.Message);
+        })
+        .And("result factories validate required values", _ =>
+        {
+            ScenarioExpect.Throws<ArgumentNullException>(() => BackendsForFrontendsResult<ClientResponse>.Success("commerce-bff", "web", null!));
+            ScenarioExpect.Throws<ArgumentNullException>(() => BackendsForFrontendsResult<ClientResponse>.Failure("commerce-bff", "web", null!));
         })
         .AssertPassed();
 

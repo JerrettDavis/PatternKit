@@ -84,6 +84,20 @@ public sealed partial class BackendsForFrontendsGeneratorTests(ITestOutputHelper
                     [FrontendHandler("WEB")]
                     private static int Handle2(BackendsForFrontendsContext<string> ctx) => 1;
                 }
+                """),
+            Compile("""
+                using PatternKit.Cloud.BackendsForFrontends;
+                using PatternKit.Generators.BackendsForFrontends;
+                [GenerateBackendsForFrontends(typeof(string), typeof(int))]
+                public static partial class BffHost
+                {
+                    [FrontendSelector("web")]
+                    private static bool Web(string value) => true;
+                    [FrontendHandler("web")]
+                    private static int Handle(BackendsForFrontendsContext<string> ctx) => 1;
+                    [FrontendFallback]
+                    private static string Fallback(BackendsForFrontendsContext<string> ctx) => "";
+                }
                 """)
         })
         .Then("diagnostics identify invalid declarations", results =>
@@ -92,6 +106,7 @@ public sealed partial class BackendsForFrontendsGeneratorTests(ITestOutputHelper
             ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKBFF002");
             ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKBFF003");
             ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKBFF004");
+            ScenarioExpect.Contains(results[4].Diagnostics, diagnostic => diagnostic.Id == "PKBFF003");
         })
         .AssertPassed();
 
