@@ -160,6 +160,9 @@
 - name: External Configuration Store
   href: external-configuration-store.md
 
+- name: Gateway Aggregation
+  href: gateway-aggregation.md
+
 - name: Queue Load Leveling
   href: queue-load-leveling.md
 

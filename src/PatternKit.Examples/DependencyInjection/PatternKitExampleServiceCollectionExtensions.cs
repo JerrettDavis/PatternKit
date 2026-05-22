@@ -37,6 +37,7 @@ using PatternKit.Examples.EventNotificationDemo;
 using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
+using PatternKit.Examples.GatewayAggregationDemo;
 using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.HealthEndpointMonitoringDemo;
@@ -200,6 +201,7 @@ public sealed record FulfillmentPriorityQueueExample(PriorityQueuePolicy<Fulfill
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
+public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -288,7 +290,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddFulfillmentPriorityQueueExample()
             .AddProductCatalogCacheAsideExample()
             .AddProductSearchRateLimitingExample()
-            .AddTenantExternalConfigurationStoreExample();
+            .AddTenantExternalConfigurationStoreExample()
+            .AddCustomerDashboardGatewayAggregationExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1015,6 +1018,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<TenantExternalConfigurationStoreDemoRunner>(),
             sp.GetRequiredService<TenantExternalConfigurationService>()));
         return services.RegisterExample<TenantExternalConfigurationStoreExample>("Tenant External Configuration Store", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddCustomerDashboardGatewayAggregationExample(this IServiceCollection services)
+    {
+        services.AddCustomerDashboardGatewayAggregationDemo();
+        services.AddSingleton<CustomerDashboardGatewayAggregationExample>(sp => new(
+            sp.GetRequiredService<CustomerDashboardGatewayAggregationDemoRunner>(),
+            sp.GetRequiredService<CustomerDashboardGatewayService>()));
+        return services.RegisterExample<CustomerDashboardGatewayAggregationExample>("Customer Dashboard Gateway Aggregation", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore);
     }
 
     private static IServiceCollection RegisterExample<T>(

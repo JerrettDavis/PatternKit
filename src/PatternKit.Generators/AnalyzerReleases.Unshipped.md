@@ -302,6 +302,10 @@ PKECS004 | PatternKit.Generators.Cloud | Error | External Configuration Store va
 PKHEM001 | PatternKit.Generators.HealthEndpointMonitoring | Error | Health Endpoint host must be partial.
 PKHEM002 | PatternKit.Generators.HealthEndpointMonitoring | Error | Health Endpoint checks are missing.
 PKHEM003 | PatternKit.Generators.HealthEndpointMonitoring | Error | Health Endpoint check signature is invalid.
+PKGA001 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation host must be partial.
+PKGA002 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation members are missing.
+PKGA003 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation method signature is invalid.
+PKGA004 | PatternKit.Generators.GatewayAggregation | Error | Gateway Aggregation fetch is duplicated.
 PKMS001 | PatternKit.Generators.Messaging | Error | Message store type must be partial.
 PKMS002 | PatternKit.Generators.Messaging | Error | Message store identity signature is invalid.
 PKMS003 | PatternKit.Generators.Messaging | Error | Message store retention signature is invalid.

@@ -19,6 +19,7 @@ using PatternKit.Generators.Facade;
 using PatternKit.Generators.FeatureToggles;
 using PatternKit.Generators.Flyweight;
 using PatternKit.Generators.Factories;
+using PatternKit.Generators.GatewayAggregation;
 using PatternKit.Generators.IdentityMap;
 using PatternKit.Generators.Interpreter;
 using PatternKit.Generators.Iterator;
@@ -220,6 +221,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
         { typeof(GenerateHealthEndpointAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(HealthEndpointCheckAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateGatewayAggregationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GatewayAggregationFetchAttribute), AttributeTargets.Method, false, false },
+        { typeof(GatewayAggregationComposerAttribute), AttributeTargets.Method, false, false },
         { typeof(GeneratePriorityQueueAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(PriorityQueuePrioritySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateQueueLoadLevelingPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -472,6 +476,28 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.IsType<EventNotificationKeyAttribute>(new EventNotificationKeyAttribute());
         ScenarioExpect.IsType<EventNotificationCorrelationAttribute>(new EventNotificationCorrelationAttribute());
         ScenarioExpect.IsType<EventNotificationRuleAttribute>(new EventNotificationRuleAttribute());
+    }
+
+    [Scenario("Gateway Aggregation Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void GatewayAggregation_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var gateway = new GenerateGatewayAggregationAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildDashboard",
+            GatewayName = "customer-dashboard"
+        };
+        var fetch = new GatewayAggregationFetchAttribute("profile");
+
+        ScenarioExpect.Equal(typeof(string), gateway.RequestType);
+        ScenarioExpect.Equal(typeof(int), gateway.ResponseType);
+        ScenarioExpect.Equal("BuildDashboard", gateway.FactoryMethodName);
+        ScenarioExpect.Equal("customer-dashboard", gateway.GatewayName);
+        ScenarioExpect.Equal("profile", fetch.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayAggregationAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGatewayAggregationAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new GatewayAggregationFetchAttribute(""));
+        ScenarioExpect.IsType<GatewayAggregationComposerAttribute>(new GatewayAggregationComposerAttribute());
     }
 
     [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]

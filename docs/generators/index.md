@@ -121,6 +121,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Cache-Aside**](cache-aside.md) | Read-through cache policy factories with TTL and cache predicates | `[GenerateCacheAsidePolicy]` |
 | [**Rate Limiting**](rate-limiting.md) | Key-partitioned fixed-window rate limit policy factories | `[GenerateRateLimitPolicy]` |
 | [**External Configuration Store**](external-configuration-store.md) | Typed centralized configuration loaders | `[GenerateExternalConfigurationStore]` |
+| [**Gateway Aggregation**](gateway-aggregation.md) | API gateway response composition factories | `[GenerateGatewayAggregation]` |
 
 ## Quick Reference
 
@@ -293,6 +294,10 @@ public static partial class ProductCatalogCachePolicy { }
 // Rate limiting - generated tenant or key budget policy
 [GenerateRateLimitPolicy(typeof(SearchResponse), PermitLimit = 2, WindowMilliseconds = 60000)]
 public static partial class ProductSearchRateLimitPolicy { }
+
+// Gateway aggregation - generated downstream response composition
+[GenerateGatewayAggregation(typeof(CustomerDashboardRequest), typeof(CustomerDashboardResponse))]
+public static partial class CustomerDashboardGateway { }
 ```
 
 ## Examples

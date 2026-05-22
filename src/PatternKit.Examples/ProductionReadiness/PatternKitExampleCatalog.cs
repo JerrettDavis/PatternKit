@@ -727,7 +727,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/tenant-external-configuration-store.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["External Configuration Store"],
-            ["central settings provider", "typed validation", "source-generated store factory", "DI composition"])
+            ["central settings provider", "typed validation", "source-generated store factory", "DI composition"]),
+        Descriptor(
+            "Customer Dashboard Gateway Aggregation",
+            "src/PatternKit.Examples/GatewayAggregationDemo/CustomerDashboardGatewayAggregationDemo.cs",
+            "test/PatternKit.Examples.Tests/GatewayAggregationDemo/CustomerDashboardGatewayAggregationDemoTests.cs",
+            "docs/examples/customer-dashboard-gateway-aggregation.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost | ExampleIntegrationSurface.AspNetCore,
+            ["Gateway Aggregation"],
+            ["downstream dashboard composition", "source-generated gateway aggregation", "ASP.NET Core endpoint mapping"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

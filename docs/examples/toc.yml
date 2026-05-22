@@ -237,3 +237,6 @@
 
 - name: Tenant External Configuration Store
   href: tenant-external-configuration-store.md
+
+- name: Customer Dashboard Gateway Aggregation
+  href: customer-dashboard-gateway-aggregation.md
