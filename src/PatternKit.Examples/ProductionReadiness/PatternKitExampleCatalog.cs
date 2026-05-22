@@ -665,6 +665,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Queue-Based Load Leveling"],
             ["bounded worker queue", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Fulfillment Priority Queue",
+            "src/PatternKit.Examples/PriorityQueueDemo/FulfillmentPriorityQueueDemo.cs",
+            "test/PatternKit.Examples.Tests/PriorityQueueDemo/FulfillmentPriorityQueueDemoTests.cs",
+            "docs/examples/fulfillment-priority-queue.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Priority Queue"],
+            ["business priority ordering", "source-generated priority queue factory", "DI composition"]),
+        Descriptor(
             "Product Catalog Cache-Aside",
             "src/PatternKit.Examples/CacheAsideDemo/ProductCatalogCacheAsideDemo.cs",
             "test/PatternKit.Examples.Tests/CacheAsideDemo/ProductCatalogCacheAsideDemoTests.cs",

@@ -78,6 +78,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Inventory Service Activator**
   Shows fluent and source-generated message-to-service activation with an importable `IServiceCollection` extension. See [Inventory Service Activator](inventory-service-activator.md).
 
+* **Fulfillment Priority Queue**
+  Shows fluent and source-generated business-priority queues with an importable `IServiceCollection` extension. See [Fulfillment Priority Queue](fulfillment-priority-queue.md).
+
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 

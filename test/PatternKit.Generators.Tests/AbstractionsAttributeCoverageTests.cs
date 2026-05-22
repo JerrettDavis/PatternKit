@@ -24,6 +24,7 @@ using PatternKit.Generators.Messaging;
 using PatternKit.Generators.Observer;
 using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
+using PatternKit.Generators.PriorityQueue;
 using PatternKit.Generators.QueueLoadLeveling;
 using PatternKit.Generators.RateLimiting;
 using PatternKit.Generators.Repository;
@@ -202,6 +203,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(PrototypeStrategyAttribute), AttributeTargets.Property | AttributeTargets.Field, false, false },
         { typeof(GenerateProxyAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(ProxyIgnoreAttribute), AttributeTargets.Method | AttributeTargets.Property, false, false },
+        { typeof(GeneratePriorityQueueAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(PriorityQueuePrioritySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateQueueLoadLevelingPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRateLimitPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateRepositoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -384,6 +387,27 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(8, bulkhead.MaxQueueLength);
         ScenarioExpect.Equal(250, bulkhead.QueueTimeoutMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateBulkheadPolicyAttribute(null!));
+    }
+
+    [Scenario("Priority Queue Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void PriorityQueue_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var queue = new GeneratePriorityQueueAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "BuildFulfillmentPriority",
+            QueueName = "fulfillment-priority",
+            DequeueHighestPriorityFirst = false
+        };
+
+        ScenarioExpect.Equal(typeof(string), queue.ItemType);
+        ScenarioExpect.Equal(typeof(int), queue.PriorityType);
+        ScenarioExpect.Equal("BuildFulfillmentPriority", queue.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment-priority", queue.QueueName);
+        ScenarioExpect.False(queue.DequeueHighestPriorityFirst);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePriorityQueueAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePriorityQueueAttribute(typeof(string), null!));
+        ScenarioExpect.IsType<PriorityQueuePrioritySelectorAttribute>(new PriorityQueuePrioritySelectorAttribute());
     }
 
     [Scenario("Queue Load Leveling Attributes Expose Defaults And Configuration")]
