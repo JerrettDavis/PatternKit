@@ -72,6 +72,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **ERP Channel Adapter**
   Shows fluent and source-generated external DTO adapters over PatternKit message channels, with an importable `IServiceCollection` extension. See [ERP Channel Adapter](erp-channel-adapter.md).
 
+* **Payment Messaging Gateway**
+  Shows fluent and source-generated request/response gateways over PatternKit message channels, with an importable `IServiceCollection` extension. See [Payment Messaging Gateway](payment-messaging-gateway.md).
+
 * **Generated Message Envelope**
   Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
 

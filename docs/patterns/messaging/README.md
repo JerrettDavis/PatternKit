@@ -44,6 +44,12 @@ Channel adapters translate external transport DTOs into PatternKit message chann
 
 [Learn More](channel-adapter.md)
 
+## Messaging Gateway
+
+Messaging gateways expose typed request/response methods while hiding message envelope and channel plumbing from application services.
+
+[Learn More](messaging-gateway.md)
+
 ## Idempotent Receiver, Inbox, and Outbox
 
 Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.

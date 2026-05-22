@@ -241,6 +241,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ChannelAdapter", "MessageChannel"],
             ["external ERP DTO bridge", "source-generated adapter factory", "DI composition"]),
         Descriptor(
+            "Payment Messaging Gateway",
+            "src/PatternKit.Examples/Messaging/PaymentMessagingGatewayExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/PaymentMessagingGatewayExampleTests.cs",
+            "docs/examples/payment-messaging-gateway.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MessagingGateway", "MessageChannel"],
+            ["typed authorization gateway", "source-generated gateway factory", "DI composition"]),
+        Descriptor(
             "Patterns Showcase",
             "src/PatternKit.Examples/PatternShowcase/PatternShowcase.cs",
             "test/PatternKit.Examples.Tests/PatternShowcase/PatternShowcaseTests.cs",

@@ -48,6 +48,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Polling Consumer | `PollingConsumer<TPayload>` | Polling Consumer generator |
 | Enterprise Integration | Event-Driven Consumer | `EventDrivenConsumer<TPayload>` | Event-Driven Consumer generator |
 | Enterprise Integration | Channel Adapter | `ChannelAdapter<TExternal, TPayload>` | Channel Adapter generator |
+| Enterprise Integration | Messaging Gateway | `MessagingGateway<TRequest, TResponse>` | Messaging Gateway generator |
 | Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Messaging generator |
 | Enterprise Integration | Message Translator | `MessageTranslator<TInput, TOutput>` | Message Translator generator |
 | Enterprise Integration | Claim Check | `ClaimCheck<TPayload>` | Claim Check generator |

@@ -58,6 +58,9 @@
 - name: ERP Channel Adapter
   href: erp-channel-adapter.md
 
+- name: Payment Messaging Gateway
+  href: payment-messaging-gateway.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 
