@@ -305,6 +305,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Canonical Data Model"],
             ["partner order normalization", "source-generated canonical adapter", "DI composition"]),
         Descriptor(
+            "Inventory Event-Carried State Transfer",
+            "src/PatternKit.Examples/EventCarriedStateTransferDemo/InventoryEventCarriedStateTransferDemo.cs",
+            "test/PatternKit.Examples.Tests/EventCarriedStateTransferDemo/InventoryEventCarriedStateTransferDemoTests.cs",
+            "docs/examples/inventory-event-carried-state-transfer.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Event-Carried State Transfer"],
+            ["inventory read-model projection", "source-generated state transfer", "DI composition"]),
+        Descriptor(
             "Generated Claim Check",
             "src/PatternKit.Examples/Messaging/LargeDocumentClaimCheckExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/LargeDocumentClaimCheckExampleTests.cs",

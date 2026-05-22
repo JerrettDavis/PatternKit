@@ -28,6 +28,9 @@
 - name: Canonical Data Model
   href: canonical-data-model.md
 
+- name: Event-Carried State Transfer
+  href: event-carried-state-transfer.md
+
 - name: Chain
   href: chain.md
 

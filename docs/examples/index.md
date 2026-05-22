@@ -90,6 +90,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Order Canonical Data Model**
   Shows fluent and source-generated order normalization into an application-owned canonical contract, with an importable `IServiceCollection` extension. See [Order Canonical Data Model](order-canonical-data-model.md).
 
+* **Inventory Event-Carried State Transfer**
+  Shows fluent and source-generated inventory projection events that carry enough state to update a local read model, with an importable `IServiceCollection` extension. See [Inventory Event-Carried State Transfer](inventory-event-carried-state-transfer.md).
+
 * **Generated Recipient List**
   Shows fluent and source-generated recipient-list fan-out side by side, with an importable `IServiceCollection` extension. See [Generated Recipient List](generated-recipient-list.md).
 
