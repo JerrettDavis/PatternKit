@@ -51,15 +51,7 @@ public sealed class WarehouseLeaderElectionDemoTests(ITestOutputHelper output) :
             var provider = services.BuildServiceProvider(validateScopes: true);
             return new { Provider = provider, Hosted = provider.GetServices<IHostedService>().OfType<WarehouseLeadershipHostedService>().Single() };
         })
-        .When("the host starts and stops the service", async ctx =>
-        {
-            using (ctx.Provider)
-            {
-                await ctx.Hosted.StartAsync(CancellationToken.None);
-                await ctx.Hosted.StopAsync(CancellationToken.None);
-                return ctx.Hosted.Context.Log.ToArray();
-            }
-        })
+        .When("the host starts and stops the service", ctx => RunHostedLifecycle(ctx.Provider, ctx.Hosted))
         .Then("leadership is acquired and released", log =>
             ScenarioExpect.Equal(["acquired:1", "released"], log))
         .AssertPassed();
@@ -95,4 +87,16 @@ public sealed class WarehouseLeaderElectionDemoTests(ITestOutputHelper output) :
         .Then("the registered example executes leadership callbacks", log =>
             ScenarioExpect.Equal(["acquired:1", "renewed:1", "released"], log))
         .AssertPassed();
+
+    private static async Task<string[]> RunHostedLifecycle(
+        ServiceProvider provider,
+        WarehouseLeadershipHostedService hosted)
+    {
+        using (provider)
+        {
+            await hosted.StartAsync(CancellationToken.None);
+            await hosted.StopAsync(CancellationToken.None);
+            return hosted.Context.Log.ToArray();
+        }
+    }
 }
