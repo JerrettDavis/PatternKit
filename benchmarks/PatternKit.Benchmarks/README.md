@@ -5,13 +5,13 @@ This project contains reportable BenchmarkDotNet comparisons for PatternKit flue
 Run the full benchmark suite from the repository root:
 
 ```powershell
-dotnet run -c Release --project benchmarks/PatternKit.Benchmarks -- --artifacts artifacts/benchmarks
+dotnet run -c Release --framework net10.0 --project benchmarks/PatternKit.Benchmarks -- --artifacts artifacts/benchmarks --join
 ```
 
 Run one pattern family:
 
 ```powershell
-dotnet run -c Release --project benchmarks/PatternKit.Benchmarks -- --filter *LeaderElection* --artifacts artifacts/benchmarks
+dotnet run -c Release --framework net10.0 --project benchmarks/PatternKit.Benchmarks -- --filter *LeaderElection* --artifacts artifacts/benchmarks --join
 ```
 
 Every pattern-specific scenario benchmark class must:
@@ -26,3 +26,6 @@ Coverage matrix benchmarks under `Coverage/` include every pattern from `Pattern
 source file from `src/PatternKit.Generators`. The TinyBDD production-readiness tests fail when a catalog pattern or generator
 is missing from that matrix. Pattern-specific benchmarks can then add deeper scenario timing while the matrix keeps top-to-bottom
 coverage complete.
+
+Published benchmark snapshots live in `docs/guides/benchmarks.md` so users can compare fluent and source-generated timing,
+overhead, and allocation without running the suite first.
