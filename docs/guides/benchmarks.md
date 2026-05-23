@@ -4,6 +4,8 @@ PatternKit keeps BenchmarkDotNet coverage in `benchmarks/PatternKit.Benchmarks`.
 
 The benchmark suite is structured around fluent-vs-source-generated comparisons. Each pattern benchmark should report construction overhead separately from runtime execution when both costs matter. The shared BenchmarkDotNet configuration enables memory diagnostics and exports GitHub markdown, CSV, and JSON artifacts for CI publishing or local analysis.
 
+Published scenario timing and full coverage-matrix results are kept in [Benchmark Results](benchmark-results.md).
+
 Run all benchmarks:
 
 ```powershell
@@ -31,7 +33,7 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Scheduler Agent Supervisor | Construction | 47.29 ns | 400 B | 45.40 ns | 400 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Scheduler Agent Supervisor | Execution | 177.46 ns | 1,304 B | 180.14 ns | 1,304 B | Effectively equivalent for this scenario. |
 
-The coverage matrix is separate from the scenario timings. Matrix benchmarks prove every catalog pattern and every generator source file has a reportable BenchmarkDotNet route; pattern-specific scenario benchmarks provide the fluent-vs-generated construction and execution numbers shown above.
+The coverage matrix is separate from the scenario timings. Matrix benchmarks prove every catalog pattern and every generator source file has a reportable BenchmarkDotNet route; pattern-specific scenario benchmarks provide the fluent-vs-generated construction and execution numbers shown above. See [Benchmark Results](benchmark-results.md) for the full pattern and generator matrix.
 
 ## Interpreting Results
 

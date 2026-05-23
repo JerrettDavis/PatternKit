@@ -72,7 +72,7 @@ PatternKit covers 88 production-readiness patterns with fluent APIs, source-gene
 | Messaging Reliability | 3 | Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
-See [Benchmarks](guides/benchmarks.md) for published fluent-vs-source-generated timing and allocation snapshots.
+See [Benchmarks](guides/benchmarks.md) and [Benchmark Results](guides/benchmark-results.md) for published fluent-vs-source-generated timing, allocation snapshots, and the full pattern/generator matrix.
 
 ## 🛠️ Source Generators
 

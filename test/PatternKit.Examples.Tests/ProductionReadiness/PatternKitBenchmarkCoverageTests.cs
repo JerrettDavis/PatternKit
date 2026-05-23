@@ -68,6 +68,53 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
                 ScenarioExpect.Equal(ctx.SourceFiles, ctx.BenchmarkFiles))
             .AssertPassed();
 
+    [Scenario("Published benchmark results include every catalog pattern")]
+    [Fact]
+    public Task Published_Benchmark_Results_Include_Every_Catalog_Pattern()
+        => Given("the benchmark results guide and production pattern catalog", () => new
+            {
+                ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
+                Catalog = new PatternKitPatternCatalog()
+            })
+            .When("checking catalog names against the published results", ctx => new
+            {
+                ctx.ResultsGuide,
+                MissingPatterns = ctx.Catalog.Patterns
+                    .Select(static pattern => pattern.Name)
+                    .Where(patternName => !ctx.ResultsGuide.Contains($"| {patternName} |", StringComparison.Ordinal))
+                    .OrderBy(static patternName => patternName)
+                    .ToArray()
+            })
+            .Then("every catalog pattern appears in the benchmark results matrix", ctx =>
+                ScenarioExpect.Empty(ctx.MissingPatterns))
+            .And("the guide publishes the route result total", ctx =>
+                ScenarioExpect.Contains("352 pattern route results", ctx.ResultsGuide))
+            .AssertPassed();
+
+    [Scenario("Published benchmark results include every generator source")]
+    [Fact]
+    public Task Published_Benchmark_Results_Include_Every_Generator_Source()
+        => Given("the benchmark results guide and generator benchmark routes", () => new
+            {
+                ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
+                BenchmarkRoutes = GeneratorBenchmarkCoverage.Routes
+            })
+            .When("checking generator names against the published results", ctx => new
+            {
+                ctx.ResultsGuide,
+                GeneratorCount = ctx.BenchmarkRoutes.Count,
+                MissingGenerators = ctx.BenchmarkRoutes
+                    .Where(route => !ctx.ResultsGuide.Contains($"| {route.GeneratorName} |", StringComparison.Ordinal))
+                    .Select(static route => route.GeneratorName)
+                    .OrderBy(static generatorName => generatorName)
+                    .ToArray()
+            })
+            .Then("every generator source appears in the benchmark results matrix", ctx =>
+                ScenarioExpect.Empty(ctx.MissingGenerators))
+            .And("the guide publishes the generator route total", ctx =>
+                ScenarioExpect.Contains($"{ctx.GeneratorCount} generator source route results", ctx.ResultsGuide))
+            .AssertPassed();
+
     private static bool HasRoute(IEnumerable<PatternBenchmarkRoute> routes, BenchmarkRoute route, BenchmarkPhase phase)
         => routes.Any(candidate => candidate.Route == route && candidate.Phase == phase);
 
