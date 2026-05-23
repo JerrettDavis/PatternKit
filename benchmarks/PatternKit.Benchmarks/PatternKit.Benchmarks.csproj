@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
+    <ProjectReference Include="..\..\src\PatternKit.Generators.Abstractions\PatternKit.Generators.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\PatternKit.Generators\PatternKit.Generators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false"
+                      AdditionalProperties="TargetFramework=netstandard2.0" />
+  </ItemGroup>
+</Project>
