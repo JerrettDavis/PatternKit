@@ -115,8 +115,69 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
                 ScenarioExpect.Contains($"{ctx.GeneratorCount} generator source route results", ctx.ResultsGuide))
             .AssertPassed();
 
+    [Scenario("Published benchmark results include every dedicated scenario benchmark")]
+    [Fact]
+    public Task Published_Benchmark_Results_Include_Every_Dedicated_Scenario_Benchmark()
+        => Given("the benchmark results guide and dedicated scenario benchmark classes", () =>
+            {
+                var repositoryRoot = FindRepoRoot();
+                return new
+                {
+                    ResultsGuide = File.ReadAllText(Path.Combine(repositoryRoot, "docs", "guides", "benchmark-results.md")),
+                    ScenarioBenchmarks = Directory
+                        .EnumerateFiles(Path.Combine(repositoryRoot, "benchmarks", "PatternKit.Benchmarks"), "*Benchmarks.cs", SearchOption.AllDirectories)
+                        .Where(static path => !path.Replace('\\', '/').Contains("/Coverage/", StringComparison.Ordinal))
+                        .Select(static path => HumanizeScenarioBenchmarkName(Path.GetFileNameWithoutExtension(path)))
+                        .OrderBy(static name => name)
+                        .ToArray()
+                };
+            })
+            .When("checking scenario benchmark names against the published timing table", ctx => new
+            {
+                ctx.ResultsGuide,
+                MissingRows = ctx.ScenarioBenchmarks
+                    .SelectMany(patternName => new[]
+                    {
+                        ctx.ResultsGuide.Contains($"| {patternName} | Construction |", StringComparison.Ordinal)
+                            ? null
+                            : $"{patternName} missing construction timing row",
+                        ctx.ResultsGuide.Contains($"| {patternName} | Execution |", StringComparison.Ordinal)
+                            ? null
+                            : $"{patternName} missing execution timing row"
+                    })
+                    .Where(static issue => issue is not null)
+                    .Select(static issue => issue!)
+                    .OrderBy(static issue => issue)
+                    .ToArray()
+            })
+            .Then("each dedicated scenario benchmark has construction and execution results", ctx =>
+                ScenarioExpect.Empty(ctx.MissingRows))
+            .AssertPassed();
+
     private static bool HasRoute(IEnumerable<PatternBenchmarkRoute> routes, BenchmarkRoute route, BenchmarkPhase phase)
         => routes.Any(candidate => candidate.Route == route && candidate.Phase == phase);
+
+    private static string HumanizeScenarioBenchmarkName(string benchmarkClassName)
+    {
+        var patternName = benchmarkClassName.EndsWith("Benchmarks", StringComparison.Ordinal)
+            ? benchmarkClassName[..^"Benchmarks".Length]
+            : benchmarkClassName;
+
+        if (patternName == "CacheAside")
+            return "Cache-Aside";
+
+        var chars = new List<char>(patternName.Length + 4);
+        for (var index = 0; index < patternName.Length; index++)
+        {
+            var current = patternName[index];
+            if (index > 0 && char.IsUpper(current) && char.IsLower(patternName[index - 1]))
+                chars.Add(' ');
+
+            chars.Add(current);
+        }
+
+        return new string(chars.ToArray());
+    }
 
     private static string FindRepoRoot()
     {
