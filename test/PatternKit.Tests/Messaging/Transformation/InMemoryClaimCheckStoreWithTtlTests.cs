@@ -94,6 +94,16 @@ public sealed class InMemoryClaimCheckStoreWithTtlTests
             () => store.StoreAsync("", "payload", MessageHeaders.Empty).AsTask());
     }
 
+    [Scenario("StoreAsync RejectsNegativeTtl")]
+    [Fact]
+    public async Task StoreAsync_RejectsNegativeTtl()
+    {
+        var store = new InMemoryClaimCheckStoreWithTtl<string>();
+
+        await ScenarioExpect.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => store.StoreAsync("claim-1", "payload", MessageHeaders.Empty, TimeSpan.FromSeconds(-1)).AsTask());
+    }
+
     [Scenario("StoreAsync RejectsNullHeaders")]
     [Fact]
     public async Task StoreAsync_RejectsNullHeaders()

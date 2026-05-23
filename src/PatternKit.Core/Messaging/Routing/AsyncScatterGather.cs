@@ -10,7 +10,9 @@ public abstract class CompletionStrategy
     /// <summary>Wait for all recipients to respond.</summary>
     public static CompletionStrategy All { get; } = new AllStrategy();
 
-    /// <summary>Wait until at least <paramref name="n"/> recipients have responded.</summary>
+    /// <summary>
+    /// Wait until at least <paramref name="n"/> recipients have responded (success or failure).
+    /// </summary>
     public static CompletionStrategy Quorum(int n) => new QuorumStrategy(n);
 
     /// <summary>Wait until at least <paramref name="n"/> successful responses are received.</summary>
@@ -22,14 +24,10 @@ public abstract class CompletionStrategy
     /// <summary>Wait for all responses, but stop waiting after <paramref name="timeout"/>.</summary>
     public static CompletionStrategy AllOrTimeout(TimeSpan timeout) => new AllOrTimeoutStrategy(timeout);
 
-    internal abstract Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct);
     internal abstract TimeSpan? GetTimeout();
 
     private sealed class AllStrategy : CompletionStrategy
     {
-        internal override Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct)
-            => Task.FromResult(true);
-
         internal override TimeSpan? GetTimeout() => null;
     }
 
@@ -41,9 +39,6 @@ public abstract class CompletionStrategy
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Quorum must be positive.");
             _quorum = n;
         }
-
-        internal override Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct)
-            => Task.FromResult(true); // handled externally via tracking count
 
         internal override TimeSpan? GetTimeout() => null;
 
@@ -59,9 +54,6 @@ public abstract class CompletionStrategy
             _n = n;
         }
 
-        internal override Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct)
-            => Task.FromResult(true);
-
         internal override TimeSpan? GetTimeout() => null;
 
         internal int Required => _n;
@@ -76,9 +68,6 @@ public abstract class CompletionStrategy
             _timeout = timeout;
         }
 
-        internal override Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct)
-            => Task.FromResult(true);
-
         internal override TimeSpan? GetTimeout() => _timeout;
     }
 
@@ -90,9 +79,6 @@ public abstract class CompletionStrategy
             if (timeout <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive.");
             _timeout = timeout;
         }
-
-        internal override Task<bool> ShouldCompleteAsync(Task<ResponseEnvelope<object?>[]> whenAll, int recipientCount, TimeSpan? overallTimeout, CancellationToken ct)
-            => Task.FromResult(true);
 
         internal override TimeSpan? GetTimeout() => _timeout;
 
@@ -133,7 +119,7 @@ public sealed class ResponseEnvelope<TResponse>
 
 /// <summary>
 /// Async scatter-gather with pluggable completion strategy, per-branch error isolation,
-/// and concurrent fan-out.
+/// and concurrent fan-out using Task.WhenAll.
 /// </summary>
 /// <typeparam name="TRequest">The fan-out request type.</typeparam>
 /// <typeparam name="TResponse">The per-recipient response type.</typeparam>
@@ -199,22 +185,21 @@ public sealed class AsyncScatterGather<TRequest, TResponse, TResult>
         // Track completed envelopes in a thread-safe list
         var envelopes = new System.Collections.Concurrent.ConcurrentBag<ResponseEnvelope<TResponse>>();
 
-        // Check if we need early-exit on FirstN or Quorum
+        // FirstN counts only successful responses; Quorum counts any completed response (success or failure).
         _strategy.IsFirstN(out var firstN);
         _strategy.IsQuorum(out var quorum);
-        var earlyExitCount = firstN > 0 ? firstN : (quorum > 0 ? quorum : 0);
 
-        using var earlyCts = earlyExitCount > 0
+        using var earlyCts = (firstN > 0 || quorum > 0)
             ? (cts != null
                 ? CancellationTokenSource.CreateLinkedTokenSource(cts.Token)
                 : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
             : null;
 
-        var earlyCounter = new EarlyExitCounter(earlyExitCount, earlyCts);
+        var earlyCounter = new EarlyExitCounter(firstN, quorum, earlyCts);
 
         var tasks = _recipients.Select(recipient => RunRecipientAsync(
             recipient, message, effectiveContext, earlyCts?.Token ?? linkedToken,
-            envelopes, earlyCounter)).ToArray();
+            envelopes, earlyCounter, cancellationToken)).ToArray();
 
         try
         {
@@ -248,7 +233,8 @@ public sealed class AsyncScatterGather<TRequest, TResponse, TResult>
         MessageContext context,
         CancellationToken ct,
         System.Collections.Concurrent.ConcurrentBag<ResponseEnvelope<TResponse>> envelopes,
-        EarlyExitCounter earlyCounter)
+        EarlyExitCounter earlyCounter,
+        CancellationToken callerCt)
     {
         try
         {
@@ -256,32 +242,64 @@ public sealed class AsyncScatterGather<TRequest, TResponse, TResult>
             envelopes.Add(ResponseEnvelope<TResponse>.Success(recipient.Name, response));
             earlyCounter.RecordSuccess();
         }
+        catch (OperationCanceledException) when (!callerCt.IsCancellationRequested)
+        {
+            // Cancellation from early-exit CTS or timeout — not a recipient error and not caller-initiated.
+            earlyCounter.RecordCompletion();
+        }
         catch (OperationCanceledException)
         {
-            // Cancellation from early-exit or timeout — not a recipient error
+            // Caller-initiated cancellation — surface as a failure envelope so callers can observe it,
+            // then re-throw so the task propagates cancellation normally.
+            envelopes.Add(ResponseEnvelope<TResponse>.Failure(recipient.Name, new OperationCanceledException("Recipient cancelled by caller.", callerCt)));
+            throw;
         }
         catch (Exception ex)
         {
             envelopes.Add(ResponseEnvelope<TResponse>.Failure(recipient.Name, ex));
+            earlyCounter.RecordCompletion();
         }
     }
 
     private sealed class EarlyExitCounter
     {
-        private readonly int _required;
+        private readonly int _firstN;
+        private readonly int _quorum;
         private readonly CancellationTokenSource? _cts;
-        private int _count;
+        private int _successCount;
+        private int _completedCount;
 
-        internal EarlyExitCounter(int required, CancellationTokenSource? cts)
-            => (_required, _cts) = (required, cts);
+        internal EarlyExitCounter(int firstN, int quorum, CancellationTokenSource? cts)
+            => (_firstN, _quorum, _cts) = (firstN, quorum, cts);
 
+        /// <summary>Called when a recipient succeeds. Triggers early exit for FirstN; also counts toward Quorum.</summary>
         internal void RecordSuccess()
         {
-            if (_required <= 0 || _cts is null)
+            if (_cts is null)
                 return;
 
-            var count = System.Threading.Interlocked.Increment(ref _count);
-            if (count >= _required)
+            if (_firstN > 0)
+            {
+                var count = System.Threading.Interlocked.Increment(ref _successCount);
+                if (count >= _firstN)
+                {
+                    try { _cts.Cancel(); } catch (ObjectDisposedException) { }
+                    return;
+                }
+            }
+
+            // Success also counts as a completion toward Quorum
+            RecordCompletion();
+        }
+
+        /// <summary>Called when a recipient completes (success or failure). Triggers early exit for Quorum.</summary>
+        internal void RecordCompletion()
+        {
+            if (_quorum <= 0 || _cts is null)
+                return;
+
+            var count = System.Threading.Interlocked.Increment(ref _completedCount);
+            if (count >= _quorum)
             {
                 try { _cts.Cancel(); } catch (ObjectDisposedException) { }
             }

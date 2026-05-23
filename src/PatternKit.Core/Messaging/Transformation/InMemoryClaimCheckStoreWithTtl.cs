@@ -51,6 +51,8 @@ public sealed class InMemoryClaimCheckStoreWithTtl<TPayload> : IClaimCheckStoreW
             throw new ArgumentException("Claim id is required.", nameof(claimId));
         if (headers is null)
             throw new ArgumentNullException(nameof(headers));
+        if (ttl.HasValue && ttl.Value < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(ttl), "TTL must not be negative.");
 
         var expiresAt = ttl.HasValue ? DateTimeOffset.UtcNow + ttl.Value : (DateTimeOffset?)null;
         _items[claimId] = new TimedEntry(new ClaimCheckStoredPayload<TPayload>(payload, headers), expiresAt);

@@ -105,6 +105,10 @@ public sealed class AsyncWireTap<TPayload>
             }
             catch (Exception ex)
             {
+                // Re-throw OCE when the caller requested cancellation — tap policy must not swallow it.
+                if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                    throw;
+
                 results[i] = TapResult.Failure(tap.Name, ex);
                 switch (tap.Policy)
                 {

@@ -103,6 +103,16 @@ public sealed class InMemoryIdempotencyStoreWithTtlTests
         await ScenarioExpect.ThrowsAsync<ArgumentException>(() => store.TryClaimAsync("").AsTask());
     }
 
+    [Scenario("TryClaimAsync RejectsNegativeTtl")]
+    [Fact]
+    public async Task TryClaimAsync_RejectsNegativeTtl()
+    {
+        var store = new InMemoryIdempotencyStoreWithTtl();
+
+        await ScenarioExpect.ThrowsAsync<ArgumentOutOfRangeException>(
+            () => store.TryClaimAsync("key-1", TimeSpan.FromSeconds(-1)).AsTask());
+    }
+
     [Scenario("ConcurrentClaims OnlyOneSucceeds")]
     [Fact]
     public async Task ConcurrentClaims_OnlyOneSucceeds()

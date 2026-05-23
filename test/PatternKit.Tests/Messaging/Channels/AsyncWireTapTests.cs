@@ -144,9 +144,6 @@ public sealed class AsyncWireTapTests
     {
         using var cts = new CancellationTokenSource();
         cts.Cancel();
-        var tap = AsyncWireTap<Order>.Create()
-            .Tap("audit", async (_, _, ct) => { await Task.Delay(100, ct); })
-            .Build();
 
         // Propagate policy will propagate OperationCanceledException
         var tap2 = AsyncWireTap<Order>.Create()
@@ -155,6 +152,21 @@ public sealed class AsyncWireTapTests
 
         await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
             () => tap2.PublishAsync(Message<Order>.Create(new Order("o-1", 100m)), cancellationToken: cts.Token).AsTask());
+    }
+
+    [Scenario("PublishAsync SwallowPolicy ReThrowsOCEOnCallerCancellation")]
+    [Fact]
+    public async Task PublishAsync_SwallowPolicy_ReThrowsOCEOnCallerCancellation()
+    {
+        // Swallow policy must NOT suppress OperationCanceledException when the caller's CT is cancelled.
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var tap = AsyncWireTap<Order>.Create()
+            .Tap("audit", async (_, _, ct) => { await Task.Delay(100, ct); }, TapErrorPolicy.Swallow)
+            .Build();
+
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
+            () => tap.PublishAsync(Message<Order>.Create(new Order("o-1", 100m)), cancellationToken: cts.Token).AsTask());
     }
 
     private sealed record Order(string Id, decimal Total);

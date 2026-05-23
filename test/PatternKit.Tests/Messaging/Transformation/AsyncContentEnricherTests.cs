@@ -114,6 +114,34 @@ public sealed class AsyncContentEnricherTests
             AsyncContentEnricher<Customer>.Create().Build());
     }
 
+    [Scenario("Builder RejectsUseDefaultWithoutFactory")]
+    [Fact]
+    public void Builder_RejectsUseDefaultWithoutFactory()
+    {
+        // UseDefault without a defaultFactory would silently behave like Skip; require factory at build time.
+        ScenarioExpect.Throws<ArgumentException>(() =>
+            AsyncContentEnricher<Customer>.Create()
+                .Enrich("step", async (c, _, _) => { await Task.CompletedTask; return c; },
+                    EnrichmentErrorPolicy.UseDefault, defaultFactory: null)
+                .Build());
+    }
+
+    [Scenario("EnrichAsync SkipPolicy ReThrowsOCEOnCallerCancellation")]
+    [Fact]
+    public async Task EnrichAsync_SkipPolicy_ReThrowsOCEOnCallerCancellation()
+    {
+        // Skip policy must NOT suppress OperationCanceledException when the caller's CT is cancelled.
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+        var enricher = AsyncContentEnricher<Customer>.Create()
+            .Enrich("step", async (c, _, ct) => { await Task.Delay(100, ct); return c; },
+                EnrichmentErrorPolicy.Skip)
+            .Build();
+
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
+            () => enricher.EnrichAsync(Message<Customer>.Create(new Customer("Alice", null, null)), cancellationToken: cts.Token).AsTask());
+    }
+
     [Scenario("EnrichAsync RejectsNullMessage")]
     [Fact]
     public async Task EnrichAsync_RejectsNullMessage()

@@ -1,5 +1,3 @@
-using System.Collections.Concurrent;
-
 namespace PatternKit.Messaging.Reliability;
 
 /// <summary>
@@ -45,6 +43,8 @@ public sealed class InMemoryIdempotencyStoreWithTtl : IIdempotencyStoreWithTtl
     public ValueTask<IdempotencyClaim> TryClaimAsync(string key, TimeSpan? ttl, CancellationToken cancellationToken = default)
     {
         ValidateKey(key);
+        if (ttl.HasValue && ttl.Value < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(ttl), "TTL must not be negative.");
         cancellationToken.ThrowIfCancellationRequested();
 
         var now = DateTimeOffset.UtcNow;

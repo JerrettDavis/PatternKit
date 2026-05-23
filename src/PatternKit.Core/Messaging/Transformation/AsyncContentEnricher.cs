@@ -105,6 +105,10 @@ public sealed class AsyncContentEnricher<TPayload>
             }
             catch (Exception ex)
             {
+                // Re-throw OCE when the caller requested cancellation — enrichment policy must not swallow it.
+                if (ex is OperationCanceledException && cancellationToken.IsCancellationRequested)
+                    throw;
+
                 switch (step.Policy)
                 {
                     case EnrichmentErrorPolicy.Throw:
@@ -159,6 +163,10 @@ public sealed class AsyncContentEnricher<TPayload>
                 throw new ArgumentException("Enrichment step name cannot be null, empty, or whitespace.", nameof(name));
             if (handler is null)
                 throw new ArgumentNullException(nameof(handler));
+            if (policy == EnrichmentErrorPolicy.UseDefault && defaultFactory is null)
+                throw new ArgumentException(
+                    $"A non-null {nameof(defaultFactory)} is required when policy is {nameof(EnrichmentErrorPolicy.UseDefault)}.",
+                    nameof(defaultFactory));
 
             _steps.Add(new Step(name, handler, policy, defaultFactory));
             return this;

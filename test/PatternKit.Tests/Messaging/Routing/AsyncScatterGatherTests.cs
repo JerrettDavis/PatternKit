@@ -98,6 +98,26 @@ public sealed class AsyncScatterGatherTests
         ScenarioExpect.True(result.Result >= 30); // at least a and b responded
     }
 
+    [Scenario("DispatchAsync QuorumStrategy CountsFailedRecipientsTowardQuorum")]
+    [Fact]
+    public async Task DispatchAsync_QuorumStrategy_CountsFailedRecipientsTowardQuorum()
+    {
+        // A failing recipient counts toward quorum — quorum means "any N responses", not "N successes".
+        var completedCount = 0;
+        var sg = AsyncScatterGather<string, int, int>.Create()
+            .Recipient("failing", async (m, _, _) => { await Task.CompletedTask; throw new InvalidOperationException("recipient error"); })
+            .Recipient("slow", async (m, _, ct) => { await Task.Delay(5000, ct); Interlocked.Increment(ref completedCount); return 99; })
+            .CompleteWith(CompletionStrategy.Quorum(1))
+            .WithAggregator((envelopes, _, _) => envelopes.Count())
+            .Build();
+
+        var result = await sg.DispatchAsync(Message<string>.Create("test"));
+
+        // Quorum(1) satisfied by the failing recipient; slow recipient was cancelled before completing.
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.Equal(0, completedCount); // slow never completed
+    }
+
     [Scenario("DispatchAsync AllFail AggregatorReceivesFailedEnvelopes")]
     [Fact]
     public async Task DispatchAsync_AllFail_AggregatorReceivesFailedEnvelopes()
