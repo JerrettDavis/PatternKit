@@ -460,7 +460,7 @@ PatternKit currently tracks 88 production-readiness patterns. Each catalog patte
 
 ## Benchmark Snapshot
 
-BenchmarkDotNet results are documented in [docs/guides/benchmarks.md](docs/guides/benchmarks.md). This snapshot was captured on Windows 11, Intel Core i9-14900K, .NET SDK 10.0.108, .NET 10.0.8, BenchmarkDotNet 0.15.8, using the `current-tfm` job.
+BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guides/benchmarks.md), and the full published result matrix is in [docs/guides/benchmark-results.md](docs/guides/benchmark-results.md). This snapshot was captured on Windows 11, Intel Core i9-14900K, .NET SDK 10.0.108, .NET 10.0.8, BenchmarkDotNet 0.15.8, using the `current-tfm` job.
 
 | Pattern | Phase | Fluent mean | Fluent allocation | Generated mean | Generated allocation | Read |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
