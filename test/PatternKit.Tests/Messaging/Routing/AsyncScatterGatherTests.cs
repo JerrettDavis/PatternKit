@@ -98,18 +98,21 @@ public sealed class AsyncScatterGatherTests
         ScenarioExpect.True(result.Result >= 30); // at least a and b responded
     }
 
-    [Scenario("DispatchAsync NoRecipients Returns Rejected")]
+    [Scenario("DispatchAsync AllFail AggregatorReceivesFailedEnvelopes")]
     [Fact]
-    public async Task DispatchAsync_AllFail_ReturnsRejected()
+    public async Task DispatchAsync_AllFail_AggregatorReceivesFailedEnvelopes()
     {
         var sg = AsyncScatterGather<string, int, int>.Create()
-            .Recipient("bad", async (m, _, _) => { await Task.CompletedTask; throw new Exception(); })
-            .WithAggregator((envelopes, _, _) => envelopes.Where(e => e.Succeeded).Sum(e => e.Response))
+            .Recipient("bad", async (m, _, _) => { await Task.CompletedTask; throw new InvalidOperationException(); })
+            .WithAggregator((envelopes, _, _) => envelopes.Count(e => !e.Succeeded))
             .Build();
 
         var result = await sg.DispatchAsync(Message<string>.Create("test"));
 
-        ScenarioExpect.False(result.Succeeded);
+        // Aggregator runs even if all recipients failed; it receives the failed envelopes
+        ScenarioExpect.True(result.Succeeded);
+        ScenarioExpect.Equal(1, result.Result); // one failed envelope
+        ScenarioExpect.Equal(1, result.Envelopes.Count(e => !e.Succeeded));
     }
 
     [Scenario("Builder RejectsInvalidConfiguration")]
