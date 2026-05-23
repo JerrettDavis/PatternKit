@@ -133,7 +133,7 @@ public sealed class ResponseEnvelope<TResponse>
 
 /// <summary>
 /// Async scatter-gather with pluggable completion strategy, per-branch error isolation,
-/// and concurrent fan-out via <see cref="Task.WhenAll"/>.
+/// and concurrent fan-out.
 /// </summary>
 /// <typeparam name="TRequest">The fan-out request type.</typeparam>
 /// <typeparam name="TResponse">The per-recipient response type.</typeparam>
