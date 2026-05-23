@@ -111,6 +111,27 @@ public sealed class AsyncPollingConsumer<TPayload>
         }
     }
 
+    /// <summary>
+    /// Executes a single poll cycle and returns the item received, or <see langword="null"/>
+    /// if the source returned no message.
+    /// </summary>
+    /// <remarks>
+    /// Unlike <see cref="RunAsync"/>, this method does not enter a loop, does not sleep,
+    /// does not apply interval, jitter, or back-off, and does not invoke any registered
+    /// run-loop handler. It is intended for caller-driven polling where the caller owns
+    /// the loop (e.g., a workflow-framework step-based polling integration).
+    /// </remarks>
+    /// <param name="ct">Cancellation token propagated directly to the poll source.</param>
+    /// <returns>
+    /// The message returned by the source, or <see langword="null"/> when the source
+    /// returned an empty poll.
+    /// </returns>
+    public ValueTask<Message<TPayload>?> PollOnceAsync(CancellationToken ct = default)
+    {
+        ct.ThrowIfCancellationRequested();
+        return _source(MessageContext.Empty, ct);
+    }
+
     private TimeSpan ComputeDelay(int consecutiveEmpty, Random rng)
     {
         TimeSpan baseDelay;
