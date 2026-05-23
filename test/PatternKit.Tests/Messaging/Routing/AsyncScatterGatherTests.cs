@@ -48,7 +48,7 @@ public sealed class AsyncScatterGatherTests
     public async Task DispatchAsync_TimeoutStrategy_PartialResults()
     {
         var sg = AsyncScatterGather<string, int, int>.Create()
-            .Recipient("fast", async (m, _, _) => { await Task.Delay(5); return 1; })
+            .Recipient("fast", (m, _, _) => ValueTask.FromResult(1))
             .Recipient("slow", async (m, _, ct) => { await Task.Delay(5000, ct); return 2; })
             .CompleteWith(CompletionStrategy.Timeout(TimeSpan.FromMilliseconds(200)))
             .WithAggregator((envelopes, _, _) => envelopes.Where(e => e.Succeeded).Sum(e => e.Response))
