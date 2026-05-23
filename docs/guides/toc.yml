@@ -8,5 +8,7 @@
   href: migrating-from-traditional.md
 - name: Performance
   href: performance.md
+- name: Benchmarks
+  href: benchmarks.md
 - name: Testing
   href: testing.md
