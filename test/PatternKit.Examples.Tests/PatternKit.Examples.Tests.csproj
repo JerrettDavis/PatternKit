@@ -42,6 +42,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\BenchmarkRepository.cs" Link="BenchmarkCoverage\BenchmarkRepository.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\BenchmarkRoute.cs" Link="BenchmarkCoverage\BenchmarkRoute.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\GeneratorBenchmarkCoverage.cs" Link="BenchmarkCoverage\GeneratorBenchmarkCoverage.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\PatternBenchmarkCoverage.cs" Link="BenchmarkCoverage\PatternBenchmarkCoverage.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
     </ItemGroup>
 

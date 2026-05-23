@@ -64,21 +64,24 @@ public sealed class AsyncPollingConsumerTests
         using var cts = new CancellationTokenSource();
 
         var consumer = AsyncPollingConsumer<string>.Create()
-            .WithSource(async (_, _) => { await Task.CompletedTask; Interlocked.Increment(ref pollCount); return null; })
+            .WithSource(async (_, _) =>
+            {
+                await Task.CompletedTask;
+                if (Interlocked.Increment(ref pollCount) >= 3)
+                {
+                    cts.Cancel();
+                }
+
+                return null;
+            })
             .WithInterval(TimeSpan.FromMilliseconds(20))
             .OnEmpty(BackOffPolicy.Constant)
             .Build();
 
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(150);
-            cts.Cancel();
-        });
-
         await consumer.RunAsync(async (_, _, _) => await Task.CompletedTask, cancellationToken: cts.Token);
 
-        // Should have polled several times in 150ms with 20ms interval
-        ScenarioExpect.True(pollCount >= 3, $"Expected >= 3 polls but got {pollCount}");
+        // Constant backoff should continue polling after empty source results until cancellation.
+        ScenarioExpect.Equal(3, pollCount);
     }
 
     [Scenario("RunAsync EmptyPollExponentialBackOff")]
