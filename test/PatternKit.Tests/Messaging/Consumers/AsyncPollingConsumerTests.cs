@@ -167,4 +167,78 @@ public sealed class AsyncPollingConsumerTests
 
         await ScenarioExpect.ThrowsAsync<ArgumentNullException>(() => consumer.RunAsync(null!).AsTask());
     }
+
+    // ─── PollOnceAsync ────────────────────────────────────────────────────────
+
+    [Scenario("PollOnceAsync ReturnsItemFromSource")]
+    [Fact]
+    public async Task PollOnceAsync_ReturnsItemFromSource()
+    {
+        var consumer = AsyncPollingConsumer<string>.Create()
+            .WithSource(async (_, _) => { await Task.CompletedTask; return Message<string>.Create("hello"); })
+            .Build();
+
+        var result = await consumer.PollOnceAsync();
+
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.Equal("hello", result!.Payload);
+    }
+
+    [Scenario("PollOnceAsync ReturnsNullWhenSourceReturnsEmpty")]
+    [Fact]
+    public async Task PollOnceAsync_ReturnsNullWhenSourceReturnsEmpty()
+    {
+        var consumer = AsyncPollingConsumer<string>.Create()
+            .WithSource(async (_, _) => { await Task.CompletedTask; return null; })
+            .Build();
+
+        var result = await consumer.PollOnceAsync();
+
+        ScenarioExpect.Null(result);
+    }
+
+    [Scenario("PollOnceAsync RespectsCancellation")]
+    [Fact]
+    public async Task PollOnceAsync_RespectsCancellation()
+    {
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        var consumer = AsyncPollingConsumer<string>.Create()
+            .WithSource(async (_, ct) =>
+            {
+                await Task.Delay(1000, ct);
+                return Message<string>.Create("never");
+            })
+            .Build();
+
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
+            () => consumer.PollOnceAsync(ct: cts.Token).AsTask());
+    }
+
+    [Scenario("PollOnceAsync DoesNotInvokeRunLoopHandler")]
+    [Fact]
+    public async Task PollOnceAsync_DoesNotInvokeRunLoopHandler()
+    {
+        // PollOnceAsync has no handler parameter — the only side-effect observable is
+        // that the source is called exactly once and the raw message is returned.
+        // We verify this by counting source invocations and confirming the value is
+        // returned directly without any additional callback layer.
+        var sourceCallCount = 0;
+
+        var consumer = AsyncPollingConsumer<string>.Create()
+            .WithSource(async (_, _) =>
+            {
+                Interlocked.Increment(ref sourceCallCount);
+                await Task.CompletedTask;
+                return Message<string>.Create("msg");
+            })
+            .Build();
+
+        var result = await consumer.PollOnceAsync();
+
+        ScenarioExpect.Equal(1, sourceCallCount);   // source called exactly once
+        ScenarioExpect.NotNull(result);              // message returned directly to caller
+        ScenarioExpect.Equal("msg", result!.Payload); // no handler mutation
+    }
 }
