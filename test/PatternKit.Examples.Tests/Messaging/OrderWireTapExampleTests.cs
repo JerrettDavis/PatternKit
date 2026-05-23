@@ -7,6 +7,13 @@ using TinyBDD;
 
 namespace PatternKit.Examples.Tests.Messaging;
 
+[CollectionDefinition("Order wire tap examples", DisableParallelization = true)]
+public sealed class OrderWireTapExampleCollection
+{
+    public const string Name = "Order wire tap examples";
+}
+
+[Collection(OrderWireTapExampleCollection.Name)]
 public sealed class OrderWireTapExampleTests
 {
     [Scenario("FluentWireTap RecordsAuditAndMetricsWithoutChangingMessage")]

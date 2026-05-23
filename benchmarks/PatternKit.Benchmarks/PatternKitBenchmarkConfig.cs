@@ -13,7 +13,7 @@ public static class PatternKitBenchmarkConfig
 {
     public static IConfig Create()
         => ManualConfig.Create(DefaultConfig.Instance)
-            .AddJob(Job.Default.WithId("net10.0"))
+            .AddJob(Job.Default.WithId("current-tfm"))
             .AddDiagnoser(MemoryDiagnoser.Default)
             .AddColumn(CategoriesColumn.Default)
             .AddColumn(RankColumn.Arabic)
