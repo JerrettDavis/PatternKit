@@ -213,23 +213,32 @@ public sealed class AsyncPollingConsumerTests
             .Build();
 
         await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
-            () => consumer.PollOnceAsync(cts.Token).AsTask());
+            () => consumer.PollOnceAsync(ct: cts.Token).AsTask());
     }
 
     [Scenario("PollOnceAsync DoesNotInvokeRunLoopHandler")]
     [Fact]
     public async Task PollOnceAsync_DoesNotInvokeRunLoopHandler()
     {
-        var handlerInvoked = false;
+        // PollOnceAsync has no handler parameter — the only side-effect observable is
+        // that the source is called exactly once and the raw message is returned.
+        // We verify this by counting source invocations and confirming the value is
+        // returned directly without any additional callback layer.
+        var sourceCallCount = 0;
 
         var consumer = AsyncPollingConsumer<string>.Create()
-            .WithSource(async (_, _) => { await Task.CompletedTask; return Message<string>.Create("msg"); })
+            .WithSource(async (_, _) =>
+            {
+                Interlocked.Increment(ref sourceCallCount);
+                await Task.CompletedTask;
+                return Message<string>.Create("msg");
+            })
             .Build();
 
-        // PollOnceAsync takes no handler argument — the run-loop handler is never called.
         var result = await consumer.PollOnceAsync();
 
-        ScenarioExpect.False(handlerInvoked);
-        ScenarioExpect.NotNull(result); // the source did produce a message
+        ScenarioExpect.Equal(1, sourceCallCount);   // source called exactly once
+        ScenarioExpect.NotNull(result);              // message returned directly to caller
+        ScenarioExpect.Equal("msg", result!.Payload); // no handler mutation
     }
 }

@@ -39,7 +39,22 @@ public sealed class OutboxStoreExtensionsTests
 
         ScenarioExpect.NotNull(record);
         ScenarioExpect.Equal(payload, record.Message.Payload);
-        ScenarioExpect.Equal(0, record.Message.Headers.Count);
+        // Null headers must reuse MessageHeaders.Empty — not allocate a new empty instance.
+        ScenarioExpect.True(ReferenceEquals(MessageHeaders.Empty, record.Message.Headers));
+    }
+
+    [Scenario("EnqueueObjectAsync WithEmptyDictionary StoresEmptyHeadersMessage")]
+    [Fact]
+    public async Task EnqueueObjectAsync_WithEmptyDictionary_StoresEmptyHeadersMessage()
+    {
+        var store = new InMemoryOutboxStore<object>();
+        var payload = 42;
+
+        var record = await store.EnqueueObjectAsync(payload, headers: new Dictionary<string, string>());
+
+        ScenarioExpect.NotNull(record);
+        // An empty (non-null) dictionary must also map to MessageHeaders.Empty.
+        ScenarioExpect.True(ReferenceEquals(MessageHeaders.Empty, record.Message.Headers));
     }
 
     [Scenario("EnqueueObjectAsync RespectsCancellation")]

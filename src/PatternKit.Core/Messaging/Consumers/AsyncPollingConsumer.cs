@@ -117,19 +117,25 @@ public sealed class AsyncPollingConsumer<TPayload>
     /// </summary>
     /// <remarks>
     /// Unlike <see cref="RunAsync"/>, this method does not enter a loop, does not sleep,
-    /// does not apply interval, jitter, or back-off, and does not invoke any registered
-    /// run-loop handler. It is intended for caller-driven polling where the caller owns
-    /// the loop (e.g., a workflow-framework step-based polling integration).
+    /// does not apply interval, jitter, or back-off, and does not invoke any run-loop handler.
+    /// It is intended for caller-driven polling where the caller owns the loop (e.g., a
+    /// workflow-framework step-based polling integration).
+    /// The <paramref name="context"/> parameter is optional; when omitted,
+    /// <see cref="MessageContext.Empty"/> is used.
     /// </remarks>
+    /// <param name="context">
+    /// Optional message context forwarded to the poll source. When <see langword="null"/>,
+    /// <see cref="MessageContext.Empty"/> is used.
+    /// </param>
     /// <param name="ct">Cancellation token propagated directly to the poll source.</param>
     /// <returns>
     /// The message returned by the source, or <see langword="null"/> when the source
     /// returned an empty poll.
     /// </returns>
-    public ValueTask<Message<TPayload>?> PollOnceAsync(CancellationToken ct = default)
+    public ValueTask<Message<TPayload>?> PollOnceAsync(MessageContext? context = null, CancellationToken ct = default)
     {
         ct.ThrowIfCancellationRequested();
-        return _source(MessageContext.Empty, ct);
+        return _source(context ?? MessageContext.Empty, ct);
     }
 
     private TimeSpan ComputeDelay(int consecutiveEmpty, Random rng)
