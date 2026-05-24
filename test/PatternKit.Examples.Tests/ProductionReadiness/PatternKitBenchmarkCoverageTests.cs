@@ -166,6 +166,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "CacheAside")
             return "Cache-Aside";
 
+        if (patternName == "QueueLoadLeveling")
+            return "Queue-Based Load Leveling";
+
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
         {
