@@ -52,6 +52,12 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Dead Letter Channel | Execution | 999.95 ns | 7,056 B | 1.023 us | 7,024 B | Generated allocated slightly less, while fluent was slightly faster for capture-and-replay preparation. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
 | Domain Event | Execution | 367.2 ns | 1.77 KB | 346.4 ns | 1.55 KB | Generated reduced execution time and allocation for the order-placed dispatch workflow. |
+| Event-Carried State Transfer | Construction | 7.552 ns | 48 B | 6.751 ns | 48 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Event-Carried State Transfer | Execution | 58.508 ns | 448 B | 59.071 ns | 448 B | Effectively equivalent for the inventory projection workflow. |
+| Event Notification | Construction | 30.920 ns | 232 B | 31.926 ns | 232 B | Effectively equivalent for this microbenchmark. |
+| Event Notification | Execution | 93.209 ns | 704 B | 106.973 ns | 704 B | Same allocation; fluent was faster for order notification publishing. |
+| Event-Driven Consumer | Construction | 41.394 ns | 336 B | 25.216 ns | 192 B | Generated reduced construction time and allocation in this microbenchmark. |
+| Event-Driven Consumer | Execution | 135.584 ns | 888 B | 122.305 ns | 688 B | Generated reduced execution time and allocation for the order-accepted event workflow. |
 | External Configuration Store | Construction | 42.02 ns | 392 B | 41.06 ns | 328 B | Generated reduced construction time and allocation in this microbenchmark. |
 | External Configuration Store | Execution | 34.94 ns | 48 B | 35.78 ns | 48 B | Same allocation; fluent was slightly faster for the cached tenant settings workflow. |
 | Gateway Aggregation | Construction | 104.21 ns | 856 B | 64.99 ns | 560 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -66,10 +72,14 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Materialized View | Execution | 389.5 ns | 2.02 KB | 386.0 ns | 2.02 KB | Effectively equivalent for this scenario. |
 | Message Channel | Construction | 10.282 ns | 120 B | 10.148 ns | 120 B | Effectively equivalent for this microbenchmark. |
 | Message Channel | Execution | 72.921 ns | 512 B | 71.924 ns | 512 B | Same allocation; generated was slightly faster for the inventory adjustment workflow. |
+| Message Envelope | Construction | 248.580 ns | 1,688 B | 228.019 ns | 1,688 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Message Envelope | Execution | 455.486 ns | 2,752 B | 427.664 ns | 2,752 B | Same allocation; generated was slightly faster for message context enrichment. |
 | Message Filter | Construction | 25.431 ns | 232 B | 25.626 ns | 232 B | Effectively equivalent for this microbenchmark. |
 | Message Filter | Execution | 44.637 ns | 424 B | 45.826 ns | 424 B | Same allocation; fluent was slightly faster for order fraud screening. |
 | Message Routing | Construction | 23.42 ns | 224 B | 23.33 ns | 224 B | Effectively equivalent for this microbenchmark. |
 | Message Routing | Execution | 707.34 ns | 4,744 B | 679.97 ns | 4,632 B | Generated reduced execution time and allocation for the route/split/aggregate workflow. |
+| Message Store | Construction | 18.824 ns | 216 B | 18.721 ns | 216 B | Effectively equivalent for this microbenchmark. |
+| Message Store | Execution | 274.799 ns | 1,576 B | 265.470 ns | 1,576 B | Same allocation; generated was slightly faster for record-and-replay lookup. |
 | Message Translator | Construction | 39.49 ns | 424 B | 39.65 ns | 424 B | Effectively equivalent for this microbenchmark. |
 | Message Translator | Execution | 365.30 ns | 2,528 B | 381.79 ns | 2,528 B | Same allocation; fluent was slightly faster in this path. |
 | Messaging Gateway | Construction | 14.094 ns | 160 B | 14.167 ns | 160 B | Effectively equivalent for this microbenchmark. |

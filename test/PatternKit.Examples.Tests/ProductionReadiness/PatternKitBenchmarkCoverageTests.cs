@@ -172,6 +172,12 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "PipesAndFilters")
             return "Pipes and Filters";
 
+        if (patternName == "EventCarriedStateTransfer")
+            return "Event-Carried State Transfer";
+
+        if (patternName == "EventDrivenConsumer")
+            return "Event-Driven Consumer";
+
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
         {
