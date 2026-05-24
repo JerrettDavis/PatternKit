@@ -169,6 +169,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "QueueLoadLeveling")
             return "Queue-Based Load Leveling";
 
+        if (patternName == "PipesAndFilters")
+            return "Pipes and Filters";
+
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
         {
