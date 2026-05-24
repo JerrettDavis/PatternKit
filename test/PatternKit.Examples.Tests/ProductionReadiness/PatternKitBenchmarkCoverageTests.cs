@@ -178,6 +178,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "EventDrivenConsumer")
             return "Event-Driven Consumer";
 
+        if (patternName == "ContentBasedRouter")
+            return "Content-Based Router";
+
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
         {
