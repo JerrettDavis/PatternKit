@@ -11,6 +11,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 | Pattern | Phase | Fluent mean | Fluent allocation | Generated mean | Generated allocation | Decision signal |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
+| Abstract Factory | Construction | 715.345 ns | 5,992 B | 720.811 ns | 5,992 B | Effectively equivalent for tenant widget factory composition. |
+| Abstract Factory | Execution | 750.189 ns | 6,200 B | 735.733 ns | 6,200 B | Same allocation; generated was slightly faster for login widget creation. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -21,6 +23,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Audit Log | Execution | 265.81 ns | 968 B | 273.42 ns | 968 B | Same allocation; fluent was slightly faster for submit-and-approve audit logging. |
 | Backends For Frontends | Construction | 58.00 ns | 512 B | 42.48 ns | 296 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Backends For Frontends | Execution | 25.40 ns | 216 B | 29.77 ns | 216 B | Same allocation; fluent was faster for the web summary shaping workflow. |
+| Builder | Construction | 48.24 ns | 320 B | 160.455 us | 129,236 B | Fluent builder construction is much lighter; generated measures full HostApplicationBuilder composition. |
+| Builder | Execution | 65.14 ns | 352 B | 500.676 us | 279,923 B | Fluent option building is much lighter; generated exercises the full host-backed application build. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
@@ -57,6 +61,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Event-Driven Consumer | Execution | 135.584 ns | 888 B | 122.305 ns | 688 B | Generated reduced execution time and allocation for the order-accepted event workflow. |
 | External Configuration Store | Construction | 42.02 ns | 392 B | 41.06 ns | 328 B | Generated reduced construction time and allocation in this microbenchmark. |
 | External Configuration Store | Execution | 34.94 ns | 48 B | 35.78 ns | 48 B | Same allocation; fluent was slightly faster for the cached tenant settings workflow. |
+| Factory Method | Construction | 72.397 ns | 512 B | 0.355 ns | 0 B | Generated static factory surface resolution avoids runtime builder allocation. |
+| Factory Method | Execution | 1.792 us | 10,568 B | 1.681 us | 10,056 B | Generated was faster and allocated less for service-module registration. |
 | Feature Toggle | Construction | 84.97 ns | 496 B | 82.73 ns | 496 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Feature Toggle | Execution | 151.85 ns | 1,120 B | 150.87 ns | 1,120 B | Effectively equivalent for checkout feature evaluation. |
 | Gateway Aggregation | Construction | 104.21 ns | 856 B | 64.99 ns | 560 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -97,6 +103,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Pipes and Filters | Execution | 138.66 ns | 800 B | 137.18 ns | 800 B | Same allocation; generated was slightly faster for the fulfillment pipeline workflow. |
 | Polling Consumer | Construction | 35.577 ns | 328 B | 4.367 ns | 32 B | Generated materially reduced construction time and allocation in this microbenchmark. |
 | Polling Consumer | Execution | 52.658 ns | 384 B | 15.783 ns | 96 B | Generated reduced execution time and allocation for the replenishment polling workflow. |
+| Prototype | Construction | 886.538 ns | 6,888 B | 20.985 ns | 152 B | Generated clone source construction is much lighter than populating the fluent registry. |
+| Prototype | Execution | 1.193 us | 7,832 B | 21.717 ns | 152 B | Generated cloning was materially faster and allocated less for the character prototype. |
 | Publish-Subscribe | Construction | 156.89 ns | 1,616 B | 153.49 ns | 1,616 B | Same allocation; generated was slightly faster for topology composition. |
 | Publish-Subscribe | Execution | 6.380 us | 10,386 B | 6.275 us | 10,417 B | Generated was slightly faster; fluent allocated slightly less for two-subscriber dispatch. |
 | Reliability Pipeline | Construction | 34.90 ns | 392 B | 33.16 ns | 328 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -113,6 +121,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Routing Slip | Execution | 515.138 ns | 3,504 B | 507.633 ns | 3,568 B | Generated was slightly faster; fluent allocated slightly less for the fulfillment itinerary. |
 | Saga / Process Manager | Construction | 39.453 ns | 272 B | 42.138 ns | 272 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Saga / Process Manager | Execution | 89.969 ns | 672 B | 105.648 ns | 784 B | Fluent was faster and allocated less for the order saga workflow. |
+| Singleton | Construction | 26.618 ns | 184 B | 0.366 ns | 0 B | Generated static singleton surface resolution avoids runtime builder allocation. |
+| Singleton | Execution | 74.198 ns | 504 B | 0.205 ns | 0 B | Generated static singleton access avoids the fluent resolver allocation path. |
 | Priority Queue | Construction | 14.67 ns | 128 B | 14.33 ns | 128 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Priority Queue | Execution | 95.63 ns | 536 B | 93.42 ns | 536 B | Same allocation; generated was slightly faster for the fulfillment scheduling workflow. |
 | Queue-Based Load Leveling | Construction | 17.64 ns | 176 B | 17.54 ns | 176 B | Effectively equivalent for this microbenchmark. |
