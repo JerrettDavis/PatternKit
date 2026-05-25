@@ -217,6 +217,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageChannel"],
             ["typed queue boundary", "source-generated channel factory", "DI composition"]),
         Descriptor(
+            "Inventory Channel Purger",
+            "src/PatternKit.Examples/Messaging/InventoryChannelPurgerExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/InventoryChannelPurgerExampleTests.cs",
+            "docs/examples/inventory-channel-purger.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ChannelPurger", "MessageChannel"],
+            ["operational backlog purge", "source-generated purger factory", "DI composition"]),
+        Descriptor(
             "Warehouse Polling Consumer",
             "src/PatternKit.Examples/Messaging/WarehousePollingConsumerExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/WarehousePollingConsumerExampleTests.cs",

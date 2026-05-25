@@ -44,6 +44,12 @@ Channel adapters translate external transport DTOs into PatternKit message chann
 
 [Learn More](channel-adapter.md)
 
+## Channel Purger
+
+Channel purgers remove stale or operationally obsolete messages from PatternKit message channels with optional predicates and audit hooks.
+
+[Learn More](channel-purger.md)
+
 ## Messaging Gateway
 
 Messaging gateways expose typed request/response methods while hiding message envelope and channel plumbing from application services.

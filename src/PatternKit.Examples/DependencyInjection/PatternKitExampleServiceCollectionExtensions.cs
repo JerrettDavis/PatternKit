@@ -144,6 +144,7 @@ public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
+public sealed record InventoryChannelPurgerExampleService(MessageChannel<InventoryMaintenanceCommand> Channel, InventoryChannelPurgerService Service);
 public sealed record WarehousePollingConsumerExampleService(PollingConsumer<ReplenishmentRequest> Consumer, WarehousePollingConsumerService Service);
 public sealed record OrderEventDrivenConsumerExampleService(EventDrivenConsumer<OrderAcceptedEvent> Consumer, OrderEventDrivenConsumerService Service);
 public sealed record ErpChannelAdapterExampleService(ChannelAdapter<ErpOrderDocument, OrderIntegrationMessage> Adapter, ErpChannelAdapterService Service);
@@ -241,6 +242,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
             .AddInventoryMessageChannelExample()
+            .AddInventoryChannelPurgerExample()
             .AddWarehousePollingConsumerExample()
             .AddOrderEventDrivenConsumerExample()
             .AddErpChannelAdapterExample()
@@ -516,6 +518,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageChannel<InventoryAdjustment>>(),
             sp.GetRequiredService<InventoryMessageChannelService>()));
         return services.RegisterExample<InventoryMessageChannelExampleService>("Inventory Message Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddInventoryChannelPurgerExample(this IServiceCollection services)
+    {
+        services.AddInventoryChannelPurgerDemo();
+        services.AddSingleton<InventoryChannelPurgerExampleService>(sp => new(
+            sp.GetRequiredService<MessageChannel<InventoryMaintenanceCommand>>(),
+            sp.GetRequiredService<InventoryChannelPurgerService>()));
+        return services.RegisterExample<InventoryChannelPurgerExampleService>("Inventory Channel Purger", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddWarehousePollingConsumerExample(this IServiceCollection services)

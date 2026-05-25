@@ -81,6 +81,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 |---|---|---|
 | [**Dispatcher**](dispatcher.md) | Mediator pattern with commands, notifications, and streams | `[GenerateDispatcher]` |
 | [**Message Channel**](message-channel.md) | Typed channel factories for in-process message queues | `[GenerateMessageChannel]` |
+| [**Channel Purger**](channel-purger.md) | Channel maintenance purger factories for in-process message queues | `[GenerateChannelPurger]` |
 | [**Polling Consumer**](polling-consumer.md) | Pull-based message consumer factories | `[GeneratePollingConsumer]` |
 | [**Event-Driven Consumer**](event-driven-consumer.md) | Push-based message consumer factories | `[GenerateEventDrivenConsumer]` |
 | [**Channel Adapter**](channel-adapter.md) | External DTO to message-channel adapter factories | `[GenerateChannelAdapter]` |

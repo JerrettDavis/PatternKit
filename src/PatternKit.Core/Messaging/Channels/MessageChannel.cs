@@ -54,6 +54,31 @@ public sealed class MessageChannel<TPayload>
         }
     }
 
+    public IReadOnlyList<Message<TPayload>> Drain(Func<Message<TPayload>, bool>? predicate = null)
+    {
+        var removed = new List<Message<TPayload>>();
+
+        lock (_gate)
+        {
+            var messages = _messages.ToArray();
+            var retained = new List<Message<TPayload>>(messages.Length);
+
+            foreach (var message in messages)
+            {
+                if (predicate is null || predicate(message))
+                    removed.Add(message);
+                else
+                    retained.Add(message);
+            }
+
+            _messages.Clear();
+            foreach (var message in retained)
+                _messages.Enqueue(message);
+        }
+
+        return removed;
+    }
+
     public IReadOnlyList<Message<TPayload>> Snapshot()
     {
         lock (_gate)
@@ -130,4 +155,106 @@ public sealed class MessageChannelReceiveResult<TPayload>
     internal static MessageChannelReceiveResult<TPayload> Success(string channelName, Message<TPayload> message, int count) => new(channelName, true, message, count);
 
     internal static MessageChannelReceiveResult<TPayload> Empty(string channelName) => new(channelName, false, null, 0);
+}
+
+public sealed class ChannelPurger<TPayload>
+{
+    private readonly MessageChannel<TPayload> _channel;
+    private readonly Func<Message<TPayload>, bool>? _predicate;
+    private readonly Action<ChannelPurgeRecord<TPayload>>? _audit;
+
+    private ChannelPurger(
+        string name,
+        MessageChannel<TPayload> channel,
+        Func<Message<TPayload>, bool>? predicate,
+        Action<ChannelPurgeRecord<TPayload>>? audit)
+        => (Name, _channel, _predicate, _audit) = (name, channel, predicate, audit);
+
+    public string Name { get; }
+
+    public ChannelPurgeResult<TPayload> Purge()
+    {
+        var purged = _channel.Drain(_predicate);
+        foreach (var message in purged)
+            _audit?.Invoke(new(Name, _channel.Name, message));
+
+        return new(Name, _channel.Name, purged.Count, _channel.Count, purged);
+    }
+
+    public static Builder Create(string name = "channel-purger") => new(name);
+
+    public sealed class Builder
+    {
+        private readonly string _name;
+        private MessageChannel<TPayload>? _channel;
+        private Func<Message<TPayload>, bool>? _predicate;
+        private Action<ChannelPurgeRecord<TPayload>>? _audit;
+
+        internal Builder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Channel purger name cannot be null, empty, or whitespace.", nameof(name));
+
+            _name = name;
+        }
+
+        public Builder From(MessageChannel<TPayload> channel)
+        {
+            _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+            return this;
+        }
+
+        public Builder When(Func<Message<TPayload>, bool> predicate)
+        {
+            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
+            return this;
+        }
+
+        public Builder AuditWith(Action<ChannelPurgeRecord<TPayload>> audit)
+        {
+            _audit = audit ?? throw new ArgumentNullException(nameof(audit));
+            return this;
+        }
+
+        public ChannelPurger<TPayload> Build()
+        {
+            if (_channel is null)
+                throw new InvalidOperationException("Channel purger requires a message channel.");
+
+            return new(_name, _channel, _predicate, _audit);
+        }
+    }
+}
+
+public sealed class ChannelPurgeRecord<TPayload>
+{
+    public ChannelPurgeRecord(string purgerName, string channelName, Message<TPayload> message)
+        => (PurgerName, ChannelName, Message) = (purgerName, channelName, message);
+
+    public string PurgerName { get; }
+
+    public string ChannelName { get; }
+
+    public Message<TPayload> Message { get; }
+}
+
+public sealed class ChannelPurgeResult<TPayload>
+{
+    public ChannelPurgeResult(
+        string purgerName,
+        string channelName,
+        int purgedCount,
+        int remainingCount,
+        IReadOnlyList<Message<TPayload>> purgedMessages)
+        => (PurgerName, ChannelName, PurgedCount, RemainingCount, PurgedMessages) = (purgerName, channelName, purgedCount, remainingCount, purgedMessages);
+
+    public string PurgerName { get; }
+
+    public string ChannelName { get; }
+
+    public int PurgedCount { get; }
+
+    public int RemainingCount { get; }
+
+    public IReadOnlyList<Message<TPayload>> PurgedMessages { get; }
 }
