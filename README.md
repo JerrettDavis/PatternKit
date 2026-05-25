@@ -550,10 +550,14 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Pipes and Filters | Execution | 138.66 ns | 800 B | 137.18 ns | 800 B | Same allocation; generated was slightly faster for the fulfillment pipeline workflow. |
 | Polling Consumer | Construction | 35.577 ns | 328 B | 4.367 ns | 32 B | Generated materially reduced construction time and allocation in this microbenchmark. |
 | Polling Consumer | Execution | 52.658 ns | 384 B | 15.783 ns | 96 B | Generated reduced execution time and allocation for the replenishment polling workflow. |
+| Publish-Subscribe | Construction | 156.89 ns | 1,616 B | 153.49 ns | 1,616 B | Same allocation; generated was slightly faster for topology composition. |
+| Publish-Subscribe | Execution | 6.380 us | 10,386 B | 6.275 us | 10,417 B | Generated was slightly faster; fluent allocated slightly less for two-subscriber dispatch. |
 | Reliability Pipeline | Construction | 34.90 ns | 392 B | 33.16 ns | 328 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Reliability Pipeline | Execution | 2.303 us | 3,992 B | 381.36 ns | 1,872 B | Generated was materially faster and allocated less for duplicate inbox processing plus outbox dispatch. |
 | Recipient List | Construction | 30.304 ns | 288 B | 30.380 ns | 288 B | Effectively equivalent for this microbenchmark. |
 | Recipient List | Execution | 123.057 ns | 992 B | 120.325 ns | 968 B | Generated was slightly faster and allocated slightly less for shipment fan-out. |
+| Request-Reply | Construction | 79.15 ns | 672 B | 78.63 ns | 672 B | Effectively equivalent for request/reply topology composition. |
+| Request-Reply | Execution | 11.196 us | 13,492 B | 10.864 us | 13,493 B | Generated was slightly faster; allocations were effectively equivalent for the request/reply exchange. |
 | Repository | Construction | 9.793 ns | 112 B | 9.239 ns | 112 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Repository | Execution | 146.37 ns | 888 B | 143.27 ns | 888 B | Same allocation; generated was slightly faster for the seed-and-query workflow. |
 | Resequencer | Construction | 16.89 ns | 192 B | 17.27 ns | 192 B | Effectively equivalent for this microbenchmark. |

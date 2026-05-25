@@ -199,6 +199,12 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "IdentityMap")
             return "Identity Map";
 
+        if (patternName == "PublishSubscribe")
+            return "Publish-Subscribe";
+
+        if (patternName == "RequestReply")
+            return "Request-Reply";
+
         if (patternName == "ScatterGather")
             return "Scatter-Gather";
 
