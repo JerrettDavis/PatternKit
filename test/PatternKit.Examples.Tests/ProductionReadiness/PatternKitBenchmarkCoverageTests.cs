@@ -166,6 +166,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "CacheAside")
             return "Cache-Aside";
 
+        if (patternName == "ChainOfResponsibility")
+            return "Chain of Responsibility";
+
         if (patternName == "QueueLoadLeveling")
             return "Queue-Based Load Leveling";
 
