@@ -181,6 +181,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "ContentBasedRouter")
             return "Content-Based Router";
 
+        if (patternName == "SagaProcessManager")
+            return "Saga / Process Manager";
+
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
         {

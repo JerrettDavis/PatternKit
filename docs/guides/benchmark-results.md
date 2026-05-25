@@ -21,6 +21,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
+| Canonical Data Model | Construction | 75.482 ns | 632 B | 59.947 ns | 496 B | Generated reduced construction time and allocation in this microbenchmark. |
+| Canonical Data Model | Execution | 116.680 ns | 832 B | 92.082 ns | 696 B | Generated reduced execution time and allocation for order normalization. |
 | Channel Adapter | Construction | 38.469 ns | 384 B | 38.681 ns | 384 B | Effectively equivalent for this microbenchmark. |
 | Channel Adapter | Execution | 204.907 ns | 888 B | 198.374 ns | 888 B | Same allocation; generated was slightly faster for the ERP order document round-trip workflow. |
 | Claim Check | Construction | 111.92 ns | 1,664 B | 110.71 ns | 1,664 B | Effectively equivalent for this microbenchmark. |
@@ -53,10 +55,16 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Gateway Routing | Execution | 23.63 ns | 200 B | 20.13 ns | 168 B | Generated reduced execution time and allocation for the inventory routing workflow. |
 | Health Endpoint Monitoring | Construction | 35.68 ns | 264 B | 35.25 ns | 264 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Health Endpoint Monitoring | Execution | 38.50 ns | 248 B | 31.67 ns | 248 B | Same allocation; generated was faster for the fulfillment health evaluation workflow. |
+| Idempotent Receiver | Construction | 17.022 ns | 184 B | 17.021 ns | 184 B | Effectively equivalent for this microbenchmark. |
+| Idempotent Receiver | Execution | 99.419 ns | 608 B | 99.051 ns | 608 B | Effectively equivalent for idempotent command handling. |
+| Inbox | Construction | 22.259 ns | 208 B | 21.675 ns | 208 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Inbox | Execution | 113.126 ns | 632 B | 110.770 ns | 608 B | Generated reduced execution time and allocation for inbox command processing. |
 | Leader Election | Construction | 14.28 ns | 104 B | 15.91 ns | 104 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Leader Election | Execution | 43.62 ns | 360 B | 144.37 ns | 312 B | Generated allocated about 13% less memory, while fluent was faster in this path. |
 | Materialized View | Construction | 140.9 ns | 1.05 KB | 147.4 ns | 1.05 KB | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Materialized View | Execution | 389.5 ns | 2.02 KB | 386.0 ns | 2.02 KB | Effectively equivalent for this scenario. |
+| Mailbox | Construction | 17.030 ns | 216 B | 29.867 ns | 360 B | Fluent was faster and allocated less for disposable mailbox construction. |
+| Mailbox | Execution | 1.856 us | 2,620 B | 1.956 us | 2,474 B | Generated allocated less, while fluent was faster for serialized mailbox processing. |
 | Message Channel | Construction | 10.282 ns | 120 B | 10.148 ns | 120 B | Effectively equivalent for this microbenchmark. |
 | Message Channel | Execution | 72.921 ns | 512 B | 71.924 ns | 512 B | Same allocation; generated was slightly faster for the inventory adjustment workflow. |
 | Message Envelope | Construction | 248.580 ns | 1,688 B | 228.019 ns | 1,688 B | Same allocation; generated was slightly faster in this microbenchmark. |
@@ -71,6 +79,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Message Translator | Execution | 365.30 ns | 2,528 B | 381.79 ns | 2,528 B | Same allocation; fluent was slightly faster in this path. |
 | Messaging Gateway | Construction | 14.094 ns | 160 B | 14.167 ns | 160 B | Effectively equivalent for this microbenchmark. |
 | Messaging Gateway | Execution | 66.597 ns | 560 B | 67.558 ns | 560 B | Same allocation; fluent was slightly faster for payment authorization. |
+| Outbox | Construction | 9.544 ns | 88 B | 9.672 ns | 88 B | Effectively equivalent for this microbenchmark. |
+| Outbox | Execution | 118.307 ns | 424 B | 122.972 ns | 424 B | Same allocation; fluent was slightly faster for enqueue-and-dispatch processing. |
 | Pipes and Filters | Construction | 32.99 ns | 264 B | 32.98 ns | 264 B | Effectively equivalent for this microbenchmark. |
 | Pipes and Filters | Execution | 138.66 ns | 800 B | 137.18 ns | 800 B | Same allocation; generated was slightly faster for the fulfillment pipeline workflow. |
 | Polling Consumer | Construction | 35.577 ns | 328 B | 4.367 ns | 32 B | Generated materially reduced construction time and allocation in this microbenchmark. |
@@ -85,6 +95,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Resequencer | Execution | 311.90 ns | 2,456 B | 303.94 ns | 2,456 B | Same allocation; generated was slightly faster for the three-event shipment resequencing workflow. |
 | Routing Slip | Construction | 35.508 ns | 256 B | 32.448 ns | 256 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Routing Slip | Execution | 515.138 ns | 3,504 B | 507.633 ns | 3,568 B | Generated was slightly faster; fluent allocated slightly less for the fulfillment itinerary. |
+| Saga / Process Manager | Construction | 39.453 ns | 272 B | 42.138 ns | 272 B | Same allocation; fluent was slightly faster in this microbenchmark. |
+| Saga / Process Manager | Execution | 89.969 ns | 672 B | 105.648 ns | 784 B | Fluent was faster and allocated less for the order saga workflow. |
 | Priority Queue | Construction | 14.67 ns | 128 B | 14.33 ns | 128 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Priority Queue | Execution | 95.63 ns | 536 B | 93.42 ns | 536 B | Same allocation; generated was slightly faster for the fulfillment scheduling workflow. |
 | Queue-Based Load Leveling | Construction | 17.64 ns | 176 B | 17.54 ns | 176 B | Effectively equivalent for this microbenchmark. |
