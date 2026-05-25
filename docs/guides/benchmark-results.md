@@ -13,6 +13,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | --- | --- | ---: | ---: | ---: | ---: | --- |
 | Abstract Factory | Construction | 715.345 ns | 5,992 B | 720.811 ns | 5,992 B | Effectively equivalent for tenant widget factory composition. |
 | Abstract Factory | Execution | 750.189 ns | 6,200 B | 735.733 ns | 6,200 B | Same allocation; generated was slightly faster for login widget creation. |
+| Adapter | Construction | 34.668 ns | 320 B | 3.607 ns | 24 B | Generated adapter construction was materially faster and allocated less. |
+| Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -25,6 +27,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Backends For Frontends | Execution | 25.40 ns | 216 B | 29.77 ns | 216 B | Same allocation; fluent was faster for the web summary shaping workflow. |
 | Builder | Construction | 48.24 ns | 320 B | 160.455 us | 129,236 B | Fluent builder construction is much lighter; generated measures full HostApplicationBuilder composition. |
 | Builder | Execution | 65.14 ns | 352 B | 500.676 us | 279,923 B | Fluent option building is much lighter; generated exercises the full host-backed application build. |
+| Bridge | Construction | 53.115 ns | 504 B | 3.821 ns | 24 B | Generated bridge construction was materially faster and allocated less. |
+| Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
@@ -37,6 +41,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Claim Check | Execution | 355.24 ns | 2,976 B | 342.12 ns | 2,976 B | Same allocation; generated was slightly faster for the large-document restore workflow. |
 | Competing Consumers | Construction | 35.66 ns | 328 B | 35.40 ns | 328 B | Effectively equivalent for this microbenchmark. |
 | Competing Consumers | Execution | 75.34 ns | 416 B | 75.23 ns | 416 B | Effectively equivalent for the fulfillment dispatch workflow. |
+| Composite | Construction | 82.460 ns | 848 B | 30.685 ns | 216 B | Generated composite construction was faster and allocated less for the storage tree. |
+| Composite | Execution | 90.010 ns | 848 B | 36.760 ns | 216 B | Generated composite traversal was faster and allocated less for size calculation. |
 | Circuit Breaker | Construction | 14.33 ns | 128 B | 13.73 ns | 128 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Circuit Breaker | Execution | 85.34 ns | 488 B | 85.19 ns | 488 B | Effectively equivalent for the accepted fulfillment workflow. |
 | Content-Based Router | Construction | 42.913 ns | 400 B | 44.118 ns | 400 B | Same allocation; fluent was slightly faster in this microbenchmark. |
@@ -49,6 +55,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Data Mapper | Execution | 188.09 ns | 1,104 B | 97.71 ns | 672 B | Generated reduced execution time and allocation for the map-store-load workflow. |
 | Dead Letter Channel | Construction | 12.35 ns | 120 B | 12.50 ns | 120 B | Effectively equivalent for this microbenchmark. |
 | Dead Letter Channel | Execution | 999.95 ns | 7,056 B | 1.023 us | 7,024 B | Generated allocated slightly less, while fluent was slightly faster for capture-and-replay preparation. |
+| Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
+| Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
 | Domain Event | Execution | 367.2 ns | 1.77 KB | 346.4 ns | 1.55 KB | Generated reduced execution time and allocation for the order-placed dispatch workflow. |
 | Event-Carried State Transfer | Construction | 7.552 ns | 48 B | 6.751 ns | 48 B | Same allocation; generated was slightly faster in this microbenchmark. |
@@ -63,8 +71,12 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | External Configuration Store | Execution | 34.94 ns | 48 B | 35.78 ns | 48 B | Same allocation; fluent was slightly faster for the cached tenant settings workflow. |
 | Factory Method | Construction | 72.397 ns | 512 B | 0.355 ns | 0 B | Generated static factory surface resolution avoids runtime builder allocation. |
 | Factory Method | Execution | 1.792 us | 10,568 B | 1.681 us | 10,056 B | Generated was faster and allocated less for service-module registration. |
+| Facade | Construction | 59.132 ns | 624 B | 12.567 ns | 112 B | Generated facade construction was faster and allocated less for the shipping facade. |
+| Facade | Execution | 100.182 ns | 664 B | 68.503 ns | 208 B | Generated facade execution was faster and allocated less for shipping quote calculation. |
 | Feature Toggle | Construction | 84.97 ns | 496 B | 82.73 ns | 496 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Feature Toggle | Execution | 151.85 ns | 1,120 B | 150.87 ns | 1,120 B | Effectively equivalent for checkout feature evaluation. |
+| Flyweight | Construction | 20.595 ns | 192 B | 23.842 ns | 272 B | Fluent construction was lighter; generated route includes LRU cache infrastructure. |
+| Flyweight | Execution | 58.502 ns | 400 B | 109.987 ns | 704 B | Fluent was faster and allocated less in this LRU-vs-unbounded cache comparison. |
 | Gateway Aggregation | Construction | 104.21 ns | 856 B | 64.99 ns | 560 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Gateway Aggregation | Execution | 109.55 ns | 632 B | 112.95 ns | 632 B | Same allocation; fluent was slightly faster for the dashboard aggregation workflow. |
 | Gateway Routing | Construction | 56.20 ns | 464 B | 50.72 ns | 336 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -105,6 +117,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Polling Consumer | Execution | 52.658 ns | 384 B | 15.783 ns | 96 B | Generated reduced execution time and allocation for the replenishment polling workflow. |
 | Prototype | Construction | 886.538 ns | 6,888 B | 20.985 ns | 152 B | Generated clone source construction is much lighter than populating the fluent registry. |
 | Prototype | Execution | 1.193 us | 7,832 B | 21.717 ns | 152 B | Generated cloning was materially faster and allocated less for the character prototype. |
+| Proxy | Construction | 9.099 ns | 88 B | 6.037 ns | 48 B | Generated proxy construction was faster and allocated less. |
+| Proxy | Execution | 20.148 ns | 120 B | 3.116 ns | 0 B | Generated proxy execution avoided allocation and was materially faster for price calculation. |
 | Publish-Subscribe | Construction | 156.89 ns | 1,616 B | 153.49 ns | 1,616 B | Same allocation; generated was slightly faster for topology composition. |
 | Publish-Subscribe | Execution | 6.380 us | 10,386 B | 6.275 us | 10,417 B | Generated was slightly faster; fluent allocated slightly less for two-subscriber dispatch. |
 | Reliability Pipeline | Construction | 34.90 ns | 392 B | 33.16 ns | 328 B | Generated reduced construction time and allocation in this microbenchmark. |
