@@ -170,3 +170,9 @@ Consider alternatives when:
 - ❌ You need dynamic handler discovery at runtime
 - ❌ Your handlers come from plugins/dynamic assemblies
 - ❌ You need complex routing logic (use message broker)
+
+## Invalid Message Channel
+
+`InvalidMessageChannel<TPayload>` routes messages that fail validation to a dedicated invalid-message channel with reason metadata and original headers preserved.
+
+See [Invalid Message Channel](invalid-message-channel.md).

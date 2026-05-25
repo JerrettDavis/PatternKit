@@ -225,6 +225,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ChannelPurger", "MessageChannel"],
             ["operational backlog purge", "source-generated purger factory", "DI composition"]),
         Descriptor(
+            "Order Invalid Message Channel",
+            "src/PatternKit.Examples/Messaging/OrderInvalidMessageChannelExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderInvalidMessageChannelExampleTests.cs",
+            "docs/examples/order-invalid-message-channel.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["InvalidMessageChannel", "MessageChannel"],
+            ["validation failure routing", "source-generated invalid channel builder", "DI composition"]),
+        Descriptor(
             "Warehouse Polling Consumer",
             "src/PatternKit.Examples/Messaging/WarehousePollingConsumerExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/WarehousePollingConsumerExampleTests.cs",

@@ -157,6 +157,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateChannelPurgerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateInvalidMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePollingConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(PollingConsumerSourceAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateEventDrivenConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -1127,6 +1128,11 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildPurger",
             PurgerName = "inventory-maintenance"
         };
+        var invalidMessageChannel = new GenerateInvalidMessageChannelAttribute(typeof(string))
+        {
+            FactoryName = "BuildInvalids",
+            ChannelName = "invalid-orders"
+        };
         var pollingConsumer = new GeneratePollingConsumerAttribute(typeof(string))
         {
             FactoryName = "BuildPoller",
@@ -1317,6 +1323,9 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal(typeof(string), channelPurger.PayloadType);
         ScenarioExpect.Equal("BuildPurger", channelPurger.FactoryName);
         ScenarioExpect.Equal("inventory-maintenance", channelPurger.PurgerName);
+        ScenarioExpect.Equal(typeof(string), invalidMessageChannel.PayloadType);
+        ScenarioExpect.Equal("BuildInvalids", invalidMessageChannel.FactoryName);
+        ScenarioExpect.Equal("invalid-orders", invalidMessageChannel.ChannelName);
         ScenarioExpect.Equal(typeof(string), pollingConsumer.PayloadType);
         ScenarioExpect.Equal("BuildPoller", pollingConsumer.FactoryName);
         ScenarioExpect.Equal("inventory-poller", pollingConsumer.ConsumerName);
@@ -1450,6 +1459,7 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateChannelPurgerAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInvalidMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePollingConsumerAttribute(null!));
         ScenarioExpect.IsType<PollingConsumerSourceAttribute>(new PollingConsumerSourceAttribute());
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateEventDrivenConsumerAttribute(null!));

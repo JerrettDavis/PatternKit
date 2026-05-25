@@ -52,6 +52,9 @@
 - name: Inventory Channel Purger
   href: inventory-channel-purger.md
 
+- name: Order Invalid Message Channel
+  href: order-invalid-message-channel.md
+
 - name: Warehouse Polling Consumer
   href: warehouse-polling-consumer.md
 
