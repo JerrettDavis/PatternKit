@@ -169,6 +169,28 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Unit Of Work | Execution | 121.03 ns | 824 B | 96.91 ns | 520 B | Generated reduced execution time and allocation for the checkout commit workflow. |
 | Wire Tap | Construction | 47.13 ns | 496 B | 40.99 ns | 336 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Wire Tap | Execution | 214.72 ns | 1,232 B | 191.45 ns | 1,064 B | Generated reduced execution time and allocation for the order observability workflow. |
+| Chain of Responsibility | Construction | 58.0959 ns | 656 B | 3.0491 ns | 24 B | Generated chain construction was materially faster and allocated less. |
+| Chain of Responsibility | Execution | 60.2624 ns | 656 B | 4.3664 ns | 0 B | Generated handler dispatch was faster and allocation-free for the approval route. |
+| Command | Construction | 19.6229 ns | 208 B | 3.2500 ns | 24 B | Generated command handler setup was faster and allocated less. |
+| Command | Execution | 23.1740 ns | 232 B | 0.0125 ns | 0 B | Generated static command dispatch removed fluent command allocation overhead in this microbenchmark. |
+| Interpreter | Construction | 149.7429 ns | 1,352 B | 109.6622 ns | 896 B | Generated interpreter factory reduced construction time and allocation. |
+| Interpreter | Execution | 240.8832 ns | 1,464 B | 189.7219 ns | 1,008 B | Generated interpreter rules were faster and allocated less for pricing expressions. |
+| Iterator | Construction | 34.2051 ns | 352 B | 4.8293 ns | 48 B | Generated iterator construction was materially lighter than fluent flow composition. |
+| Iterator | Execution | 84.8700 ns | 480 B | 14.2925 ns | 48 B | Generated iterator execution was faster and allocated less for revenue traversal. |
+| Mediator | Construction | 97.3925 ns | 1,144 B | 37.7610 ns | 416 B | Generated dispatcher mediator construction was faster and allocated less. |
+| Mediator | Execution | 154.8279 ns | 1,320 B | 64.4207 ns | 416 B | Generated dispatcher send path was faster and allocated less for command dispatch. |
+| Memento | Construction | 12.9626 ns | 128 B | 15.7943 ns | 120 B | Fluent construction was slightly faster; generated history allocated slightly less. |
+| Memento | Execution | 116.4308 ns | 376 B | 6.0277 ns | 48 B | Generated memento capture and restore was materially faster and allocated less. |
+| Observer | Construction | 4.9422 ns | 40 B | 6.9757 ns | 56 B | Fluent observer construction was slightly lighter for this small instance. |
+| Observer | Execution | 30.9549 ns | 176 B | 44.3640 ns | 368 B | Fluent publish was lighter for this single-subscriber microbenchmark. |
+| State | Construction | 173.0951 ns | 1,688 B | 3.0356 ns | 24 B | Generated state machine construction was materially faster and allocated less. |
+| State | Execution | 179.4049 ns | 1,688 B | 3.3041 ns | 24 B | Generated transition dispatch was materially faster and allocated less. |
+| Strategy | Construction | 49.6712 ns | 432 B | 49.4027 ns | 432 B | Fluent and generated strategy builders were effectively equivalent. |
+| Strategy | Execution | 51.8884 ns | 432 B | 49.9407 ns | 432 B | Generated strategy execution was slightly faster with the same allocation. |
+| Template Method | Construction | 10.3334 ns | 88 B | 3.0359 ns | 24 B | Generated template construction was faster and allocated less. |
+| Template Method | Execution | 12.9121 ns | 88 B | 0.1900 ns | 0 B | Generated template execution removed fluent delegate overhead in this microbenchmark. |
+| Visitor | Construction | 166.0976 ns | 1,720 B | 9.3177 ns | 112 B | Generated visitor builder construction was materially faster and allocated less. |
+| Visitor | Execution | 197.2918 ns | 1,760 B | 59.6870 ns | 432 B | Generated visitor dispatch was faster and allocated less for document nodes. |
 
 ## Coverage Matrix Summary
 
