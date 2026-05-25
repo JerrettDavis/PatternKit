@@ -167,6 +167,7 @@ PKCH005 | PatternKit.Generators.Chain | Error | Pipeline terminal missing
 PKCH006 | PatternKit.Generators.Chain | Error | Multiple pipeline terminals
 PKCH007 | PatternKit.Generators.Chain | Error | Chain default missing
 PKCP001 | PatternKit.Generators.Messaging | Error | Channel purger type must be partial
+PKIMC001 | PatternKit.Generators.Messaging | Error | Invalid message channel type must be partial
 PKCMD001 | PatternKit.Generators.Command | Error | Command type must be partial
 PKCMD002 | PatternKit.Generators.Command | Error | Command handler missing
 PKCMD003 | PatternKit.Generators.Command | Error | Multiple command handlers

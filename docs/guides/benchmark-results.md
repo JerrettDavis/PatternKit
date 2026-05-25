@@ -39,6 +39,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Channel Adapter | Execution | 204.907 ns | 888 B | 198.374 ns | 888 B | Same allocation; generated was slightly faster for the ERP order document round-trip workflow. |
 | Channel Purger | Construction | 28.72 ns | 288 B | 16.66 ns | 168 B | Generated reduced construction time and allocation for the maintenance purger factory. |
 | Channel Purger | Execution | 402.57 ns | 2,456 B | 269.76 ns | 1,680 B | Generated reduced execution time and allocation for the inventory backlog purge workflow. |
+| Invalid Message Channel | Construction | 20.15 ns | 176 B | 19.76 ns | 176 B | Fluent and generated builder construction were effectively equivalent. |
+| Invalid Message Channel | Execution | 428.21 ns | 2,680 B | 441.83 ns | 2,680 B | Fluent and generated invalid-message routing had equivalent allocation with minor timing variance. |
 | Claim Check | Construction | 111.92 ns | 1,664 B | 110.71 ns | 1,664 B | Effectively equivalent for this microbenchmark. |
 | Claim Check | Execution | 355.24 ns | 2,976 B | 342.12 ns | 2,976 B | Same allocation; generated was slightly faster for the large-document restore workflow. |
 | Competing Consumers | Construction | 35.66 ns | 328 B | 35.40 ns | 328 B | Effectively equivalent for this microbenchmark. |
@@ -196,7 +198,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 89 catalog patterns and 356 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 90 catalog patterns and 360 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -204,11 +206,11 @@ The coverage matrix currently publishes 89 catalog patterns and 356 pattern rout
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
-| Enterprise Integration | 31 | 124 |
+| Enterprise Integration | 32 | 128 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 85 generator source route results.
+The generator matrix currently publishes 86 generator source route results.
 
 ## Pattern Matrix Results
 
@@ -266,6 +268,7 @@ The generator matrix currently publishes 85 generator source route results.
 | Enterprise Integration | Canonical Data Model | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Channel Adapter | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Channel Purger | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Invalid Message Channel | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Claim Check | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Competing Consumers | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Content-Based Router | Covered | Covered | Covered | Covered |
@@ -347,6 +350,7 @@ The generator matrix currently publishes 85 generator source route results.
 | BackplaneTopologyGenerator | `src/PatternKit.Generators/Messaging/BackplaneTopologyGenerator.cs` | Covered |
 | ChannelAdapterGenerator | `src/PatternKit.Generators/Messaging/ChannelAdapterGenerator.cs` | Covered |
 | ChannelPurgerGenerator | `src/PatternKit.Generators/Messaging/ChannelPurgerGenerator.cs` | Covered |
+| InvalidMessageChannelGenerator | `src/PatternKit.Generators/Messaging/InvalidMessageChannelGenerator.cs` | Covered |
 | ClaimCheckGenerator | `src/PatternKit.Generators/Messaging/ClaimCheckGenerator.cs` | Covered |
 | CompetingConsumerGroupGenerator | `src/PatternKit.Generators/Messaging/CompetingConsumerGroupGenerator.cs` | Covered |
 | ContentRouterGenerator | `src/PatternKit.Generators/Messaging/ContentRouterGenerator.cs` | Covered |

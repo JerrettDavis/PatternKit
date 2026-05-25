@@ -258,3 +258,137 @@ public sealed class ChannelPurgeResult<TPayload>
 
     public IReadOnlyList<Message<TPayload>> PurgedMessages { get; }
 }
+
+public sealed class InvalidMessageChannel<TPayload>
+{
+    private readonly MessageChannel<InvalidMessage<TPayload>> _invalidChannel;
+    private readonly Func<Message<TPayload>, bool> _predicate;
+    private readonly Func<Message<TPayload>, string> _reason;
+    private readonly Func<DateTimeOffset> _clock;
+
+    private InvalidMessageChannel(
+        string name,
+        MessageChannel<InvalidMessage<TPayload>> invalidChannel,
+        Func<Message<TPayload>, bool> predicate,
+        Func<Message<TPayload>, string> reason,
+        Func<DateTimeOffset> clock)
+        => (Name, _invalidChannel, _predicate, _reason, _clock) = (name, invalidChannel, predicate, reason, clock);
+
+    public string Name { get; }
+
+    public InvalidMessageRouteResult<TPayload> Route(Message<TPayload> message)
+    {
+        if (message is null)
+            throw new ArgumentNullException(nameof(message));
+
+        if (!_predicate(message))
+            return new(Name, _invalidChannel.Name, false, null, _invalidChannel.Count, null);
+
+        var reason = _reason(message);
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new InvalidOperationException("Invalid message reason cannot be null, empty, or whitespace.");
+
+        var invalid = new InvalidMessage<TPayload>(message, reason, _clock());
+        var send = _invalidChannel.Send(Message<InvalidMessage<TPayload>>.Create(invalid).WithHeaders(message.Headers));
+        if (!send.Accepted)
+            throw new InvalidOperationException(send.RejectionReason ?? "Invalid message channel rejected the message.");
+
+        return new(Name, _invalidChannel.Name, true, reason, send.Count, invalid);
+    }
+
+    public IReadOnlyList<Message<InvalidMessage<TPayload>>> Snapshot() => _invalidChannel.Snapshot();
+
+    public static Builder Create(string name = "invalid-message-channel") => new(name);
+
+    public sealed class Builder
+    {
+        private readonly string _name;
+        private MessageChannel<InvalidMessage<TPayload>>? _invalidChannel;
+        private Func<Message<TPayload>, bool> _predicate = static _ => true;
+        private Func<Message<TPayload>, string> _reason = static _ => "Message failed validation.";
+        private Func<DateTimeOffset> _clock = static () => DateTimeOffset.UtcNow;
+
+        internal Builder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Invalid message channel name cannot be null, empty, or whitespace.", nameof(name));
+
+            _name = name;
+        }
+
+        public Builder To(MessageChannel<InvalidMessage<TPayload>> invalidChannel)
+        {
+            _invalidChannel = invalidChannel ?? throw new ArgumentNullException(nameof(invalidChannel));
+            return this;
+        }
+
+        public Builder When(Func<Message<TPayload>, bool> predicate)
+        {
+            _predicate = predicate ?? throw new ArgumentNullException(nameof(predicate));
+            return this;
+        }
+
+        public Builder Because(Func<Message<TPayload>, string> reason)
+        {
+            _reason = reason ?? throw new ArgumentNullException(nameof(reason));
+            return this;
+        }
+
+        public Builder WithClock(Func<DateTimeOffset> clock)
+        {
+            _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+            return this;
+        }
+
+        public InvalidMessageChannel<TPayload> Build()
+        {
+            if (_invalidChannel is null)
+                throw new InvalidOperationException("Invalid message channel requires a target message channel.");
+
+            return new(_name, _invalidChannel, _predicate, _reason, _clock);
+        }
+    }
+}
+
+public sealed class InvalidMessage<TPayload>
+{
+    public InvalidMessage(Message<TPayload> originalMessage, string reason, DateTimeOffset routedAt)
+    {
+        OriginalMessage = originalMessage ?? throw new ArgumentNullException(nameof(originalMessage));
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new ArgumentException("Invalid message reason cannot be null, empty, or whitespace.", nameof(reason));
+
+        Reason = reason;
+        RoutedAt = routedAt;
+    }
+
+    public Message<TPayload> OriginalMessage { get; }
+
+    public string Reason { get; }
+
+    public DateTimeOffset RoutedAt { get; }
+}
+
+public sealed class InvalidMessageRouteResult<TPayload>
+{
+    public InvalidMessageRouteResult(
+        string routerName,
+        string channelName,
+        bool routed,
+        string? reason,
+        int invalidMessageCount,
+        InvalidMessage<TPayload>? invalidMessage)
+        => (RouterName, ChannelName, Routed, Reason, InvalidMessageCount, InvalidMessage) = (routerName, channelName, routed, reason, invalidMessageCount, invalidMessage);
+
+    public string RouterName { get; }
+
+    public string ChannelName { get; }
+
+    public bool Routed { get; }
+
+    public string? Reason { get; }
+
+    public int InvalidMessageCount { get; }
+
+    public InvalidMessage<TPayload>? InvalidMessage { get; }
+}

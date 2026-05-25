@@ -103,6 +103,9 @@
 - name: Channel Purger
   href: channel-purger.md
 
+- name: Invalid Message Channel
+  href: invalid-message-channel.md
+
 - name: Polling Consumer
   href: polling-consumer.md
 
