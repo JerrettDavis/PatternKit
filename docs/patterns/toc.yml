@@ -297,6 +297,8 @@
       items:
         - name: Message Channel
           href: messaging/message-channel.md
+        - name: Channel Purger
+          href: messaging/channel-purger.md
         - name: Polling Consumer
           href: messaging/polling-consumer.md
         - name: Event-Driven Consumer

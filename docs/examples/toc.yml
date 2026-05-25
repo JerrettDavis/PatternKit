@@ -49,6 +49,9 @@
 - name: Inventory Message Channel
   href: inventory-message-channel.md
 
+- name: Inventory Channel Purger
+  href: inventory-channel-purger.md
+
 - name: Warehouse Polling Consumer
   href: warehouse-polling-consumer.md
 
