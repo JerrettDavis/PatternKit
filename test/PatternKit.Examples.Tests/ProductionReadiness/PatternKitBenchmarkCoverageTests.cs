@@ -181,8 +181,26 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
         if (patternName == "ContentBasedRouter")
             return "Content-Based Router";
 
+        if (patternName == "Cqrs")
+            return "CQRS";
+
         if (patternName == "SagaProcessManager")
             return "Saga / Process Manager";
+
+        if (patternName == "AntiCorruptionLayer")
+            return "Anti-Corruption Layer";
+
+        if (patternName == "EventSourcing")
+            return "Event Sourcing";
+
+        if (patternName == "FeatureToggle")
+            return "Feature Toggle";
+
+        if (patternName == "IdentityMap")
+            return "Identity Map";
+
+        if (patternName == "ScatterGather")
+            return "Scatter-Gather";
 
         var chars = new List<char>(patternName.Length + 4);
         for (var index = 0; index < patternName.Length; index++)
