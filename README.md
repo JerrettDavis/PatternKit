@@ -454,7 +454,7 @@ PatternKit currently tracks 88 production-readiness patterns. Each catalog patte
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 17 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
-| Enterprise Integration | 30 | Aggregator, Canonical Data Model, Channel Adapter, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Dead Letter Channel, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Mailbox, Message Channel, Message Envelope, Message Filter, Message Store, Message Translator, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
+| Enterprise Integration | 33 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Dead Letter Channel, Durable Subscriber, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Invalid Message Channel, Mailbox, Message Channel, Message Envelope, Message Filter, Message Store, Message Translator, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
 | Messaging Reliability | 3 | Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
@@ -490,6 +490,10 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Canonical Data Model | Execution | 116.680 ns | 832 B | 92.082 ns | 696 B | Generated reduced execution time and allocation for order normalization. |
 | Channel Adapter | Construction | 38.469 ns | 384 B | 38.681 ns | 384 B | Effectively equivalent for this microbenchmark. |
 | Channel Adapter | Execution | 204.907 ns | 888 B | 198.374 ns | 888 B | Same allocation; generated was slightly faster for the ERP order document round-trip workflow. |
+| Channel Purger | Construction | 28.72 ns | 288 B | 16.66 ns | 168 B | Generated reduced construction time and allocation for the maintenance purger factory. |
+| Channel Purger | Execution | 402.57 ns | 2,456 B | 269.76 ns | 1,680 B | Generated reduced execution time and allocation for the inventory backlog purge workflow. |
+| Invalid Message Channel | Construction | 20.15 ns | 176 B | 19.76 ns | 176 B | Fluent and generated builder construction were effectively equivalent. |
+| Invalid Message Channel | Execution | 428.21 ns | 2,680 B | 441.83 ns | 2,680 B | Fluent and generated invalid-message routing had equivalent allocation with minor timing variance. |
 | Claim Check | Construction | 111.92 ns | 1,664 B | 110.71 ns | 1,664 B | Effectively equivalent for this microbenchmark. |
 | Claim Check | Execution | 355.24 ns | 2,976 B | 342.12 ns | 2,976 B | Same allocation; generated was slightly faster for the large-document restore workflow. |
 | Competing Consumers | Construction | 35.66 ns | 328 B | 35.40 ns | 328 B | Effectively equivalent for this microbenchmark. |
@@ -508,6 +512,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Data Mapper | Execution | 188.09 ns | 1,104 B | 97.71 ns | 672 B | Generated reduced execution time and allocation for the map-store-load workflow. |
 | Dead Letter Channel | Construction | 12.35 ns | 120 B | 12.50 ns | 120 B | Effectively equivalent for this microbenchmark. |
 | Dead Letter Channel | Execution | 999.95 ns | 7,056 B | 1.023 us | 7,024 B | Generated allocated slightly less, while fluent was slightly faster for capture-and-replay preparation. |
+| Durable Subscriber | Construction | 98.55 ns | 760 B | 81.45 ns | 616 B | Generated reduced construction time and allocation for checkpointed replay subscriber setup. |
+| Durable Subscriber | Execution | 711.81 ns | 3,912 B | 605.65 ns | 3,128 B | Generated reduced catch-up projection replay time and allocation in this microbenchmark. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
@@ -622,6 +628,28 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Unit Of Work | Execution | 121.03 ns | 824 B | 96.91 ns | 520 B | Generated reduced execution time and allocation for the checkout commit workflow. |
 | Wire Tap | Construction | 47.13 ns | 496 B | 40.99 ns | 336 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Wire Tap | Execution | 214.72 ns | 1,232 B | 191.45 ns | 1,064 B | Generated reduced execution time and allocation for the order observability workflow. |
+| Chain of Responsibility | Construction | 58.0959 ns | 656 B | 3.0491 ns | 24 B | Generated chain construction was materially faster and allocated less. |
+| Chain of Responsibility | Execution | 60.2624 ns | 656 B | 4.3664 ns | 0 B | Generated handler dispatch was faster and allocation-free for the approval route. |
+| Command | Construction | 19.6229 ns | 208 B | 3.2500 ns | 24 B | Generated command handler setup was faster and allocated less. |
+| Command | Execution | 23.1740 ns | 232 B | 0.0125 ns | 0 B | Generated static command dispatch removed fluent command allocation overhead in this microbenchmark. |
+| Interpreter | Construction | 149.7429 ns | 1,352 B | 109.6622 ns | 896 B | Generated interpreter factory reduced construction time and allocation. |
+| Interpreter | Execution | 240.8832 ns | 1,464 B | 189.7219 ns | 1,008 B | Generated interpreter rules were faster and allocated less for pricing expressions. |
+| Iterator | Construction | 34.2051 ns | 352 B | 4.8293 ns | 48 B | Generated iterator construction was materially lighter than fluent flow composition. |
+| Iterator | Execution | 84.8700 ns | 480 B | 14.2925 ns | 48 B | Generated iterator execution was faster and allocated less for revenue traversal. |
+| Mediator | Construction | 97.3925 ns | 1,144 B | 37.7610 ns | 416 B | Generated dispatcher mediator construction was faster and allocated less. |
+| Mediator | Execution | 154.8279 ns | 1,320 B | 64.4207 ns | 416 B | Generated dispatcher send path was faster and allocated less for command dispatch. |
+| Memento | Construction | 12.9626 ns | 128 B | 15.7943 ns | 120 B | Fluent construction was slightly faster; generated history allocated slightly less. |
+| Memento | Execution | 116.4308 ns | 376 B | 6.0277 ns | 48 B | Generated memento capture and restore was materially faster and allocated less. |
+| Observer | Construction | 4.9422 ns | 40 B | 6.9757 ns | 56 B | Fluent observer construction was slightly lighter for this small instance. |
+| Observer | Execution | 30.9549 ns | 176 B | 44.3640 ns | 368 B | Fluent publish was lighter for this single-subscriber microbenchmark. |
+| State | Construction | 173.0951 ns | 1,688 B | 3.0356 ns | 24 B | Generated state machine construction was materially faster and allocated less. |
+| State | Execution | 179.4049 ns | 1,688 B | 3.3041 ns | 24 B | Generated transition dispatch was materially faster and allocated less. |
+| Strategy | Construction | 49.6712 ns | 432 B | 49.4027 ns | 432 B | Fluent and generated strategy builders were effectively equivalent. |
+| Strategy | Execution | 51.8884 ns | 432 B | 49.9407 ns | 432 B | Generated strategy execution was slightly faster with the same allocation. |
+| Template Method | Construction | 10.3334 ns | 88 B | 3.0359 ns | 24 B | Generated template construction was faster and allocated less. |
+| Template Method | Execution | 12.9121 ns | 88 B | 0.1900 ns | 0 B | Generated template execution removed fluent delegate overhead in this microbenchmark. |
+| Visitor | Construction | 166.0976 ns | 1,720 B | 9.3177 ns | 112 B | Generated visitor builder construction was materially faster and allocated less. |
+| Visitor | Execution | 197.2918 ns | 1,760 B | 59.6870 ns | 432 B | Generated visitor dispatch was faster and allocated less for document nodes. |
 
 Run the benchmarks on target hardware before making final route decisions:
 

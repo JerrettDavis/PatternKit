@@ -297,10 +297,16 @@
       items:
         - name: Message Channel
           href: messaging/message-channel.md
+        - name: Channel Purger
+          href: messaging/channel-purger.md
+        - name: Invalid Message Channel
+          href: messaging/invalid-message-channel.md
         - name: Polling Consumer
           href: messaging/polling-consumer.md
         - name: Event-Driven Consumer
           href: messaging/event-driven-consumer.md
+        - name: Durable Subscriber
+          href: messaging/durable-subscriber.md
         - name: Channel Adapter
           href: messaging/channel-adapter.md
         - name: Messaging Gateway

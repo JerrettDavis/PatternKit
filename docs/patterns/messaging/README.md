@@ -38,11 +38,23 @@ Push-based consumers handle messages when a broker callback, background service,
 
 [Learn More](event-driven-consumer.md)
 
+## Durable Subscriber
+
+Durable subscribers catch up from a message store and checkpoint the last successfully handled sequence per subscriber.
+
+[Learn More](durable-subscriber.md)
+
 ## Channel Adapter
 
 Channel adapters translate external transport DTOs into PatternKit message channels and translate outbound channel messages back to the transport shape.
 
 [Learn More](channel-adapter.md)
+
+## Channel Purger
+
+Channel purgers remove stale or operationally obsolete messages from PatternKit message channels with optional predicates and audit hooks.
+
+[Learn More](channel-purger.md)
 
 ## Messaging Gateway
 
@@ -164,3 +176,9 @@ Consider alternatives when:
 - ❌ You need dynamic handler discovery at runtime
 - ❌ Your handlers come from plugins/dynamic assemblies
 - ❌ You need complex routing logic (use message broker)
+
+## Invalid Message Channel
+
+`InvalidMessageChannel<TPayload>` routes messages that fail validation to a dedicated invalid-message channel with reason metadata and original headers preserved.
+
+See [Invalid Message Channel](invalid-message-channel.md).
