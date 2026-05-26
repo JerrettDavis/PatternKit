@@ -393,6 +393,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["DurableSubscriber", "MessageStore"],
             ["checkpointed replay", "source-generated subscription handler", "DI composition"]),
         Descriptor(
+            "Order Dynamic Router",
+            "src/PatternKit.Examples/Messaging/OrderDynamicRouterExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderDynamicRouterExampleTests.cs",
+            "docs/examples/order-dynamic-router.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["DynamicRouter"],
+            ["runtime route replacement", "source-generated initial route table", "DI composition"]),
+        Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",

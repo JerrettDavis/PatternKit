@@ -115,6 +115,9 @@
 - name: Order Durable Subscriber
   href: order-durable-subscriber.md
 
+- name: Order Dynamic Router
+  href: order-dynamic-router.md
+
 - name: Order Wire Tap
   href: order-wire-tap.md
 

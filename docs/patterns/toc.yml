@@ -307,6 +307,8 @@
           href: messaging/event-driven-consumer.md
         - name: Durable Subscriber
           href: messaging/durable-subscriber.md
+        - name: Dynamic Router
+          href: messaging/dynamic-router.md
         - name: Channel Adapter
           href: messaging/channel-adapter.md
         - name: Messaging Gateway

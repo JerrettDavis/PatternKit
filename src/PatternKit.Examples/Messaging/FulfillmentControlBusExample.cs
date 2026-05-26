@@ -120,7 +120,14 @@ public static class FulfillmentControlBuses
 /// <summary>Bridge from generated static handlers to container-owned fulfillment state.</summary>
 public static class FulfillmentProcessorControlRegistry
 {
-    public static FulfillmentProcessorControlState Current { get; set; } = new();
+    private static readonly AsyncLocal<FulfillmentProcessorControlState?> CurrentState = new();
+    private static readonly FulfillmentProcessorControlState DefaultState = new();
+
+    public static FulfillmentProcessorControlState Current
+    {
+        get => CurrentState.Value ?? DefaultState;
+        set => CurrentState.Value = value ?? throw new ArgumentNullException(nameof(value));
+    }
 }
 
 /// <summary>Source-generated control bus for fulfillment operations.</summary>
