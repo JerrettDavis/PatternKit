@@ -85,6 +85,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Invalid Message Channel**](invalid-message-channel.md) | Invalid-message channel builder factories for validation boundaries | `[GenerateInvalidMessageChannel]` |
 | [**Polling Consumer**](polling-consumer.md) | Pull-based message consumer factories | `[GeneratePollingConsumer]` |
 | [**Event-Driven Consumer**](event-driven-consumer.md) | Push-based message consumer factories | `[GenerateEventDrivenConsumer]` |
+| [**Durable Subscriber**](durable-subscriber.md) | Checkpointed replay subscriber factories | `[GenerateDurableSubscriber]` |
 | [**Channel Adapter**](channel-adapter.md) | External DTO to message-channel adapter factories | `[GenerateChannelAdapter]` |
 | [**Messaging Gateway**](messaging-gateway.md) | Typed request/response gateway factories | `[GenerateMessagingGateway]` |
 | [**Service Activator**](service-activator.md) | Message-to-service operation factories | `[GenerateServiceActivator]` |
@@ -265,6 +266,10 @@ public static partial class OrderMailbox { }
 // Reliability pipeline - generated idempotent receiver, inbox, and outbox factories
 [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
 public static partial class OrderReliability { }
+
+// Durable subscriber - generated checkpointed replay subscriber
+[GenerateDurableSubscriber(typeof(OrderShipmentEvent), SubscriberName = "shipment-projection")]
+public static partial class OrderShipmentSubscriber { }
 
 // Backplane topology - generated request/reply and pub/sub host wiring
 [GenerateBackplaneTopology(typeof(OrderBackplaneServices), HostBuilderType = typeof(OrderBackplaneHostBuilder))]

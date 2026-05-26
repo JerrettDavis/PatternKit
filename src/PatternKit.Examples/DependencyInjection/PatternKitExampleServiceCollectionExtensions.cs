@@ -162,6 +162,7 @@ public sealed record GeneratedRecipientListExample(RecipientListGeneratorExample
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
+public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -261,6 +262,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
             .AddOrderMessageStoreExample()
+            .AddOrderDurableSubscriberExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -676,6 +678,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageStore<OrderMessageStoreEvent>>(),
             sp.GetRequiredService<OrderMessageStoreService>()));
         return services.RegisterExample<OrderMessageStoreExampleService>("Order Message Store", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderDurableSubscriberExample(this IServiceCollection services)
+    {
+        services.AddOrderDurableSubscriberDemo();
+        services.AddSingleton<OrderDurableSubscriberExampleService>(sp => new(
+            sp.GetRequiredService<DurableSubscriber<OrderShipmentEvent>>(),
+            sp.GetRequiredService<OrderDurableSubscriberService>()));
+        return services.RegisterExample<OrderDurableSubscriberExampleService>("Order Durable Subscriber", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

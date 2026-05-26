@@ -38,6 +38,12 @@ Push-based consumers handle messages when a broker callback, background service,
 
 [Learn More](event-driven-consumer.md)
 
+## Durable Subscriber
+
+Durable subscribers catch up from a message store and checkpoint the last successfully handled sequence per subscriber.
+
+[Learn More](durable-subscriber.md)
+
 ## Channel Adapter
 
 Channel adapters translate external transport DTOs into PatternKit message channels and translate outbound channel messages back to the transport shape.

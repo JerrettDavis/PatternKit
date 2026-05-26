@@ -385,6 +385,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageStore"],
             ["audit persistence", "source-generated identity and retention", "DI composition"]),
         Descriptor(
+            "Order Durable Subscriber",
+            "src/PatternKit.Examples/Messaging/OrderDurableSubscriberExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderDurableSubscriberExampleTests.cs",
+            "docs/examples/order-durable-subscriber.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["DurableSubscriber", "MessageStore"],
+            ["checkpointed replay", "source-generated subscription handler", "DI composition"]),
+        Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",

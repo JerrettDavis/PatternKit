@@ -112,6 +112,9 @@
 - name: Event-Driven Consumer
   href: event-driven-consumer.md
 
+- name: Durable Subscriber
+  href: durable-subscriber.md
+
 - name: Channel Adapter
   href: channel-adapter.md
 
