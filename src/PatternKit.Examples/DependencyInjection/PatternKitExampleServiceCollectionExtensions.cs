@@ -163,6 +163,7 @@ public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRun
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
+public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -263,6 +264,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageFilterExample()
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
+            .AddOrderDynamicRouterExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -687,6 +689,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<DurableSubscriber<OrderShipmentEvent>>(),
             sp.GetRequiredService<OrderDurableSubscriberService>()));
         return services.RegisterExample<OrderDurableSubscriberExampleService>("Order Durable Subscriber", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderDynamicRouterExample(this IServiceCollection services)
+    {
+        services.AddOrderDynamicRouterDemo();
+        services.AddSingleton<OrderDynamicRouterExampleService>(sp => new(
+            sp.GetRequiredService<DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision>>(),
+            sp.GetRequiredService<FulfillmentRoutingService>()));
+        return services.RegisterExample<OrderDynamicRouterExampleService>("Order Dynamic Router", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)
