@@ -61,6 +61,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Dead Letter Channel | `DeadLetterChannel<TPayload>` | Dead Letter Channel generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
 | Enterprise Integration | Dynamic Router | `DynamicRouter<TPayload, TResult>` | Dynamic Router generator |
+| Enterprise Integration | Message Bus | `MessageBus<TPayload>` | Message Bus generator |
 | Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
 | Enterprise Integration | Message Store | `MessageStore<TPayload>` | Message Store generator |
 | Enterprise Integration | Wire Tap | `WireTap<TPayload>` | Wire Tap generator |

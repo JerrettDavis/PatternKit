@@ -156,6 +156,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(TraversalChildrenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateMessageBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageBusRouteAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateChannelPurgerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateInvalidMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePollingConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -1123,6 +1125,12 @@ public sealed class AbstractionsAttributeCoverageTests
             Capacity = 12,
             BackpressurePolicy = "DropOldest"
         };
+        var messageBus = new GenerateMessageBusAttribute(typeof(string))
+        {
+            FactoryName = "BuildBus",
+            BusName = "orders"
+        };
+        var messageBusRoute = new MessageBusRouteAttribute("accepted");
         var channelPurger = new GenerateChannelPurgerAttribute(typeof(string))
         {
             FactoryName = "BuildPurger",
@@ -1458,6 +1466,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("content-type", translatorHeader.Name);
         ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
+        ScenarioExpect.Equal(typeof(string), messageBus.PayloadType);
+        ScenarioExpect.Equal("BuildBus", messageBus.FactoryName);
+        ScenarioExpect.Equal("orders", messageBus.BusName);
+        ScenarioExpect.Equal("accepted", messageBusRoute.Topic);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageBusAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageBusRouteAttribute(""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateChannelPurgerAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInvalidMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePollingConsumerAttribute(null!));

@@ -401,6 +401,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["DynamicRouter"],
             ["runtime route replacement", "source-generated initial route table", "DI composition"]),
         Descriptor(
+            "Order Message Bus",
+            "src/PatternKit.Examples/Messaging/OrderMessageBusExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageBusExampleTests.cs",
+            "docs/examples/order-message-bus.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MessageBus", "MessageChannel"],
+            ["topic bus", "source-generated topology", "DI composition"]),
+        Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",

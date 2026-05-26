@@ -44,6 +44,12 @@ Durable subscribers catch up from a message store and checkpoint the last succes
 
 [Learn More](durable-subscriber.md)
 
+## Message Bus
+
+Typed message buses publish messages to named topic subscribers backed by PatternKit message channels, with fluent and source-generated topology paths.
+
+[Learn More](message-bus.md)
+
 ## Channel Adapter
 
 Channel adapters translate external transport DTOs into PatternKit message channels and translate outbound channel messages back to the transport shape.
