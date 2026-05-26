@@ -305,6 +305,8 @@
           href: messaging/polling-consumer.md
         - name: Event-Driven Consumer
           href: messaging/event-driven-consumer.md
+        - name: Durable Subscriber
+          href: messaging/durable-subscriber.md
         - name: Channel Adapter
           href: messaging/channel-adapter.md
         - name: Messaging Gateway

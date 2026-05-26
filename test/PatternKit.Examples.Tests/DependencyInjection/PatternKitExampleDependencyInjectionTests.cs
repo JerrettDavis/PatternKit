@@ -105,6 +105,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var pipesAndFilters = provider.GetRequiredService<FulfillmentPipesAndFiltersExampleService>();
         var messageFilter = provider.GetRequiredService<OrderMessageFilterExampleService>();
         var messageStore = provider.GetRequiredService<OrderMessageStoreExampleService>();
+        var durableSubscriber = provider.GetRequiredService<OrderDurableSubscriberExampleService>();
         var wireTap = provider.GetRequiredService<OrderWireTapExampleService>();
         var generatedTranslator = provider.GetRequiredService<GeneratedMessageTranslatorExample>();
         var generatedClaimCheck = provider.GetRequiredService<GeneratedClaimCheckExample>();
@@ -195,6 +196,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated pipes and filters publish fulfillment work", pipesAndFilters.Service.ProcessAsync("ORDER-PF").GetAwaiter().GetResult().Value.Published),
             ("generated message filter screens trusted orders", messageFilter.Service.Screen(new("ORDER-MF", "trusted", 250m, true)).Accepted),
             ("generated message store records replayable order events", messageStore.Service.Record(new("ORDER-MS", "Submitted", 125m, false), "MSG-MS", "CHECKOUT-MS").Stored),
+            ("generated durable subscriber catches up projections", durableSubscriber.Service.CatchUp([new("ORDER-DS", "Packed", "central")]).DeliveredCount == 1),
             ("generated wire tap records observability side channels", wireTap.Service.Publish(new("ORDER-WT", "tenant-a", 125m)).InvokedTaps.Count == 2),
             ("message envelope example tracks first attempt", envelope.Run().Attempt == 1),
             ("CQRS fluent path matches command writes to query reads", cqrsFluent.QueryMatchedCommand),

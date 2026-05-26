@@ -112,6 +112,9 @@
 - name: Order Message Store
   href: order-message-store.md
 
+- name: Order Durable Subscriber
+  href: order-durable-subscriber.md
+
 - name: Order Wire Tap
   href: order-wire-tap.md
 
