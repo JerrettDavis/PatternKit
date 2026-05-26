@@ -365,6 +365,11 @@ PKEVT003 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer handl
 PKDS001 | PatternKit.Generators.Messaging | Error | Durable Subscriber host type must be partial.
 PKDS002 | PatternKit.Generators.Messaging | Error | Durable Subscriber must declare at least one handler.
 PKDS003 | PatternKit.Generators.Messaging | Error | Durable Subscriber handler signature is invalid.
+PKDR001 | PatternKit.Generators.Messaging | Error | Dynamic Router host type must be partial.
+PKDR002 | PatternKit.Generators.Messaging | Error | Dynamic Router must declare at least one route.
+PKDR003 | PatternKit.Generators.Messaging | Error | Dynamic Router route signature is invalid.
+PKDR004 | PatternKit.Generators.Messaging | Error | Dynamic Router default signature is invalid.
+PKDR005 | PatternKit.Generators.Messaging | Error | Dynamic Router route name or order is duplicated.
 PKCAD001 | PatternKit.Generators.Messaging | Error | Channel Adapter host type must be partial.
 PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one inbound translator.
 PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.
