@@ -100,6 +100,9 @@
 - name: Message Channel
   href: message-channel.md
 
+- name: Message Bus
+  href: message-bus.md
+
 - name: Channel Purger
   href: channel-purger.md
 

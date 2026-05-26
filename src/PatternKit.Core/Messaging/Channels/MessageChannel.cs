@@ -157,6 +157,132 @@ public sealed class MessageChannelReceiveResult<TPayload>
     internal static MessageChannelReceiveResult<TPayload> Empty(string channelName) => new(channelName, false, null, 0);
 }
 
+public sealed class MessageBus<TPayload>
+{
+    private readonly object _gate = new();
+    private readonly Dictionary<string, List<MessageChannel<TPayload>>> _routes;
+
+    private MessageBus(string name, Dictionary<string, List<MessageChannel<TPayload>>> routes)
+        => (Name, _routes) = (name, routes);
+
+    public string Name { get; }
+
+    public IReadOnlyList<string> Topics
+    {
+        get
+        {
+            lock (_gate)
+                return _routes.Keys.OrderBy(static key => key, StringComparer.Ordinal).ToArray();
+        }
+    }
+
+    public void Subscribe(string topic, MessageChannel<TPayload> channel)
+    {
+        if (string.IsNullOrWhiteSpace(topic))
+            throw new ArgumentException("Message bus topic cannot be null, empty, or whitespace.", nameof(topic));
+        if (channel is null)
+            throw new ArgumentNullException(nameof(channel));
+
+        lock (_gate)
+        {
+            if (!_routes.TryGetValue(topic, out var channels))
+            {
+                channels = [];
+                _routes[topic] = channels;
+            }
+
+            channels.Add(channel);
+        }
+    }
+
+    public MessageBusPublishResult Publish(string topic, Message<TPayload> message)
+    {
+        if (string.IsNullOrWhiteSpace(topic))
+            throw new ArgumentException("Message bus topic cannot be null, empty, or whitespace.", nameof(topic));
+        if (message is null)
+            throw new ArgumentNullException(nameof(message));
+
+        MessageChannel<TPayload>[] channels;
+        lock (_gate)
+            channels = _routes.TryGetValue(topic, out var routed) ? routed.ToArray() : [];
+
+        var deliveries = new List<MessageBusDelivery>(channels.Length);
+        foreach (var channel in channels)
+        {
+            var result = channel.Send(message);
+            deliveries.Add(new(channel.Name, result.Accepted, result.Count, result.RejectionReason));
+        }
+
+        return new(Name, topic, deliveries);
+    }
+
+    public static Builder Create(string name = "message-bus") => new(name);
+
+    public sealed class Builder
+    {
+        private readonly string _name;
+        private readonly Dictionary<string, List<MessageChannel<TPayload>>> _routes = new(StringComparer.Ordinal);
+
+        internal Builder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Message bus name cannot be null, empty, or whitespace.", nameof(name));
+
+            _name = name;
+        }
+
+        public Builder Route(string topic, MessageChannel<TPayload> channel)
+        {
+            if (string.IsNullOrWhiteSpace(topic))
+                throw new ArgumentException("Message bus topic cannot be null, empty, or whitespace.", nameof(topic));
+            if (channel is null)
+                throw new ArgumentNullException(nameof(channel));
+
+            if (!_routes.TryGetValue(topic, out var channels))
+            {
+                channels = [];
+                _routes[topic] = channels;
+            }
+
+            channels.Add(channel);
+            return this;
+        }
+
+        public MessageBus<TPayload> Build()
+            => new(_name, _routes.ToDictionary(static route => route.Key, static route => route.Value.ToList(), StringComparer.Ordinal));
+    }
+}
+
+public sealed class MessageBusDelivery
+{
+    public MessageBusDelivery(string channelName, bool accepted, int count, string? rejectionReason)
+        => (ChannelName, Accepted, Count, RejectionReason) = (channelName, accepted, count, rejectionReason);
+
+    public string ChannelName { get; }
+
+    public bool Accepted { get; }
+
+    public int Count { get; }
+
+    public string? RejectionReason { get; }
+}
+
+public sealed class MessageBusPublishResult
+{
+    public MessageBusPublishResult(string busName, string topic, IReadOnlyList<MessageBusDelivery> deliveries)
+        => (BusName, Topic, Deliveries) = (busName, topic, deliveries);
+
+    public string BusName { get; }
+
+    public string Topic { get; }
+
+    public IReadOnlyList<MessageBusDelivery> Deliveries { get; }
+
+    public int AcceptedCount => Deliveries.Count(static delivery => delivery.Accepted);
+
+    public int RejectedCount => Deliveries.Count(static delivery => !delivery.Accepted);
+}
+
 public sealed class ChannelPurger<TPayload>
 {
     private readonly MessageChannel<TPayload> _channel;

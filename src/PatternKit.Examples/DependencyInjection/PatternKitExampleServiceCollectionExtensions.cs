@@ -164,6 +164,7 @@ public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessage
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
+public sealed record OrderMessageBusExampleService(MessageBus<BusOrderEvent> Bus, OrderMessageBusExampleRunner Runner);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -265,6 +266,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
+            .AddOrderMessageBusExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -698,6 +700,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision>>(),
             sp.GetRequiredService<FulfillmentRoutingService>()));
         return services.RegisterExample<OrderDynamicRouterExampleService>("Order Dynamic Router", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderMessageBusExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageBusDemo();
+        services.AddSingleton<OrderMessageBusExampleService>(sp => new(
+            sp.GetRequiredService<MessageBus<BusOrderEvent>>(),
+            sp.GetRequiredService<OrderMessageBusExampleRunner>()));
+        return services.RegisterExample<OrderMessageBusExampleService>("Order Message Bus", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

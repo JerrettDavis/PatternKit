@@ -370,6 +370,9 @@ PKDR002 | PatternKit.Generators.Messaging | Error | Dynamic Router must declare 
 PKDR003 | PatternKit.Generators.Messaging | Error | Dynamic Router route signature is invalid.
 PKDR004 | PatternKit.Generators.Messaging | Error | Dynamic Router default signature is invalid.
 PKDR005 | PatternKit.Generators.Messaging | Error | Dynamic Router route name or order is duplicated.
+PKBUS001 | PatternKit.Generators.Messaging | Error | Message Bus host type must be partial.
+PKBUS002 | PatternKit.Generators.Messaging | Error | Message Bus must declare at least one route.
+PKBUS003 | PatternKit.Generators.Messaging | Error | Message Bus route signature is invalid.
 PKCAD001 | PatternKit.Generators.Messaging | Error | Channel Adapter host type must be partial.
 PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one inbound translator.
 PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.
