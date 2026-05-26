@@ -18,7 +18,7 @@ jobs:
         uses: actions/github-script@v9
         with:
           script: |
-            const allowed = /^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?!?: .+$/;
+            const allowed = /^(build|chore|ci|deps|docs|feat|fix|perf|refactor|revert|style|test)(\([A-Za-z0-9._/-]+\))?!?: .+$/;
             const allowedSpecial = /^(Merge .+|Revert ".+")$/;
 
             const failures = [];
@@ -51,7 +51,7 @@ jobs:
                 '  type: description',
                 '',
                 'Allowed types:',
-                '  build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test',
+                '  build, chore, ci, deps, docs, feat, fix, perf, refactor, revert, style, test',
                 '',
                 'Failures:',
                 ...failures.map(f => `  - ${f}`),
