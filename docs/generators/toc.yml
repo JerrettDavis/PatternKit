@@ -115,6 +115,9 @@
 - name: Durable Subscriber
   href: durable-subscriber.md
 
+- name: Dynamic Router
+  href: dynamic-router.md
+
 - name: Channel Adapter
   href: channel-adapter.md
 

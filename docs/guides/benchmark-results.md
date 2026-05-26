@@ -61,6 +61,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Dead Letter Channel | Execution | 999.95 ns | 7,056 B | 1.023 us | 7,024 B | Generated allocated slightly less, while fluent was slightly faster for capture-and-replay preparation. |
 | Durable Subscriber | Construction | 98.55 ns | 760 B | 81.45 ns | 616 B | Generated reduced construction time and allocation for checkpointed replay subscriber setup. |
 | Durable Subscriber | Execution | 711.81 ns | 3,912 B | 605.65 ns | 3,128 B | Generated reduced catch-up projection replay time and allocation in this microbenchmark. |
+| Dynamic Router | Construction | 213.4 ns | 1.29 KB | 214.0 ns | 1.29 KB | Fluent and generated route-table construction were effectively equivalent. |
+| Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
@@ -200,7 +202,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 91 catalog patterns and 364 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 92 catalog patterns and 368 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -208,11 +210,11 @@ The coverage matrix currently publishes 91 catalog patterns and 364 pattern rout
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
-| Enterprise Integration | 33 | 132 |
+| Enterprise Integration | 34 | 136 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 87 generator source route results.
+The generator matrix currently publishes 88 generator source route results.
 
 ## Pattern Matrix Results
 
@@ -277,6 +279,7 @@ The generator matrix currently publishes 87 generator source route results.
 | Enterprise Integration | Control Bus | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Dead Letter Channel | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Durable Subscriber | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Dynamic Router | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event Notification | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Carried State Transfer | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Driven Consumer | Covered | Covered | Covered | Covered |
@@ -361,6 +364,7 @@ The generator matrix currently publishes 87 generator source route results.
 | DeadLetterChannelGenerator | `src/PatternKit.Generators/Messaging/DeadLetterChannelGenerator.cs` | Covered |
 | DispatcherGenerator | `src/PatternKit.Generators/Messaging/DispatcherGenerator.cs` | Covered |
 | DurableSubscriberGenerator | `src/PatternKit.Generators/Messaging/DurableSubscriberGenerator.cs` | Covered |
+| DynamicRouterGenerator | `src/PatternKit.Generators/Messaging/DynamicRouterGenerator.cs` | Covered |
 | EventDrivenConsumerGenerator | `src/PatternKit.Generators/Messaging/EventDrivenConsumerGenerator.cs` | Covered |
 | MailboxGenerator | `src/PatternKit.Generators/Messaging/MailboxGenerator.cs` | Covered |
 | MessageChannelGenerator | `src/PatternKit.Generators/Messaging/MessageChannelGenerator.cs` | Covered |
