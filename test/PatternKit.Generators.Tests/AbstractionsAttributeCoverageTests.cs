@@ -50,6 +50,7 @@ using PatternKit.Generators.UnitOfWork;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
+using PatternKit.Generators.ActivityTracking;
 using PatternKit.Generators.AuditLog;
 using PatternKit.Generators.Ambassador;
 using PatternKit.Generators.BackendsForFrontends;
@@ -76,6 +77,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AntiCorruptionTranslatorAttribute), AttributeTargets.Method, false, false },
         { typeof(AntiCorruptionExternalRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(AntiCorruptionDomainRuleAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateActivityTrackerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateAuditLogAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(AuditLogKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAdapterAttribute), AttributeTargets.Class, true, false },
@@ -376,6 +378,20 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionExternalRuleAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionDomainRuleAttribute(" "));
         ScenarioExpect.IsType<AntiCorruptionTranslatorAttribute>(new AntiCorruptionTranslatorAttribute());
+    }
+
+    [Scenario("Activity Tracker Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void ActivityTracker_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var tracker = new GenerateActivityTrackerAttribute
+        {
+            FactoryMethodName = "BuildTracker",
+            TrackerName = "loading-wheel"
+        };
+
+        ScenarioExpect.Equal("BuildTracker", tracker.FactoryMethodName);
+        ScenarioExpect.Equal("loading-wheel", tracker.TrackerName);
     }
 
     [Scenario("Rate Limiting Attributes Expose Defaults And Configuration")]

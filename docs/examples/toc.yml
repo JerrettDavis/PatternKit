@@ -4,6 +4,9 @@
 - name: Production-Ready Example Integrations
   href: production-ready-integrations.md
 
+- name: Dashboard Activity Tracker
+  href: dashboard-activity-tracker.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 

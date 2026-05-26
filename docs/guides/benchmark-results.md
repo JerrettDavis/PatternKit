@@ -15,6 +15,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Abstract Factory | Execution | 750.189 ns | 6,200 B | 735.733 ns | 6,200 B | Same allocation; generated was slightly faster for login widget creation. |
 | Adapter | Construction | 34.668 ns | 320 B | 3.607 ns | 24 B | Generated adapter construction was materially faster and allocated less. |
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
+| Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -204,11 +206,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 93 catalog patterns and 372 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 94 catalog patterns and 376 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 15 | 60 |
+| Application Architecture | 16 | 64 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -216,12 +218,13 @@ The coverage matrix currently publishes 93 catalog patterns and 372 pattern rout
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 89 generator source route results.
+The generator matrix currently publishes 90 generator source route results.
 
 ## Pattern Matrix Results
 
 | Category | Pattern | Fluent construction | Fluent execution | Generated construction | Generated execution |
 | --- | --- | --- | --- | --- | --- |
+| Application Architecture | Activity Tracker | Covered | Covered | Covered | Covered |
 | Application Architecture | Anti-Corruption Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Audit Log | Covered | Covered | Covered | Covered |
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
@@ -320,6 +323,7 @@ The generator matrix currently publishes 89 generator source route results.
 
 | Generator | Source | Matrix result |
 | --- | --- | --- |
+| ActivityTrackerGenerator | `src/PatternKit.Generators/ActivityTracking/ActivityTrackerGenerator.cs` | Covered |
 | AdapterGenerator | `src/PatternKit.Generators/Adapter/AdapterGenerator.cs` | Covered |
 | AmbassadorGenerator | `src/PatternKit.Generators/Ambassador/AmbassadorGenerator.cs` | Covered |
 | AntiCorruptionLayerGenerator | `src/PatternKit.Generators/AntiCorruption/AntiCorruptionLayerGenerator.cs` | Covered |

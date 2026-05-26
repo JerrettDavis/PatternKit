@@ -155,6 +155,8 @@ PKACL001 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer 
 PKACL002 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer must declare exactly one translator.
 PKACL003 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer translator signature is invalid.
 PKACL004 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer validation rule signature is invalid.
+PKAT001 | PatternKit.Generators.ActivityTracking | Error | Activity Tracker host must be partial.
+PKAT002 | PatternKit.Generators.ActivityTracking | Error | Activity Tracker configuration is invalid.
 PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be partial
 PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
 PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported
