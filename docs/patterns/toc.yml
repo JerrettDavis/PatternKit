@@ -399,6 +399,8 @@
       items:
         - name: Anti-Corruption Layer
           href: application/anti-corruption-layer.md
+        - name: Activity Tracker
+          href: application/activity-tracker.md
         - name: Repository
           href: application/repository.md
         - name: Unit of Work

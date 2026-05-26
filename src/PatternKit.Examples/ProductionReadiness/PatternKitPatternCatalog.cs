@@ -1270,7 +1270,20 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/legacy-order-anti-corruption-layer.md",
             "src/PatternKit.Examples/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemo.cs",
             "test/PatternKit.Examples.Tests/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemoTests.cs",
-            ["fluent translation boundary", "generated anti-corruption layer", "DI-importable legacy order import example"])
+            ["fluent translation boundary", "generated anti-corruption layer", "DI-importable legacy order import example"]),
+
+        Pattern("Activity Tracker", PatternFamily.ApplicationArchitecture,
+            "docs/patterns/application/activity-tracker.md",
+            "src/PatternKit.Core/Application/ActivityTracking/ActivityTracker.cs",
+            "test/PatternKit.Tests/Application/ActivityTracking/ActivityTrackerTests.cs",
+            "docs/generators/activity-tracker.md",
+            "src/PatternKit.Generators/ActivityTracking/ActivityTrackerGenerator.cs",
+            "test/PatternKit.Generators.Tests/ActivityTrackerGeneratorTests.cs",
+            null,
+            "docs/examples/dashboard-activity-tracker.md",
+            "src/PatternKit.Examples/ActivityTrackingDemo/DashboardActivityTrackerDemo.cs",
+            "test/PatternKit.Examples.Tests/ActivityTrackingDemo/DashboardActivityTrackerDemoTests.cs",
+            ["fluent activity gate", "generated tracker factory", "DI-importable loading gate example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;

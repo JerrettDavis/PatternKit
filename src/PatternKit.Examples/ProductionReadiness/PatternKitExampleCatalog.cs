@@ -569,6 +569,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MaterializedView"],
             ["event-sourced read model", "source-generated projection factory", "DI composition"]),
         Descriptor(
+            "Dashboard Activity Tracker",
+            "src/PatternKit.Examples/ActivityTrackingDemo/DashboardActivityTrackerDemo.cs",
+            "test/PatternKit.Examples.Tests/ActivityTrackingDemo/DashboardActivityTrackerDemoTests.cs",
+            "docs/examples/dashboard-activity-tracker.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ActivityTracker"],
+            ["tracked active work", "source-generated tracker factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

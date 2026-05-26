@@ -10,6 +10,9 @@
 - name: Anti-Corruption Layer
   href: anti-corruption-layer.md
 
+- name: Activity Tracker
+  href: activity-tracker.md
+
 - name: Audit Log
   href: audit-log.md
 
