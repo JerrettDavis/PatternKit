@@ -217,6 +217,22 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageChannel"],
             ["typed queue boundary", "source-generated channel factory", "DI composition"]),
         Descriptor(
+            "Inventory Channel Purger",
+            "src/PatternKit.Examples/Messaging/InventoryChannelPurgerExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/InventoryChannelPurgerExampleTests.cs",
+            "docs/examples/inventory-channel-purger.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ChannelPurger", "MessageChannel"],
+            ["operational backlog purge", "source-generated purger factory", "DI composition"]),
+        Descriptor(
+            "Order Invalid Message Channel",
+            "src/PatternKit.Examples/Messaging/OrderInvalidMessageChannelExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderInvalidMessageChannelExampleTests.cs",
+            "docs/examples/order-invalid-message-channel.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["InvalidMessageChannel", "MessageChannel"],
+            ["validation failure routing", "source-generated invalid channel builder", "DI composition"]),
+        Descriptor(
             "Warehouse Polling Consumer",
             "src/PatternKit.Examples/Messaging/WarehousePollingConsumerExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/WarehousePollingConsumerExampleTests.cs",
@@ -368,6 +384,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
             ["MessageStore"],
             ["audit persistence", "source-generated identity and retention", "DI composition"]),
+        Descriptor(
+            "Order Durable Subscriber",
+            "src/PatternKit.Examples/Messaging/OrderDurableSubscriberExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderDurableSubscriberExampleTests.cs",
+            "docs/examples/order-durable-subscriber.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["DurableSubscriber", "MessageStore"],
+            ["checkpointed replay", "source-generated subscription handler", "DI composition"]),
         Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",

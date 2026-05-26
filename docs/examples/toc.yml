@@ -49,6 +49,12 @@
 - name: Inventory Message Channel
   href: inventory-message-channel.md
 
+- name: Inventory Channel Purger
+  href: inventory-channel-purger.md
+
+- name: Order Invalid Message Channel
+  href: order-invalid-message-channel.md
+
 - name: Warehouse Polling Consumer
   href: warehouse-polling-consumer.md
 
@@ -105,6 +111,9 @@
 
 - name: Order Message Store
   href: order-message-store.md
+
+- name: Order Durable Subscriber
+  href: order-durable-subscriber.md
 
 - name: Order Wire Tap
   href: order-wire-tap.md

@@ -144,6 +144,8 @@ public sealed record ApiExceptionMappingVisitorExample(Func<Task> RunAsync);
 public sealed record EventProcessingVisitorExample(Func<Task> RunAsync);
 public sealed record MessageRouterVisitorExample(Func<RoutingSummary> Run);
 public sealed record InventoryMessageChannelExampleService(MessageChannel<InventoryAdjustment> Channel, InventoryMessageChannelService Service);
+public sealed record InventoryChannelPurgerExampleService(MessageChannel<InventoryMaintenanceCommand> Channel, InventoryChannelPurgerService Service);
+public sealed record OrderInvalidMessageChannelExampleService(MessageChannel<InvalidMessage<OrderImportCommand>> Channel, OrderInvalidMessageChannelService Service);
 public sealed record WarehousePollingConsumerExampleService(PollingConsumer<ReplenishmentRequest> Consumer, WarehousePollingConsumerService Service);
 public sealed record OrderEventDrivenConsumerExampleService(EventDrivenConsumer<OrderAcceptedEvent> Consumer, OrderEventDrivenConsumerService Service);
 public sealed record ErpChannelAdapterExampleService(ChannelAdapter<ErpOrderDocument, OrderIntegrationMessage> Adapter, ErpChannelAdapterService Service);
@@ -160,6 +162,7 @@ public sealed record GeneratedRecipientListExample(RecipientListGeneratorExample
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
+public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -241,6 +244,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddEventProcessingVisitorExample()
             .AddMessageRouterVisitorExample()
             .AddInventoryMessageChannelExample()
+            .AddInventoryChannelPurgerExample()
+            .AddOrderInvalidMessageChannelExample()
             .AddWarehousePollingConsumerExample()
             .AddOrderEventDrivenConsumerExample()
             .AddErpChannelAdapterExample()
@@ -257,6 +262,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
             .AddOrderMessageStoreExample()
+            .AddOrderDurableSubscriberExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -518,6 +524,24 @@ public static class PatternKitExampleServiceCollectionExtensions
         return services.RegisterExample<InventoryMessageChannelExampleService>("Inventory Message Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
+    public static IServiceCollection AddInventoryChannelPurgerExample(this IServiceCollection services)
+    {
+        services.AddInventoryChannelPurgerDemo();
+        services.AddSingleton<InventoryChannelPurgerExampleService>(sp => new(
+            sp.GetRequiredService<MessageChannel<InventoryMaintenanceCommand>>(),
+            sp.GetRequiredService<InventoryChannelPurgerService>()));
+        return services.RegisterExample<InventoryChannelPurgerExampleService>("Inventory Channel Purger", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderInvalidMessageChannelExample(this IServiceCollection services)
+    {
+        services.AddOrderInvalidMessageChannelDemo();
+        services.AddSingleton<OrderInvalidMessageChannelExampleService>(sp => new(
+            sp.GetRequiredService<MessageChannel<InvalidMessage<OrderImportCommand>>>(),
+            sp.GetRequiredService<OrderInvalidMessageChannelService>()));
+        return services.RegisterExample<OrderInvalidMessageChannelExampleService>("Order Invalid Message Channel", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
     public static IServiceCollection AddWarehousePollingConsumerExample(this IServiceCollection services)
     {
         services.AddWarehousePollingConsumerDemo();
@@ -654,6 +678,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageStore<OrderMessageStoreEvent>>(),
             sp.GetRequiredService<OrderMessageStoreService>()));
         return services.RegisterExample<OrderMessageStoreExampleService>("Order Message Store", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderDurableSubscriberExample(this IServiceCollection services)
+    {
+        services.AddOrderDurableSubscriberDemo();
+        services.AddSingleton<OrderDurableSubscriberExampleService>(sp => new(
+            sp.GetRequiredService<DurableSubscriber<OrderShipmentEvent>>(),
+            sp.GetRequiredService<OrderDurableSubscriberService>()));
+        return services.RegisterExample<OrderDurableSubscriberExampleService>("Order Durable Subscriber", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

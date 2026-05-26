@@ -166,6 +166,8 @@ PKCH004 | PatternKit.Generators.Chain | Error | Chain handler signature invalid
 PKCH005 | PatternKit.Generators.Chain | Error | Pipeline terminal missing
 PKCH006 | PatternKit.Generators.Chain | Error | Multiple pipeline terminals
 PKCH007 | PatternKit.Generators.Chain | Error | Chain default missing
+PKCP001 | PatternKit.Generators.Messaging | Error | Channel purger type must be partial
+PKIMC001 | PatternKit.Generators.Messaging | Error | Invalid message channel type must be partial
 PKCMD001 | PatternKit.Generators.Command | Error | Command type must be partial
 PKCMD002 | PatternKit.Generators.Command | Error | Command handler missing
 PKCMD003 | PatternKit.Generators.Command | Error | Multiple command handlers
@@ -360,6 +362,9 @@ PKPOLL003 | PatternKit.Generators.Messaging | Error | Polling Consumer source si
 PKEVT001 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer host type must be partial.
 PKEVT002 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer must declare at least one handler.
 PKEVT003 | PatternKit.Generators.Messaging | Error | Event-Driven Consumer handler signature is invalid.
+PKDS001 | PatternKit.Generators.Messaging | Error | Durable Subscriber host type must be partial.
+PKDS002 | PatternKit.Generators.Messaging | Error | Durable Subscriber must declare at least one handler.
+PKDS003 | PatternKit.Generators.Messaging | Error | Durable Subscriber handler signature is invalid.
 PKCAD001 | PatternKit.Generators.Messaging | Error | Channel Adapter host type must be partial.
 PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one inbound translator.
 PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.

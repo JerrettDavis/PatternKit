@@ -88,7 +88,7 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
             .Then("every catalog pattern appears in the benchmark results matrix", ctx =>
                 ScenarioExpect.Empty(ctx.MissingPatterns))
             .And("the guide publishes the route result total", ctx =>
-                ScenarioExpect.Contains("352 pattern route results", ctx.ResultsGuide))
+                ScenarioExpect.Contains("364 pattern route results", ctx.ResultsGuide))
             .AssertPassed();
 
     [Scenario("Published benchmark results include every generator source")]
@@ -165,6 +165,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
 
         if (patternName == "CacheAside")
             return "Cache-Aside";
+
+        if (patternName == "ChainOfResponsibility")
+            return "Chain of Responsibility";
 
         if (patternName == "QueueLoadLeveling")
             return "Queue-Based Load Leveling";
