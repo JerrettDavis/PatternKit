@@ -417,6 +417,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessagingBridge", "MessageBus", "MessageChannel"],
             ["topology bridge", "header-preserving translation", "source-generated bridge factory", "DI composition"]),
         Descriptor(
+            "Order Message History",
+            "src/PatternKit.Examples/Messaging/OrderMessageHistoryExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageHistoryExampleTests.cs",
+            "docs/examples/order-message-history.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MessageHistory"],
+            ["message envelope audit trail", "source-generated history factory", "DI composition"]),
+        Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",

@@ -63,6 +63,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Dynamic Router | `DynamicRouter<TPayload, TResult>` | Dynamic Router generator |
 | Enterprise Integration | Message Bus | `MessageBus<TPayload>` | Message Bus generator |
 | Enterprise Integration | Messaging Bridge | `MessagingBridge<TInbound,TOutbound>` | Messaging Bridge generator |
+| Enterprise Integration | Message History | `MessageHistory<TPayload>` | Message History generator |
 | Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
 | Enterprise Integration | Message Store | `MessageStore<TPayload>` | Message Store generator |
 | Enterprise Integration | Wire Tap | `WireTap<TPayload>` | Wire Tap generator |

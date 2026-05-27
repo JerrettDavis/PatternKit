@@ -109,6 +109,9 @@
 - name: Messaging Bridge
   href: messaging-bridge.md
 
+- name: Message History
+  href: message-history.md
+
 - name: Channel Purger
   href: channel-purger.md
 
