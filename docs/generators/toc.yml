@@ -151,6 +151,9 @@
 - name: Message Filter
   href: message-filter.md
 
+- name: Message Expiration
+  href: message-expiration.md
+
 - name: Message Store
   href: message-store.md
 

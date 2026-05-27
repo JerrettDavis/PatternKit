@@ -66,6 +66,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Correlation Identifier | `CorrelationIdentifier<TPayload>` | Correlation Identifier generator |
 | Enterprise Integration | Message History | `MessageHistory<TPayload>` | Message History generator |
 | Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
+| Enterprise Integration | Message Expiration | `MessageExpiration<TPayload>` | Message Expiration generator |
 | Enterprise Integration | Message Store | `MessageStore<TPayload>` | Message Store generator |
 | Enterprise Integration | Wire Tap | `WireTap<TPayload>` | Wire Tap generator |
 | Enterprise Integration | Control Bus | `ControlBus<TCommand>` | Control Bus generator |

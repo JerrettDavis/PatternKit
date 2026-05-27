@@ -339,6 +339,8 @@
           href: messaging/dead-letter-channel.md
         - name: Message Filter
           href: messaging/message-filter.md
+        - name: Message Expiration
+          href: messaging/message-expiration.md
         - name: Message Store
           href: messaging/message-store.md
         - name: Wire Tap
