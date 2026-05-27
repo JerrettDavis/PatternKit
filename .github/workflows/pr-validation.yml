@@ -77,8 +77,9 @@ jobs:
           dotnet test PatternKit.slnx \
             --configuration Release \
             --no-build \
+            -p:TestTfmsInParallel=false \
             --verbosity normal \
-            --logger "trx;LogFileName=test-results.trx" \
+            --logger "trx" \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
@@ -117,7 +118,8 @@ jobs:
           # Package all library projects
           for project in src/PatternKit.Core \
                         src/PatternKit.Generators \
-                        src/PatternKit.Generators.Abstractions; do
+                        src/PatternKit.Generators.Abstractions \
+                        src/PatternKit.Hosting.Extensions; do
             if [ -d "$project" ]; then
               echo "  Packing $project..."
               dotnet pack "$project" \

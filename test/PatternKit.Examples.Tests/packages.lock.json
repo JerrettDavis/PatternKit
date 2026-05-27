@@ -83,11 +83,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.8, )",
-        "resolved": "0.19.8",
-        "contentHash": "x5YhK3YbgqPltVvlIaDF5WREwjv7zYAkKb/0OUB5SVrO0vT3b4xE1eub6Jw3Ih7lytdbrOcecz20QAhoFyo2FA==",
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "Rc9ic+sEog916hOOWaqW7OxFW6Bt9eGY8dX5YGyd4ognqbxjTolLd74shdAf6v92nNIJWzunAFiqfX2rJ6Ea2Q==",
         "dependencies": {
-          "TinyBDD": "0.19.8",
+          "TinyBDD": "0.19.21",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -265,9 +265,9 @@
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.14, )",
-        "resolved": "0.19.8",
-        "contentHash": "W5J/Ftk6MMphFsu54Nm4rePdQvPQSANAeU6yAPs1+SbdBsETNMldNFj6wJdpr/nh7GLJfOPHmbhER1MubLv+tg=="
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "DYh22Z40sOKUod6aoBUpmDNHbwJyl8Mij3sT4bZXY9HvdnXOVdZC9DLNSM7wg8TbcJRCSvXk5tMtaCcH8AkFKw=="
       }
     },
     "net8.0": {
@@ -366,11 +366,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.8, )",
-        "resolved": "0.19.8",
-        "contentHash": "x5YhK3YbgqPltVvlIaDF5WREwjv7zYAkKb/0OUB5SVrO0vT3b4xE1eub6Jw3Ih7lytdbrOcecz20QAhoFyo2FA==",
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "Rc9ic+sEog916hOOWaqW7OxFW6Bt9eGY8dX5YGyd4ognqbxjTolLd74shdAf6v92nNIJWzunAFiqfX2rJ6Ea2Q==",
         "dependencies": {
-          "TinyBDD": "0.19.8",
+          "TinyBDD": "0.19.21",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -520,11 +520,6 @@
           "Microsoft.Extensions.FileProviders.Abstractions": "10.0.8",
           "Microsoft.Extensions.FileProviders.Physical": "10.0.8"
         }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.8",
-        "contentHash": "21nbDV60SRPWGIivsyl6lqBeEJNG1sginhhfWgRrr3Ais7aQ12To25OAHQxgoiJkjqy1aQ6RxpZBGYuTi7Ge6A=="
       },
       "Microsoft.Extensions.Diagnostics": {
         "type": "Transitive",
@@ -791,6 +786,12 @@
           "Microsoft.Extensions.Configuration.Abstractions": "10.0.8"
         }
       },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.8, )",
+        "resolved": "10.0.8",
+        "contentHash": "21nbDV60SRPWGIivsyl6lqBeEJNG1sginhhfWgRrr3Ais7aQ12To25OAHQxgoiJkjqy1aQ6RxpZBGYuTi7Ge6A=="
+      },
       "Microsoft.Extensions.Hosting": {
         "type": "CentralTransitive",
         "requested": "[10.0.8, )",
@@ -856,12 +857,12 @@
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.14, )",
-        "resolved": "0.19.8",
-        "contentHash": "W5J/Ftk6MMphFsu54Nm4rePdQvPQSANAeU6yAPs1+SbdBsETNMldNFj6wJdpr/nh7GLJfOPHmbhER1MubLv+tg==",
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "DYh22Z40sOKUod6aoBUpmDNHbwJyl8Mij3sT4bZXY9HvdnXOVdZC9DLNSM7wg8TbcJRCSvXk5tMtaCcH8AkFKw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.5",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
+          "Microsoft.Extensions.DependencyInjection": "10.0.8",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
         }
       }
     },
@@ -961,11 +962,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.8, )",
-        "resolved": "0.19.8",
-        "contentHash": "x5YhK3YbgqPltVvlIaDF5WREwjv7zYAkKb/0OUB5SVrO0vT3b4xE1eub6Jw3Ih7lytdbrOcecz20QAhoFyo2FA==",
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "Rc9ic+sEog916hOOWaqW7OxFW6Bt9eGY8dX5YGyd4ognqbxjTolLd74shdAf6v92nNIJWzunAFiqfX2rJ6Ea2Q==",
         "dependencies": {
-          "TinyBDD": "0.19.8",
+          "TinyBDD": "0.19.21",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -1115,11 +1116,6 @@
           "Microsoft.Extensions.FileProviders.Abstractions": "10.0.8",
           "Microsoft.Extensions.FileProviders.Physical": "10.0.8"
         }
-      },
-      "Microsoft.Extensions.DependencyInjection.Abstractions": {
-        "type": "Transitive",
-        "resolved": "10.0.8",
-        "contentHash": "21nbDV60SRPWGIivsyl6lqBeEJNG1sginhhfWgRrr3Ais7aQ12To25OAHQxgoiJkjqy1aQ6RxpZBGYuTi7Ge6A=="
       },
       "Microsoft.Extensions.Diagnostics": {
         "type": "Transitive",
@@ -1386,6 +1382,12 @@
           "Microsoft.Extensions.Configuration.Abstractions": "10.0.8"
         }
       },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "CentralTransitive",
+        "requested": "[10.0.8, )",
+        "resolved": "10.0.8",
+        "contentHash": "21nbDV60SRPWGIivsyl6lqBeEJNG1sginhhfWgRrr3Ais7aQ12To25OAHQxgoiJkjqy1aQ6RxpZBGYuTi7Ge6A=="
+      },
       "Microsoft.Extensions.Hosting": {
         "type": "CentralTransitive",
         "requested": "[10.0.8, )",
@@ -1451,12 +1453,12 @@
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.14, )",
-        "resolved": "0.19.8",
-        "contentHash": "W5J/Ftk6MMphFsu54Nm4rePdQvPQSANAeU6yAPs1+SbdBsETNMldNFj6wJdpr/nh7GLJfOPHmbhER1MubLv+tg==",
+        "requested": "[0.19.21, )",
+        "resolved": "0.19.21",
+        "contentHash": "DYh22Z40sOKUod6aoBUpmDNHbwJyl8Mij3sT4bZXY9HvdnXOVdZC9DLNSM7wg8TbcJRCSvXk5tMtaCcH8AkFKw==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection": "10.0.5",
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.5"
+          "Microsoft.Extensions.DependencyInjection": "10.0.8",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
         }
       }
     }

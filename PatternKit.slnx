@@ -10,6 +10,7 @@
     <Project Path="src/PatternKit.Examples/PatternKit.Examples.csproj" />
     <Project Path="src/PatternKit.Generators/PatternKit.Generators.csproj" />
     <Project Path="src/PatternKit.Generators.Abstractions/PatternKit.Generators.Abstractions.csproj" />
+    <Project Path="src/PatternKit.Hosting.Extensions/PatternKit.Hosting.Extensions.csproj" />
   </Folder>
   <Folder Name="/benchmarks/">
     <Project Path="benchmarks\PatternKit.Benchmarks\PatternKit.Benchmarks.csproj" Type="Classic C#" />
@@ -18,5 +19,6 @@
     <Project Path="test/PatternKit.Tests/PatternKit.Tests.csproj" />
     <Project Path="test\PatternKit.Examples.Tests\PatternKit.Examples.Tests.csproj" Type="Classic C#" />
     <Project Path="test\PatternKit.Generators.Tests\PatternKit.Generators.Tests.csproj" Type="Classic C#" />
+    <Project Path="test\PatternKit.Hosting.Extensions.Tests\PatternKit.Hosting.Extensions.Tests.csproj" Type="Classic C#" />
   </Folder>
 </Solution>

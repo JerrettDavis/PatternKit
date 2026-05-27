@@ -34,6 +34,33 @@ Install via NuGet:
 dotnet add package PatternKit --version <latest>
 ```
 
+For first-party `IServiceCollection` integration in ASP.NET Core, worker services, or generic host apps:
+
+```bash
+dotnet add package PatternKit.Hosting.Extensions --version <latest>
+```
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Hosting.DependencyInjection;
+using PatternKit.Messaging.Channels;
+
+var services = new ServiceCollection();
+
+services
+    .AddPatternKitMessageChannel<OrderCommand>(
+        "orders",
+        channel => channel.WithCapacity(100, MessageChannelBackpressurePolicy.Reject))
+    .AddPatternKitRetryPolicy<ServiceReply>(
+        "inventory-retry",
+        retry => retry.WithMaxAttempts(3).HandleResult(static reply => !reply.Available));
+
+public sealed record OrderCommand(string OrderId, decimal Total);
+public sealed record ServiceReply(bool Available);
+```
+
+See [Hosting Extensions](docs/guides/hosting-extensions.md) for reusable DI registrations that do not depend on the examples assembly.
+
 Use a pattern immediately—here’s a simple **Strategy**:
 
 ```csharp

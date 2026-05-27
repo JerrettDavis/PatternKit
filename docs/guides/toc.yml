@@ -4,6 +4,8 @@
   href: pattern-coverage.md
 - name: Composing Patterns
   href: composing-patterns.md
+- name: Hosting Extensions
+  href: hosting-extensions.md
 - name: Migrating from Traditional Patterns
   href: migrating-from-traditional.md
 - name: Performance
