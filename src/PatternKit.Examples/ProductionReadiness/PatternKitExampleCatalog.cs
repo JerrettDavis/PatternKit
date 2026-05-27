@@ -313,6 +313,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageTranslator"],
             ["partner event normalization", "source-generated translator", "DI composition"]),
         Descriptor(
+            "Customer Profile Content Enricher",
+            "src/PatternKit.Examples/Messaging/CustomerProfileContentEnricherExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/CustomerProfileContentEnricherExampleTests.cs",
+            "docs/examples/customer-profile-content-enricher.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["ContentEnricher"],
+            ["profile normalization", "source-generated enrichment steps", "DI composition"]),
+        Descriptor(
             "Order Canonical Data Model",
             "src/PatternKit.Examples/CanonicalDataModelDemo/OrderCanonicalDataModelDemo.cs",
             "test/PatternKit.Examples.Tests/CanonicalDataModelDemo/OrderCanonicalDataModelDemoTests.cs",

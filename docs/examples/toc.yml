@@ -88,6 +88,9 @@
 - name: Generated Message Translator
   href: generated-message-translator.md
 
+- name: Customer Profile Content Enricher
+  href: customer-profile-content-enricher.md
+
 - name: Order Canonical Data Model
   href: order-canonical-data-model.md
 

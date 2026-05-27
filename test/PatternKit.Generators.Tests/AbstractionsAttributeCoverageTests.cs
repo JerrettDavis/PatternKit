@@ -189,6 +189,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateMessageFilterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageFilterRuleAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageExpirationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateContentEnricherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ContentEnrichmentStepAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageStoreIdentityAttribute), AttributeTargets.Method, false, false },
         { typeof(MessageStoreRetentionAttribute), AttributeTargets.Method, false, false },
@@ -1951,6 +1953,36 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.False(configured.GenerateAsync);
         ScenarioExpect.False(configured.GenerateActions);
         ScenarioExpect.False(configured.AutoDiscoverDerivedTypes);
+    }
+
+    [Scenario("Content Enricher Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void ContentEnricher_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var generator = new GenerateContentEnricherAttribute(typeof(string))
+        {
+            FactoryName = "BuildCustomerProfile",
+            EnricherName = "customer-profile",
+            DefaultPolicy = ContentEnrichmentErrorPolicy.Skip
+        };
+        var step = new ContentEnrichmentStepAttribute("normalize-email")
+        {
+            Order = 20,
+            Policy = ContentEnrichmentErrorPolicy.UseDefault,
+            DefaultFactoryName = "UseDefaultEmail"
+        };
+
+        ScenarioExpect.Equal(typeof(string), generator.PayloadType);
+        ScenarioExpect.Equal("BuildCustomerProfile", generator.FactoryName);
+        ScenarioExpect.Equal("customer-profile", generator.EnricherName);
+        ScenarioExpect.Equal(ContentEnrichmentErrorPolicy.Skip, generator.DefaultPolicy);
+        ScenarioExpect.Equal("normalize-email", step.Name);
+        ScenarioExpect.Equal(20, step.Order);
+        ScenarioExpect.Equal(ContentEnrichmentErrorPolicy.UseDefault, step.Policy);
+        ScenarioExpect.Equal("UseDefaultEmail", step.DefaultFactoryName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateContentEnricherAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContentEnrichmentStepAttribute(" "));
+        AssertEnumValues(ContentEnrichmentErrorPolicy.Throw, ContentEnrichmentErrorPolicy.Skip, ContentEnrichmentErrorPolicy.UseDefault);
     }
 
     private static void AssertEnumValues<TEnum>(params TEnum[] values)

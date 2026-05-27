@@ -168,6 +168,7 @@ public sealed record GeneratedRecipientListExample(RecipientListGeneratorExample
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageExpirationExampleService(MessageExpiration<ExpiringOrderCommand> Expiration, OrderMessageExpirationService Service);
+public sealed record CustomerProfileContentEnricherExampleService(AsyncContentEnricher<CustomerProfileUpdate> Enricher, CustomerProfileEnrichmentService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
@@ -275,6 +276,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
             .AddOrderMessageExpirationExample()
+            .AddCustomerProfileContentEnricherExample()
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
@@ -698,6 +700,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageExpiration<ExpiringOrderCommand>>(),
             sp.GetRequiredService<OrderMessageExpirationService>()));
         return services.RegisterExample<OrderMessageExpirationExampleService>("Order Message Expiration", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCustomerProfileContentEnricherExample(this IServiceCollection services)
+    {
+        services.AddCustomerProfileContentEnricherDemo();
+        services.AddSingleton<CustomerProfileContentEnricherExampleService>(sp => new(
+            sp.GetRequiredService<AsyncContentEnricher<CustomerProfileUpdate>>(),
+            sp.GetRequiredService<CustomerProfileEnrichmentService>()));
+        return services.RegisterExample<CustomerProfileContentEnricherExampleService>("Customer Profile Content Enricher", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddOrderMessageStoreExample(this IServiceCollection services)
