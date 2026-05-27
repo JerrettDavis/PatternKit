@@ -96,6 +96,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Service Activator**](service-activator.md) | Message-to-service operation factories | `[GenerateServiceActivator]` |
 | [**Message Envelope**](messaging.md#generated-message-envelope) | Required message metadata contracts | `[GenerateMessageEnvelope]` |
 | [**Message Translator**](message-translator.md) | Partner and transport event normalization | `[GenerateMessageTranslator]` |
+| [**Content Enricher**](content-enricher.md) | Ordered async payload enrichment pipelines | `[GenerateContentEnricher]` |
 | [**Canonical Data Model**](canonical-data-model.md) | Source-to-canonical contract normalization | `[GenerateCanonicalDataModel]` |
 | [**Event-Carried State Transfer**](event-carried-state-transfer.md) | State-rich event projection factories | `[GenerateEventCarriedStateTransfer]` |
 | [**Event Notification**](event-notification.md) | Compact event notification factories | `[GenerateEventNotification]` |

@@ -70,6 +70,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Circuit Breaker | Execution | 85.34 ns | 488 B | 85.19 ns | 488 B | Effectively equivalent for the accepted fulfillment workflow. |
 | Content-Based Router | Construction | 42.913 ns | 400 B | 44.118 ns | 400 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Content-Based Router | Execution | 52.789 ns | 520 B | 60.816 ns | 576 B | Fluent was faster and allocated less for wholesale order routing. |
+| Content Enricher | Construction | 36.39 ns | 312 B | 36.22 ns | 312 B | Effectively equivalent for this microbenchmark. |
+| Content Enricher | Execution | 1.357 us | 1,400 B | 1.344 us | 1,400 B | Same allocation; generated was slightly faster for customer profile enrichment. |
 | Control Bus | Construction | 115.64 ns | 880 B | 79.88 ns | 624 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Control Bus | Execution | 290.44 ns | 1,688 B | 232.48 ns | 1,432 B | Generated reduced execution time and allocation for operational command dispatch. |
 | CQRS | Construction | 199.3 ns | 2.09 KB | 88.001 us | 309.24 KB | Fluent mediator construction is much lighter; generated measurement includes full IServiceCollection dispatcher composition. |

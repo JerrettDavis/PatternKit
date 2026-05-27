@@ -327,6 +327,8 @@
           href: messaging/message-envelope.md
         - name: Message Translator
           href: messaging/message-translator.md
+        - name: Content Enricher
+          href: messaging/content-enricher.md
         - name: Canonical Data Model
           href: messaging/canonical-data-model.md
         - name: Event-Carried State Transfer

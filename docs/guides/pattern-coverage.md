@@ -54,6 +54,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Service Activator | `ServiceActivator<TRequest, TResponse>` | Service Activator generator |
 | Enterprise Integration | Message Envelope | `Message<TPayload>`, headers, context | Messaging generator |
 | Enterprise Integration | Message Translator | `MessageTranslator<TInput, TOutput>` | Message Translator generator |
+| Enterprise Integration | Content Enricher | `AsyncContentEnricher<TPayload>` | Content Enricher generator |
 | Enterprise Integration | Canonical Data Model | `CanonicalDataModel<TCanonical>` | Canonical Data Model generator |
 | Enterprise Integration | Event-Carried State Transfer | `EventCarriedStateTransfer<TEvent,TKey,TState>` | Event-Carried State Transfer generator |
 | Enterprise Integration | Event Notification | `EventNotification<TEvent,TKey>` | Event Notification generator |
