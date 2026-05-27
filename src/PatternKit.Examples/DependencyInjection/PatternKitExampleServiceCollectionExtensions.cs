@@ -169,6 +169,7 @@ public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRun
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
 public sealed record OrderMessageExpirationExampleService(MessageExpiration<ExpiringOrderCommand> Expiration, OrderMessageExpirationService Service);
 public sealed record CustomerProfileContentEnricherExampleService(AsyncContentEnricher<CustomerProfileUpdate> Enricher, CustomerProfileEnrichmentService Service);
+public sealed record ShipmentGuaranteedDeliveryExampleService(GuaranteedDeliveryQueue<ShipmentDispatchCommand> Queue, ShipmentGuaranteedDeliveryService Service, ShipmentGuaranteedDeliveryExampleRunner Runner);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
@@ -277,6 +278,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageFilterExample()
             .AddOrderMessageExpirationExample()
             .AddCustomerProfileContentEnricherExample()
+            .AddShipmentGuaranteedDeliveryExample()
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
@@ -709,6 +711,16 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<AsyncContentEnricher<CustomerProfileUpdate>>(),
             sp.GetRequiredService<CustomerProfileEnrichmentService>()));
         return services.RegisterExample<CustomerProfileContentEnricherExampleService>("Customer Profile Content Enricher", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddShipmentGuaranteedDeliveryExample(this IServiceCollection services)
+    {
+        services.AddShipmentGuaranteedDeliveryDemo();
+        services.AddSingleton<ShipmentGuaranteedDeliveryExampleService>(sp => new(
+            sp.GetRequiredService<GuaranteedDeliveryQueue<ShipmentDispatchCommand>>(),
+            sp.GetRequiredService<ShipmentGuaranteedDeliveryService>(),
+            sp.GetRequiredService<ShipmentGuaranteedDeliveryExampleRunner>()));
+        return services.RegisterExample<ShipmentGuaranteedDeliveryExampleService>("Shipment Guaranteed Delivery", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderMessageStoreExample(this IServiceCollection services)

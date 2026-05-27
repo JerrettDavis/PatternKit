@@ -157,6 +157,9 @@
 - name: Message Expiration
   href: message-expiration.md
 
+- name: Guaranteed Delivery
+  href: guaranteed-delivery.md
+
 - name: Message Store
   href: message-store.md
 

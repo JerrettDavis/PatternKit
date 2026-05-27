@@ -321,6 +321,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ContentEnricher"],
             ["profile normalization", "source-generated enrichment steps", "DI composition"]),
         Descriptor(
+            "Shipment Guaranteed Delivery",
+            "src/PatternKit.Examples/Messaging/ShipmentGuaranteedDeliveryExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/ShipmentGuaranteedDeliveryExampleTests.cs",
+            "docs/examples/shipment-guaranteed-delivery.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Guaranteed Delivery"],
+            ["durable shipment work queue", "source-generated queue factory", "DI composition"]),
+        Descriptor(
             "Order Canonical Data Model",
             "src/PatternKit.Examples/CanonicalDataModelDemo/OrderCanonicalDataModelDemo.cs",
             "test/PatternKit.Examples.Tests/CanonicalDataModelDemo/OrderCanonicalDataModelDemoTests.cs",

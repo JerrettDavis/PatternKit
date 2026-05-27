@@ -118,6 +118,9 @@
 - name: Order Message Expiration
   href: order-message-expiration.md
 
+- name: Shipment Guaranteed Delivery
+  href: shipment-guaranteed-delivery.md
+
 - name: Order Message Store
   href: order-message-store.md
 

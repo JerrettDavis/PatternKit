@@ -343,6 +343,8 @@
           href: messaging/message-filter.md
         - name: Message Expiration
           href: messaging/message-expiration.md
+        - name: Guaranteed Delivery
+          href: messaging/guaranteed-delivery.md
         - name: Message Store
           href: messaging/message-store.md
         - name: Wire Tap

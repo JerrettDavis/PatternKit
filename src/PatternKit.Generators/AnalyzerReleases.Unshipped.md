@@ -352,6 +352,8 @@ PKMS003 | PatternKit.Generators.Messaging | Error | Message store retention sign
 PKMS004 | PatternKit.Generators.Messaging | Error | Message store hook is duplicated.
 PKMEXP001 | PatternKit.Generators.Messaging | Error | Message expiration type must be partial.
 PKMEXP002 | PatternKit.Generators.Messaging | Error | Message expiration configuration is invalid.
+PKMGD001 | PatternKit.Generators.Messaging | Error | Guaranteed Delivery host type must be partial.
+PKMGD002 | PatternKit.Generators.Messaging | Error | Guaranteed Delivery configuration is invalid.
 PKMCE001 | PatternKit.Generators.Messaging | Error | Content Enricher host type must be partial.
 PKMCE002 | PatternKit.Generators.Messaging | Error | Content Enricher must declare at least one enrichment step.
 PKMCE003 | PatternKit.Generators.Messaging | Error | Content Enricher step signature is invalid.
