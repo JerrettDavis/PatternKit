@@ -138,6 +138,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Message Filter | Execution | 44.637 ns | 424 B | 45.826 ns | 424 B | Same allocation; fluent was slightly faster for order fraud screening. |
 | Message Expiration | Construction | 22.55 ns | 248 B | 14.63 ns | 144 B | Generated policy construction reduced time and allocation. |
 | Message Expiration | Execution | 88.54 ns | 728 B | 103.86 ns | 536 B | Generated reduced allocation; fluent was faster for the stamp-and-evaluate flow. |
+| Guaranteed Delivery | Construction | 22.778 ns | 200 B | 22.522 ns | 200 B | Fluent and generated queue construction were effectively equivalent. |
+| Guaranteed Delivery | Execution | 175.488 ns | 752 B | 167.434 ns | 752 B | Generated was slightly faster with the same allocation for enqueue, receive, and acknowledge. |
 | Message Routing | Construction | 23.42 ns | 224 B | 23.33 ns | 224 B | Effectively equivalent for this microbenchmark. |
 | Message Routing | Execution | 707.34 ns | 4,744 B | 679.97 ns | 4,632 B | Generated reduced execution time and allocation for the route/split/aggregate workflow. |
 | Message Store | Construction | 18.824 ns | 216 B | 18.721 ns | 216 B | Effectively equivalent for this microbenchmark. |

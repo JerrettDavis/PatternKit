@@ -1985,6 +1985,26 @@ public sealed class AbstractionsAttributeCoverageTests
         AssertEnumValues(ContentEnrichmentErrorPolicy.Throw, ContentEnrichmentErrorPolicy.Skip, ContentEnrichmentErrorPolicy.UseDefault);
     }
 
+    [Scenario("Guaranteed Delivery Attribute Exposes Defaults And Configuration")]
+    [Fact]
+    public void GuaranteedDelivery_Attribute_Exposes_Defaults_And_Configuration()
+    {
+        var generator = new GenerateGuaranteedDeliveryAttribute(typeof(string))
+        {
+            FactoryName = "BuildShipmentDelivery",
+            QueueName = "shipment-delivery",
+            LeaseMilliseconds = 45000,
+            MaxDeliveryAttempts = 7
+        };
+
+        ScenarioExpect.Equal(typeof(string), generator.PayloadType);
+        ScenarioExpect.Equal("BuildShipmentDelivery", generator.FactoryName);
+        ScenarioExpect.Equal("shipment-delivery", generator.QueueName);
+        ScenarioExpect.Equal(45000, generator.LeaseMilliseconds);
+        ScenarioExpect.Equal(7, generator.MaxDeliveryAttempts);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateGuaranteedDeliveryAttribute(null!));
+    }
+
     private static void AssertEnumValues<TEnum>(params TEnum[] values)
         where TEnum : struct, Enum
     {

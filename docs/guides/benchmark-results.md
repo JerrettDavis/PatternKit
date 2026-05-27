@@ -123,6 +123,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Message Filter | Execution | 44.637 ns | 424 B | 45.826 ns | 424 B | Same allocation; fluent was slightly faster for order fraud screening. |
 | Message Expiration | Construction | 22.55 ns | 248 B | 14.63 ns | 144 B | Generated policy construction reduced time and allocation. |
 | Message Expiration | Execution | 88.54 ns | 728 B | 103.86 ns | 536 B | Generated reduced allocation; fluent was faster for the stamp-and-evaluate flow. |
+| Guaranteed Delivery | Construction | 22.778 ns | 200 B | 22.522 ns | 200 B | Fluent and generated queue construction were effectively equivalent. |
+| Guaranteed Delivery | Execution | 175.488 ns | 752 B | 167.434 ns | 752 B | Generated was slightly faster with the same allocation for enqueue, receive, and acknowledge. |
 | Message Routing | Construction | 23.42 ns | 224 B | 23.33 ns | 224 B | Effectively equivalent for this microbenchmark. |
 | Message Routing | Execution | 707.34 ns | 4,744 B | 679.97 ns | 4,632 B | Generated reduced execution time and allocation for the route/split/aggregate workflow. |
 | Message Store | Construction | 18.824 ns | 216 B | 18.721 ns | 216 B | Effectively equivalent for this microbenchmark. |
@@ -216,7 +218,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 99 catalog patterns and 396 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 101 catalog patterns and 404 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -224,11 +226,11 @@ The coverage matrix currently publishes 99 catalog patterns and 396 pattern rout
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
-| Enterprise Integration | 40 | 160 |
+| Enterprise Integration | 41 | 164 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 95 generator source route results.
+The generator matrix currently publishes 96 generator source route results.
 
 ## Pattern Matrix Results
 
@@ -308,6 +310,7 @@ The generator matrix currently publishes 95 generator source route results.
 | Enterprise Integration | Message Envelope | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Message Filter | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Message Expiration | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Guaranteed Delivery | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Message Store | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Message Translator | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Messaging Gateway | Covered | Covered | Covered | Covered |
@@ -396,6 +399,7 @@ The generator matrix currently publishes 95 generator source route results.
 | MessageEnvelopeGenerator | `src/PatternKit.Generators/Messaging/MessageEnvelopeGenerator.cs` | Covered |
 | MessageFilterGenerator | `src/PatternKit.Generators/Messaging/MessageFilterGenerator.cs` | Covered |
 | MessageExpirationGenerator | `src/PatternKit.Generators/Messaging/MessageExpirationGenerator.cs` | Covered |
+| GuaranteedDeliveryGenerator | `src/PatternKit.Generators/Messaging/GuaranteedDeliveryGenerator.cs` | Covered |
 | CorrelationIdentifierGenerator | `src/PatternKit.Generators/Messaging/CorrelationIdentifierGenerator.cs` | Covered |
 | MessageHistoryGenerator | `src/PatternKit.Generators/Messaging/MessageHistoryGenerator.cs` | Covered |
 | MessageStoreGenerator | `src/PatternKit.Generators/Messaging/MessageStoreGenerator.cs` | Covered |

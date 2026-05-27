@@ -105,6 +105,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Content Router**](messaging.md#generated-content-router) | Content-based message routing factories | `[GenerateContentRouter]` |
 | [**Message Filter**](message-filter.md) | Named allow-rule filters for message consumers | `[GenerateMessageFilter]` |
 | [**Message Expiration**](message-expiration.md) | Deadline stamping and stale-message evaluation policies | `[GenerateMessageExpiration]` |
+| [**Guaranteed Delivery**](guaranteed-delivery.md) | Durable delivery queue factories with lease and retry settings | `[GenerateGuaranteedDelivery]` |
 | [**Message Store**](message-store.md) | Message audit, lookup, and replay store factories | `[GenerateMessageStore]` |
 | [**Wire Tap**](wire-tap.md) | Side-channel message observability factories | `[GenerateWireTap]` |
 | [**Control Bus**](control-bus.md) | Operational command bus factories for message processors | `[GenerateControlBus]` |
