@@ -309,6 +309,10 @@
           href: messaging/durable-subscriber.md
         - name: Dynamic Router
           href: messaging/dynamic-router.md
+        - name: Message Bus
+          href: messaging/message-bus.md
+        - name: Messaging Bridge
+          href: messaging/messaging-bridge.md
         - name: Channel Adapter
           href: messaging/channel-adapter.md
         - name: Messaging Gateway

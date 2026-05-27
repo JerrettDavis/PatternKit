@@ -67,6 +67,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
 | Message Bus | Construction | 186.7 ns | 1,264 B | 160.0 ns | 904 B | Generated reduced construction time and allocation for topic bus topology setup. |
 | Message Bus | Execution | 503.8 ns | 3,192 B | 587.7 ns | 3,232 B | Fluent was faster and allocated slightly less for publishing order events to topic subscribers. |
+| Messaging Bridge | Construction | 184.0 ns | 1,328 B | 185.5 ns | 1,328 B | Same allocation; fluent and generated bridge construction were effectively equivalent. |
+| Messaging Bridge | Execution | 666.8 ns | 3,912 B | 670.8 ns | 3,912 B | Same allocation; fluent was slightly faster for partner order imports. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
@@ -206,7 +208,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 94 catalog patterns and 376 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 95 catalog patterns and 380 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -214,11 +216,11 @@ The coverage matrix currently publishes 94 catalog patterns and 376 pattern rout
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
-| Enterprise Integration | 34 | 136 |
+| Enterprise Integration | 36 | 144 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 90 generator source route results.
+The generator matrix currently publishes 91 generator source route results.
 
 ## Pattern Matrix Results
 
@@ -286,6 +288,7 @@ The generator matrix currently publishes 90 generator source route results.
 | Enterprise Integration | Durable Subscriber | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Dynamic Router | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Message Bus | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Messaging Bridge | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event Notification | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Carried State Transfer | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Driven Consumer | Covered | Covered | Covered | Covered |
@@ -375,6 +378,7 @@ The generator matrix currently publishes 90 generator source route results.
 | EventDrivenConsumerGenerator | `src/PatternKit.Generators/Messaging/EventDrivenConsumerGenerator.cs` | Covered |
 | MailboxGenerator | `src/PatternKit.Generators/Messaging/MailboxGenerator.cs` | Covered |
 | MessageBusGenerator | `src/PatternKit.Generators/Messaging/MessageBusGenerator.cs` | Covered |
+| MessagingBridgeGenerator | `src/PatternKit.Generators/Messaging/MessagingBridgeGenerator.cs` | Covered |
 | MessageChannelGenerator | `src/PatternKit.Generators/Messaging/MessageChannelGenerator.cs` | Covered |
 | MessageEnvelopeGenerator | `src/PatternKit.Generators/Messaging/MessageEnvelopeGenerator.cs` | Covered |
 | MessageFilterGenerator | `src/PatternKit.Generators/Messaging/MessageFilterGenerator.cs` | Covered |

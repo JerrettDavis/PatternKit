@@ -160,6 +160,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateMessageBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageBusRouteAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateMessagingBridgeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateChannelPurgerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateInvalidMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePollingConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -1147,6 +1148,11 @@ public sealed class AbstractionsAttributeCoverageTests
             BusName = "orders"
         };
         var messageBusRoute = new MessageBusRouteAttribute("accepted");
+        var messagingBridge = new GenerateMessagingBridgeAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildBridge",
+            BridgeName = "partner-commerce"
+        };
         var channelPurger = new GenerateChannelPurgerAttribute(typeof(string))
         {
             FactoryName = "BuildPurger",
@@ -1488,6 +1494,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("accepted", messageBusRoute.Topic);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageBusAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageBusRouteAttribute(""));
+        ScenarioExpect.Equal(typeof(string), messagingBridge.InboundType);
+        ScenarioExpect.Equal(typeof(int), messagingBridge.OutboundType);
+        ScenarioExpect.Equal("BuildBridge", messagingBridge.FactoryName);
+        ScenarioExpect.Equal("partner-commerce", messagingBridge.BridgeName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingBridgeAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingBridgeAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateChannelPurgerAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInvalidMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePollingConsumerAttribute(null!));
