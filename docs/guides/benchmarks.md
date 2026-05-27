@@ -84,6 +84,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
 | Messaging Bridge | Construction | 184.0 ns | 1,328 B | 185.5 ns | 1,328 B | Same allocation; fluent and generated bridge construction were effectively equivalent. |
 | Messaging Bridge | Execution | 666.8 ns | 3,912 B | 670.8 ns | 3,912 B | Same allocation; fluent was slightly faster for partner order imports. |
+| Correlation Identifier | Construction | 13.188 ns | 96 B | 6.133 ns | 48 B | Generated reduced construction time and allocation for correlation builder setup. |
+| Correlation Identifier | Execution | 235.073 ns | 1,480 B | 224.406 ns | 1,432 B | Generated was slightly faster and allocated slightly less for order request/reply correlation. |
 | Message History | Construction | 6.843 ns | 56 B | 6.075 ns | 56 B | Same allocation; generated was slightly faster for history recorder construction. |
 | Message History | Execution | 275.298 ns | 1,400 B | 285.765 ns | 1,400 B | Same allocation; fluent was slightly faster for order history recording. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |

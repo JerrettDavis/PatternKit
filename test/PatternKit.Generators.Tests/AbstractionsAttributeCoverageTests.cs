@@ -161,6 +161,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateMessageBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageBusRouteAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateMessagingBridgeAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateCorrelationIdentifierAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateMessageHistoryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateChannelPurgerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateInvalidMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -1154,6 +1155,12 @@ public sealed class AbstractionsAttributeCoverageTests
             FactoryName = "BuildBridge",
             BridgeName = "partner-commerce"
         };
+        var correlationIdentifier = new GenerateCorrelationIdentifierAttribute(typeof(string))
+        {
+            FactoryName = "BuildCorrelation",
+            HeaderName = "X-Correlation",
+            PreserveExisting = false
+        };
         var messageHistory = new GenerateMessageHistoryAttribute(typeof(string), "checkout-api")
         {
             FactoryName = "BuildHistory",
@@ -1507,6 +1514,11 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("partner-commerce", messagingBridge.BridgeName);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingBridgeAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessagingBridgeAttribute(typeof(string), null!));
+        ScenarioExpect.Equal(typeof(string), correlationIdentifier.PayloadType);
+        ScenarioExpect.Equal("BuildCorrelation", correlationIdentifier.FactoryName);
+        ScenarioExpect.Equal("X-Correlation", correlationIdentifier.HeaderName);
+        ScenarioExpect.False(correlationIdentifier.PreserveExisting);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCorrelationIdentifierAttribute(null!));
         ScenarioExpect.Equal(typeof(string), messageHistory.PayloadType);
         ScenarioExpect.Equal("checkout-api", messageHistory.Component);
         ScenarioExpect.Equal("BuildHistory", messageHistory.FactoryName);

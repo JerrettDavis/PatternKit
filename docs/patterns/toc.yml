@@ -313,6 +313,8 @@
           href: messaging/message-bus.md
         - name: Messaging Bridge
           href: messaging/messaging-bridge.md
+        - name: Correlation Identifier
+          href: messaging/correlation-identifier.md
         - name: Message History
           href: messaging/message-history.md
         - name: Channel Adapter

@@ -124,6 +124,9 @@
 - name: Partner Order Messaging Bridge
   href: partner-order-messaging-bridge.md
 
+- name: Order Correlation Identifier
+  href: order-correlation-identifier.md
+
 - name: Order Message History
   href: order-message-history.md
 
