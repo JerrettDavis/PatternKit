@@ -15,6 +15,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Abstract Factory | Execution | 750.189 ns | 6,200 B | 735.733 ns | 6,200 B | Same allocation; generated was slightly faster for login widget creation. |
 | Adapter | Construction | 34.668 ns | 320 B | 3.607 ns | 24 B | Generated adapter construction was materially faster and allocated less. |
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
+| Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -63,6 +65,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Durable Subscriber | Execution | 711.81 ns | 3,912 B | 605.65 ns | 3,128 B | Generated reduced catch-up projection replay time and allocation in this microbenchmark. |
 | Dynamic Router | Construction | 213.4 ns | 1.29 KB | 214.0 ns | 1.29 KB | Fluent and generated route-table construction were effectively equivalent. |
 | Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
+| Message Bus | Construction | 186.7 ns | 1,264 B | 160.0 ns | 904 B | Generated reduced construction time and allocation for topic bus topology setup. |
+| Message Bus | Execution | 503.8 ns | 3,192 B | 587.7 ns | 3,232 B | Fluent was faster and allocated slightly less for publishing order events to topic subscribers. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
@@ -202,11 +206,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 92 catalog patterns and 368 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 94 catalog patterns and 376 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 15 | 60 |
+| Application Architecture | 16 | 64 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -214,12 +218,13 @@ The coverage matrix currently publishes 92 catalog patterns and 368 pattern rout
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 88 generator source route results.
+The generator matrix currently publishes 90 generator source route results.
 
 ## Pattern Matrix Results
 
 | Category | Pattern | Fluent construction | Fluent execution | Generated construction | Generated execution |
 | --- | --- | --- | --- | --- | --- |
+| Application Architecture | Activity Tracker | Covered | Covered | Covered | Covered |
 | Application Architecture | Anti-Corruption Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Audit Log | Covered | Covered | Covered | Covered |
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
@@ -280,6 +285,7 @@ The generator matrix currently publishes 88 generator source route results.
 | Enterprise Integration | Dead Letter Channel | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Durable Subscriber | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Dynamic Router | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Message Bus | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event Notification | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Carried State Transfer | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Event-Driven Consumer | Covered | Covered | Covered | Covered |
@@ -317,6 +323,7 @@ The generator matrix currently publishes 88 generator source route results.
 
 | Generator | Source | Matrix result |
 | --- | --- | --- |
+| ActivityTrackerGenerator | `src/PatternKit.Generators/ActivityTracking/ActivityTrackerGenerator.cs` | Covered |
 | AdapterGenerator | `src/PatternKit.Generators/Adapter/AdapterGenerator.cs` | Covered |
 | AmbassadorGenerator | `src/PatternKit.Generators/Ambassador/AmbassadorGenerator.cs` | Covered |
 | AntiCorruptionLayerGenerator | `src/PatternKit.Generators/AntiCorruption/AntiCorruptionLayerGenerator.cs` | Covered |
@@ -367,6 +374,7 @@ The generator matrix currently publishes 88 generator source route results.
 | DynamicRouterGenerator | `src/PatternKit.Generators/Messaging/DynamicRouterGenerator.cs` | Covered |
 | EventDrivenConsumerGenerator | `src/PatternKit.Generators/Messaging/EventDrivenConsumerGenerator.cs` | Covered |
 | MailboxGenerator | `src/PatternKit.Generators/Messaging/MailboxGenerator.cs` | Covered |
+| MessageBusGenerator | `src/PatternKit.Generators/Messaging/MessageBusGenerator.cs` | Covered |
 | MessageChannelGenerator | `src/PatternKit.Generators/Messaging/MessageChannelGenerator.cs` | Covered |
 | MessageEnvelopeGenerator | `src/PatternKit.Generators/Messaging/MessageEnvelopeGenerator.cs` | Covered |
 | MessageFilterGenerator | `src/PatternKit.Generators/Messaging/MessageFilterGenerator.cs` | Covered |

@@ -61,6 +61,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Enterprise Integration | Dead Letter Channel | `DeadLetterChannel<TPayload>` | Dead Letter Channel generator |
 | Enterprise Integration | Content-Based Router | `ContentRouter<TPayload, TResult>` | Messaging generator |
 | Enterprise Integration | Dynamic Router | `DynamicRouter<TPayload, TResult>` | Dynamic Router generator |
+| Enterprise Integration | Message Bus | `MessageBus<TPayload>` | Message Bus generator |
 | Enterprise Integration | Message Filter | `MessageFilter<TPayload>` | Message Filter generator |
 | Enterprise Integration | Message Store | `MessageStore<TPayload>` | Message Store generator |
 | Enterprise Integration | Wire Tap | `WireTap<TPayload>` | Wire Tap generator |
@@ -112,6 +113,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Audit Log | `IAuditLog<TEntry,TKey>` and `InMemoryAuditLog<TEntry,TKey>` | Audit Log generator |
 | Application Architecture | Materialized View | `IMaterializedView<TState,TEvent>` and `MaterializedView<TState,TEvent>` | Materialized View generator |
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
+| Application Architecture | Activity Tracker | `ActivityTracker` | Activity Tracker generator |
 
 ## Research Baselines
 

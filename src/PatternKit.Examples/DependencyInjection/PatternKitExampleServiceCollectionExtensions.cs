@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Application.AntiCorruption;
+using PatternKit.Application.ActivityTracking;
 using PatternKit.Application.Specification;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
@@ -21,6 +22,7 @@ using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AmbassadorDemo;
 using PatternKit.Examples.AntiCorruptionDemo;
+using PatternKit.Examples.ActivityTrackingDemo;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.AuditLogDemo;
 using PatternKit.Examples.BackendsForFrontendsDemo;
@@ -164,6 +166,7 @@ public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessage
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
+public sealed record OrderMessageBusExampleService(MessageBus<BusOrderEvent> Bus, OrderMessageBusExampleRunner Runner);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -203,6 +206,7 @@ public sealed record AsyncConnectionStateMachineExample(Func<string[], ValueTask
 public sealed record TemplateMethodSubclassingExample(DataProcessor Processor);
 public sealed record TemplateMethodAsyncExample(AsyncDataPipeline Pipeline);
 public sealed record LegacyOrderAntiCorruptionExample(AntiCorruptionLayer<LegacyOrderDto, CommerceOrder> Layer, LegacyOrderImportService Service);
+public sealed record DashboardActivityTrackerExample(ActivityTracker Tracker, DashboardActivityTrackerDemoRunner Runner);
 public sealed record InventoryRetryExample(RetryPolicy<InventoryResponse> Policy, InventoryLookupService Service);
 public sealed record FulfillmentCircuitBreakerExample(CircuitBreakerPolicy<FulfillmentResponse> Policy, FulfillmentCircuitBreakerService Service);
 public sealed record ShippingBulkheadExample(BulkheadPolicy<ShippingAllocation> Policy, ShippingBulkheadService Service);
@@ -265,6 +269,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
+            .AddOrderMessageBusExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -304,6 +309,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddTemplateMethodSubclassingExample()
             .AddTemplateMethodAsyncExample()
             .AddLegacyOrderAntiCorruptionExample()
+            .AddDashboardActivityTrackerExample()
             .AddInventoryRetryExample()
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
@@ -700,6 +706,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         return services.RegisterExample<OrderDynamicRouterExampleService>("Order Dynamic Router", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
+    public static IServiceCollection AddOrderMessageBusExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageBusDemo();
+        services.AddSingleton<OrderMessageBusExampleService>(sp => new(
+            sp.GetRequiredService<MessageBus<BusOrderEvent>>(),
+            sp.GetRequiredService<OrderMessageBusExampleRunner>()));
+        return services.RegisterExample<OrderMessageBusExampleService>("Order Message Bus", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)
     {
         services.AddOrderWireTapDemo();
@@ -1029,6 +1044,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<BulkheadPolicy<ShippingAllocation>>(),
             sp.GetRequiredService<ShippingBulkheadService>()));
         return services.RegisterExample<ShippingBulkheadExample>("Shipping Bulkhead", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddDashboardActivityTrackerExample(this IServiceCollection services)
+    {
+        services.AddDashboardActivityTrackerDemo();
+        services.AddSingleton<DashboardActivityTrackerExample>(sp => new(
+            sp.GetRequiredService<ActivityTracker>(),
+            sp.GetRequiredService<DashboardActivityTrackerDemoRunner>()));
+        return services.RegisterExample<DashboardActivityTrackerExample>("Dashboard Activity Tracker", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddFulfillmentQueueLoadLevelingExample(this IServiceCollection services)

@@ -50,6 +50,7 @@ using PatternKit.Generators.UnitOfWork;
 using PatternKit.Generators.Visitors;
 using PatternKit.Generators;
 using PatternKit.Generators.AntiCorruption;
+using PatternKit.Generators.ActivityTracking;
 using PatternKit.Generators.AuditLog;
 using PatternKit.Generators.Ambassador;
 using PatternKit.Generators.BackendsForFrontends;
@@ -76,6 +77,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AntiCorruptionTranslatorAttribute), AttributeTargets.Method, false, false },
         { typeof(AntiCorruptionExternalRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(AntiCorruptionDomainRuleAttribute), AttributeTargets.Method, true, false },
+        { typeof(GenerateActivityTrackerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateAuditLogAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(AuditLogKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAdapterAttribute), AttributeTargets.Class, true, false },
@@ -156,6 +158,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(TraversalChildrenAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDispatcherAttribute), AttributeTargets.Assembly, false, true },
         { typeof(GenerateMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateMessageBusAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(MessageBusRouteAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateChannelPurgerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateInvalidMessageChannelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GeneratePollingConsumerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -374,6 +378,20 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionExternalRuleAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionDomainRuleAttribute(" "));
         ScenarioExpect.IsType<AntiCorruptionTranslatorAttribute>(new AntiCorruptionTranslatorAttribute());
+    }
+
+    [Scenario("Activity Tracker Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void ActivityTracker_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var tracker = new GenerateActivityTrackerAttribute
+        {
+            FactoryMethodName = "BuildTracker",
+            TrackerName = "loading-wheel"
+        };
+
+        ScenarioExpect.Equal("BuildTracker", tracker.FactoryMethodName);
+        ScenarioExpect.Equal("loading-wheel", tracker.TrackerName);
     }
 
     [Scenario("Rate Limiting Attributes Expose Defaults And Configuration")]
@@ -1123,6 +1141,12 @@ public sealed class AbstractionsAttributeCoverageTests
             Capacity = 12,
             BackpressurePolicy = "DropOldest"
         };
+        var messageBus = new GenerateMessageBusAttribute(typeof(string))
+        {
+            FactoryName = "BuildBus",
+            BusName = "orders"
+        };
+        var messageBusRoute = new MessageBusRouteAttribute("accepted");
         var channelPurger = new GenerateChannelPurgerAttribute(typeof(string))
         {
             FactoryName = "BuildPurger",
@@ -1458,6 +1482,12 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("content-type", translatorHeader.Name);
         ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
+        ScenarioExpect.Equal(typeof(string), messageBus.PayloadType);
+        ScenarioExpect.Equal("BuildBus", messageBus.FactoryName);
+        ScenarioExpect.Equal("orders", messageBus.BusName);
+        ScenarioExpect.Equal("accepted", messageBusRoute.Topic);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageBusAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new MessageBusRouteAttribute(""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateChannelPurgerAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateInvalidMessageChannelAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GeneratePollingConsumerAttribute(null!));

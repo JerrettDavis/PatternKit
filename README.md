@@ -450,11 +450,11 @@ PatternKit currently tracks 92 production-readiness patterns. Each catalog patte
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 15 | Anti-Corruption Layer, Audit Log, CQRS, Data Mapper, Domain Event, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Transaction Script, Unit of Work |
+| Application Architecture | 16 | Activity Tracker, Anti-Corruption Layer, Audit Log, CQRS, Data Mapper, Domain Event, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Transaction Script, Unit of Work |
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 17 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
-| Enterprise Integration | 34 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Invalid Message Channel, Mailbox, Message Channel, Message Envelope, Message Filter, Message Store, Message Translator, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
+| Enterprise Integration | 35 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Filter, Message Store, Message Translator, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
 | Messaging Reliability | 3 | Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
@@ -468,6 +468,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Abstract Factory | Execution | 750.189 ns | 6,200 B | 735.733 ns | 6,200 B | Same allocation; generated was slightly faster for login widget creation. |
 | Adapter | Construction | 34.668 ns | 320 B | 3.607 ns | 24 B | Generated adapter construction was materially faster and allocated less. |
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
+| Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
+| Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -516,6 +518,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Durable Subscriber | Execution | 711.81 ns | 3,912 B | 605.65 ns | 3,128 B | Generated reduced catch-up projection replay time and allocation in this microbenchmark. |
 | Dynamic Router | Construction | 213.4 ns | 1.29 KB | 214.0 ns | 1.29 KB | Fluent and generated route-table construction were effectively equivalent. |
 | Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
+| Message Bus | Construction | 186.7 ns | 1,264 B | 160.0 ns | 904 B | Generated reduced construction time and allocation for topic bus topology setup. |
+| Message Bus | Execution | 503.8 ns | 3,192 B | 587.7 ns | 3,232 B | Fluent was faster and allocated slightly less for publishing order events to topic subscribers. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |

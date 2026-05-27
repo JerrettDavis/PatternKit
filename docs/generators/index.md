@@ -61,6 +61,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Specification**](specification.md) | Named business-rule registries | `[GenerateSpecificationRegistry]` |
 | [**Repository**](repository.md) | In-memory repository factories from key selectors | `[GenerateRepository]` |
 | [**Anti-Corruption Layer**](anti-corruption-layer.md) | External-to-domain translation boundaries with validation | `[GenerateAntiCorruptionLayer]` |
+| [**Activity Tracker**](activity-tracker.md) | Active-work tracker gates for loading and readiness workflows | `[GenerateActivityTracker]` |
 | [**Audit Log**](audit-log.md) | Append-only audit log factories from key selectors | `[GenerateAuditLog]` |
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
@@ -81,6 +82,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 |---|---|---|
 | [**Dispatcher**](dispatcher.md) | Mediator pattern with commands, notifications, and streams | `[GenerateDispatcher]` |
 | [**Message Channel**](message-channel.md) | Typed channel factories for in-process message queues | `[GenerateMessageChannel]` |
+| [**Message Bus**](message-bus.md) | Topic bus topology factories over message channels | `[GenerateMessageBus]` |
 | [**Channel Purger**](channel-purger.md) | Channel maintenance purger factories for in-process message queues | `[GenerateChannelPurger]` |
 | [**Invalid Message Channel**](invalid-message-channel.md) | Invalid-message channel builder factories for validation boundaries | `[GenerateInvalidMessageChannel]` |
 | [**Polling Consumer**](polling-consumer.md) | Pull-based message consumer factories | `[GeneratePollingConsumer]` |

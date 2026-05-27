@@ -401,6 +401,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["DynamicRouter"],
             ["runtime route replacement", "source-generated initial route table", "DI composition"]),
         Descriptor(
+            "Order Message Bus",
+            "src/PatternKit.Examples/Messaging/OrderMessageBusExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageBusExampleTests.cs",
+            "docs/examples/order-message-bus.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["MessageBus", "MessageChannel"],
+            ["topic bus", "source-generated topology", "DI composition"]),
+        Descriptor(
             "Order Wire Tap",
             "src/PatternKit.Examples/Messaging/OrderWireTapExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderWireTapExampleTests.cs",
@@ -560,6 +568,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["MaterializedView"],
             ["event-sourced read model", "source-generated projection factory", "DI composition"]),
+        Descriptor(
+            "Dashboard Activity Tracker",
+            "src/PatternKit.Examples/ActivityTrackingDemo/DashboardActivityTrackerDemo.cs",
+            "test/PatternKit.Examples.Tests/ActivityTrackingDemo/DashboardActivityTrackerDemoTests.cs",
+            "docs/examples/dashboard-activity-tracker.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ActivityTracker"],
+            ["tracked active work", "source-generated tracker factory", "DI composition"]),
         Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",

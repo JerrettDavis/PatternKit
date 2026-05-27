@@ -155,6 +155,8 @@ PKACL001 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer 
 PKACL002 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer must declare exactly one translator.
 PKACL003 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer translator signature is invalid.
 PKACL004 | PatternKit.Generators.AntiCorruption | Error | Anti-corruption layer validation rule signature is invalid.
+PKAT001 | PatternKit.Generators.ActivityTracking | Error | Activity Tracker host must be partial.
+PKAT002 | PatternKit.Generators.ActivityTracking | Error | Activity Tracker configuration is invalid.
 PKBRG001 | PatternKit.Generators.Bridge | Error | Bridge abstraction must be partial
 PKBRG002 | PatternKit.Generators.Bridge | Error | Bridge implementor must be an interface or abstract class
 PKBRG003 | PatternKit.Generators.Bridge | Error | Implementor member is unsupported
@@ -370,6 +372,9 @@ PKDR002 | PatternKit.Generators.Messaging | Error | Dynamic Router must declare 
 PKDR003 | PatternKit.Generators.Messaging | Error | Dynamic Router route signature is invalid.
 PKDR004 | PatternKit.Generators.Messaging | Error | Dynamic Router default signature is invalid.
 PKDR005 | PatternKit.Generators.Messaging | Error | Dynamic Router route name or order is duplicated.
+PKBUS001 | PatternKit.Generators.Messaging | Error | Message Bus host type must be partial.
+PKBUS002 | PatternKit.Generators.Messaging | Error | Message Bus must declare at least one route.
+PKBUS003 | PatternKit.Generators.Messaging | Error | Message Bus route signature is invalid.
 PKCAD001 | PatternKit.Generators.Messaging | Error | Channel Adapter host type must be partial.
 PKCAD002 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one inbound translator.
 PKCAD003 | PatternKit.Generators.Messaging | Error | Channel Adapter must declare exactly one outbound translator.

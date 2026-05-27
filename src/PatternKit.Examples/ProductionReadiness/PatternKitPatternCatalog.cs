@@ -623,6 +623,19 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "test/PatternKit.Examples.Tests/Messaging/OrderDynamicRouterExampleTests.cs",
             ["fluent runtime route table", "generated initial route table", "DI-importable fulfillment routing example"]),
 
+        Pattern("Message Bus", PatternFamily.EnterpriseIntegration,
+            "docs/patterns/messaging/message-bus.md",
+            "src/PatternKit.Core/Messaging/Channels/MessageChannel.cs",
+            "test/PatternKit.Tests/Messaging/Channels/MessageBusTests.cs",
+            "docs/generators/message-bus.md",
+            "src/PatternKit.Generators/Messaging/MessageBusGenerator.cs",
+            "test/PatternKit.Generators.Tests/MessageBusGeneratorTests.cs",
+            null,
+            "docs/examples/order-message-bus.md",
+            "src/PatternKit.Examples/Messaging/OrderMessageBusExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageBusExampleTests.cs",
+            ["fluent topic bus", "generated bus topology", "DI-importable order event bus example"]),
+
         Pattern("Wire Tap", PatternFamily.EnterpriseIntegration,
             "docs/patterns/messaging/wire-tap.md",
             "src/PatternKit.Core/Messaging/Routing/WireTap.cs",
@@ -1257,7 +1270,20 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/legacy-order-anti-corruption-layer.md",
             "src/PatternKit.Examples/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemo.cs",
             "test/PatternKit.Examples.Tests/AntiCorruptionDemo/LegacyOrderAntiCorruptionDemoTests.cs",
-            ["fluent translation boundary", "generated anti-corruption layer", "DI-importable legacy order import example"])
+            ["fluent translation boundary", "generated anti-corruption layer", "DI-importable legacy order import example"]),
+
+        Pattern("Activity Tracker", PatternFamily.ApplicationArchitecture,
+            "docs/patterns/application/activity-tracker.md",
+            "src/PatternKit.Core/Application/ActivityTracking/ActivityTracker.cs",
+            "test/PatternKit.Tests/Application/ActivityTracking/ActivityTrackerTests.cs",
+            "docs/generators/activity-tracker.md",
+            "src/PatternKit.Generators/ActivityTracking/ActivityTrackerGenerator.cs",
+            "test/PatternKit.Generators.Tests/ActivityTrackerGeneratorTests.cs",
+            null,
+            "docs/examples/dashboard-activity-tracker.md",
+            "src/PatternKit.Examples/ActivityTrackingDemo/DashboardActivityTrackerDemo.cs",
+            "test/PatternKit.Examples.Tests/ActivityTrackingDemo/DashboardActivityTrackerDemoTests.cs",
+            ["fluent activity gate", "generated tracker factory", "DI-importable loading gate example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;

@@ -55,6 +55,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Dead Letter Channel",
         "Durable Subscriber",
         "Dynamic Router",
+        "Message Bus",
         "Content-Based Router",
         "Message Filter",
         "Message Store",
@@ -106,7 +107,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Feature Toggle",
         "Audit Log",
         "Materialized View",
-        "Anti-Corruption Layer"
+        "Anti-Corruption Layer",
+        "Activity Tracker"
     ];
 
     [Scenario("Catalog covers every canonical GoF pattern")]
@@ -147,10 +149,10 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(EnterprisePatternAdditions.OrderBy(static x => x), patterns.Select(static p => p.Name).OrderBy(static x => x)))
             .And("enterprise entries are grouped by integration reliability and architecture families", patterns =>
             {
-                ScenarioExpect.Equal(34, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
+                ScenarioExpect.Equal(35, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(17, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
-                ScenarioExpect.Equal(15, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(16, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
