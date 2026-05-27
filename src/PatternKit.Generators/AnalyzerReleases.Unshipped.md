@@ -22,6 +22,8 @@ PKCOM008 | PatternKit.Generators.Composer | Error | ComposerGenerator
 PKCOM009 | PatternKit.Generators.Composer | Warning | ComposerGenerator
 PKMBR001 | PatternKit.Generators.Messaging | Error | Messaging bridge host must be partial
 PKMBR002 | PatternKit.Generators.Messaging | Error | Messaging bridge configuration is invalid
+PKMH001 | PatternKit.Generators.Messaging | Error | Message history host must be partial
+PKMH002 | PatternKit.Generators.Messaging | Error | Message history configuration is invalid
 PKFAC001 | PatternKit.Generators.Facade | Error | Diagnostics
 PKFAC002 | PatternKit.Generators.Facade | Error | Diagnostics
 PKFAC003 | PatternKit.Generators.Facade | Warning | Diagnostics
