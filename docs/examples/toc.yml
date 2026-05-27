@@ -121,6 +121,12 @@
 - name: Order Dynamic Router
   href: order-dynamic-router.md
 
+- name: Partner Order Messaging Bridge
+  href: partner-order-messaging-bridge.md
+
+- name: Order Message History
+  href: order-message-history.md
+
 - name: Order Wire Tap
   href: order-wire-tap.md
 
