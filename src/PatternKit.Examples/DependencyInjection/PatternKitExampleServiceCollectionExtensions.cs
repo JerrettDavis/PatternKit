@@ -78,6 +78,7 @@ using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Consumers;
+using PatternKit.Messaging.Correlation;
 using PatternKit.Messaging.Diagnostics;
 using PatternKit.Messaging.Adapters;
 using PatternKit.Messaging.Activation;
@@ -170,6 +171,7 @@ public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<Orde
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
 public sealed record OrderMessageBusExampleService(MessageBus<BusOrderEvent> Bus, OrderMessageBusExampleRunner Runner);
 public sealed record PartnerOrderMessagingBridgeExampleService(MessagingBridge<PartnerBridgeOrder, CommerceBridgeOrderEvent> Bridge, PartnerOrderMessagingBridgeExampleRunner Runner);
+public sealed record OrderCorrelationIdentifierExampleService(CorrelationIdentifier<CorrelatedOrder> CorrelationIdentifier, OrderCorrelationService Service, OrderCorrelationIdentifierExampleRunner Runner);
 public sealed record OrderMessageHistoryExampleService(MessageHistory<HistoryOrder> Received, MessageHistory<HistoryOrder> Routed, OrderMessageHistoryExampleRunner Runner);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
@@ -275,6 +277,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderDynamicRouterExample()
             .AddOrderMessageBusExample()
             .AddPartnerOrderMessagingBridgeExample()
+            .AddOrderCorrelationIdentifierExample()
             .AddOrderMessageHistoryExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
@@ -738,6 +741,16 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetServices<MessageHistory<HistoryOrder>>().ElementAt(1),
             sp.GetRequiredService<OrderMessageHistoryExampleRunner>()));
         return services.RegisterExample<OrderMessageHistoryExampleService>("Order Message History", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderCorrelationIdentifierExample(this IServiceCollection services)
+    {
+        services.AddOrderCorrelationIdentifierDemo();
+        services.AddSingleton<OrderCorrelationIdentifierExampleService>(sp => new(
+            sp.GetRequiredService<CorrelationIdentifier<CorrelatedOrder>>(),
+            sp.GetRequiredService<OrderCorrelationService>(),
+            sp.GetRequiredService<OrderCorrelationIdentifierExampleRunner>()));
+        return services.RegisterExample<OrderCorrelationIdentifierExampleService>("Order Correlation Identifier", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

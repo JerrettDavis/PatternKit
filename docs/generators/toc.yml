@@ -109,6 +109,9 @@
 - name: Messaging Bridge
   href: messaging-bridge.md
 
+- name: Correlation Identifier
+  href: correlation-identifier.md
+
 - name: Message History
   href: message-history.md
 

@@ -417,6 +417,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessagingBridge", "MessageBus", "MessageChannel"],
             ["topology bridge", "header-preserving translation", "source-generated bridge factory", "DI composition"]),
         Descriptor(
+            "Order Correlation Identifier",
+            "src/PatternKit.Examples/Messaging/OrderCorrelationIdentifierExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderCorrelationIdentifierExampleTests.cs",
+            "docs/examples/order-correlation-identifier.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["CorrelationIdentifier"],
+            ["request/reply correlation", "source-generated correlation factory", "DI composition"]),
+        Descriptor(
             "Order Message History",
             "src/PatternKit.Examples/Messaging/OrderMessageHistoryExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderMessageHistoryExampleTests.cs",

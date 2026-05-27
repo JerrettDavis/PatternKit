@@ -446,7 +446,7 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 96 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 97 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
@@ -454,7 +454,7 @@ PatternKit currently tracks 96 production-readiness patterns. Each catalog patte
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 17 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
-| Enterprise Integration | 37 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
+| Enterprise Integration | 38 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content-Based Router, Control Bus, Correlation Identifier, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
 | Messaging Reliability | 3 | Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
@@ -522,6 +522,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Message Bus | Execution | 503.8 ns | 3,192 B | 587.7 ns | 3,232 B | Fluent was faster and allocated slightly less for publishing order events to topic subscribers. |
 | Messaging Bridge | Construction | 184.0 ns | 1,328 B | 185.5 ns | 1,328 B | Same allocation; fluent and generated bridge construction were effectively equivalent. |
 | Messaging Bridge | Execution | 666.8 ns | 3,912 B | 670.8 ns | 3,912 B | Same allocation; fluent was slightly faster for partner order imports. |
+| Correlation Identifier | Construction | 13.188 ns | 96 B | 6.133 ns | 48 B | Generated reduced construction time and allocation for correlation builder setup. |
+| Correlation Identifier | Execution | 235.073 ns | 1,480 B | 224.406 ns | 1,432 B | Generated was slightly faster and allocated slightly less for order request/reply correlation. |
 | Message History | Construction | 6.843 ns | 56 B | 6.075 ns | 56 B | Same allocation; generated was slightly faster for history recorder construction. |
 | Message History | Execution | 275.298 ns | 1,400 B | 285.765 ns | 1,400 B | Same allocation; fluent was slightly faster for order history recording. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
