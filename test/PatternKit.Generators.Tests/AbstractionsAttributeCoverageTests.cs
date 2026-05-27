@@ -188,6 +188,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(ContentRouteDefaultAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateMessageFilterAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageFilterRuleAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateMessageExpirationAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateMessageStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(MessageStoreIdentityAttribute), AttributeTargets.Method, false, false },
         { typeof(MessageStoreRetentionAttribute), AttributeTargets.Method, false, false },
@@ -1227,6 +1228,15 @@ public sealed class AbstractionsAttributeCoverageTests
             RejectionReason = "manual review"
         };
         var messageFilterRule = new MessageFilterRuleAttribute("trusted", 9);
+        var messageExpiration = new GenerateMessageExpirationAttribute(typeof(string))
+        {
+            FactoryName = "BuildExpiration",
+            PolicyName = "orders",
+            HeaderName = "x-expires-at",
+            DefaultTtlMilliseconds = 1000,
+            PreserveExisting = false,
+            ExpiredReason = "too old"
+        };
         var messageStore = new GenerateMessageStoreAttribute(typeof(string))
         {
             FactoryName = "BuildStore",
@@ -1411,6 +1421,13 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("manual review", messageFilter.RejectionReason);
         ScenarioExpect.Equal("trusted", messageFilterRule.Name);
         ScenarioExpect.Equal(9, messageFilterRule.Order);
+        ScenarioExpect.Equal(typeof(string), messageExpiration.PayloadType);
+        ScenarioExpect.Equal("BuildExpiration", messageExpiration.FactoryName);
+        ScenarioExpect.Equal("orders", messageExpiration.PolicyName);
+        ScenarioExpect.Equal("x-expires-at", messageExpiration.HeaderName);
+        ScenarioExpect.Equal(1000, messageExpiration.DefaultTtlMilliseconds);
+        ScenarioExpect.False(messageExpiration.PreserveExisting);
+        ScenarioExpect.Equal("too old", messageExpiration.ExpiredReason);
         ScenarioExpect.Equal(typeof(string), messageStore.PayloadType);
         ScenarioExpect.Equal("BuildStore", messageStore.FactoryName);
         ScenarioExpect.Equal("order-audit", messageStore.StoreName);
@@ -1552,6 +1569,7 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new ContentRouteAttribute("name", 1, ""));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageFilterAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageFilterRuleAttribute("", 1));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageExpirationAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageStoreAttribute(null!));
         ScenarioExpect.IsType<MessageStoreIdentityAttribute>(new MessageStoreIdentityAttribute());
         ScenarioExpect.IsType<MessageStoreRetentionAttribute>(new MessageStoreRetentionAttribute());

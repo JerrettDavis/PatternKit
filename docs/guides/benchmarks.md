@@ -134,6 +134,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Message Envelope | Execution | 455.486 ns | 2,752 B | 427.664 ns | 2,752 B | Same allocation; generated was slightly faster for message context enrichment. |
 | Message Filter | Construction | 25.431 ns | 232 B | 25.626 ns | 232 B | Effectively equivalent for this microbenchmark. |
 | Message Filter | Execution | 44.637 ns | 424 B | 45.826 ns | 424 B | Same allocation; fluent was slightly faster for order fraud screening. |
+| Message Expiration | Construction | 22.55 ns | 248 B | 14.63 ns | 144 B | Generated policy construction reduced time and allocation. |
+| Message Expiration | Execution | 88.54 ns | 728 B | 103.86 ns | 536 B | Generated reduced allocation; fluent was faster for the stamp-and-evaluate flow. |
 | Message Routing | Construction | 23.42 ns | 224 B | 23.33 ns | 224 B | Effectively equivalent for this microbenchmark. |
 | Message Routing | Execution | 707.34 ns | 4,744 B | 679.97 ns | 4,632 B | Generated reduced execution time and allocation for the route/split/aggregate workflow. |
 | Message Store | Construction | 18.824 ns | 216 B | 18.721 ns | 216 B | Effectively equivalent for this microbenchmark. |

@@ -85,6 +85,7 @@ using PatternKit.Messaging.Activation;
 using PatternKit.Messaging.Bridges;
 using PatternKit.Messaging.Gateways;
 using PatternKit.Messaging.Routing;
+using PatternKit.Messaging.Reliability;
 using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.ControlBus;
 using PatternKit.Messaging.CompetingConsumers;
@@ -166,6 +167,7 @@ public sealed record GeneratedDeadLetterChannelExample(FulfillmentDeadLetterChan
 public sealed record GeneratedRecipientListExample(RecipientListGeneratorExampleRunner Runner);
 public sealed record GeneratedSplitterAggregatorExample(MessageRoutingExampleRunner Runner);
 public sealed record OrderMessageFilterExampleService(MessageFilter<OrderMessageFilterCommand> Filter, OrderMessageFilterService Service);
+public sealed record OrderMessageExpirationExampleService(MessageExpiration<ExpiringOrderCommand> Expiration, OrderMessageExpirationService Service);
 public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageStoreEvent> Store, OrderMessageStoreService Service);
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
@@ -272,6 +274,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedRecipientListExample()
             .AddGeneratedSplitterAggregatorExample()
             .AddOrderMessageFilterExample()
+            .AddOrderMessageExpirationExample()
             .AddOrderMessageStoreExample()
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
@@ -686,6 +689,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageFilter<OrderMessageFilterCommand>>(),
             sp.GetRequiredService<OrderMessageFilterService>()));
         return services.RegisterExample<OrderMessageFilterExampleService>("Order Message Filter", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderMessageExpirationExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageExpirationDemo();
+        services.AddSingleton<OrderMessageExpirationExampleService>(sp => new(
+            sp.GetRequiredService<MessageExpiration<ExpiringOrderCommand>>(),
+            sp.GetRequiredService<OrderMessageExpirationService>()));
+        return services.RegisterExample<OrderMessageExpirationExampleService>("Order Message Expiration", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddOrderMessageStoreExample(this IServiceCollection services)

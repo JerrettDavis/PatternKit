@@ -377,6 +377,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["MessageFilter"],
             ["fraud-screening allow rules", "source-generated filter", "DI composition"]),
         Descriptor(
+            "Order Message Expiration",
+            "src/PatternKit.Examples/Messaging/OrderMessageExpirationExample.cs",
+            "test/PatternKit.Examples.Tests/Messaging/OrderMessageExpirationExampleTests.cs",
+            "docs/examples/order-message-expiration.md",
+            ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["MessageExpiration"],
+            ["deadline stamping", "source-generated expiration policy", "DI composition"]),
+        Descriptor(
             "Order Message Store",
             "src/PatternKit.Examples/Messaging/OrderMessageStoreExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/OrderMessageStoreExampleTests.cs",
