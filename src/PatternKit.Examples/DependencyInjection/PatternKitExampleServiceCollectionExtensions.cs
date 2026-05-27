@@ -78,8 +78,10 @@ using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.VisitorDemo;
 using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Consumers;
+using PatternKit.Messaging.Diagnostics;
 using PatternKit.Messaging.Adapters;
 using PatternKit.Messaging.Activation;
+using PatternKit.Messaging.Bridges;
 using PatternKit.Messaging.Gateways;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
@@ -167,6 +169,8 @@ public sealed record OrderMessageStoreExampleService(MessageStore<OrderMessageSt
 public sealed record OrderDurableSubscriberExampleService(DurableSubscriber<OrderShipmentEvent> Subscriber, OrderDurableSubscriberService Service);
 public sealed record OrderDynamicRouterExampleService(DynamicRouter<DynamicFulfillmentOrder, FulfillmentRouteDecision> Router, FulfillmentRoutingService Service);
 public sealed record OrderMessageBusExampleService(MessageBus<BusOrderEvent> Bus, OrderMessageBusExampleRunner Runner);
+public sealed record PartnerOrderMessagingBridgeExampleService(MessagingBridge<PartnerBridgeOrder, CommerceBridgeOrderEvent> Bridge, PartnerOrderMessagingBridgeExampleRunner Runner);
+public sealed record OrderMessageHistoryExampleService(MessageHistory<HistoryOrder> Received, MessageHistory<HistoryOrder> Routed, OrderMessageHistoryExampleRunner Runner);
 public sealed record OrderWireTapExampleService(WireTap<OrderWireTapEvent> Tap, OrderWireTapService Service);
 public sealed record FulfillmentControlBusExampleService(ControlBus<FulfillmentControlCommand> Bus, FulfillmentControlBusService Service);
 public sealed record SupplierQuoteScatterGatherExampleService(ScatterGather<SupplierQuoteRequest, SupplierQuote, SupplierQuoteSummary> ScatterGather, SupplierQuoteService Service);
@@ -270,6 +274,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderDurableSubscriberExample()
             .AddOrderDynamicRouterExample()
             .AddOrderMessageBusExample()
+            .AddPartnerOrderMessagingBridgeExample()
+            .AddOrderMessageHistoryExample()
             .AddOrderWireTapExample()
             .AddFulfillmentControlBusExample()
             .AddSupplierQuoteScatterGatherExample()
@@ -713,6 +719,25 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<MessageBus<BusOrderEvent>>(),
             sp.GetRequiredService<OrderMessageBusExampleRunner>()));
         return services.RegisterExample<OrderMessageBusExampleService>("Order Message Bus", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddPartnerOrderMessagingBridgeExample(this IServiceCollection services)
+    {
+        services.AddPartnerOrderMessagingBridgeDemo();
+        services.AddSingleton<PartnerOrderMessagingBridgeExampleService>(sp => new(
+            sp.GetRequiredService<MessagingBridge<PartnerBridgeOrder, CommerceBridgeOrderEvent>>(),
+            sp.GetRequiredService<PartnerOrderMessagingBridgeExampleRunner>()));
+        return services.RegisterExample<PartnerOrderMessagingBridgeExampleService>("Partner Order Messaging Bridge", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderMessageHistoryExample(this IServiceCollection services)
+    {
+        services.AddOrderMessageHistoryDemo();
+        services.AddSingleton<OrderMessageHistoryExampleService>(sp => new(
+            sp.GetServices<MessageHistory<HistoryOrder>>().ElementAt(0),
+            sp.GetServices<MessageHistory<HistoryOrder>>().ElementAt(1),
+            sp.GetRequiredService<OrderMessageHistoryExampleRunner>()));
+        return services.RegisterExample<OrderMessageHistoryExampleService>("Order Message History", ExampleIntegrationSurface.Messaging | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderWireTapExample(this IServiceCollection services)

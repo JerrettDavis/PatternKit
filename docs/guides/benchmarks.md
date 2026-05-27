@@ -82,6 +82,10 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Durable Subscriber | Execution | 711.81 ns | 3,912 B | 605.65 ns | 3,128 B | Generated reduced catch-up projection replay time and allocation in this microbenchmark. |
 | Dynamic Router | Construction | 213.4 ns | 1.29 KB | 214.0 ns | 1.29 KB | Fluent and generated route-table construction were effectively equivalent. |
 | Dynamic Router | Execution | 406.7 ns | 2.83 KB | 415.2 ns | 2.83 KB | Same allocation; fluent was slightly faster for fulfillment route-table dispatch. |
+| Messaging Bridge | Construction | 184.0 ns | 1,328 B | 185.5 ns | 1,328 B | Same allocation; fluent and generated bridge construction were effectively equivalent. |
+| Messaging Bridge | Execution | 666.8 ns | 3,912 B | 670.8 ns | 3,912 B | Same allocation; fluent was slightly faster for partner order imports. |
+| Message History | Construction | 6.843 ns | 56 B | 6.075 ns | 56 B | Same allocation; generated was slightly faster for history recorder construction. |
+| Message History | Execution | 275.298 ns | 1,400 B | 285.765 ns | 1,400 B | Same allocation; fluent was slightly faster for order history recording. |
 | Decorator | Construction | 34.293 ns | 264 B | 17.669 ns | 168 B | Generated decorator composition was faster and allocated less. |
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
