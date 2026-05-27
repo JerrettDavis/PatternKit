@@ -6,7 +6,8 @@
         {
           "files": [
             "src/PatternKit.Core/**.csproj",
-            "src/PatternKit.Generators.Abstractions/**.csproj"
+            "src/PatternKit.Generators.Abstractions/**.csproj",
+            "src/PatternKit.Hosting.Extensions/**.csproj"
           ],
           "src": ".."
         }

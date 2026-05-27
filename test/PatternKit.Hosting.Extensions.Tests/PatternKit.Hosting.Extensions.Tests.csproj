@@ -5,11 +5,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <!-- Suppress warnings:
-             TBDD010: TinyBDD optimization hints (not errors)
-             CS0618: Tests intentionally use obsolete APIs to verify backward compatibility
-             xUnit1031: Some tests intentionally use sync-over-async for specific testing scenarios
-             xUnit2002: NotNull on value types (analyzer false positive in some generator tests) -->
         <NoWarn>$(NoWarn);TBDD010;CS0618;xUnit1031;xUnit2002</NoWarn>
     </PropertyGroup>
 
@@ -18,9 +13,8 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="System.Collections.Immutable" />
-        <PackageReference Include="System.Linq.Async" />
         <PackageReference Include="TinyBDD.Xunit" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.extensibility.core" />
@@ -36,15 +30,11 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
-        <ProjectReference Include="..\..\src\PatternKit.Examples\PatternKit.Examples.csproj" />
+        <ProjectReference Include="..\..\src\PatternKit.Hosting.Extensions\PatternKit.Hosting.Extensions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
         <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Structural\" />
     </ItemGroup>
 
     <ItemGroup>
