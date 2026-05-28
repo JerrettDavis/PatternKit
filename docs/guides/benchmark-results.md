@@ -103,6 +103,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Gateway Routing | Execution | 23.63 ns | 200 B | 20.13 ns | 168 B | Generated reduced execution time and allocation for the inventory routing workflow. |
 | Health Endpoint Monitoring | Construction | 35.68 ns | 264 B | 35.25 ns | 264 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Health Endpoint Monitoring | Execution | 38.50 ns | 248 B | 31.67 ns | 248 B | Same allocation; generated was faster for the fulfillment health evaluation workflow. |
+| Hosting Extensions | Construction | reportable | reportable | reportable | reportable | Dedicated route measures reusable `IServiceCollection` registration and provider build overhead for package-level hosting APIs. |
+| Hosting Extensions | Execution | reportable | reportable | reportable | reportable | Dedicated route measures resolving and executing reusable PatternKit primitives through Microsoft.Extensions.DependencyInjection. |
 | Idempotent Receiver | Construction | 17.022 ns | 184 B | 17.021 ns | 184 B | Effectively equivalent for this microbenchmark. |
 | Idempotent Receiver | Execution | 99.419 ns | 608 B | 99.051 ns | 608 B | Effectively equivalent for idempotent command handling. |
 | Inbox | Construction | 22.259 ns | 208 B | 21.675 ns | 208 B | Same allocation; generated was slightly faster in this microbenchmark. |
@@ -218,7 +220,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 101 catalog patterns and 404 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution.
+The coverage matrix currently publishes 101 catalog patterns and 404 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -231,6 +233,20 @@ The coverage matrix currently publishes 101 catalog patterns and 404 pattern rou
 | Structural | 7 | 28 |
 
 The generator matrix currently publishes 96 generator source route results.
+
+## Hosting Integration Matrix Results
+
+| Pattern | Route | Registration | Source | Tests | Docs |
+| --- | --- | --- | --- | --- | --- |
+| Bulkhead | `IServiceCollection` | `AddPatternKitBulkheadPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Circuit Breaker | `IServiceCollection` | `AddPatternKitCircuitBreakerPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Guaranteed Delivery | `IServiceCollection` | `AddPatternKitGuaranteedDelivery<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Message Channel | `IServiceCollection` | `AddPatternKitMessageChannel<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Message Store | `IServiceCollection` | `AddPatternKitMessageStore<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Priority Queue | `IServiceCollection` | `AddPatternKitPriorityQueue<TItem, TPriority>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Queue-Based Load Leveling | `IServiceCollection` | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Rate Limiting | `IServiceCollection` | `AddPatternKitRateLimitPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Retry | `IServiceCollection` | `AddPatternKitRetryPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 
 ## Pattern Matrix Results
 

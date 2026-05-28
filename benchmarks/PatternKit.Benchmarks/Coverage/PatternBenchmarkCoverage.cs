@@ -20,9 +20,16 @@ public static class PatternBenchmarkCoverage
     public static IEnumerable<PatternBenchmarkRoute> SourceGeneratedExecutionRoutes => Routes
         .Where(static route => route.Route == BenchmarkRoute.SourceGenerated && route.Phase == BenchmarkPhase.Execution);
 
+    public static IEnumerable<PatternBenchmarkRoute> HostingIntegrationRoutes => Routes
+        .Where(static route => route.Route == BenchmarkRoute.HostingIntegration);
+
     private static IReadOnlyList<PatternBenchmarkRoute> CreateRoutes()
     {
         var catalog = new PatternKitPatternCatalog();
+        var hostingCatalog = new PatternKitHostingIntegrationCatalog();
+        var hostingIntegrations = hostingCatalog.Integrations
+            .Where(static integration => integration.Kind == PatternHostingIntegrationKind.ReusableHostingExtension)
+            .ToDictionary(static integration => integration.PatternName, StringComparer.Ordinal);
         var routes = new List<PatternBenchmarkRoute>(catalog.Patterns.Count * 4);
 
         foreach (var pattern in catalog.Patterns)
@@ -64,6 +71,18 @@ public static class PatternBenchmarkCoverage
                 implementation.ExampleSourcePath,
                 implementation.ExampleTestPath,
                 implementation.ExampleDocumentationPath));
+
+            if (hostingIntegrations.TryGetValue(pattern.Name, out var hostingIntegration))
+            {
+                routes.Add(new(
+                    pattern.Name,
+                    pattern.Family,
+                    BenchmarkRoute.HostingIntegration,
+                    BenchmarkPhase.Construction,
+                    "src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs",
+                    hostingIntegration.TestPath,
+                    hostingIntegration.DocumentationPath));
+            }
         }
 
         return routes;

@@ -5,7 +5,8 @@ namespace PatternKit.Benchmarks.Coverage;
 public enum BenchmarkRoute
 {
     Fluent,
-    SourceGenerated
+    SourceGenerated,
+    HostingIntegration
 }
 
 public enum BenchmarkPhase

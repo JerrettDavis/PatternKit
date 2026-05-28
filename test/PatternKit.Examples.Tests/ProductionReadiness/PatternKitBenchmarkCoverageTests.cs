@@ -43,6 +43,25 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
             })
             .AssertPassed();
 
+    [Scenario("Reusable hosting integrations have benchmark routes")]
+    [Fact]
+    public Task Reusable_Hosting_Integrations_Have_Benchmark_Routes()
+        => Given("the hosting integration catalog and benchmark routes", () => new
+        {
+            Hosting = new PatternKitHostingIntegrationCatalog().Integrations
+                .Where(static integration => integration.Kind == PatternHostingIntegrationKind.ReusableHostingExtension)
+                .Select(static integration => integration.PatternName)
+                .OrderBy(static name => name)
+                .ToArray(),
+            BenchmarkRoutes = PatternBenchmarkCoverage.HostingIntegrationRoutes
+                .Select(static route => route.PatternName)
+                .OrderBy(static name => name)
+                .ToArray()
+        })
+            .Then("each reusable IServiceCollection integration has a reportable BenchmarkDotNet route", ctx =>
+                ScenarioExpect.Equal(ctx.Hosting, ctx.BenchmarkRoutes))
+            .AssertPassed();
+
     [Scenario("Every generator source is represented in the benchmark matrix")]
     [Fact]
     public Task Every_Generator_Source_Is_Represented_In_The_Benchmark_Matrix()
@@ -89,6 +108,30 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
                 ScenarioExpect.Empty(ctx.MissingPatterns))
             .And("the guide publishes the route result total", ctx =>
                 ScenarioExpect.Contains("404 pattern route results", ctx.ResultsGuide))
+            .AssertPassed();
+
+    [Scenario("Published benchmark results include reusable hosting integrations")]
+    [Fact]
+    public Task Published_Benchmark_Results_Include_Reusable_Hosting_Integrations()
+        => Given("the benchmark results guide and reusable hosting benchmark routes", () => new
+        {
+            ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
+            HostingRoutes = PatternBenchmarkCoverage.HostingIntegrationRoutes.ToArray()
+        })
+            .When("checking hosting route names against the published results", ctx => new
+            {
+                ctx.ResultsGuide,
+                ctx.HostingRoutes,
+                MissingRows = ctx.HostingRoutes
+                    .Where(route => !ctx.ResultsGuide.Contains($"| {route.PatternName} | `IServiceCollection` |", StringComparison.Ordinal))
+                    .Select(static route => route.PatternName)
+                    .OrderBy(static name => name)
+                    .ToArray()
+            })
+            .Then("every reusable hosting route appears in the benchmark results matrix", ctx =>
+                ScenarioExpect.Empty(ctx.MissingRows))
+            .And("the guide publishes the hosting route total", ctx =>
+                ScenarioExpect.Contains($"{ctx.HostingRoutes.Length} reusable hosting integration route results", ctx.ResultsGuide))
             .AssertPassed();
 
     [Scenario("Published benchmark results include every generator source")]
