@@ -1,8 +1,8 @@
 using PatternKit.Messaging;
-using ControlBusUnderTest = global::PatternKit.Messaging.ControlBus.ControlBus<PatternKit.Tests.Messaging.ControlBus.ControlBusTests.Command>;
+using TinyBDD;
 using ControlBusHeaders = global::PatternKit.Messaging.ControlBus.ControlBusHeaders;
 using ControlBusResult = global::PatternKit.Messaging.ControlBus.ControlBusResult<PatternKit.Tests.Messaging.ControlBus.ControlBusTests.Command>;
-using TinyBDD;
+using ControlBusUnderTest = global::PatternKit.Messaging.ControlBus.ControlBus<PatternKit.Tests.Messaging.ControlBus.ControlBusTests.Command>;
 
 namespace PatternKit.Tests.Messaging.ControlBus;
 

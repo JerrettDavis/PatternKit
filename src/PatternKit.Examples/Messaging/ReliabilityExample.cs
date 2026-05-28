@@ -1,7 +1,7 @@
+using PatternKit.Generators.Messaging;
 using PatternKit.Messaging;
 using PatternKit.Messaging.Mailboxes;
 using PatternKit.Messaging.Reliability;
-using PatternKit.Generators.Messaging;
 
 namespace PatternKit.Examples.Messaging;
 

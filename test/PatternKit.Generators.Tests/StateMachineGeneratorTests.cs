@@ -350,7 +350,7 @@ public class StateMachineGeneratorTests
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
         ScenarioExpect.Contains("OnEnterSubmitted()", generatedSource);
         ScenarioExpect.Contains("OnEnterPaid()", generatedSource);
-        
+
         // Verify State is updated before entry hooks
         var submitIndex = generatedSource.IndexOf("State = global::PatternKit.Examples.OrderState.Submitted");
         var entrySubmittedIndex = generatedSource.IndexOf("OnEnterSubmitted()");
@@ -890,19 +890,19 @@ public class StateMachineGeneratorTests
 
         // Should have PKST008 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        
+
         // Debug: print all diagnostics
         if (diagnostics.Length == 0)
         {
             // Check if code was even generated
             var hasGeneratedCode = result.Results.Any(r => r.GeneratedSources.Length > 0);
             ScenarioExpect.True(hasGeneratedCode, "No code was generated");
-            
+
             // Check compilation diagnostics
             var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST")).ToArray();
             ScenarioExpect.True(compDiags.Length > 0, $"No PKST diagnostics found. Generated code: {result.Results[0].GeneratedSources.Length} files");
         }
-        
+
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST008");
 
         // Verify FireAsync is NOT generated

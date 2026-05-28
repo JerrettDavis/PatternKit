@@ -14,10 +14,10 @@ public sealed class ShippingBulkheadDemoTests(ITestOutputHelper output) : TinyBd
     [Fact]
     public Task Fluent_And_Generated_Bulkhead_Policies_Reserve_Shipping_Allocations()
         => Given("shipping allocators imported by an application", static () => new
-            {
-                FluentAllocator = new ScriptedShippingAllocator(new ShippingAllocation("ORDER-100", "ground", true)),
-                GeneratedAllocator = new ScriptedShippingAllocator(new ShippingAllocation("ORDER-100", "ground", true))
-            })
+        {
+            FluentAllocator = new ScriptedShippingAllocator(new ShippingAllocation("ORDER-100", "ground", true)),
+            GeneratedAllocator = new ScriptedShippingAllocator(new ShippingAllocation("ORDER-100", "ground", true))
+        })
             .When("reserving through both policy paths", ctx => new
             {
                 Fluent = new ShippingBulkheadService(ctx.FluentAllocator, ShippingBulkheadPolicies.CreateFluentPolicy())

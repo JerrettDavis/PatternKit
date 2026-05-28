@@ -189,14 +189,14 @@ public sealed class VisitorGeneratorExamplesTests(ITestOutputHelper output) : Ti
     public async Task DocumentProcessingDemo_PrivateAsyncHelpers_CoverConcreteBranches()
     {
         await Given("documents that exercise every helper branch", () => new
-            {
-                Pdf = new PdfDocument { Id = "PDF-1", FileName = "secure.pdf", PageCount = 4, IsEncrypted = true },
-                Word = new WordDocument { Id = "WORD-1", FileName = "macro.docx", WordCount = 12, HasMacros = true },
-                SheetWithFormulas = new SpreadsheetDocument { Id = "SHEET-1", FileName = "calc.xlsx", SheetCount = 3, HasFormulas = true },
-                SheetWithoutFormulas = new SpreadsheetDocument { Id = "SHEET-2", FileName = "plain.xlsx", SheetCount = 1, HasFormulas = false },
-                MarkdownWithCode = new MarkdownDocument { Id = "MD-1", FileName = "code.md", LineCount = 10, HasCodeBlocks = true },
-                MarkdownWithoutCode = new MarkdownDocument { Id = "MD-2", FileName = "plain.md", LineCount = 5, HasCodeBlocks = false }
-            })
+        {
+            Pdf = new PdfDocument { Id = "PDF-1", FileName = "secure.pdf", PageCount = 4, IsEncrypted = true },
+            Word = new WordDocument { Id = "WORD-1", FileName = "macro.docx", WordCount = 12, HasMacros = true },
+            SheetWithFormulas = new SpreadsheetDocument { Id = "SHEET-1", FileName = "calc.xlsx", SheetCount = 3, HasFormulas = true },
+            SheetWithoutFormulas = new SpreadsheetDocument { Id = "SHEET-2", FileName = "plain.xlsx", SheetCount = 1, HasFormulas = false },
+            MarkdownWithCode = new MarkdownDocument { Id = "MD-1", FileName = "code.md", LineCount = 10, HasCodeBlocks = true },
+            MarkdownWithoutCode = new MarkdownDocument { Id = "MD-2", FileName = "plain.md", LineCount = 5, HasCodeBlocks = false }
+        })
             .When("invoking the indexing and scanning helpers", async Task<(string[] Keys, List<string> Scans)> (docs) =>
             {
                 var keys = new[]

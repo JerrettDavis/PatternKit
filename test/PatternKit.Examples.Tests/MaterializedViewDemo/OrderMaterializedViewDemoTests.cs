@@ -1,5 +1,5 @@
-using PatternKit.Examples.MaterializedViewDemo;
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Examples.MaterializedViewDemo;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;

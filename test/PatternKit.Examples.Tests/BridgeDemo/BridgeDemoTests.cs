@@ -1,6 +1,6 @@
 using PatternKit.Examples.BridgeDemo;
-using static PatternKit.Examples.BridgeDemo.BridgeDemo;
 using TinyBDD;
+using static PatternKit.Examples.BridgeDemo.BridgeDemo;
 
 namespace PatternKit.Examples.Tests.BridgeDemoTests;
 

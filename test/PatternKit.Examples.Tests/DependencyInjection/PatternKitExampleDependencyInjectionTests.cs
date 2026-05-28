@@ -22,11 +22,11 @@ using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TableDataGatewayDemo;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
-using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
-using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
+using Showcase = PatternKit.Examples.PatternShowcase.PatternShowcase;
+using WidgetDemo = PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 
 namespace PatternKit.Examples.Tests.DependencyInjection;
 

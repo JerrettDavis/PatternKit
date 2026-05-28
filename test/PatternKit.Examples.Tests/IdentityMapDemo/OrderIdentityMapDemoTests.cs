@@ -13,10 +13,10 @@ public sealed partial class OrderIdentityMapDemoTests(ITestOutputHelper output) 
     [Fact]
     public Task Fluent_And_Generated_Identity_Maps_Reuse_Loaded_Orders()
         => Given("fluent and generated identity maps", () => new
-            {
-                Fluent = OrderIdentityMapDemo.RunFluent(),
-                Generated = OrderIdentityMapDemo.RunGenerated()
-            })
+        {
+            Fluent = OrderIdentityMapDemo.RunFluent(),
+            Generated = OrderIdentityMapDemo.RunGenerated()
+        })
             .Then("both paths reuse object identity and reject duplicates", runs =>
             {
                 ScenarioExpect.True(runs.Fluent.ReusedInstance);

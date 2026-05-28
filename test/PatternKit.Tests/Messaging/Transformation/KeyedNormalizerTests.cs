@@ -13,7 +13,7 @@ public sealed class KeyedNormalizerTests
     {
         var normalizer = KeyedNormalizer<string, string, Order>.Create()
             .When("json", (raw, _) => new ValueTask<Order>(new Order(raw, "json")))
-            .When("xml",  (raw, _) => new ValueTask<Order>(new Order(raw, "xml")))
+            .When("xml", (raw, _) => new ValueTask<Order>(new Order(raw, "xml")))
             .Build();
 
         var result = await normalizer.NormalizeAsync("json", "payload-1");
@@ -27,17 +27,17 @@ public sealed class KeyedNormalizerTests
     public async Task NormalizeAsync_MultipleKeys_EachRoutesCorrectly()
     {
         var normalizer = KeyedNormalizer<string, string, Order>.Create()
-            .When("csv",   (raw, _) => new ValueTask<Order>(new Order(raw, "csv")))
-            .When("avro",  (raw, _) => new ValueTask<Order>(new Order(raw, "avro")))
+            .When("csv", (raw, _) => new ValueTask<Order>(new Order(raw, "csv")))
+            .When("avro", (raw, _) => new ValueTask<Order>(new Order(raw, "avro")))
             .When("proto", (raw, _) => new ValueTask<Order>(new Order(raw, "proto")))
             .Build();
 
-        var csv   = await normalizer.NormalizeAsync("csv",   "c");
-        var avro  = await normalizer.NormalizeAsync("avro",  "a");
+        var csv = await normalizer.NormalizeAsync("csv", "c");
+        var avro = await normalizer.NormalizeAsync("avro", "a");
         var proto = await normalizer.NormalizeAsync("proto", "p");
 
-        ScenarioExpect.Equal("csv",   csv.Format);
-        ScenarioExpect.Equal("avro",  avro.Format);
+        ScenarioExpect.Equal("csv", csv.Format);
+        ScenarioExpect.Equal("avro", avro.Format);
         ScenarioExpect.Equal("proto", proto.Format);
     }
 

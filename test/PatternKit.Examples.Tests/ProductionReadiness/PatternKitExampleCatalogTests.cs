@@ -16,10 +16,10 @@ public sealed class PatternKitExampleCatalogTests(ITestOutputHelper output) : Ti
     [Fact]
     public Task Catalog_Entries_Map_Documented_Examples_To_Source_Tests_And_Production_Checks()
         => Given("an examples catalog and the repository root", () => new
-            {
-                Catalog = new PatternKitExampleCatalog(),
-                RepositoryRoot = FindRepoRoot()
-            })
+        {
+            Catalog = new PatternKitExampleCatalog(),
+            RepositoryRoot = FindRepoRoot()
+        })
             .When("validating the catalog against repository files", ctx => new
             {
                 ctx.Catalog.Entries,

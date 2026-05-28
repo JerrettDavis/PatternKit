@@ -14,16 +14,16 @@ public sealed class FulfillmentCircuitBreakerDemoTests(ITestOutputHelper output)
     [Fact]
     public Task Fluent_And_Generated_Circuit_Breaker_Policies_Isolate_Fulfillment_Outages()
         => Given("an unstable fulfillment gateway", static () => new
-            {
-                FluentGateway = new ScriptedFulfillmentGateway(
+        {
+            FluentGateway = new ScriptedFulfillmentGateway(
                     new FulfillmentResponse("ORDER-42", 503, "down"),
                     new FulfillmentResponse("ORDER-42", 503, "down"),
                     new FulfillmentResponse("ORDER-42", 202, "accepted")),
-                GeneratedGateway = new ScriptedFulfillmentGateway(
+            GeneratedGateway = new ScriptedFulfillmentGateway(
                     new FulfillmentResponse("ORDER-42", 503, "down"),
                     new FulfillmentResponse("ORDER-42", 503, "down"),
                     new FulfillmentResponse("ORDER-42", 202, "accepted"))
-            })
+        })
             .When("submitting orders through both policy paths", ctx =>
             {
                 var fluent = new FulfillmentCircuitBreakerService(ctx.FluentGateway, FulfillmentCircuitBreakerPolicies.CreateFluentPolicy());

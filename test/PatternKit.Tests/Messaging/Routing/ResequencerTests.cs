@@ -1,6 +1,6 @@
 using PatternKit.Messaging;
-using ResequencerUnderTest = global::PatternKit.Messaging.Routing.Resequencer<PatternKit.Tests.Messaging.Routing.ResequencerTests.Event>;
 using TinyBDD;
+using ResequencerUnderTest = global::PatternKit.Messaging.Routing.Resequencer<PatternKit.Tests.Messaging.Routing.ResequencerTests.Event>;
 
 namespace PatternKit.Tests.Messaging.Routing;
 

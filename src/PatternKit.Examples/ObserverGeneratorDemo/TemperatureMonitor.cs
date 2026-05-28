@@ -38,7 +38,7 @@ public partial class TemperatureChanged
 /// Observable event for temperature alerts with custom configuration.
 /// Uses Stop exception policy to ensure critical alerts aren't missed.
 /// </summary>
-[Observer(typeof(TemperatureAlert), 
+[Observer(typeof(TemperatureAlert),
     Threading = ObserverThreadingPolicy.Locking,
     Exceptions = ObserverExceptionPolicy.Stop,
     Order = ObserverOrderPolicy.RegistrationOrder)]

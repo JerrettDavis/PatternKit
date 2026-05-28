@@ -166,10 +166,10 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
     [Fact]
     public Task Each_Pattern_Has_Fluent_Generated_Documented_And_Example_Paths()
         => Given("the PatternKit pattern catalog and repository root", () => new
-            {
-                Catalog = new PatternKitPatternCatalog(),
-                RepositoryRoot = FindRepoRoot()
-            })
+        {
+            Catalog = new PatternKitPatternCatalog(),
+            RepositoryRoot = FindRepoRoot()
+        })
             .When("validating implementation paths", ctx => ctx.Catalog.Patterns
                 .SelectMany(pattern => ValidatePattern(ctx.RepositoryRoot, pattern))
                 .ToArray())

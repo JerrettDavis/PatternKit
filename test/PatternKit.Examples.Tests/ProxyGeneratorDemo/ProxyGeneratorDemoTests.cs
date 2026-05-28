@@ -243,12 +243,12 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
     public async Task ProxyInterceptors_CoverAsyncNoOpAndNonRetriableBranches()
     {
         await Given("standalone interceptors and method contexts", () => new
-            {
-                Retry = new RetryInterceptor(maxRetries: 1),
-                Cache = new CachingInterceptor(),
-                Auth = new AuthenticationInterceptor(),
-                Context = new GetTransactionHistoryMethodContext("cust-standalone"),
-                MissingToken = new ProcessPaymentAsyncMethodContext(
+        {
+            Retry = new RetryInterceptor(maxRetries: 1),
+            Cache = new CachingInterceptor(),
+            Auth = new AuthenticationInterceptor(),
+            Context = new GetTransactionHistoryMethodContext("cust-standalone"),
+            MissingToken = new ProcessPaymentAsyncMethodContext(
                     new PaymentRequest
                     {
                         CustomerId = "cust-standalone",
@@ -258,7 +258,7 @@ public sealed class ProxyGeneratorDemoTests(ITestOutputHelper output) : TinyBddX
                         AuthToken = null
                     },
                     CancellationToken.None)
-            })
+        })
             .When("invoking direct async interceptor paths", async Task<UnauthorizedAccessException?> (harness) =>
             {
                 await harness.Retry.BeforeAsync(harness.Context);

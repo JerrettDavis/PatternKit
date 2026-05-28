@@ -13,10 +13,10 @@ public sealed class ProductCatalogCacheAsideDemoTests(ITestOutputHelper output) 
     [Fact]
     public Task Fluent_And_Generated_CacheAside_Policies_Reuse_Product_Catalog_Reads()
         => Given("product catalog repositories imported by an application", static () => new
-            {
-                FluentRepository = new ScriptedProductCatalogRepository(new ProductReadModel("SKU-42", "Trail Jacket", 129m, true)),
-                GeneratedRepository = new ScriptedProductCatalogRepository(new ProductReadModel("SKU-42", "Trail Jacket", 129m, true))
-            })
+        {
+            FluentRepository = new ScriptedProductCatalogRepository(new ProductReadModel("SKU-42", "Trail Jacket", 129m, true)),
+            GeneratedRepository = new ScriptedProductCatalogRepository(new ProductReadModel("SKU-42", "Trail Jacket", 129m, true))
+        })
             .When("looking up the same product twice through both policy paths", ctx =>
             {
                 var fluent = new ProductCatalogCacheAsideService(ctx.FluentRepository, ProductCatalogCacheAsidePolicies.CreateFluentPolicy());

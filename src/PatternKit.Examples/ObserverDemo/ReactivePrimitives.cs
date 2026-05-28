@@ -1,5 +1,5 @@
-using PatternKit.Behavioral.Observer;
 using System.Collections;
+using PatternKit.Behavioral.Observer;
 
 namespace PatternKit.Examples.ObserverDemo;
 

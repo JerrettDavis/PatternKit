@@ -1,6 +1,6 @@
-using PatternKit.Structural.Facade;
 using System.Linq.Expressions;
 using System.Reflection;
+using PatternKit.Structural.Facade;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -286,16 +286,16 @@ public sealed class TypedFacadeTests(ITestOutputHelper output) : TinyBddXunitBas
     [Fact]
     public Task TypedFacade_PrivateValidation_Covers_Invalid_Selectors_And_Signatures()
         => Given("private validation helpers", () => new
-            {
-                Extract = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
+        {
+            Extract = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
                     "ExtractMethodInfo",
                     BindingFlags.NonPublic | BindingFlags.Static)!,
-                Validate = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
+            Validate = typeof(TypedFacade<ISimpleService>.Builder).GetMethod(
                     "ValidateMethodSignature",
                     BindingFlags.NonPublic | BindingFlags.Static)!,
-                GetStatus = typeof(ISimpleService).GetMethod(nameof(ISimpleService.GetStatus))!,
-                Operation1 = typeof(IComplexService).GetMethod(nameof(IComplexService.Operation1))!
-            })
+            GetStatus = typeof(ISimpleService).GetMethod(nameof(ISimpleService.GetStatus))!,
+            Operation1 = typeof(IComplexService).GetMethod(nameof(IComplexService.Operation1))!
+        })
             .When("invoking invalid selectors and signature checks", helpers =>
             {
                 Expression<Func<ISimpleService, int>> notMethodSelector = _ => 1;
