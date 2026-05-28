@@ -9,7 +9,7 @@
              CS1591: Missing XML comment (examples don't need docs)
              CS0649: Field never assigned (used in serialization scenarios)
              TBDD010: TinyBDD optimization hints (not errors) -->
-        <NoWarn>$(NoWarn);CS1591;CS0649;TBDD010</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;CS0649;CS8602;TBDD010</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

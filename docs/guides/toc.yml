@@ -16,3 +16,5 @@
   href: benchmark-results.md
 - name: Testing
   href: testing.md
+- name: Quality Gates
+  href: quality-gates.md
