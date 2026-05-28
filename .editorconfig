@@ -49,6 +49,61 @@ dotnet_style_prefer_auto_properties = true:suggestion
 dotnet_style_prefer_conditional_expression_over_assignment = true:suggestion
 dotnet_style_prefer_conditional_expression_over_return = true:suggestion
 
+# Recommended .NET analyzers are enabled for production package projects.
+# These path-scoped suppressions are the current production API baseline; tighten
+# them by rule family as tracked cleanup work resolves each category.
+[src/PatternKit.Core/**/*.cs]
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1001.severity = none
+dotnet_diagnostic.CA1018.severity = none
+dotnet_diagnostic.CA1068.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1510.severity = none
+dotnet_diagnostic.CA1512.severity = none
+dotnet_diagnostic.CA1513.severity = none
+dotnet_diagnostic.CA1710.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+dotnet_diagnostic.CA2012.severity = none
+dotnet_diagnostic.CA2016.severity = none
+dotnet_diagnostic.CA2208.severity = none
+
+[src/PatternKit.Generators/**/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1834.severity = none
+dotnet_diagnostic.CA1852.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+
+[src/PatternKit.Generators/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1834.severity = none
+dotnet_diagnostic.CA1852.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+
+[src/PatternKit.Generators.Abstractions/**/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1805.severity = none
+
+[src/PatternKit.Generators.Abstractions/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1805.severity = none
+
+[src/PatternKit.Hosting.Extensions/**/*.cs]
+dotnet_diagnostic.CA1510.severity = none
+dotnet_diagnostic.CA2263.severity = none
+
 [*.{json,yml,yaml,md}]
 indent_style = space
 indent_size = 2
