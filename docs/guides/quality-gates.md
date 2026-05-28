@@ -12,17 +12,25 @@ dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 dotnet build PatternKit.slnx --configuration Release --no-restore -m:1
 ```
 
-Run the focused test suite for the area being changed. For broad changes, run the solution test command used by CI:
+Run the focused test suite for the area being changed. For broad changes, run the same project-by-project coverage shape used by CI:
 
 ```bash
-dotnet test PatternKit.slnx \
-  --configuration Release \
-  -p:TestTfmsInParallel=false \
-  --collect:"XPlat Code Coverage" \
-  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
-  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
-  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
-  -- RunConfiguration.TestSessionTimeout=1800000
+for project in \
+  test/PatternKit.Tests/PatternKit.Tests.csproj \
+  test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
+  test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
+  test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj
+do
+  dotnet test "$project" \
+    --configuration Release \
+    --no-build \
+    -p:TestTfmsInParallel=false \
+    --collect:"XPlat Code Coverage" \
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
+    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
+    -- RunConfiguration.TestSessionTimeout=1800000
+done
 ```
 
 Build documentation with warnings treated as failures:
@@ -71,4 +79,13 @@ Every production pattern should have:
 
 The repository includes a root `.editorconfig` so editors, `dotnet format`, and CI agree on basic C# layout and style. Run `dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal` before opening a PR; CI enforces the same gate for pull requests and `main` releases.
 
-Built-in .NET analyzers can be audited with `/p:EnableNETAnalyzers=true /p:AnalysisLevel=latest /p:AnalysisMode=Recommended /p:EnforceCodeStyleInBuild=true`. That audit currently surfaces project-specific baselines, including source-generator workspace gaps in examples and benchmarks, fluent API shape warnings in production code, benchmark naming warnings, and culture-sensitive string assertions in generator tests. Enable stricter analyzer families by project with explicit baselines rather than turning on every optional rule at once.
+Built-in .NET analyzers are enabled in `Recommended` mode for the production package projects:
+
+- `PatternKit.Core`
+- `PatternKit.Generators`
+- `PatternKit.Generators.Abstractions`
+- `PatternKit.Hosting.Extensions`
+
+The current rule-family baseline is path-scoped in `.editorconfig`. Tighten it by removing one rule family at a time, fixing or documenting the production API impact, and validating the affected package with `/t:Rebuild`.
+
+Do not enable `EnforceCodeStyleInBuild` at the solution level. `dotnet format` remains the repository style gate, and forcing code-style analysis through MSBuild currently prevents design-time workspace loading for examples and benchmarks that depend on PatternKit source generators. Keep source-generated consumers validated through the normal restore, format, build, test, docs, and benchmark gates instead of routing style diagnostics through generated-symbol design-time builds.
