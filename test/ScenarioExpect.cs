@@ -104,12 +104,12 @@ public static class ScenarioExpect
         }
     }
 
-    public static void Contains(string expectedSubstring, string actualString)
+    public static void Contains(string expectedSubstring, string? actualString)
         => Contains(expectedSubstring, actualString, StringComparison.Ordinal);
 
-    public static void Contains(string expectedSubstring, string actualString, StringComparison comparison)
+    public static void Contains(string expectedSubstring, string? actualString, StringComparison comparison)
     {
-        if (actualString.IndexOf(expectedSubstring, comparison) < 0)
+        if (actualString is null || actualString.IndexOf(expectedSubstring, comparison) < 0)
             Fail($"expected string to contain {Format(expectedSubstring)}, but was {Format(actualString)}");
     }
 
@@ -131,9 +131,9 @@ public static class ScenarioExpect
         return default!;
     }
 
-    public static void DoesNotContain(string expectedSubstring, string actualString)
+    public static void DoesNotContain(string expectedSubstring, string? actualString)
     {
-        if (actualString.Contains(expectedSubstring, StringComparison.Ordinal))
+        if (actualString?.Contains(expectedSubstring, StringComparison.Ordinal) == true)
             Fail($"expected string to not contain {Format(expectedSubstring)}, but was {Format(actualString)}");
     }
 
@@ -149,18 +149,18 @@ public static class ScenarioExpect
             Fail("expected collection to not contain a matching item");
     }
 
-    public static void StartsWith(string expectedStart, string actualString)
+    public static void StartsWith(string expectedStart, string? actualString)
         => StartsWith(expectedStart, actualString, StringComparison.Ordinal);
 
-    public static void StartsWith(string expectedStart, string actualString, StringComparison comparison)
+    public static void StartsWith(string expectedStart, string? actualString, StringComparison comparison)
     {
-        if (!actualString.StartsWith(expectedStart, comparison))
+        if (actualString is null || !actualString.StartsWith(expectedStart, comparison))
             Fail($"expected string to start with {Format(expectedStart)}, but was {Format(actualString)}");
     }
 
-    public static void Matches(string expectedRegexPattern, string actualString)
+    public static void Matches(string expectedRegexPattern, string? actualString)
     {
-        if (!Regex.IsMatch(actualString, expectedRegexPattern))
+        if (actualString is null || !Regex.IsMatch(actualString, expectedRegexPattern))
             Fail($"expected string to match /{expectedRegexPattern}/, but was {Format(actualString)}");
     }
 
