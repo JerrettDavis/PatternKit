@@ -6,6 +6,7 @@ using PatternKit.Generators.Ambassador;
 using PatternKit.Generators.AntiCorruption;
 using PatternKit.Generators.AuditLog;
 using PatternKit.Generators.BackendsForFrontends;
+using PatternKit.Generators.BoundedContexts;
 using PatternKit.Generators.Bridge;
 using PatternKit.Generators.Bulkhead;
 using PatternKit.Generators.CacheAside;
@@ -135,6 +136,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(DomainEventHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDomainServiceRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DomainServiceOperationAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateBoundedContextDescriptorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(BoundedContextCapabilityAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(BoundedContextAdapterAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(GenerateEventStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
@@ -936,6 +940,34 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainServiceRegistryAttribute(null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainServiceRegistryAttribute(typeof(string), null!));
         ScenarioExpect.Throws<ArgumentException>(() => new DomainServiceOperationAttribute(""));
+    }
+
+    [Scenario("Bounded Context Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Bounded_Context_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateBoundedContextDescriptorAttribute("Fulfillment")
+        {
+            FactoryMethodName = "Build"
+        };
+        var capability = new BoundedContextCapabilityAttribute("quote shipment", typeof(string));
+        var adapter = new BoundedContextAdapterAttribute("Catalog", "Fulfillment", typeof(string), typeof(int));
+
+        ScenarioExpect.Equal("Fulfillment", generator.Name);
+        ScenarioExpect.Equal("Build", generator.FactoryMethodName);
+        ScenarioExpect.Equal("quote shipment", capability.Name);
+        ScenarioExpect.Equal(typeof(string), capability.ServiceType);
+        ScenarioExpect.Equal("Catalog", adapter.UpstreamContext);
+        ScenarioExpect.Equal("Fulfillment", adapter.DownstreamContext);
+        ScenarioExpect.Equal(typeof(string), adapter.SourceType);
+        ScenarioExpect.Equal(typeof(int), adapter.TargetType);
+        ScenarioExpect.Throws<ArgumentException>(() => new GenerateBoundedContextDescriptorAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new BoundedContextCapabilityAttribute("", typeof(string)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BoundedContextCapabilityAttribute("quote shipment", null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new BoundedContextAdapterAttribute("", "Fulfillment", typeof(string), typeof(int)));
+        ScenarioExpect.Throws<ArgumentException>(() => new BoundedContextAdapterAttribute("Catalog", "", typeof(string), typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BoundedContextAdapterAttribute("Catalog", "Fulfillment", null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new BoundedContextAdapterAttribute("Catalog", "Fulfillment", typeof(string), null!));
     }
 
     [Scenario("Retry Attributes Expose Defaults And Configuration")]

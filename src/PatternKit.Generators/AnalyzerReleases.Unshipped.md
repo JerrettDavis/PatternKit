@@ -415,6 +415,10 @@ PKAGG002 | PatternKit.Generators.Aggregates | Error | Aggregate handler must dec
 PKAGG003 | PatternKit.Generators.Aggregates | Error | Aggregate handler must declare one event applier.
 PKAGG004 | PatternKit.Generators.Aggregates | Error | Aggregate decision signature is invalid.
 PKAGG005 | PatternKit.Generators.Aggregates | Error | Aggregate event applier signature is invalid.
+PKCTX001 | PatternKit.Generators.BoundedContexts | Error | Bounded context descriptor host must be partial.
+PKCTX002 | PatternKit.Generators.BoundedContexts | Error | Bounded context descriptor must declare at least one capability.
+PKCTX003 | PatternKit.Generators.BoundedContexts | Error | Bounded context capability is duplicated.
+PKCTX004 | PatternKit.Generators.BoundedContexts | Error | Bounded context adapter is duplicated.
 PKDOM001 | PatternKit.Generators.DomainServices | Error | Domain service registry host must be partial.
 PKDOM002 | PatternKit.Generators.DomainServices | Error | Domain service registry must declare at least one operation.
 PKDOM003 | PatternKit.Generators.DomainServices | Error | Domain service operation signature is invalid.

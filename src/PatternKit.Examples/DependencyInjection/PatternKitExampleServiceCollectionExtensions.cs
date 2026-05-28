@@ -27,6 +27,7 @@ using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.AuditLogDemo;
 using PatternKit.Examples.BackendsForFrontendsDemo;
+using PatternKit.Examples.BoundedContextDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
 using PatternKit.Examples.CanonicalDataModelDemo;
@@ -197,6 +198,7 @@ public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, Val
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
 public sealed record OrderAggregateRootPatternExample(OrderAggregateRootService Service);
 public sealed record ShippingDomainServicePatternExample(ShippingDomainService Service);
+public sealed record FulfillmentBoundedContextPatternExample(FulfillmentBoundedContextDemo.FulfillmentPlanner Planner);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record OrderValueObjectPatternExample(OrderValueObjectService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
@@ -309,6 +311,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddGeneratedInterpreterRulesExample()
             .AddOrderAggregateRootPatternExample()
             .AddShippingDomainServicePatternExample()
+            .AddFulfillmentBoundedContextPatternExample()
             .AddLoanApprovalSpecificationsExample()
             .AddOrderValueObjectPatternExample()
             .AddOrderRepositoryPatternExample()
@@ -926,6 +929,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddShippingDomainServiceDemo();
         services.AddSingleton<ShippingDomainServicePatternExample>(sp => new(sp.GetRequiredService<ShippingDomainService>()));
         return services.RegisterExample<ShippingDomainServicePatternExample>("Shipping Domain Service Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddFulfillmentBoundedContextPatternExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentBoundedContextDemo();
+        services.AddSingleton<FulfillmentBoundedContextPatternExample>(sp => new(sp.GetRequiredService<FulfillmentBoundedContextDemo.FulfillmentPlanner>()));
+        return services.RegisterExample<FulfillmentBoundedContextPatternExample>("Fulfillment Bounded Context Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddLoanApprovalSpecificationsExample(this IServiceCollection services)

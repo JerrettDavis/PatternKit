@@ -537,6 +537,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Domain Service"],
             ["stateless domain operation", "source-generated operation registry", "DI composition"]),
         Descriptor(
+            "Fulfillment Bounded Context Pattern",
+            "src/PatternKit.Examples/BoundedContextDemo/FulfillmentBoundedContextDemo.cs",
+            "test/PatternKit.Examples.Tests/BoundedContextDemo/FulfillmentBoundedContextDemoTests.cs",
+            "docs/examples/fulfillment-bounded-context-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Bounded Context"],
+            ["explicit domain boundary", "source-generated context descriptor", "DI composition"]),
+        Descriptor(
             "Order Value Object Pattern",
             "src/PatternKit.Examples/ValueObjectDemo/OrderValueObjectDemo.cs",
             "test/PatternKit.Examples.Tests/ValueObjectDemo/OrderValueObjectDemoTests.cs",
