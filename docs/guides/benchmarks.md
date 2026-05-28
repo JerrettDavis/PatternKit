@@ -196,6 +196,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Service Layer | Execution | 151.32 ns | 960 B | 148.10 ns | 872 B | Generated slightly reduced execution time and allocation for the register-customer workflow. |
 | Specification | Construction | 196.03 ns | 1,704 B | 136.87 ns | 1,008 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Specification | Execution | 111.25 ns | 344 B | 93.30 ns | 344 B | Same allocation; generated was faster for loan-application evaluation. |
+| Value Object | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Value Object | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Splitter | Construction | 3.664 ns | 24 B | 4.020 ns | 24 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Splitter | Execution | 135.516 ns | 808 B | 134.062 ns | 832 B | Generated was slightly faster; fluent allocated slightly less for order line splitting. |
 | Strangler Fig | Construction | 53.71 ns | 416 B | 42.35 ns | 288 B | Generated reduced construction time and allocation in this microbenchmark. |
