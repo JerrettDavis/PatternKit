@@ -521,6 +521,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Specification"],
             ["composable business rules", "source-generated registry", "DI composition"]),
         Descriptor(
+            "Order Aggregate Root Pattern",
+            "src/PatternKit.Examples/AggregateRootDemo/OrderAggregateRootDemo.cs",
+            "test/PatternKit.Examples.Tests/AggregateRootDemo/OrderAggregateRootDemoTests.cs",
+            "docs/examples/order-aggregate-root-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Aggregate Root"],
+            ["invariant boundary", "source-generated command handler", "DI composition"]),
+        Descriptor(
             "Order Value Object Pattern",
             "src/PatternKit.Examples/ValueObjectDemo/OrderValueObjectDemo.cs",
             "test/PatternKit.Examples.Tests/ValueObjectDemo/OrderValueObjectDemoTests.cs",

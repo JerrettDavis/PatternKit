@@ -410,6 +410,11 @@ PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler s
 PKSVA001 | PatternKit.Generators.Messaging | Error | Service Activator host type must be partial.
 PKSVA002 | PatternKit.Generators.Messaging | Error | Service Activator must declare exactly one handler.
 PKSVA003 | PatternKit.Generators.Messaging | Error | Service Activator handler signature is invalid.
+PKAGG001 | PatternKit.Generators.Aggregates | Error | Aggregate handler host must be partial.
+PKAGG002 | PatternKit.Generators.Aggregates | Error | Aggregate handler must declare one decision method.
+PKAGG003 | PatternKit.Generators.Aggregates | Error | Aggregate handler must declare one event applier.
+PKAGG004 | PatternKit.Generators.Aggregates | Error | Aggregate decision signature is invalid.
+PKAGG005 | PatternKit.Generators.Aggregates | Error | Aggregate event applier signature is invalid.
 PKVO001 | PatternKit.Generators.ValueObjects | Error | Value Object host must be partial.
 PKVO002 | PatternKit.Generators.ValueObjects | Error | Value Object host must be a class.
 PKVO003 | PatternKit.Generators.ValueObjects | Error | Value Object must declare at least one component.

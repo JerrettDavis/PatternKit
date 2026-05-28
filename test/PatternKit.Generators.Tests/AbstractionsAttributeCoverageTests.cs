@@ -1,6 +1,7 @@
 using PatternKit.Generators;
 using PatternKit.Generators.ActivityTracking;
 using PatternKit.Generators.Adapter;
+using PatternKit.Generators.Aggregates;
 using PatternKit.Generators.Ambassador;
 using PatternKit.Generators.AntiCorruption;
 using PatternKit.Generators.AuditLog;
@@ -79,6 +80,9 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(AntiCorruptionExternalRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(AntiCorruptionDomainRuleAttribute), AttributeTargets.Method, true, false },
         { typeof(GenerateActivityTrackerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(GenerateAggregateCommandHandlerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(AggregateDecisionAttribute), AttributeTargets.Method, false, false },
+        { typeof(AggregateEventApplierAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAuditLogAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(AuditLogKeySelectorAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateAdapterAttribute), AttributeTargets.Class, true, false },
@@ -888,6 +892,28 @@ public sealed class AbstractionsAttributeCoverageTests
 
         ScenarioExpect.Equal("From", generator.FactoryMethodName);
         ScenarioExpect.IsType<ValueObjectComponentAttribute>(new ValueObjectComponentAttribute());
+    }
+
+    [Scenario("Aggregate Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Aggregate_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateAggregateCommandHandlerAttribute(typeof(string), typeof(int), typeof(Guid))
+        {
+            FactoryMethodName = "Build",
+            HandlerName = "orders"
+        };
+
+        ScenarioExpect.Equal(typeof(string), generator.AggregateType);
+        ScenarioExpect.Equal(typeof(int), generator.CommandType);
+        ScenarioExpect.Equal(typeof(Guid), generator.EventType);
+        ScenarioExpect.Equal("Build", generator.FactoryMethodName);
+        ScenarioExpect.Equal("orders", generator.HandlerName);
+        ScenarioExpect.IsType<AggregateDecisionAttribute>(new AggregateDecisionAttribute());
+        ScenarioExpect.IsType<AggregateEventApplierAttribute>(new AggregateEventApplierAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(null!, typeof(int), typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(typeof(string), null!, typeof(Guid)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(typeof(string), typeof(int), null!));
     }
 
     [Scenario("Retry Attributes Expose Defaults And Configuration")]
