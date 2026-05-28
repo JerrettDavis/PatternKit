@@ -371,7 +371,7 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         // Validate it's actually System.Func by checking namespace and name
         var fullName = nextType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        if (!fullName.StartsWith("global::System.Func<"))
+        if (!fullName.StartsWith("global::System.Func<", StringComparison.Ordinal))
         {
             context.ReportDiagnostic(Diagnostic.Create(
                 InvalidStepSignatureDescriptor,
@@ -743,9 +743,9 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
         var fullName = namedType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         return fullName == "global::System.Threading.Tasks.Task" ||
-               fullName.StartsWith("global::System.Threading.Tasks.Task<") ||
+               fullName.StartsWith("global::System.Threading.Tasks.Task<", StringComparison.Ordinal) ||
                fullName == "global::System.Threading.Tasks.ValueTask" ||
-               fullName.StartsWith("global::System.Threading.Tasks.ValueTask<");
+               fullName.StartsWith("global::System.Threading.Tasks.ValueTask<", StringComparison.Ordinal);
     }
 
     private bool IsPartial(SyntaxNode node)

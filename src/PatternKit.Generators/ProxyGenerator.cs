@@ -211,7 +211,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         // Determine default proxy type name
         var baseName = contractSymbol.Name;
-        if (baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
+        if (baseName.StartsWith("I", StringComparison.Ordinal) && baseName.Length > 1 && char.IsUpper(baseName[1]))
         {
             // Interface with I prefix: IUserService -> UserServiceProxy
             baseName = baseName.Substring(1);
@@ -592,8 +592,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         var returnType = method.ReturnType;
         var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
-               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
+        return typeName.StartsWith("global::System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               typeName.StartsWith("global::System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool IsGenericAsyncReturnType(IMethodSymbol method)
@@ -615,8 +615,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         return (fullName == "global::System.Threading.Tasks.Task<T>" ||
                 fullName == "global::System.Threading.Tasks.ValueTask<T>") ||
-               (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<") ||
-                originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<")));
+               (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<", StringComparison.Ordinal) ||
+                originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<", StringComparison.Ordinal)));
     }
 
     private static bool IsCancellationToken(ITypeSymbol type)
@@ -1490,7 +1490,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             }
             else
             {
-                propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                propName = char.ToUpperInvariant(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
 
                 // Avoid conflicts with reserved property names
                 if (usedPropNames.Contains(propName))

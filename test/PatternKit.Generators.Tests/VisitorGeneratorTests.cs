@@ -849,7 +849,7 @@ public class VisitorGeneratorTests
 
         // Should have no generator diagnostics
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics)
-            .Where(d => d.Id.StartsWith("PKVIS"))
+            .Where(d => d.Id.StartsWith("PKVIS", StringComparison.Ordinal))
             .ToArray();
         ScenarioExpect.Empty(diagnostics);
     }
