@@ -83,6 +83,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Domain Event | Execution | 367.2 ns | 1.77 KB | 346.4 ns | 1.55 KB | Generated reduced execution time and allocation for the order-placed dispatch workflow. |
 | Bounded Context | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Bounded Context | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Context Map | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Context Map | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Domain Service | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Domain Service | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Event-Carried State Transfer | Construction | 7.552 ns | 48 B | 6.751 ns | 48 B | Same allocation; generated was slightly faster in this microbenchmark. |
@@ -228,11 +230,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 105 catalog patterns and 420 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 106 catalog patterns and 424 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 20 | 80 |
+| Application Architecture | 21 | 84 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -240,7 +242,7 @@ The coverage matrix currently publishes 105 catalog patterns and 420 pattern rou
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 100 generator source route results.
+The generator matrix currently publishes 101 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -265,6 +267,7 @@ The generator matrix currently publishes 100 generator source route results.
 | Application Architecture | Anti-Corruption Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Audit Log | Covered | Covered | Covered | Covered |
 | Application Architecture | Bounded Context | Covered | Covered | Covered | Covered |
+| Application Architecture | Context Map | Covered | Covered | Covered | Covered |
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
 | Application Architecture | Data Mapper | Covered | Covered | Covered | Covered |
 | Application Architecture | Domain Event | Covered | Covered | Covered | Covered |
@@ -391,6 +394,7 @@ The generator matrix currently publishes 100 generator source route results.
 | DecoratorGenerator | `src/PatternKit.Generators/DecoratorGenerator.cs` | Covered |
 | DomainEventDispatcherGenerator | `src/PatternKit.Generators/DomainEvents/DomainEventDispatcherGenerator.cs` | Covered |
 | BoundedContextDescriptorGenerator | `src/PatternKit.Generators/BoundedContexts/BoundedContextDescriptorGenerator.cs` | Covered |
+| ContextMapDescriptorGenerator | `src/PatternKit.Generators/ContextMaps/ContextMapDescriptorGenerator.cs` | Covered |
 | DomainServiceRegistryGenerator | `src/PatternKit.Generators/DomainServices/DomainServiceRegistryGenerator.cs` | Covered |
 | EventCarriedStateTransferGenerator | `src/PatternKit.Generators/EventCarriedStateTransfer/EventCarriedStateTransferGenerator.cs` | Covered |
 | EventNotificationGenerator | `src/PatternKit.Generators/EventNotification/EventNotificationGenerator.cs` | Covered |

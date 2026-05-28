@@ -117,6 +117,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Domain Event | `IDomainEvent` and `DomainEventDispatcher<TEventBase>` | Domain Event generator |
 | Application Architecture | Domain Service | `DomainServiceOperation<TRequest,TResponse>` and named registries | Domain Service generator |
 | Application Architecture | Bounded Context | `BoundedContextDescriptor` capabilities and adapters | Bounded Context generator |
+| Application Architecture | Context Map | `ContextMapDescriptor` relationships and contracts | Context Map generator |
 | Application Architecture | Table Data Gateway | `ITableDataGateway<TRow,TKey>` and `InMemoryTableDataGateway<TRow,TKey>` | Table Data Gateway generator |
 | Application Architecture | Event Sourcing | `IEventStore<TEvent,TStreamId>` and `InMemoryEventStore<TEvent,TStreamId>` | Event Sourcing generator |
 | Application Architecture | Feature Toggle | `IFeatureToggleSet<TContext>` and `FeatureToggleSet<TContext>` | Feature Toggle generator |

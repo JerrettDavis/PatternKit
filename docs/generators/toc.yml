@@ -252,6 +252,9 @@
 - name: Bounded Context
   href: bounded-context.md
 
+- name: Context Map
+  href: context-map.md
+
 - name: State Machine
   href: state-machine.md
 

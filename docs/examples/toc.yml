@@ -306,3 +306,6 @@
 
 - name: Fulfillment Bounded Context Pattern
   href: fulfillment-bounded-context-pattern.md
+
+- name: Commerce Context Map Pattern
+  href: commerce-context-map-pattern.md

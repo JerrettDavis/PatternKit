@@ -17,6 +17,7 @@ using PatternKit.Generators.Cloud;
 using PatternKit.Generators.Command;
 using PatternKit.Generators.Composer;
 using PatternKit.Generators.Composite;
+using PatternKit.Generators.ContextMaps;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
@@ -139,6 +140,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateBoundedContextDescriptorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(BoundedContextCapabilityAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(BoundedContextAdapterAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
+        { typeof(GenerateContextMapDescriptorAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(ContextMapRelationshipAttribute), AttributeTargets.Class | AttributeTargets.Struct, true, false },
         { typeof(GenerateEventStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
@@ -968,6 +971,32 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new BoundedContextAdapterAttribute("Catalog", "", typeof(string), typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new BoundedContextAdapterAttribute("Catalog", "Fulfillment", null!, typeof(int)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new BoundedContextAdapterAttribute("Catalog", "Fulfillment", typeof(string), null!));
+    }
+
+    [Scenario("Context Map Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Context_Map_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateContextMapDescriptorAttribute("Commerce")
+        {
+            FactoryMethodName = "Build"
+        };
+        var relationship = new ContextMapRelationshipAttribute(
+            "Catalog",
+            "Fulfillment",
+            ContextMapRelationshipKind.PublishedLanguage,
+            "ProductFeed");
+
+        ScenarioExpect.Equal("Commerce", generator.Name);
+        ScenarioExpect.Equal("Build", generator.FactoryMethodName);
+        ScenarioExpect.Equal("Catalog", relationship.UpstreamContext);
+        ScenarioExpect.Equal("Fulfillment", relationship.DownstreamContext);
+        ScenarioExpect.Equal(ContextMapRelationshipKind.PublishedLanguage, relationship.Kind);
+        ScenarioExpect.Equal("ProductFeed", relationship.ContractName);
+        ScenarioExpect.Throws<ArgumentException>(() => new GenerateContextMapDescriptorAttribute(""));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContextMapRelationshipAttribute("", "Fulfillment", ContextMapRelationshipKind.PublishedLanguage, "ProductFeed"));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContextMapRelationshipAttribute("Catalog", "", ContextMapRelationshipKind.PublishedLanguage, "ProductFeed"));
+        ScenarioExpect.Throws<ArgumentException>(() => new ContextMapRelationshipAttribute("Catalog", "Fulfillment", ContextMapRelationshipKind.PublishedLanguage, ""));
     }
 
     [Scenario("Retry Attributes Expose Defaults And Configuration")]

@@ -545,6 +545,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Bounded Context"],
             ["explicit domain boundary", "source-generated context descriptor", "DI composition"]),
         Descriptor(
+            "Commerce Context Map Pattern",
+            "src/PatternKit.Examples/ContextMapDemo/CommerceContextMapDemo.cs",
+            "test/PatternKit.Examples.Tests/ContextMapDemo/CommerceContextMapDemoTests.cs",
+            "docs/examples/commerce-context-map-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Context Map"],
+            ["bounded context relationships", "source-generated context map", "DI composition"]),
+        Descriptor(
             "Order Value Object Pattern",
             "src/PatternKit.Examples/ValueObjectDemo/OrderValueObjectDemo.cs",
             "test/PatternKit.Examples.Tests/ValueObjectDemo/OrderValueObjectDemoTests.cs",

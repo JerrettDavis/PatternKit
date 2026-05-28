@@ -102,6 +102,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "CQRS",
         "Aggregate Root",
         "Bounded Context",
+        "Context Map",
         "Domain Service",
         "Specification",
         "Value Object",
@@ -162,7 +163,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(41, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(17, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
-                ScenarioExpect.Equal(20, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(21, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
