@@ -529,6 +529,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Aggregate Root"],
             ["invariant boundary", "source-generated command handler", "DI composition"]),
         Descriptor(
+            "Shipping Domain Service Pattern",
+            "src/PatternKit.Examples/DomainServiceDemo/ShippingDomainServiceDemo.cs",
+            "test/PatternKit.Examples.Tests/DomainServiceDemo/ShippingDomainServiceDemoTests.cs",
+            "docs/examples/shipping-domain-service-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Domain Service"],
+            ["stateless domain operation", "source-generated operation registry", "DI composition"]),
+        Descriptor(
             "Order Value Object Pattern",
             "src/PatternKit.Examples/ValueObjectDemo/OrderValueObjectDemo.cs",
             "test/PatternKit.Examples.Tests/ValueObjectDemo/OrderValueObjectDemoTests.cs",

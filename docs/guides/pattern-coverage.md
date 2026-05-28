@@ -115,6 +115,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Transaction Script | `TransactionScript<TRequest,TResponse>` | Transaction Script generator |
 | Application Architecture | Service Layer | `IServiceOperation<TRequest,TResponse>` and `ServiceLayerOperation<TRequest,TResponse>` | Service Layer generator |
 | Application Architecture | Domain Event | `IDomainEvent` and `DomainEventDispatcher<TEventBase>` | Domain Event generator |
+| Application Architecture | Domain Service | `DomainServiceOperation<TRequest,TResponse>` and named registries | Domain Service generator |
 | Application Architecture | Table Data Gateway | `ITableDataGateway<TRow,TKey>` and `InMemoryTableDataGateway<TRow,TKey>` | Table Data Gateway generator |
 | Application Architecture | Event Sourcing | `IEventStore<TEvent,TStreamId>` and `InMemoryEventStore<TEvent,TStreamId>` | Event Sourcing generator |
 | Application Architecture | Feature Toggle | `IFeatureToggleSet<TContext>` and `FeatureToggleSet<TContext>` | Feature Toggle generator |

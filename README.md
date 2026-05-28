@@ -473,11 +473,11 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 103 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 104 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 18 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, CQRS, Data Mapper, Domain Event, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Transaction Script, Unit of Work, Value Object |
+| Application Architecture | 19 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Transaction Script, Unit of Work, Value Object |
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 17 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
@@ -561,6 +561,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
 | Domain Event | Execution | 367.2 ns | 1.77 KB | 346.4 ns | 1.55 KB | Generated reduced execution time and allocation for the order-placed dispatch workflow. |
+| Domain Service | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Domain Service | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Event-Carried State Transfer | Construction | 7.552 ns | 48 B | 6.751 ns | 48 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Event-Carried State Transfer | Execution | 58.508 ns | 448 B | 59.071 ns | 448 B | Effectively equivalent for the inventory projection workflow. |
 | Event Notification | Construction | 30.920 ns | 232 B | 31.926 ns | 232 B | Effectively equivalent for this microbenchmark. |

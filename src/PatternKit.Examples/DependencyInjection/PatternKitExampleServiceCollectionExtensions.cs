@@ -35,6 +35,7 @@ using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DomainEventDemo;
+using PatternKit.Examples.DomainServiceDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.EventCarriedStateTransferDemo;
 using PatternKit.Examples.EventNotificationDemo;
@@ -195,6 +196,7 @@ public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, Che
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
 public sealed record OrderAggregateRootPatternExample(OrderAggregateRootService Service);
+public sealed record ShippingDomainServicePatternExample(ShippingDomainService Service);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record OrderValueObjectPatternExample(OrderValueObjectService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
@@ -306,6 +308,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddMessagingBackplaneFacadeExample()
             .AddGeneratedInterpreterRulesExample()
             .AddOrderAggregateRootPatternExample()
+            .AddShippingDomainServicePatternExample()
             .AddLoanApprovalSpecificationsExample()
             .AddOrderValueObjectPatternExample()
             .AddOrderRepositoryPatternExample()
@@ -916,6 +919,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderAggregateRootDemo();
         services.AddSingleton<OrderAggregateRootPatternExample>(sp => new(sp.GetRequiredService<OrderAggregateRootService>()));
         return services.RegisterExample<OrderAggregateRootPatternExample>("Order Aggregate Root Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddShippingDomainServicePatternExample(this IServiceCollection services)
+    {
+        services.AddShippingDomainServiceDemo();
+        services.AddSingleton<ShippingDomainServicePatternExample>(sp => new(sp.GetRequiredService<ShippingDomainService>()));
+        return services.RegisterExample<ShippingDomainServicePatternExample>("Shipping Domain Service Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddLoanApprovalSpecificationsExample(this IServiceCollection services)

@@ -81,6 +81,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Decorator | Execution | 60.765 ns | 384 B | 35.551 ns | 304 B | Generated decorator execution was faster and allocated less for decorated storage reads. |
 | Domain Event | Construction | 199.5 ns | 1.34 KB | 157.6 ns | 1.04 KB | Generated reduced construction time and allocation in this microbenchmark. |
 | Domain Event | Execution | 367.2 ns | 1.77 KB | 346.4 ns | 1.55 KB | Generated reduced execution time and allocation for the order-placed dispatch workflow. |
+| Domain Service | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Domain Service | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Event-Carried State Transfer | Construction | 7.552 ns | 48 B | 6.751 ns | 48 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Event-Carried State Transfer | Execution | 58.508 ns | 448 B | 59.071 ns | 448 B | Effectively equivalent for the inventory projection workflow. |
 | Event Notification | Construction | 30.920 ns | 232 B | 31.926 ns | 232 B | Effectively equivalent for this microbenchmark. |
@@ -224,11 +226,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 103 catalog patterns and 412 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 104 catalog patterns and 416 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 18 | 72 |
+| Application Architecture | 19 | 76 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -236,7 +238,7 @@ The coverage matrix currently publishes 103 catalog patterns and 412 pattern rou
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 98 generator source route results.
+The generator matrix currently publishes 99 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -263,6 +265,7 @@ The generator matrix currently publishes 98 generator source route results.
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
 | Application Architecture | Data Mapper | Covered | Covered | Covered | Covered |
 | Application Architecture | Domain Event | Covered | Covered | Covered | Covered |
+| Application Architecture | Domain Service | Covered | Covered | Covered | Covered |
 | Application Architecture | Event Sourcing | Covered | Covered | Covered | Covered |
 | Application Architecture | Feature Toggle | Covered | Covered | Covered | Covered |
 | Application Architecture | Identity Map | Covered | Covered | Covered | Covered |
@@ -384,6 +387,7 @@ The generator matrix currently publishes 98 generator source route results.
 | DataMapperGenerator | `src/PatternKit.Generators/DataMapping/DataMapperGenerator.cs` | Covered |
 | DecoratorGenerator | `src/PatternKit.Generators/DecoratorGenerator.cs` | Covered |
 | DomainEventDispatcherGenerator | `src/PatternKit.Generators/DomainEvents/DomainEventDispatcherGenerator.cs` | Covered |
+| DomainServiceRegistryGenerator | `src/PatternKit.Generators/DomainServices/DomainServiceRegistryGenerator.cs` | Covered |
 | EventCarriedStateTransferGenerator | `src/PatternKit.Generators/EventCarriedStateTransfer/EventCarriedStateTransferGenerator.cs` | Covered |
 | EventNotificationGenerator | `src/PatternKit.Generators/EventNotification/EventNotificationGenerator.cs` | Covered |
 | EventStoreGenerator | `src/PatternKit.Generators/EventSourcing/EventStoreGenerator.cs` | Covered |
