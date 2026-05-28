@@ -8,6 +8,7 @@ Restore and build the full solution:
 
 ```bash
 dotnet restore PatternKit.slnx --use-lock-file
+dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 dotnet build PatternKit.slnx --configuration Release --no-restore -m:1
 ```
 
@@ -68,6 +69,6 @@ Every production pattern should have:
 
 ## Formatting and static analysis
 
-The repository includes a root `.editorconfig` so editors and `dotnet format` agree on basic C# layout and style. The current source tree still has historical whitespace that makes a full solution `dotnet format --verify-no-changes` fail with a very large formatting-only diff. Treat that as a dedicated cleanup task, not a drive-by change inside feature work.
+The repository includes a root `.editorconfig` so editors, `dotnet format`, and CI agree on basic C# layout and style. Run `dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal` before opening a PR; CI enforces the same gate for pull requests and `main` releases.
 
 The same rule applies to analyzer hardening. Built-in .NET analyzers currently surface many intentional API-shape warnings for fluent generic factories, benchmark method names, and netstandard-compatible guard code. Enable stricter analyzers by project and rule family with explicit baselines rather than turning on solution-wide warning enforcement in one step.
