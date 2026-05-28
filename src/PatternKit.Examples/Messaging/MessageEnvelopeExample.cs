@@ -1,6 +1,6 @@
-using PatternKit.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Generators.Messaging;
+using PatternKit.Messaging;
 
 namespace PatternKit.Examples.Messaging;
 

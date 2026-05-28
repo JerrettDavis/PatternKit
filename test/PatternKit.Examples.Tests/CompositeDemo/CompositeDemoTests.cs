@@ -1,7 +1,7 @@
 using PatternKit.Examples.CompositeDemo;
+using TinyBDD;
 using static PatternKit.Examples.CompositeDemo.CompositeDemo;
 using FileInfo = PatternKit.Examples.CompositeDemo.CompositeDemo.FileInfo;
-using TinyBDD;
 
 namespace PatternKit.Examples.Tests.CompositeDemoTests;
 

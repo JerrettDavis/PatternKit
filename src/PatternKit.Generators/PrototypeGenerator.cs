@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace PatternKit.Generators;
 

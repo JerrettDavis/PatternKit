@@ -1,11 +1,11 @@
-using Microsoft.Extensions.DependencyInjection;
-using PatternKit.Generators.Messaging;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Generators.Messaging;
 
 // Generate the dispatcher for the comprehensive demo - use different name to avoid conflict with ExampleDispatcher
 [assembly: GenerateDispatcher(

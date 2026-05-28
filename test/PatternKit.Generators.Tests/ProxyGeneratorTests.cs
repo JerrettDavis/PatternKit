@@ -1,5 +1,5 @@
-using Microsoft.CodeAnalysis;
 using System.IO;
+using Microsoft.CodeAnalysis;
 using TinyBDD;
 
 namespace PatternKit.Generators.Tests;

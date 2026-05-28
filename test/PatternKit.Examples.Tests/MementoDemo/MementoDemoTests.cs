@@ -1,8 +1,8 @@
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
-using Editor = PatternKit.Examples.MementoDemo.MementoDemo.TextEditor;
 using Demo = PatternKit.Examples.MementoDemo.MementoDemo;
+using Editor = PatternKit.Examples.MementoDemo.MementoDemo.TextEditor;
 
 namespace PatternKit.Examples.Tests.MementoDemo;
 

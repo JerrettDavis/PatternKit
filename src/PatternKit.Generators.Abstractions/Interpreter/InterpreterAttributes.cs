@@ -1,4 +1,4 @@
-﻿namespace PatternKit.Generators.Interpreter;
+namespace PatternKit.Generators.Interpreter;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = false)]
 public sealed class GenerateInterpreterAttribute(Type contextType, Type resultType) : Attribute

@@ -1,5 +1,5 @@
-using Microsoft.CodeAnalysis;
 using System.Runtime.Loader;
+using Microsoft.CodeAnalysis;
 using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
@@ -198,7 +198,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // After first publish: both handlers; after second: only H2
             ScenarioExpect.Equal("H1:10|H2:10|H2:20", result);
         }
@@ -375,7 +375,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // All three handlers should execute (H1, exception, H3)
             ScenarioExpect.Equal("H1|H3", result);
         }
@@ -674,7 +674,7 @@ public class ObserverGeneratorTests
             if (!task.Wait(TimeSpan.FromSeconds(30)))
                 throw new TimeoutException("Demo.Run() did not complete within 30 seconds.");
             var result = task.Result;
-            
+
             // Both handlers should have been invoked
             ScenarioExpect.Contains("Sync", result);
             ScenarioExpect.Contains("Async", result);
@@ -808,7 +808,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             ScenarioExpect.Equal("Handler1:23.5|Handler2:23.5", result);
         }
         finally
@@ -908,7 +908,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // With RegistrationOrder, order should be preserved
             ScenarioExpect.Equal("Handler1:23.5|Handler2:23.5", result);
         }
@@ -973,7 +973,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // With Undefined order, both handlers should still be invoked (order not guaranteed)
             ScenarioExpect.Contains("Handler1:23.5", result);
             ScenarioExpect.Contains("Handler2:23.5", result);

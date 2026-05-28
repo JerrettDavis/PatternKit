@@ -1,9 +1,9 @@
+using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Generators.Messaging;
 using PatternKit.Messaging;
 using PatternKit.Messaging.Adapters;
 using PatternKit.Messaging.Channels;
-using System.Globalization;
 
 namespace PatternKit.Examples.Messaging;
 

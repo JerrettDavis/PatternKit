@@ -1,6 +1,6 @@
 using PatternKit.Examples.EnterpriseDemo;
-using static PatternKit.Examples.EnterpriseDemo.EnterpriseOrderDemo;
 using TinyBDD;
+using static PatternKit.Examples.EnterpriseDemo.EnterpriseOrderDemo;
 
 namespace PatternKit.Examples.Tests.EnterpriseDemoTests;
 

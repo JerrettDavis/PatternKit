@@ -47,10 +47,10 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
     [Fact]
     public Task Every_Generator_Source_Is_Represented_In_The_Benchmark_Matrix()
         => Given("the repository root and generator benchmark routes", () => new
-            {
-                RepositoryRoot = FindRepoRoot(),
-                BenchmarkRoutes = GeneratorBenchmarkCoverage.Routes
-            })
+        {
+            RepositoryRoot = FindRepoRoot(),
+            BenchmarkRoutes = GeneratorBenchmarkCoverage.Routes
+        })
             .When("reading generator source files", ctx => new
             {
                 SourceFiles = Directory
@@ -72,10 +72,10 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
     [Fact]
     public Task Published_Benchmark_Results_Include_Every_Catalog_Pattern()
         => Given("the benchmark results guide and production pattern catalog", () => new
-            {
-                ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
-                Catalog = new PatternKitPatternCatalog()
-            })
+        {
+            ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
+            Catalog = new PatternKitPatternCatalog()
+        })
             .When("checking catalog names against the published results", ctx => new
             {
                 ctx.ResultsGuide,
@@ -95,10 +95,10 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
     [Fact]
     public Task Published_Benchmark_Results_Include_Every_Generator_Source()
         => Given("the benchmark results guide and generator benchmark routes", () => new
-            {
-                ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
-                BenchmarkRoutes = GeneratorBenchmarkCoverage.Routes
-            })
+        {
+            ResultsGuide = File.ReadAllText(Path.Combine(FindRepoRoot(), "docs", "guides", "benchmark-results.md")),
+            BenchmarkRoutes = GeneratorBenchmarkCoverage.Routes
+        })
             .When("checking generator names against the published results", ctx => new
             {
                 ctx.ResultsGuide,

@@ -1,8 +1,8 @@
+using System.Collections.Immutable;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Collections.Immutable;
-using System.Text;
 
 namespace PatternKit.Generators;
 
@@ -209,10 +209,10 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         bool needsAsync;
 
         // Check if GenerateAsync was explicitly set to false and async members exist
-        var explicitlyDisabled = config.GenerateAsyncExplicitlySet && 
-                                config.GenerateAsync.HasValue && 
+        var explicitlyDisabled = config.GenerateAsyncExplicitlySet &&
+                                config.GenerateAsync.HasValue &&
                                 !config.GenerateAsync.Value;
-        
+
         if (explicitlyDisabled && hasAsyncMembers && !config.ForceAsync)
         {
             // Async members are present but async generation was explicitly disabled.
@@ -234,7 +234,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         }
 
         // Generate the state machine implementation
-        var source = GenerateStateMachine(typeSymbol, config, stateType, triggerType, 
+        var source = GenerateStateMachine(typeSymbol, config, stateType, triggerType,
                                          transitions, guards, entryHooks, exitHooks, needsAsync);
         var fileName = $"{typeSymbol.Name}.StateMachine.g.cs";
         context.AddSource(fileName, source);
@@ -820,25 +820,25 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
             foreach (var group in transitionGroups)
             {
                 var (fromState, trigger) = group.Key;
-                
+
                 // Check if there's a guard for this transition
                 var guard = guards.FirstOrDefault(g => g.FromState == fromState && g.Trigger == trigger);
-                
+
                 if (guard is not null)
                 {
                     var guardHasCt = guard.Method.Parameters.Length > 0 && IsCancellationToken(guard.Method.Parameters[0].Type);
-                    
+
                     // If guard is async, evaluate it synchronously using GetAwaiter().GetResult()
                     if (IsGenericValueTaskOfBool(guard.Method.ReturnType))
                     {
-                        var guardCall = guardHasCt 
+                        var guardCall = guardHasCt
                             ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()"
                             : $"{guard.Method.Name}().GetAwaiter().GetResult()";
                         sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => {guardCall},");
                     }
                     else
                     {
-                        var guardCall = guardHasCt 
+                        var guardCall = guardHasCt
                             ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None)"
                             : $"{guard.Method.Name}()";
                         sb.AppendLine($"            ({config.StateTypeName}.{fromState}, {config.TriggerTypeName}.{trigger}) => {guardCall},");
@@ -935,16 +935,16 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 {
                     var guardHasCt = guard.Method.Parameters.Length > 0 && IsCancellationToken(guard.Method.Parameters[0].Type);
                     var guardCall = IsGenericValueTaskOfBool(guard.Method.ReturnType)
-                        ? (isAsync 
+                        ? (isAsync
                             ? (guardHasCt ? $"await {guard.Method.Name}(cancellationToken){configureAwait}" : $"await {guard.Method.Name}(){configureAwait}")
                             : (guardHasCt ? $"{guard.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()" : $"{guard.Method.Name}().GetAwaiter().GetResult()"))
-                        : (guardHasCt 
+                        : (guardHasCt
                             ? (isAsync ? $"{guard.Method.Name}(cancellationToken)" : $"{guard.Method.Name}(global::System.Threading.CancellationToken.None)")
                             : $"{guard.Method.Name}()");
 
                     sb.AppendLine($"                        if (!{guardCall})");
                     sb.AppendLine($"                        {{");
-                    
+
                     if (config.GuardFailurePolicy == 0) // Throw
                     {
                         sb.AppendLine($"                            throw new global::System.InvalidOperationException($\"Guard failed for transition from {fromState} on trigger {trigger}.\");");
@@ -953,7 +953,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                     {
                         sb.AppendLine($"                            return;");
                     }
-                    
+
                     sb.AppendLine($"                        }}");
                 }
 
@@ -963,7 +963,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 {
                     var hookHasCt = exitHook.Method.Parameters.Length > 0 && IsCancellationToken(exitHook.Method.Parameters[0].Type);
                     var hookCall = IsNonGenericValueTask(exitHook.Method.ReturnType)
-                        ? (isAsync 
+                        ? (isAsync
                             ? (hookHasCt ? $"await {exitHook.Method.Name}(cancellationToken){configureAwait};" : $"await {exitHook.Method.Name}(){configureAwait};")
                             : (hookHasCt ? $"{exitHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{exitHook.Method.Name}().GetAwaiter().GetResult();"))
                         : (hookHasCt
@@ -976,7 +976,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 var transitionHasCt = transition.Method.Parameters.Length > 0 && IsCancellationToken(transition.Method.Parameters[0].Type);
                 if (IsNonGenericValueTask(transition.Method.ReturnType))
                 {
-                    var transitionCall = isAsync 
+                    var transitionCall = isAsync
                         ? (transitionHasCt ? $"await {transition.Method.Name}(cancellationToken){configureAwait};" : $"await {transition.Method.Name}(){configureAwait};")
                         : (transitionHasCt ? $"{transition.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{transition.Method.Name}().GetAwaiter().GetResult();");
                     sb.AppendLine($"                        {transitionCall}");
@@ -998,7 +998,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
                 {
                     var entryHasCt = entryHook.Method.Parameters.Length > 0 && IsCancellationToken(entryHook.Method.Parameters[0].Type);
                     var hookCall = IsNonGenericValueTask(entryHook.Method.ReturnType)
-                        ? (isAsync 
+                        ? (isAsync
                             ? (entryHasCt ? $"await {entryHook.Method.Name}(cancellationToken){configureAwait};" : $"await {entryHook.Method.Name}(){configureAwait};")
                             : (entryHasCt ? $"{entryHook.Method.Name}(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult();" : $"{entryHook.Method.Name}().GetAwaiter().GetResult();"))
                         : (entryHasCt

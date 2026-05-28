@@ -1,6 +1,6 @@
 using PatternKit.Examples.IteratorDemo;
-using static PatternKit.Examples.IteratorDemo.IteratorDemo;
 using TinyBDD;
+using static PatternKit.Examples.IteratorDemo.IteratorDemo;
 
 namespace PatternKit.Examples.Tests.IteratorDemoTests;
 

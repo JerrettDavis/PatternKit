@@ -13,14 +13,14 @@ public sealed class InventoryRetryDemoTests(ITestOutputHelper output) : TinyBddX
     [Fact]
     public Task Fluent_And_Generated_Retry_Policies_Recover_Inventory_Lookups()
         => Given("a transient inventory outage", static () => new
-            {
-                FluentClient = new ScriptedInventoryClient(
+        {
+            FluentClient = new ScriptedInventoryClient(
                     new InventoryResponse("SKU-42", 0, 503),
                     new InventoryResponse("SKU-42", 8, 200)),
-                GeneratedClient = new ScriptedInventoryClient(
+            GeneratedClient = new ScriptedInventoryClient(
                     new InventoryResponse("SKU-42", 0, 503),
                     new InventoryResponse("SKU-42", 8, 200))
-            })
+        })
             .When("checking availability through both policy paths", ctx => new
             {
                 Fluent = new InventoryLookupService(ctx.FluentClient, InventoryRetryPolicies.CreateFluentPolicy())

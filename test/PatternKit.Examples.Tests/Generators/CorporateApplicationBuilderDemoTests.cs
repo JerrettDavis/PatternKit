@@ -75,10 +75,10 @@ public sealed class CorporateApplicationBuilderDemoTests(ITestOutputHelper outpu
     [Fact]
     public Task NotificationOptions_Defaults_And_Overrides_AreExplicit()
         => Given("default and configured notification options", () => new
-            {
-                Defaults = new NotificationOptions(),
-                Configured = new NotificationOptions { Enabled = false, Provider = "rabbitmq" }
-            })
+        {
+            Defaults = new NotificationOptions(),
+            Configured = new NotificationOptions { Enabled = false, Provider = "rabbitmq" }
+        })
             .When("reading options", options => (
                 DefaultEnabled: options.Defaults.Enabled,
                 DefaultProvider: options.Defaults.Provider,

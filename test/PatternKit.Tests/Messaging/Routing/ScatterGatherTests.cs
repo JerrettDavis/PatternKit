@@ -1,8 +1,8 @@
 using PatternKit.Messaging;
+using TinyBDD;
+using ScatterGatherCountUnderTest = global::PatternKit.Messaging.Routing.ScatterGather<PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Request, PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Quote, int>;
 using ScatterGatherReply = global::PatternKit.Messaging.Routing.ScatterGatherReply<PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Quote>;
 using ScatterGatherUnderTest = global::PatternKit.Messaging.Routing.ScatterGather<PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Request, PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Quote, PatternKit.Tests.Messaging.Routing.ScatterGatherTests.QuoteSummary>;
-using ScatterGatherCountUnderTest = global::PatternKit.Messaging.Routing.ScatterGather<PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Request, PatternKit.Tests.Messaging.Routing.ScatterGatherTests.Quote, int>;
-using TinyBDD;
 
 namespace PatternKit.Tests.Messaging.Routing;
 

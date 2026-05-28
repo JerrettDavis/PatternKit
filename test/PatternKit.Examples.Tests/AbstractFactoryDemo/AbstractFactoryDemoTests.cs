@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using PatternKit.Examples.AbstractFactoryDemo;
-using static PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 using TinyBDD;
+using static PatternKit.Examples.AbstractFactoryDemo.AbstractFactoryDemo;
 
 namespace PatternKit.Examples.Tests.AbstractFactoryDemoTests;
 

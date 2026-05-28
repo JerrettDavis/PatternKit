@@ -1,7 +1,7 @@
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
 
 namespace PatternKit.Generators.Adapter;
 
@@ -749,7 +749,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
                     // (interfaces: exclude default implementations added in C# 8.0+)
                     if (isAbstractClass || type.TypeKind == TypeKind.Interface)
                         return m.IsAbstract;
-                    
+
                     return true;
                 });
 
@@ -973,7 +973,7 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             var methodName = targetMethod.Name;
             var parameters = string.Join(", ", targetMethod.Parameters.Select(p =>
                 $"{GetParameterModifiers(p)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}{GetDefaultValue(p)}"));
-            var parameterNames = string.Join(", ", targetMethod.Parameters.Select(p => 
+            var parameterNames = string.Join(", ", targetMethod.Parameters.Select(p =>
                 $"{GetArgumentModifier(p)}{p.Name}"));
 
             var isVoid = targetMethod.ReturnsVoid;

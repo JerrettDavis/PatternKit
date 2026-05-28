@@ -1,7 +1,7 @@
 using PatternKit.Examples.InterpreterDemo;
+using TinyBDD;
 using static PatternKit.Examples.InterpreterDemo.InterpreterDemo;
 using Expr = PatternKit.Behavioral.Interpreter.ExpressionExtensions;
-using TinyBDD;
 
 namespace PatternKit.Examples.Tests.InterpreterDemoTests;
 
