@@ -17,6 +17,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
 | Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
+| Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Aggregate Root | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -222,11 +224,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 102 catalog patterns and 408 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 103 catalog patterns and 412 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 17 | 68 |
+| Application Architecture | 18 | 72 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -234,7 +236,7 @@ The coverage matrix currently publishes 102 catalog patterns and 408 pattern rou
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 97 generator source route results.
+The generator matrix currently publishes 98 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -255,6 +257,7 @@ The generator matrix currently publishes 97 generator source route results.
 | Category | Pattern | Fluent construction | Fluent execution | Generated construction | Generated execution |
 | --- | --- | --- | --- | --- | --- |
 | Application Architecture | Activity Tracker | Covered | Covered | Covered | Covered |
+| Application Architecture | Aggregate Root | Covered | Covered | Covered | Covered |
 | Application Architecture | Anti-Corruption Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Audit Log | Covered | Covered | Covered | Covered |
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
@@ -361,6 +364,7 @@ The generator matrix currently publishes 97 generator source route results.
 | Generator | Source | Matrix result |
 | --- | --- | --- |
 | ActivityTrackerGenerator | `src/PatternKit.Generators/ActivityTracking/ActivityTrackerGenerator.cs` | Covered |
+| AggregateCommandHandlerGenerator | `src/PatternKit.Generators/Aggregates/AggregateCommandHandlerGenerator.cs` | Covered |
 | AdapterGenerator | `src/PatternKit.Generators/Adapter/AdapterGenerator.cs` | Covered |
 | AmbassadorGenerator | `src/PatternKit.Generators/Ambassador/AmbassadorGenerator.cs` | Covered |
 | AntiCorruptionLayerGenerator | `src/PatternKit.Generators/AntiCorruption/AntiCorruptionLayerGenerator.cs` | Covered |

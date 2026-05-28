@@ -411,6 +411,8 @@
           href: cloud/scheduler-agent-supervisor.md
     - name: Application Architecture
       items:
+        - name: Aggregate Root
+          href: application/aggregate-root.md
         - name: Anti-Corruption Layer
           href: application/anti-corruption-layer.md
         - name: Activity Tracker

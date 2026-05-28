@@ -166,6 +166,9 @@
 - name: Loan Approval Specifications
   href: loan-approval-specifications.md
 
+- name: Order Aggregate Root Pattern
+  href: order-aggregate-root-pattern.md
+
 - name: Order Value Object Pattern
   href: order-value-object-pattern.md
 

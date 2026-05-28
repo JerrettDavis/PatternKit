@@ -13,6 +13,9 @@
 - name: Activity Tracker
   href: activity-tracker.md
 
+- name: Aggregate Root
+  href: aggregate-root.md
+
 - name: Audit Log
   href: audit-log.md
 

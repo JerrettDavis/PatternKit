@@ -20,6 +20,7 @@ using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ActivityTrackingDemo;
+using PatternKit.Examples.AggregateRootDemo;
 using PatternKit.Examples.AmbassadorDemo;
 using PatternKit.Examples.AntiCorruptionDemo;
 using PatternKit.Examples.ApiGateway;
@@ -193,6 +194,7 @@ public sealed record GeneratedReliabilityPipelineExample(ReliabilityExampleRunne
 public sealed record ResilientCheckoutMailboxesExample(Func<CheckoutRequest, CheckoutServices, CheckoutResult> Run);
 public sealed record MessagingBackplaneFacadeExample(Func<CancellationToken, ValueTask<BackplaneDemoSummary>> RunAsync);
 public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRulesDemo.PricingContext, decimal> Pricing, Interpreter<InterpreterRulesDemo.PricingContext, bool> Eligibility);
+public sealed record OrderAggregateRootPatternExample(OrderAggregateRootService Service);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record OrderValueObjectPatternExample(OrderValueObjectService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
@@ -303,6 +305,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddResilientCheckoutMailboxesExample()
             .AddMessagingBackplaneFacadeExample()
             .AddGeneratedInterpreterRulesExample()
+            .AddOrderAggregateRootPatternExample()
             .AddLoanApprovalSpecificationsExample()
             .AddOrderValueObjectPatternExample()
             .AddOrderRepositoryPatternExample()
@@ -906,6 +909,13 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, decimal>>(),
             sp.GetRequiredService<Interpreter<InterpreterRulesDemo.PricingContext, bool>>()));
         return services.RegisterExample<GeneratedInterpreterRulesExample>("Generated Interpreter Rules", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddOrderAggregateRootPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderAggregateRootDemo();
+        services.AddSingleton<OrderAggregateRootPatternExample>(sp => new(sp.GetRequiredService<OrderAggregateRootService>()));
+        return services.RegisterExample<OrderAggregateRootPatternExample>("Order Aggregate Root Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddLoanApprovalSpecificationsExample(this IServiceCollection services)
