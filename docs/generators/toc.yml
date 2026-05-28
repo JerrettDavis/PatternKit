@@ -249,6 +249,9 @@
 - name: Value Object
   href: value-object.md
 
+- name: Bounded Context
+  href: bounded-context.md
+
 - name: State Machine
   href: state-machine.md
 

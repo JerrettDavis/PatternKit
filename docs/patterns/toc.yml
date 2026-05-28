@@ -433,6 +433,8 @@
           href: application/domain-event.md
         - name: Domain Service
           href: application/domain-service.md
+        - name: Bounded Context
+          href: application/bounded-context.md
         - name: Table Data Gateway
           href: application/table-data-gateway.md
         - name: Event Sourcing
