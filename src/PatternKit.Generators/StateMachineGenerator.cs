@@ -491,7 +491,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
         ulong targetValue;
         try
         {
-            targetValue = Convert.ToUInt64(constant.Value);
+            targetValue = Convert.ToUInt64(constant.Value, global::System.Globalization.CultureInfo.InvariantCulture);
         }
         catch
         {
@@ -505,7 +505,7 @@ public sealed class StateMachineGenerator : IIncrementalGenerator
 
             try
             {
-                var fieldValue = Convert.ToUInt64(field.ConstantValue);
+                var fieldValue = Convert.ToUInt64(field.ConstantValue, global::System.Globalization.CultureInfo.InvariantCulture);
                 if (fieldValue == targetValue)
                     return field.Name;
             }

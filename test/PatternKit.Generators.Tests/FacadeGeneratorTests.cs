@@ -924,10 +924,10 @@ public class FacadeGeneratorTests
         var generatedSource = generatedSources.First().SourceText.ToString();
 
         // Methods should appear in alphabetical order: Alpha, Charlie, Mike, Zebra
-        var alphaIndex = generatedSource.IndexOf("void Alpha()");
-        var charlieIndex = generatedSource.IndexOf("void Charlie()");
-        var mikeIndex = generatedSource.IndexOf("void Mike()");
-        var zebraIndex = generatedSource.IndexOf("void Zebra()");
+        var alphaIndex = generatedSource.IndexOf("void Alpha()", StringComparison.Ordinal);
+        var charlieIndex = generatedSource.IndexOf("void Charlie()", StringComparison.Ordinal);
+        var mikeIndex = generatedSource.IndexOf("void Mike()", StringComparison.Ordinal);
+        var zebraIndex = generatedSource.IndexOf("void Zebra()", StringComparison.Ordinal);
 
         ScenarioExpect.True(alphaIndex < charlieIndex);
         ScenarioExpect.True(charlieIndex < mikeIndex);

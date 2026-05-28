@@ -317,7 +317,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             : contractType.ContainingNamespace.ToDisplayString();
 
         var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface
-            ? (contractType.Name.StartsWith("I") ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
+            ? (contractType.Name.StartsWith("I", StringComparison.Ordinal) ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
             : contractType.Name + "Impl";
 
         return new FacadeInfo(
@@ -453,15 +453,15 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     private static bool IsAsyncMethod(IMethodSymbol method)
     {
         var returnType = method.ReturnType.ToDisplayString();
-        return returnType.StartsWith("System.Threading.Tasks.Task") ||
-               returnType.StartsWith("System.Threading.Tasks.ValueTask");
+        return returnType.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               returnType.StartsWith("System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool IsTaskLike(ITypeSymbol type)
     {
         var name = type.ToDisplayString();
-        return name.StartsWith("System.Threading.Tasks.Task") ||
-               name.StartsWith("System.Threading.Tasks.ValueTask");
+        return name.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               name.StartsWith("System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static ITypeSymbol UnwrapTaskType(ITypeSymbol type)
@@ -756,11 +756,11 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 {
                     // Handle async return types
                     var returnTypeStr = methodSymbol.ReturnType.ToDisplayString();
-                    if (returnTypeStr.StartsWith("System.Threading.Tasks.ValueTask<"))
+                    if (returnTypeStr.StartsWith("System.Threading.Tasks.ValueTask<", StringComparison.Ordinal))
                     {
                         sb.AppendLine($"        return System.Threading.Tasks.ValueTask.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
                     }
-                    else if (returnTypeStr.StartsWith("System.Threading.Tasks.Task<"))
+                    else if (returnTypeStr.StartsWith("System.Threading.Tasks.Task<", StringComparison.Ordinal))
                     {
                         sb.AppendLine($"        return System.Threading.Tasks.Task.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
                     }
@@ -1013,7 +1013,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var fieldName = g.Key;
             // Generate parameter name: if field starts with underscore, remove it; otherwise, use field name as-is
             // The parameter will be different from the field if underscore is present
-            var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
+            var paramName = fieldName.StartsWith("_", StringComparison.Ordinal) ? fieldName.Substring(1) : fieldName;
             var externalType = g.First().MappingMethod!.ContainingType;
             var typeFullName = externalType.ToDisplayString(FullyQualifiedFormat);
             return $"{typeFullName} {paramName}";
@@ -1025,7 +1025,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Generate constructor body with null checks
         // For fields without underscore, the parameter name matches the field name, requiring `this.` qualifier for disambiguation
         foreach (var (fieldName, paramName) in groupedByField.Select(g =>
-            (g.Key, g.Key.StartsWith("_") ? g.Key.Substring(1) : g.Key)))
+            (g.Key, g.Key.StartsWith("_", StringComparison.Ordinal) ? g.Key.Substring(1) : g.Key)))
         {
             sb.AppendLine($"        this.{fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }

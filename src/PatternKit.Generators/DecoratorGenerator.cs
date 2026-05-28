@@ -200,7 +200,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
         // Determine default base type name
         var baseName = contractSymbol.Name;
-        if (baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
+        if (baseName.StartsWith("I", StringComparison.Ordinal) && baseName.Length > 1 && char.IsUpper(baseName[1]))
         {
             // Interface with I prefix: IStorage -> StorageDecoratorBase
             baseName = baseName.Substring(1);
@@ -596,8 +596,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         var returnType = method.ReturnType;
         var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
-               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
+        return typeName.StartsWith("global::System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               typeName.StartsWith("global::System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool CanTypeAcceptNull(ITypeSymbol type)

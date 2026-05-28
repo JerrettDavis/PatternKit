@@ -375,10 +375,10 @@ public class DecoratorGeneratorTests
             .First(gs => gs.HintName == "TestNamespace_IStorage.Decorator.g.cs")
             .SourceText.ToString();
 
-        var appleIndex = generatedSource.IndexOf("void Apple");
-        var bananaIndex = generatedSource.IndexOf("void Banana");
-        var mangoIndex = generatedSource.IndexOf("void Mango");
-        var zebraIndex = generatedSource.IndexOf("void Zebra");
+        var appleIndex = generatedSource.IndexOf("void Apple", StringComparison.Ordinal);
+        var bananaIndex = generatedSource.IndexOf("void Banana", StringComparison.Ordinal);
+        var mangoIndex = generatedSource.IndexOf("void Mango", StringComparison.Ordinal);
+        var zebraIndex = generatedSource.IndexOf("void Zebra", StringComparison.Ordinal);
 
         ScenarioExpect.True(appleIndex < bananaIndex);
         ScenarioExpect.True(bananaIndex < mangoIndex);

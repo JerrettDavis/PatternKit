@@ -352,8 +352,8 @@ public class StateMachineGeneratorTests
         ScenarioExpect.Contains("OnEnterPaid()", generatedSource);
 
         // Verify State is updated before entry hooks
-        var submitIndex = generatedSource.IndexOf("State = global::PatternKit.Examples.OrderState.Submitted");
-        var entrySubmittedIndex = generatedSource.IndexOf("OnEnterSubmitted()");
+        var submitIndex = generatedSource.IndexOf("State = global::PatternKit.Examples.OrderState.Submitted", StringComparison.Ordinal);
+        var entrySubmittedIndex = generatedSource.IndexOf("OnEnterSubmitted()", StringComparison.Ordinal);
         ScenarioExpect.True(submitIndex < entrySubmittedIndex, "State should be updated before entry hook is called");
 
         // And the updated compilation actually compiles
@@ -403,8 +403,8 @@ public class StateMachineGeneratorTests
         ScenarioExpect.Contains("OnExitSubmitted()", generatedSource);
 
         // Verify exit hooks are called before transition action
-        var exitIndex = generatedSource.IndexOf("OnExitDraft()");
-        var transitionIndex = generatedSource.IndexOf("OnSubmit()");
+        var exitIndex = generatedSource.IndexOf("OnExitDraft()", StringComparison.Ordinal);
+        var transitionIndex = generatedSource.IndexOf("OnSubmit()", StringComparison.Ordinal);
         ScenarioExpect.True(exitIndex < transitionIndex, "Exit hook should be called before transition action");
 
         // And the updated compilation actually compiles
@@ -532,8 +532,8 @@ public class StateMachineGeneratorTests
 
         // Verify no exception is thrown for guard failures
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        var guardFailureIndex = generatedSource.IndexOf("if (!CanTransition())");
-        var throwIndex = generatedSource.IndexOf("throw new global::System.InvalidOperationException($\"Guard failed", guardFailureIndex);
+        var guardFailureIndex = generatedSource.IndexOf("if (!CanTransition())", StringComparison.Ordinal);
+        var throwIndex = generatedSource.IndexOf("throw new global::System.InvalidOperationException($\"Guard failed", guardFailureIndex, StringComparison.Ordinal);
         ScenarioExpect.True(throwIndex == -1, "Should not throw exception on guard failure with Ignore policy");
 
         // And the updated compilation actually compiles
@@ -899,7 +899,7 @@ public class StateMachineGeneratorTests
             ScenarioExpect.True(hasGeneratedCode, "No code was generated");
 
             // Check compilation diagnostics
-            var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST")).ToArray();
+            var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST", StringComparison.Ordinal)).ToArray();
             ScenarioExpect.True(compDiags.Length > 0, $"No PKST diagnostics found. Generated code: {result.Results[0].GeneratedSources.Length} files");
         }
 

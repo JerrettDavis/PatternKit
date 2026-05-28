@@ -1214,7 +1214,7 @@ public class DispatcherGeneratorTests
         var result = task.Result;
 
         // Should either be the expected result or an error message
-        if (result.StartsWith("ERROR:"))
+        if (result.StartsWith("ERROR:", StringComparison.Ordinal))
         {
             ScenarioExpect.Fail($"Test threw exception: {result}");
         }

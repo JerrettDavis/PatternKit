@@ -88,7 +88,7 @@ public sealed class VisitorGenerator : IIncrementalGenerator
 
         // If base is an interface with I-prefix (Hungarian notation), don't add another I
         if (baseType.TypeKind == TypeKind.Interface &&
-            baseName.StartsWith("I") &&
+            baseName.StartsWith("I", StringComparison.Ordinal) &&
             baseName.Length > 1 &&
             char.IsUpper(baseName[1]))
         {

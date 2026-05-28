@@ -312,7 +312,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private static bool HasNameConflict(INamedTypeSymbol typeSymbol, string propertyName)
     {
         // Normalize verbatim identifiers by stripping leading @
-        var normalizedName = propertyName.StartsWith("@") ? propertyName.Substring(1) : propertyName;
+        var normalizedName = propertyName.StartsWith("@", StringComparison.Ordinal) ? propertyName.Substring(1) : propertyName;
 
         // Check for existing members with the same name in declared members
         if (typeSymbol.GetMembers(normalizedName).Length > 0)

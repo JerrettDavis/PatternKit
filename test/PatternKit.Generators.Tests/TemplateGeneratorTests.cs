@@ -182,8 +182,8 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        var onStartIndex = generatedSource.IndexOf("OnStart(ctx);");
-        var validateIndex = generatedSource.IndexOf("Validate(ctx);");
+        var onStartIndex = generatedSource.IndexOf("OnStart(ctx);", StringComparison.Ordinal);
+        var validateIndex = generatedSource.IndexOf("Validate(ctx);", StringComparison.Ordinal);
         ScenarioExpect.True(onStartIndex < validateIndex, "BeforeAll hook should be called before steps");
     }
 
@@ -243,8 +243,8 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        var transformIndex = generatedSource.LastIndexOf("Transform(ctx);");
-        var onCompleteIndex = generatedSource.IndexOf("OnComplete(ctx);");
+        var transformIndex = generatedSource.LastIndexOf("Transform(ctx);", StringComparison.Ordinal);
+        var onCompleteIndex = generatedSource.IndexOf("OnComplete(ctx);", StringComparison.Ordinal);
         ScenarioExpect.True(transformIndex < onCompleteIndex, "AfterAll hook should be called after steps");
     }
 
