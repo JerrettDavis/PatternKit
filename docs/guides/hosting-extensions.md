@@ -91,4 +91,22 @@ services.AddPatternKitMessageChannel<OrderCommand>(
     lifetime: ServiceLifetime.Scoped);
 ```
 
+## Current Reusable Coverage
+
+Every catalog pattern is importable through the production example catalog. The package-level reusable hosting surface currently covers the patterns below directly from `PatternKit.Hosting.Extensions`:
+
+| Pattern | Registration API | Primary use |
+| --- | --- | --- |
+| Message Channel | `AddPatternKitMessageChannel<TPayload>` | Register bounded in-memory channels for application-owned message contracts. |
+| Message Store | `AddPatternKitMessageStore<TPayload>` | Register queryable message history or audit stores. |
+| Guaranteed Delivery | `AddPatternKitGuaranteedDelivery<TPayload>` | Register durable-delivery queues with custom stores when needed. |
+| Retry | `AddPatternKitRetryPolicy<TResult>` | Register named retry policies for synchronous service calls. |
+| Circuit Breaker | `AddPatternKitCircuitBreakerPolicy<TResult>` | Register named circuit breakers with shared state. |
+| Bulkhead | `AddPatternKitBulkheadPolicy<TResult>` | Register concurrency and queue isolation policies. |
+| Rate Limiting | `AddPatternKitRateLimitPolicy<TResult>` | Register per-key rate windows. |
+| Queue-Based Load Leveling | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | Register queue-backed worker policies. |
+| Priority Queue | `AddPatternKitPriorityQueue<TItem, TPriority>` | Register priority-ordered work queues. |
+
+The hosting integration catalog in `PatternKit.Examples.ProductionReadiness` audits every catalog pattern against this reusable surface and the example-level `AddPatternKitExamples()` import path. BenchmarkDotNet coverage includes a dedicated `HostingIntegration` matrix route for every reusable registration above.
+
 The package is intentionally separate from `PatternKit.Examples`. Example registrations remain useful for demos and documentation, while `PatternKit.Hosting.Extensions` is the production-oriented integration surface for existing ASP.NET Core, worker service, and generic host applications.

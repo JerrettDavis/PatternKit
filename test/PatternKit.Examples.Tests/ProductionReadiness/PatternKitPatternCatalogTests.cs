@@ -206,6 +206,75 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.True(catalog.Patterns.All(static pattern => pattern.IntegrationNotes.Count > 0)))
             .AssertPassed();
 
+    [Scenario("Hosting integration catalog audits every pattern")]
+    [Fact]
+    public Task Hosting_Integration_Catalog_Audits_Every_Pattern()
+        => Given("the pattern catalog and hosting integration catalog", () => new
+        {
+            Patterns = new PatternKitPatternCatalog().Patterns,
+            Hosting = new PatternKitHostingIntegrationCatalog().Integrations
+        })
+            .When("comparing catalog entries", ctx => new
+            {
+                PatternNames = ctx.Patterns.Select(static pattern => pattern.Name).OrderBy(static name => name).ToArray(),
+                HostingPatternNames = ctx.Hosting.Select(static integration => integration.PatternName).OrderBy(static name => name).ToArray(),
+                Reusable = ctx.Hosting
+                    .Where(static integration => integration.Kind == PatternHostingIntegrationKind.ReusableHostingExtension)
+                    .OrderBy(static integration => integration.PatternName)
+                    .ToArray(),
+                ExampleOnly = ctx.Hosting
+                    .Where(static integration => integration.Kind == PatternHostingIntegrationKind.ExampleServiceCollection)
+                    .ToArray()
+            })
+            .Then("every catalog pattern has a hosting audit entry", ctx =>
+                ScenarioExpect.Equal(ctx.PatternNames, ctx.HostingPatternNames))
+            .And("the current reusable hosting package surface is explicit", ctx =>
+            {
+                var reusableNames = ctx.Reusable.Select(static integration => integration.PatternName).ToArray();
+                ScenarioExpect.Equal(
+                    new[]
+                    {
+                        "Bulkhead",
+                        "Circuit Breaker",
+                        "Guaranteed Delivery",
+                        "Message Channel",
+                        "Message Store",
+                        "Priority Queue",
+                        "Queue-Based Load Leveling",
+                        "Rate Limiting",
+                        "Retry"
+                    },
+                    reusableNames);
+            })
+            .And("all remaining patterns are still importable through the example catalog", ctx =>
+            {
+                ScenarioExpect.Equal(ctx.PatternNames.Length - ctx.Reusable.Length, ctx.ExampleOnly.Length);
+                ScenarioExpect.True(ctx.ExampleOnly.All(static integration => integration.RegistrationApi == "AddPatternKitExamples"));
+            })
+            .AssertPassed();
+
+    [Scenario("Hosting integration catalog is available through IServiceCollection")]
+    [Fact]
+    public Task Hosting_Integration_Catalog_Is_Available_Through_IServiceCollection()
+        => Given("a service collection configured with hosting integration metadata", () =>
+            {
+                var services = new ServiceCollection();
+                services.AddPatternKitHostingIntegrationCatalog();
+                return services.BuildServiceProvider(validateScopes: true);
+            })
+            .When("resolving the hosting integration catalog", provider =>
+            {
+                using (provider)
+                    return provider.GetRequiredService<IPatternKitHostingIntegrationCatalog>();
+            })
+            .Then("the catalog resolves reusable and example-level integration entries", catalog =>
+            {
+                ScenarioExpect.Equal(CanonicalGofPatterns.Length + EnterprisePatternAdditions.Length, catalog.Integrations.Count);
+                ScenarioExpect.Contains(catalog.Integrations, static integration => integration.Kind == PatternHostingIntegrationKind.ReusableHostingExtension);
+                ScenarioExpect.Contains(catalog.Integrations, static integration => integration.Kind == PatternHostingIntegrationKind.ExampleServiceCollection);
+            })
+            .AssertPassed();
+
     private static IEnumerable<string> ValidatePattern(string repositoryRoot, PatternCoverageDescriptor pattern)
     {
         var implementation = pattern.Implementation;

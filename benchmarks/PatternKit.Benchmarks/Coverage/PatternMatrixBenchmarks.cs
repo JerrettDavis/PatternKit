@@ -74,3 +74,16 @@ public class SourceGeneratedExecutionPatternMatrixBenchmarks : PatternMatrixBenc
     public int SourceGenerated_Execution_Route()
         => ValidateRoute(Route);
 }
+
+[BenchmarkCategory("Coverage", "PatternMatrix", "HostingIntegration")]
+public class HostingIntegrationPatternMatrixBenchmarks : PatternMatrixBenchmarkBase
+{
+    [ParamsSource(nameof(Routes))]
+    public PatternBenchmarkRoute Route { get; set; } = default!;
+
+    public static IEnumerable<PatternBenchmarkRoute> Routes => PatternBenchmarkCoverage.HostingIntegrationRoutes;
+
+    [Benchmark(Description = "Hosting: IServiceCollection integration coverage route")]
+    public int HostingIntegration_Route()
+        => ValidateRoute(Route);
+}
