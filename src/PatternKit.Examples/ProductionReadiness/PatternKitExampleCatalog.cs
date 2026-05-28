@@ -521,6 +521,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Specification"],
             ["composable business rules", "source-generated registry", "DI composition"]),
         Descriptor(
+            "Order Value Object Pattern",
+            "src/PatternKit.Examples/ValueObjectDemo/OrderValueObjectDemo.cs",
+            "test/PatternKit.Examples.Tests/ValueObjectDemo/OrderValueObjectDemoTests.cs",
+            "docs/examples/order-value-object-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Value Object"],
+            ["component equality", "source-generated factory and equality", "DI composition"]),
+        Descriptor(
             "Order Repository Pattern",
             "src/PatternKit.Examples/RepositoryDemo/OrderRepositoryDemo.cs",
             "test/PatternKit.Examples.Tests/RepositoryDemo/OrderRepositoryDemoTests.cs",

@@ -183,6 +183,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Service Layer | Execution | 151.32 ns | 960 B | 148.10 ns | 872 B | Generated slightly reduced execution time and allocation for the register-customer workflow. |
 | Specification | Construction | 196.03 ns | 1,704 B | 136.87 ns | 1,008 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Specification | Execution | 111.25 ns | 344 B | 93.30 ns | 344 B | Same allocation; generated was faster for loan-application evaluation. |
+| Value Object | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Value Object | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Splitter | Construction | 3.664 ns | 24 B | 4.020 ns | 24 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Splitter | Execution | 135.516 ns | 808 B | 134.062 ns | 832 B | Generated was slightly faster; fluent allocated slightly less for order line splitting. |
 | Strangler Fig | Construction | 53.71 ns | 416 B | 42.35 ns | 288 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -220,11 +222,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 101 catalog patterns and 404 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 102 catalog patterns and 408 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 16 | 64 |
+| Application Architecture | 17 | 68 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 17 | 68 |
 | Creational | 5 | 20 |
@@ -232,7 +234,7 @@ The coverage matrix currently publishes 101 catalog patterns and 404 pattern rou
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 96 generator source route results.
+The generator matrix currently publishes 97 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -265,6 +267,7 @@ The generator matrix currently publishes 96 generator source route results.
 | Application Architecture | Repository | Covered | Covered | Covered | Covered |
 | Application Architecture | Service Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Specification | Covered | Covered | Covered | Covered |
+| Application Architecture | Value Object | Covered | Covered | Covered | Covered |
 | Application Architecture | Table Data Gateway | Covered | Covered | Covered | Covered |
 | Application Architecture | Transaction Script | Covered | Covered | Covered | Covered |
 | Application Architecture | Unit of Work | Covered | Covered | Covered | Covered |
@@ -445,6 +448,7 @@ The generator matrix currently publishes 96 generator source route results.
 | SidecarGenerator | `src/PatternKit.Generators/Sidecar/SidecarGenerator.cs` | Covered |
 | SingletonGenerator | `src/PatternKit.Generators/Singleton/SingletonGenerator.cs` | Covered |
 | SpecificationGenerator | `src/PatternKit.Generators/Specification/SpecificationGenerator.cs` | Covered |
+| ValueObjectGenerator | `src/PatternKit.Generators/ValueObjects/ValueObjectGenerator.cs` | Covered |
 | StateMachineGenerator | `src/PatternKit.Generators/StateMachineGenerator.cs` | Covered |
 | StranglerFigGenerator | `src/PatternKit.Generators/StranglerFig/StranglerFigGenerator.cs` | Covered |
 | StrategyGenerator | `src/PatternKit.Generators/StrategyGenerator.cs` | Covered |

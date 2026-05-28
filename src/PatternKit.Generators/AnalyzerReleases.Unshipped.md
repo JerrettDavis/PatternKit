@@ -410,3 +410,6 @@ PKGWY003 | PatternKit.Generators.Messaging | Error | Messaging Gateway handler s
 PKSVA001 | PatternKit.Generators.Messaging | Error | Service Activator host type must be partial.
 PKSVA002 | PatternKit.Generators.Messaging | Error | Service Activator must declare exactly one handler.
 PKSVA003 | PatternKit.Generators.Messaging | Error | Service Activator handler signature is invalid.
+PKVO001 | PatternKit.Generators.ValueObjects | Error | Value Object host must be partial.
+PKVO002 | PatternKit.Generators.ValueObjects | Error | Value Object host must be a class.
+PKVO003 | PatternKit.Generators.ValueObjects | Error | Value Object must declare at least one component.

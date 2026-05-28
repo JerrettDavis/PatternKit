@@ -107,7 +107,7 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
             .Then("every catalog pattern appears in the benchmark results matrix", ctx =>
                 ScenarioExpect.Empty(ctx.MissingPatterns))
             .And("the guide publishes the route result total", ctx =>
-                ScenarioExpect.Contains("404 pattern route results", ctx.ResultsGuide))
+                ScenarioExpect.Contains("408 pattern route results", ctx.ResultsGuide))
             .AssertPassed();
 
     [Scenario("Published benchmark results include reusable hosting integrations")]

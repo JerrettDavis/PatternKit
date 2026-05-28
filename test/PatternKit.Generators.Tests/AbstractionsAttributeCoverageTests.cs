@@ -53,6 +53,7 @@ using PatternKit.Generators.TableDataGateway;
 using PatternKit.Generators.Template;
 using PatternKit.Generators.TransactionScript;
 using PatternKit.Generators.UnitOfWork;
+using PatternKit.Generators.ValueObjects;
 using PatternKit.Generators.Visitors;
 using TinyBDD;
 
@@ -286,6 +287,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(SingletonFactoryAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateSpecificationRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(SpecificationRuleAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateValueObjectAttribute), AttributeTargets.Class, false, false },
+        { typeof(ValueObjectComponentAttribute), AttributeTargets.Property, false, false },
         { typeof(StateMachineAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(StateTransitionAttribute), AttributeTargets.Method, true, false },
         { typeof(StateGuardAttribute), AttributeTargets.Method, true, false },
@@ -872,6 +875,19 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("approved", rule.Name);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateSpecificationRegistryAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new SpecificationRuleAttribute(""));
+    }
+
+    [Scenario("Value Object Attributes Expose Defaults")]
+    [Fact]
+    public void Value_Object_Attributes_Expose_Defaults()
+    {
+        var generator = new GenerateValueObjectAttribute
+        {
+            FactoryMethodName = "From"
+        };
+
+        ScenarioExpect.Equal("From", generator.FactoryMethodName);
+        ScenarioExpect.IsType<ValueObjectComponentAttribute>(new ValueObjectComponentAttribute());
     }
 
     [Scenario("Retry Attributes Expose Defaults And Configuration")]

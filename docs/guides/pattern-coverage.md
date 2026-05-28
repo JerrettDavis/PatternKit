@@ -106,6 +106,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Scheduler Agent Supervisor | `SchedulerAgentSupervisor<TWork,TResult>` | Scheduler Agent Supervisor generator |
 | Application Architecture | CQRS | Mediator/dispatcher command-query split | Dispatcher generator |
 | Application Architecture | Specification | `Specification<T>` and named registries | Specification generator |
+| Application Architecture | Value Object | `ValueObject<TSelf>` and `ValueObjectFactory<T>` | Value Object generator |
 | Application Architecture | Repository | `IRepository<TEntity,TKey>` and `InMemoryRepository<TEntity,TKey>` | Repository generator |
 | Application Architecture | Unit of Work | `UnitOfWork` | Unit of Work generator |
 | Application Architecture | Data Mapper | `DataMapper<TDomain,TData>` | Data Mapper generator |

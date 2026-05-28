@@ -441,6 +441,8 @@
           href: application/materialized-view.md
         - name: Specification
           href: application/specification.md
+        - name: Value Object
+          href: application/value-object.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:
