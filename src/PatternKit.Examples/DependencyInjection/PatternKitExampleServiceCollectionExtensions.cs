@@ -34,6 +34,7 @@ using PatternKit.Examples.CanonicalDataModelDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.CircuitBreakerDemo;
+using PatternKit.Examples.ContextMapDemo;
 using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.DomainServiceDemo;
@@ -199,6 +200,7 @@ public sealed record GeneratedInterpreterRulesExample(Interpreter<InterpreterRul
 public sealed record OrderAggregateRootPatternExample(OrderAggregateRootService Service);
 public sealed record ShippingDomainServicePatternExample(ShippingDomainService Service);
 public sealed record FulfillmentBoundedContextPatternExample(FulfillmentBoundedContextDemo.FulfillmentPlanner Planner);
+public sealed record CommerceContextMapPatternExample(CommerceContextMapDemo.CommerceContextMapReporter Reporter);
 public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<LoanApprovalSpecificationDemo.LoanApplication> Registry, LoanApprovalService Service);
 public sealed record OrderValueObjectPatternExample(OrderValueObjectService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
@@ -312,6 +314,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderAggregateRootPatternExample()
             .AddShippingDomainServicePatternExample()
             .AddFulfillmentBoundedContextPatternExample()
+            .AddCommerceContextMapPatternExample()
             .AddLoanApprovalSpecificationsExample()
             .AddOrderValueObjectPatternExample()
             .AddOrderRepositoryPatternExample()
@@ -936,6 +939,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddFulfillmentBoundedContextDemo();
         services.AddSingleton<FulfillmentBoundedContextPatternExample>(sp => new(sp.GetRequiredService<FulfillmentBoundedContextDemo.FulfillmentPlanner>()));
         return services.RegisterExample<FulfillmentBoundedContextPatternExample>("Fulfillment Bounded Context Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCommerceContextMapPatternExample(this IServiceCollection services)
+    {
+        services.AddCommerceContextMapDemo();
+        services.AddSingleton<CommerceContextMapPatternExample>(sp => new(sp.GetRequiredService<CommerceContextMapDemo.CommerceContextMapReporter>()));
+        return services.RegisterExample<CommerceContextMapPatternExample>("Commerce Context Map Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddLoanApprovalSpecificationsExample(this IServiceCollection services)

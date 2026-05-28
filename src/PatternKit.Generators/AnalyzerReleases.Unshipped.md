@@ -415,6 +415,9 @@ PKAGG002 | PatternKit.Generators.Aggregates | Error | Aggregate handler must dec
 PKAGG003 | PatternKit.Generators.Aggregates | Error | Aggregate handler must declare one event applier.
 PKAGG004 | PatternKit.Generators.Aggregates | Error | Aggregate decision signature is invalid.
 PKAGG005 | PatternKit.Generators.Aggregates | Error | Aggregate event applier signature is invalid.
+PKCMAP001 | PatternKit.Generators.ContextMaps | Error | Context map descriptor host must be partial.
+PKCMAP002 | PatternKit.Generators.ContextMaps | Error | Context map descriptor must declare at least one relationship.
+PKCMAP003 | PatternKit.Generators.ContextMaps | Error | Context map relationship is duplicated.
 PKCTX001 | PatternKit.Generators.BoundedContexts | Error | Bounded context descriptor host must be partial.
 PKCTX002 | PatternKit.Generators.BoundedContexts | Error | Bounded context descriptor must declare at least one capability.
 PKCTX003 | PatternKit.Generators.BoundedContexts | Error | Bounded context capability is duplicated.
