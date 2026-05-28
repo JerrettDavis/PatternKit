@@ -38,6 +38,9 @@ jobs:
           dotnet restore --use-lock-file
           dotnet tool restore
 
+      - name: Verify formatting
+        run: dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
+
       - name: Build (Release)
         run: dotnet build PatternKit.slnx --configuration Release --no-restore /p:ContinuousIntegrationBuild=true
 
@@ -133,6 +136,9 @@ jobs:
         run: |
           dotnet restore --use-lock-file
           dotnet tool restore
+
+      - name: Verify formatting
+        run: dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 
       - name: Fetch tags
         run: git fetch --prune --tags
