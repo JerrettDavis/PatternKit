@@ -169,6 +169,9 @@
 - name: Order Aggregate Root Pattern
   href: order-aggregate-root-pattern.md
 
+- name: Shipping Domain Service Pattern
+  href: shipping-domain-service-pattern.md
+
 - name: Order Value Object Pattern
   href: order-value-object-pattern.md
 

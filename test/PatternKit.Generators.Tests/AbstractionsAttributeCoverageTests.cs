@@ -19,6 +19,7 @@ using PatternKit.Generators.Composite;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
 using PatternKit.Generators.DomainEvents;
+using PatternKit.Generators.DomainServices;
 using PatternKit.Generators.EventCarriedStateTransfer;
 using PatternKit.Generators.EventNotification;
 using PatternKit.Generators.EventSourcing;
@@ -132,6 +133,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(DataMapperToDomainAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDomainEventDispatcherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DomainEventHandlerAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateDomainServiceRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(DomainServiceOperationAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateEventStoreAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateFacadeAttribute), AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct, true, false },
         { typeof(FacadeExposeAttribute), AttributeTargets.Method, false, false },
@@ -914,6 +917,25 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(null!, typeof(int), typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(typeof(string), null!, typeof(Guid)));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateAggregateCommandHandlerAttribute(typeof(string), typeof(int), null!));
+    }
+
+    [Scenario("Domain Service Attributes Expose Defaults And Validation")]
+    [Fact]
+    public void Domain_Service_Attributes_Expose_Defaults_And_Validation()
+    {
+        var generator = new GenerateDomainServiceRegistryAttribute(typeof(string), typeof(int))
+        {
+            FactoryMethodName = "Build"
+        };
+        var operation = new DomainServiceOperationAttribute("quote");
+
+        ScenarioExpect.Equal(typeof(string), generator.RequestType);
+        ScenarioExpect.Equal(typeof(int), generator.ResponseType);
+        ScenarioExpect.Equal("Build", generator.FactoryMethodName);
+        ScenarioExpect.Equal("quote", operation.Name);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainServiceRegistryAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDomainServiceRegistryAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new DomainServiceOperationAttribute(""));
     }
 
     [Scenario("Retry Attributes Expose Defaults And Configuration")]

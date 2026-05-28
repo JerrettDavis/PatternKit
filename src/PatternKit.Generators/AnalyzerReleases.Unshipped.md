@@ -415,6 +415,10 @@ PKAGG002 | PatternKit.Generators.Aggregates | Error | Aggregate handler must dec
 PKAGG003 | PatternKit.Generators.Aggregates | Error | Aggregate handler must declare one event applier.
 PKAGG004 | PatternKit.Generators.Aggregates | Error | Aggregate decision signature is invalid.
 PKAGG005 | PatternKit.Generators.Aggregates | Error | Aggregate event applier signature is invalid.
+PKDOM001 | PatternKit.Generators.DomainServices | Error | Domain service registry host must be partial.
+PKDOM002 | PatternKit.Generators.DomainServices | Error | Domain service registry must declare at least one operation.
+PKDOM003 | PatternKit.Generators.DomainServices | Error | Domain service operation signature is invalid.
+PKDOM004 | PatternKit.Generators.DomainServices | Error | Domain service operation is duplicated.
 PKVO001 | PatternKit.Generators.ValueObjects | Error | Value Object host must be partial.
 PKVO002 | PatternKit.Generators.ValueObjects | Error | Value Object host must be a class.
 PKVO003 | PatternKit.Generators.ValueObjects | Error | Value Object must declare at least one component.
