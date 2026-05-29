@@ -1956,5 +1956,177 @@ public class FacadeGeneratorTests
         ScenarioExpect.Contains(run.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKFAC003");
     }
 
+    [Scenario("ContractFirst SignatureMatchingFailures CoverParameterAndTaskBranches")]
+    [Fact]
+    public void ContractFirst_SignatureMatchingFailures_CoverParameterAndTaskBranches()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            [GenerateFacade]
+            public partial interface IEdgeFacade
+            {
+                int Convert(int value);
+                void Move(ref int value);
+                Task PingAsync();
+            }
+
+            public static class EdgeMappings
+            {
+                [FacadeMap]
+                public static int Convert(string value) => 0;
+
+                [FacadeMap]
+                public static void Move(int value) { }
+
+                [FacadeMap]
+                public static ValueTask PingAsync() => ValueTask.CompletedTask;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ContractFirst_SignatureMatchingFailures_CoverParameterAndTaskBranches),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("Convert"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("Move"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKFCD002" && d.GetMessage().Contains("PingAsync"));
+    }
+
+    [Scenario("ContractFirst MissingMapStub PreservesContractSignature")]
+    [Fact]
+    public void ContractFirst_MissingMapStub_PreservesContractSignature()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            [GenerateFacade(ForceAsync = true, MissingMap = FacadeMissingMapPolicy.Stub)]
+            public partial interface IStubFacade
+            {
+                void Touch();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ContractFirst_MissingMapStub_PreservesContractSignature),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = string.Join("\n", run.Results.SelectMany(r => r.GeneratedSources).Select(g => g.SourceText.ToString()));
+        ScenarioExpect.Contains("public void Touch()", generatedSource);
+        ScenarioExpect.Contains("throw new System.NotImplementedException", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("ContractFirst DependencyNameCollisions GenerateDistinctFields")]
+    [Fact]
+    public void ContractFirst_DependencyNameCollisions_GenerateDistinctFields()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs.Alpha
+            {
+                public interface IClient { string Name { get; } }
+            }
+
+            namespace TestNs.Beta
+            {
+                public interface IClient { string Name { get; } }
+            }
+
+            namespace TestNs
+            {
+                [GenerateFacade]
+                public partial interface IClientFacade
+                {
+                    string ReadAlpha();
+                    string ReadBeta();
+                }
+
+                public static class ClientMappings
+                {
+                    [FacadeMap(MemberName = nameof(IClientFacade.ReadAlpha))]
+                    public static string MapAlpha(Alpha.IClient client) => client.Name;
+
+                    [FacadeMap(MemberName = nameof(IClientFacade.ReadBeta))]
+                    public static string MapBeta(Beta.IClient client) => client.Name;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ContractFirst_DependencyNameCollisions_GenerateDistinctFields),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.All(diagnostics, d => ScenarioExpect.Equal("PKFCD004", d.Id));
+
+        var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("private readonly global::TestNs.Alpha.IClient _client;", generatedSource);
+        ScenarioExpect.Contains("private readonly global::TestNs.Beta.IClient _client1;", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("AutoFacade NullableClassAndStructConstraints")]
+    [Fact]
+    public void AutoFacade_NullableClassAndStructConstraints()
+    {
+        const string source = """
+            using PatternKit.Generators.Facade;
+
+            namespace TestNs;
+
+            public interface IExternal
+            {
+                void UseReference<T>(T value) where T : class?;
+                void UseStruct<T>(T value) where T : struct;
+            }
+
+            [GenerateFacade(TargetTypeName = "TestNs.IExternal")]
+            public partial interface IConstraintFacade { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(AutoFacade_NullableClassAndStructConstraints),
+            extra: [CoreRef, CommonRef]);
+
+        var gen = new FacadeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = run.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("where T : class?", generatedSource);
+        ScenarioExpect.Contains("where T : struct", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     #endregion
 }

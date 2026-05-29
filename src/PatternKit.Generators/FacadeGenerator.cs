@@ -726,7 +726,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
 
         // Build method signature
         var returnType = methodSymbol.ReturnType.ToDisplayString(FullyQualifiedFormat);
-        var isAsync = method.IsAsync || info.ForceAsync;
+        var isAsync = method.IsAsync;
         var asyncModifier = isAsync && method.MappingMethod is not null ? "async " : "";
 
         // Prefer ValueTask for generated async methods
