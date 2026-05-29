@@ -89,6 +89,49 @@ public sealed class MessagingBridgeGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine();
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Messaging.Bridges.MessagingBridge<").Append(inbound).Append(", ").Append(outbound).Append(">.Builder ").Append(factoryName).AppendLine("()");
+        sb.AppendLine(memberIndent + "{");
+        sb.Append(bodyIndent).Append("return global::PatternKit.Messaging.Bridges.MessagingBridge<").Append(inbound).Append(", ").Append(outbound).Append(">.Create(").Append(ToLiteral(bridgeName)).AppendLine(");");
+        sb.AppendLine(memberIndent + "}");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
         sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
@@ -96,14 +139,13 @@ public sealed class MessagingBridgeGenerator : IIncrementalGenerator
             sb.Append("abstract ");
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
-
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Messaging.Bridges.MessagingBridge<").Append(inbound).Append(", ").Append(outbound).Append(">.Builder ").Append(factoryName).AppendLine("()");
-        sb.Append("        => global::PatternKit.Messaging.Bridges.MessagingBridge<").Append(inbound).Append(", ").Append(outbound).Append(">.Create(").Append(ToLiteral(bridgeName)).AppendLine(");");
-        sb.AppendLine("}");
-        return sb.ToString();
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
     }
+
+    private static string? GetNamedString(AttributeData attribute, string name)
+        => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;
+
+    private static string ToLiteral(string value) => "@\"" + value.Replace("\"", "\"\"") + "\"";
 
     private static string GetAccessibility(Accessibility accessibility)
         => accessibility switch
@@ -116,9 +158,4 @@ public sealed class MessagingBridgeGenerator : IIncrementalGenerator
             Accessibility.ProtectedOrInternal => "protected internal",
             _ => "internal"
         };
-
-    private static string? GetNamedString(AttributeData attribute, string name)
-        => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;
-
-    private static string ToLiteral(string value) => "@\"" + value.Replace("\"", "\"\"") + "\"";
 }
