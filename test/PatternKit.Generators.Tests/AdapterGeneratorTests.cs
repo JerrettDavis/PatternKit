@@ -1432,4 +1432,249 @@ public class AdapterGeneratorTests
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Return type"));
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("ref kind mismatch"));
     }
+
+    [Scenario("AdapterDiagnostics UnboundGenericAdapteeAndInvalidMapParameters")]
+    [Fact]
+    public void AdapterDiagnostics_UnboundGenericAdapteeAndInvalidMapParameters()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public class LegacyService { }
+            public class GenericAdaptee<T> { }
+
+            public interface IName { string Name { get; } }
+            public interface IFormat { string Format(int value); }
+            public interface IDescribe { string Describe(int value); }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(GenericAdaptee<>))]
+            public static partial class OpenAdapteeHost { }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "MissingAdapteeAdapter")]
+            public static partial class MissingAdapteeHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName() => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "WrongAdapteeAdapter")]
+            public static partial class WrongAdapteeHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName(string adaptee) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "RefAdapteeAdapter")]
+            public static partial class RefAdapteeHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName(ref LegacyService adaptee) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "ExtensionAdapteeAdapter")]
+            public static partial class ExtensionAdapteeHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName(this LegacyService adaptee) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "ScopedAdapteeAdapter")]
+            public static partial class ScopedAdapteeHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName(scoped LegacyService adaptee) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IFormat), Adaptee = typeof(LegacyService), AdapterTypeName = "MissingParameterAdapter")]
+            public static partial class MissingParameterHost
+            {
+                [AdapterMap(TargetMember = nameof(IFormat.Format))]
+                public static string MapFormat(LegacyService adaptee) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IDescribe), Adaptee = typeof(LegacyService), AdapterTypeName = "WrongParameterTypeAdapter")]
+            public static partial class WrongParameterTypeHost
+            {
+                [AdapterMap(TargetMember = nameof(IDescribe.Describe))]
+                public static string MapDescribe(LegacyService adaptee, string value) => "";
+            }
+
+            [GenerateAdapter(Target = typeof(IName), Adaptee = typeof(LegacyService), AdapterTypeName = "PropertyParameterAdapter")]
+            public static partial class PropertyParameterHost
+            {
+                [AdapterMap(TargetMember = nameof(IName.Name))]
+                public static string MapName(LegacyService adaptee, int extra) => "";
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AdapterDiagnostics_UnboundGenericAdapteeAndInvalidMapParameters));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP007" && d.GetMessage().Contains("GenericAdaptee"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("First parameter must be"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("but was 'string'"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("must not have a ref"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("'scoped' modifier"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Expected 1 parameters"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("type mismatch"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP005" && d.GetMessage().Contains("Property getter mapping"));
+    }
+
+    [Scenario("GenerateAdapter PartialConflictAbstractBaseAndRefReadonlyDefaults")]
+    [Fact]
+    public void GenerateAdapter_PartialConflictAbstractBaseAndRefReadonlyDefaults()
+    {
+        const string source = """
+            using PatternKit.Generators.Adapter;
+
+            namespace TestNamespace;
+
+            public enum Mode { Slow = 0, Fast = 1 }
+
+            public abstract class OperationBase
+            {
+                internal OperationBase() { }
+                public abstract string Name { get; }
+            }
+
+            public abstract class OperationContract : OperationBase
+            {
+                internal OperationContract() { }
+                public abstract int Execute(ref int value, out int written, in bool enabled, ref readonly long snapshot, Mode mode = (Mode)99);
+            }
+
+            public class LegacyOperation { }
+
+            public partial class LegacyOperationToOperationContractAdapter { }
+
+            [GenerateAdapter(Target = typeof(OperationContract), Adaptee = typeof(LegacyOperation))]
+            public static partial class OperationAdapters
+            {
+                [AdapterMap(TargetMember = nameof(OperationBase.Name))]
+                public static string MapName(LegacyOperation adaptee) => "ready";
+
+                [AdapterMap(TargetMember = nameof(OperationContract.Execute))]
+                public static int MapExecute(LegacyOperation adaptee, ref int value, out int written, in bool enabled, ref readonly long snapshot, Mode mode)
+                {
+                    written = value;
+                    return enabled ? (int)snapshot : 0;
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateAdapter_PartialConflictAbstractBaseAndRefReadonlyDefaults));
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace.LegacyOperationToOperationContractAdapter.Adapter.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public sealed partial class LegacyOperationToOperationContractAdapter", generatedSource);
+        ScenarioExpect.Contains("public override string Name", generatedSource);
+        ScenarioExpect.Contains("ref readonly long snapshot", generatedSource);
+        ScenarioExpect.Contains("in snapshot", generatedSource);
+        ScenarioExpect.Contains("global::TestNamespace.Mode mode = (global::TestNamespace.Mode)99", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("GenerateAdapter MetadataTargetAndMetadataConflict")]
+    [Fact]
+    public void GenerateAdapter_MetadataTargetAndMetadataConflict()
+    {
+        const string contractSource = """
+            namespace External
+            {
+                public interface IExternal
+                {
+                    string Name { get; }
+                    int Execute(int value);
+                }
+
+                public class Legacy { }
+            }
+
+            namespace Consumer
+            {
+                public class LegacyToIExternalAdapter { }
+            }
+            """;
+
+        var contractCompilation = RoslynTestHelpers.CreateCompilation(contractSource, "ExternalContracts");
+        using var contractImage = new MemoryStream();
+        var contractEmit = contractCompilation.Emit(contractImage);
+        ScenarioExpect.True(contractEmit.Success, string.Join("\n", contractEmit.Diagnostics));
+
+        var contractReference = MetadataReference.CreateFromImage(contractImage.ToArray());
+
+        const string generateSource = """
+            using External;
+            using PatternKit.Generators.Adapter;
+
+            namespace GeneratedConsumer;
+
+            [GenerateAdapter(Target = typeof(IExternal), Adaptee = typeof(Legacy))]
+            public static partial class ExternalAdapters
+            {
+                [AdapterMap(TargetMember = nameof(IExternal.Name))]
+                public static string MapName(Legacy adaptee) => "ready";
+
+                [AdapterMap(TargetMember = nameof(IExternal.Execute))]
+                public static int MapExecute(Legacy adaptee, int value) => value;
+            }
+            """;
+
+        var generateCompilation = RoslynTestHelpers.CreateCompilation(
+            generateSource,
+            nameof(GenerateAdapter_MetadataTargetAndMetadataConflict) + "Generate",
+            extra: contractReference);
+        var gen = new AdapterGenerator();
+        _ = RoslynTestHelpers.Run(generateCompilation, gen, out var generateResult, out var updated);
+
+        ScenarioExpect.All(generateResult.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = generateResult.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "GeneratedConsumer.LegacyToIExternalAdapter.Adapter.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public string Name", generatedSource);
+        ScenarioExpect.Contains("public int Execute(int value)", generatedSource);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
+
+        const string conflictSource = """
+            using External;
+            using PatternKit.Generators.Adapter;
+
+            namespace Consumer;
+
+            [GenerateAdapter(Target = typeof(IExternal), Adaptee = typeof(Legacy))]
+            public static partial class ExternalAdapters
+            {
+                [AdapterMap(TargetMember = nameof(IExternal.Name))]
+                public static string MapName(Legacy adaptee) => "ready";
+
+                [AdapterMap(TargetMember = nameof(IExternal.Execute))]
+                public static int MapExecute(Legacy adaptee, int value) => value;
+            }
+            """;
+
+        var conflictCompilation = RoslynTestHelpers.CreateCompilation(
+            conflictSource,
+            nameof(GenerateAdapter_MetadataTargetAndMetadataConflict) + "Conflict",
+            extra: contractReference);
+        _ = RoslynTestHelpers.Run(conflictCompilation, gen, out var conflictResult, out _);
+
+        var diagnostics = conflictResult.Results.SelectMany(r => r.Diagnostics);
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKADP006" && d.GetMessage().Contains("LegacyToIExternalAdapter"));
+    }
 }
