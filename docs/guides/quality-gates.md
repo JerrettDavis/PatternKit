@@ -12,26 +12,31 @@ dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 dotnet build PatternKit.slnx --configuration Release --no-restore -m:1
 ```
 
-Run the focused test suite for the area being changed. For broad changes, run the same project-by-project coverage shape used by CI:
+Run the focused test suite for the area being changed. For broad changes, run the same solution-level coverage shape used by CI:
 
 ```bash
-for project in \
-  test/PatternKit.Tests/PatternKit.Tests.csproj \
-  test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
-  test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
-  test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj
-do
-  dotnet test "$project" \
-    --configuration Release \
-    --no-build \
-    -p:TestTfmsInParallel=false \
-    --collect:"XPlat Code Coverage" \
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
-    -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
-    -- RunConfiguration.TestSessionTimeout=1800000
-done
+dotnet test PatternKit.slnx \
+  --configuration Release \
+  --no-build \
+  -p:TestTfmsInParallel=false \
+  --collect:"XPlat Code Coverage" \
+  --results-directory ./TestResults \
+  -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 ```
+
+Generate the same maintained-source coverage summary that CI publishes:
+
+```bash
+dotnet tool restore
+dotnet tool run reportgenerator \
+  -reports:"TestResults/**/coverage.cobertura.xml" \
+  -targetdir:"coverage-report" \
+  -reporttypes:"TextSummary;Cobertura" \
+  -assemblyfilters:"+PatternKit*;-*Tests*" \
+  -filefilters:"-**/*.Tests/*;-**/*Tests*/**;-**/obj/**;-**/bin/**;-**/*.g.cs"
+```
+
+The Codecov project and patch gates target at least 95% maintained-source coverage. The preferred direction is 99-100%, so coverage work should close real behavior gaps rather than lower thresholds.
 
 Build documentation with warnings treated as failures:
 

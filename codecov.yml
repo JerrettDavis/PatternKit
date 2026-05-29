@@ -1,3 +1,19 @@
 ignore:
   - "**/*.Tests/**"
   - "**/*Tests*/**"
+  - "**/bin/**"
+  - "**/obj/**"
+  - "**/*.g.cs"
+
+coverage:
+  status:
+    project:
+      default:
+        target: 95%
+        threshold: 0.1%
+        if_ci_failed: error
+    patch:
+      default:
+        target: 95%
+        threshold: 0.1%
+        if_ci_failed: error
