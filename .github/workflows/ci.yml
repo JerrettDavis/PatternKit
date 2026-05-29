@@ -75,7 +75,7 @@ jobs:
             -targetdir:"coverage-report" \
             -reporttypes:"HtmlInline;Cobertura;TextSummary;lcov;Badges" \
             -assemblyfilters:"+PatternKit*;-*Tests*" \
-            -filefilters:"-**/*.Tests/*;-**/*Tests*/**"
+            -filefilters:"-**/*.Tests/*;-**/*Tests*/**;-**/obj/**;-**/bin/**;-**/*.g.cs"
           echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_ENV
           sed -n '1,60p' coverage-report/Summary.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
