@@ -306,6 +306,139 @@ public class FactoriesGeneratorTests
         ScenarioExpect.Contains(diags, d => d.Id == "PKKF006");
     }
 
+    [Scenario("FactoryMethod EmptyHost SkipsGeneration")]
+    [Fact]
+    public void FactoryMethod_EmptyHost_SkipsGeneration()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(string))]
+                            public static partial class EmptyFactory
+                            {
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryMethod_EmptyHost_SkipsGeneration));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
+        ScenarioExpect.Empty(run.Results.SelectMany(r => r.GeneratedSources));
+    }
+
+    [Scenario("FactoryMethod ValidatesDefaultsAndStringKeyComparer")]
+    [Fact]
+    public void FactoryMethod_ValidatesDefaultsAndStringKeyComparer()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(string))]
+                            public static partial class BadFactory
+                            {
+                                [FactoryCase("json")]
+                                public static string Json() => "json";
+
+                                [FactoryCase("JSON")]
+                                public static string JsonDuplicate() => "json duplicate";
+
+                                [FactoryCase(null)]
+                                public static string NullKey() => "null";
+
+                                [FactoryCase(null)]
+                                public static string NullDuplicate() => "null duplicate";
+
+                                [FactoryDefault]
+                                public static string Default() => "default";
+
+                                [FactoryDefault]
+                                public static string ExtraDefault() => "extra";
+
+                                [FactoryDefault]
+                                public string InstanceDefault() => "instance";
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryMethod_ValidatesDefaultsAndStringKeyComparer));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diags = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF003" && d.GetMessage().Contains("\"JSON\""));
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF003" && d.GetMessage().Contains("null"));
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF004");
+    }
+
+    [Scenario("FactoryMethod InstanceDefault ReportsStaticDiagnostic")]
+    [Fact]
+    public void FactoryMethod_InstanceDefault_ReportsStaticDiagnostic()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(string))]
+                            public static partial class BadFactory
+                            {
+                                [FactoryDefault]
+                                public string InstanceDefault() => "instance";
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryMethod_InstanceDefault_ReportsStaticDiagnostic));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diags = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF006" && d.GetMessage().Contains("InstanceDefault"));
+    }
+
+    [Scenario("FactoryMethod DefaultSignatureMismatch ReportsDiagnostic")]
+    [Fact]
+    public void FactoryMethod_DefaultSignatureMismatch_ReportsDiagnostic()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(int))]
+                            public static partial class BadFactory
+                            {
+                                [FactoryCase(1)]
+                                public static string One(int value) => value.ToString();
+
+                                [FactoryDefault]
+                                public static string Default() => "default";
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryMethod_DefaultSignatureMismatch_ReportsDiagnostic));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diags = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diags, d => d.Id == "PKKF002");
+    }
+
     [Scenario("FactoryMethod Honors String Case Sensitivity")]
     [Fact]
     public void FactoryMethod_Honors_String_Case_Sensitivity()
@@ -437,6 +570,40 @@ public class FactoriesGeneratorTests
 
         var diags = run.Results.Single().Diagnostics;
         ScenarioExpect.Contains(diags, d => d.Id == "PKCF006");
+    }
+
+    [Scenario("FactoryClass FlagsAbstractProductAndMultipleBases")]
+    [Fact]
+    public void FactoryClass_FlagsAbstractProductAndMultipleBases()
+    {
+        const string user = """
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryClass(typeof(string))]
+                            public interface ILeft { }
+
+                            [FactoryClass(typeof(string), FactoryTypeName = "RightFactory")]
+                            public interface IRight { }
+
+                            [FactoryClassKey("abstract")]
+                            public abstract class AbstractLeft : ILeft { }
+
+                            [FactoryClassKey("both")]
+                            public class Both : ILeft, IRight { }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            user,
+            assemblyName: nameof(FactoryClass_FlagsAbstractProductAndMultipleBases));
+
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diags = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF003" && d.GetMessage().Contains("AbstractLeft"));
+        ScenarioExpect.Contains(diags, d => d.Id == "PKCF002" && d.GetMessage().Contains("Both"));
     }
 
     [Scenario("FactoryClass Respects GenerateTryCreate Flag")]
@@ -639,6 +806,43 @@ public class FactoriesGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryMethod AsyncStringDefault EmitsDefaultBranches")]
+    [Fact]
+    public void FactoryMethod_AsyncStringDefault_EmitsDefaultBranches()
+    {
+        const string user = """
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryMethod(typeof(string))]
+                            public static partial class FormatterFactory
+                            {
+                                [FactoryCase("json")]
+                                public static ValueTask<string> JsonAsync() => ValueTask.FromResult("json");
+
+                                [FactoryDefault]
+                                public static Task<string> DefaultAsync() => Task.FromResult("default");
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryMethod_AsyncStringDefault_EmitsDefaultBranches));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "FormatterFactory.FactoryMethod.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("return new global::System.Threading.Tasks.ValueTask<string>(DefaultAsync())", generated);
+        ScenarioExpect.Contains("return (false, await DefaultAsync())", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("FactoryMethod Async Numeric NoDefault EmitsSwitchBranches")]
     [Fact]
     public void FactoryMethod_Async_Numeric_NoDefault_EmitsSwitchBranches()
@@ -727,6 +931,43 @@ public class FactoriesGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("FactoryClass PrivateCtorAsyncFactory CoversSyncCreateFallback")]
+    [Fact]
+    public void FactoryClass_PrivateCtorAsyncFactory_CoversSyncCreateFallback()
+    {
+        const string user = """
+                            using System.Threading.Tasks;
+                            using PatternKit.Generators.Factories;
+
+                            namespace Demo;
+
+                            [FactoryClass(typeof(string), FactoryTypeName = "HandlerFactory")]
+                            public interface IHandler { }
+
+                            [FactoryClassKey("async")]
+                            public sealed class AsyncOnlyHandler : IHandler
+                            {
+                                private AsyncOnlyHandler() { }
+                                public static Task<IHandler> CreateAsync() => Task.FromResult<IHandler>(new AsyncOnlyHandler());
+                            }
+                            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(user, assemblyName: nameof(FactoryClass_PrivateCtorAsyncFactory_CoversSyncCreateFallback));
+        var gen = new FactoriesGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.True(r.Diagnostics.IsEmpty));
+        var generated = run.Results.SelectMany(r => r.GeneratedSources)
+            .Single(g => g.HintName == "HandlerFactory.FactoryClass.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("global::Demo.AsyncOnlyHandler.CreateAsync().GetAwaiter().GetResult()", generated);
+        ScenarioExpect.Contains("new global::System.Threading.Tasks.ValueTask<global::Demo.IHandler>(global::Demo.AsyncOnlyHandler.CreateAsync())", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("FactoryClass StringKeysGenerateStableEnumNamesAndNullComparers")]
     [Fact]
     public void FactoryClass_StringKeysGenerateStableEnumNamesAndNullComparers()
@@ -796,6 +1037,9 @@ public class FactoriesGeneratorTests
 
                 [FactoryCase(Channel.Email)]
                 public static string EnumKey() => "";
+
+                [FactoryCase((Channel)99)]
+                public static string UnknownEnumKey() => "";
             }
 
             public static class SignatureSamples
@@ -828,14 +1072,21 @@ public class FactoriesGeneratorTests
         ScenarioExpect.Equal("true", InvokeFactoryHelper<string>("ToLiteral", constants["BoolKey"]));
         ScenarioExpect.Equal("42", InvokeFactoryHelper<string>("ToLiteral", constants["NumberKey"]));
         ScenarioExpect.Equal("global::Demo.Channel.Email", InvokeFactoryHelper<string>("ToLiteral", constants["EnumKey"]));
+        ScenarioExpect.Equal("(global::Demo.Channel)99", InvokeFactoryHelper<string>("ToLiteral", constants["UnknownEnumKey"]));
 
         ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["StringKey"]));
         ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, boolType, constants["BoolKey"]));
         ScenarioExpect.True(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, intType, constants["NumberKey"]));
         ScenarioExpect.False(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, stringType, constants["NumberKey"]));
+        ScenarioExpect.False(InvokeFactoryHelper<bool>("IsKeyCompatible", compilation, intType, default(TypedConstant)));
         ScenarioExpect.True(InvokeFactoryHelper<bool>("NeedsNullCheck", stringType));
         ScenarioExpect.False(InvokeFactoryHelper<bool>("NeedsNullCheck", intType));
         ScenarioExpect.True(InvokeFactoryHelper<bool>("IsStringType", stringType));
+        ScenarioExpect.Equal("private", InvokeFactoryHelper<string>("AccessibilityToString", Accessibility.Private));
+        ScenarioExpect.Equal("internal", InvokeFactoryHelper<string>("AccessibilityToString", Accessibility.Internal));
+        ScenarioExpect.Equal("protected", InvokeFactoryHelper<string>("AccessibilityToString", Accessibility.Protected));
+        ScenarioExpect.Equal("private protected", InvokeFactoryHelper<string>("AccessibilityToString", Accessibility.ProtectedAndInternal));
+        ScenarioExpect.Equal("protected internal", InvokeFactoryHelper<string>("AccessibilityToString", Accessibility.ProtectedOrInternal));
 
         var existing = new HashSet<string>(StringComparer.Ordinal);
         ScenarioExpect.Equal("HelloWorld", InvokeFactoryHelper<string>("BuildEnumMemberName", constants["StringKey"], stringType, existing));
