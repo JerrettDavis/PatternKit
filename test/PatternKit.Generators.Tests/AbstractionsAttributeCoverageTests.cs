@@ -1465,6 +1465,17 @@ public sealed class AbstractionsAttributeCoverageTests
         };
         var translatorDrop = new MessageTranslatorDropHeaderAttribute("raw-signature");
         var translatorHeader = new MessageTranslatorHeaderAttribute("content-type", "application/vnd.demo+json");
+        var dynamicRouter = new GenerateDynamicRouterAttribute(typeof(string), typeof(int))
+        {
+            FactoryName = "BuildDynamicRouter"
+        };
+        var dynamicRoute = new DynamicRouteAttribute("vip", 2, "IsVip");
+        var durableSubscriber = new GenerateDurableSubscriberAttribute(typeof(string))
+        {
+            FactoryName = "BuildDurableSubscriber",
+            SubscriberName = "shipment-projection"
+        };
+        var durableHandler = new DurableSubscriberHandlerAttribute("project");
 
         ScenarioExpect.Equal(typeof(string), flyweight.KeyType);
         ScenarioExpect.Equal("SymbolCache", flyweight.CacheTypeName);
@@ -1645,6 +1656,16 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("raw-signature", translatorDrop.Name);
         ScenarioExpect.Equal("content-type", translatorHeader.Name);
         ScenarioExpect.Equal("application/vnd.demo+json", translatorHeader.Value);
+        ScenarioExpect.Equal(typeof(string), dynamicRouter.PayloadType);
+        ScenarioExpect.Equal(typeof(int), dynamicRouter.ResultType);
+        ScenarioExpect.Equal("BuildDynamicRouter", dynamicRouter.FactoryName);
+        ScenarioExpect.Equal("vip", dynamicRoute.Name);
+        ScenarioExpect.Equal(2, dynamicRoute.Order);
+        ScenarioExpect.Equal("IsVip", dynamicRoute.PredicateMethodName);
+        ScenarioExpect.Equal(typeof(string), durableSubscriber.PayloadType);
+        ScenarioExpect.Equal("BuildDurableSubscriber", durableSubscriber.FactoryName);
+        ScenarioExpect.Equal("shipment-projection", durableSubscriber.SubscriberName);
+        ScenarioExpect.Equal("project", durableHandler.Name);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateMessageChannelAttribute(null!));
         ScenarioExpect.Equal(typeof(string), messageBus.PayloadType);
         ScenarioExpect.Equal("BuildBus", messageBus.FactoryName);
@@ -1745,6 +1766,13 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new MessageTranslatorDropHeaderAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new MessageTranslatorHeaderAttribute("", "value"));
         ScenarioExpect.Throws<ArgumentNullException>(() => new MessageTranslatorHeaderAttribute("content-type", null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDynamicRouterAttribute(null!, typeof(int)));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDynamicRouterAttribute(typeof(string), null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new DynamicRouteAttribute("", 1, "Predicate"));
+        ScenarioExpect.Throws<ArgumentException>(() => new DynamicRouteAttribute("route", 1, ""));
+        ScenarioExpect.IsType<DynamicRouteDefaultAttribute>(new DynamicRouteDefaultAttribute());
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDurableSubscriberAttribute(null!));
+        ScenarioExpect.Throws<ArgumentException>(() => new DurableSubscriberHandlerAttribute(""));
         ScenarioExpect.IsType<MessageTranslatorHandlerAttribute>(new MessageTranslatorHandlerAttribute());
         ScenarioExpect.IsType<SagaCompleteWhenAttribute>(new SagaCompleteWhenAttribute());
         ScenarioExpect.IsType<ContentRouteDefaultAttribute>(new ContentRouteDefaultAttribute());

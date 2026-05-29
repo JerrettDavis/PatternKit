@@ -219,34 +219,86 @@ public sealed class DynamicRouterGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.Append("partial ").Append(GetKind(type)).Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Messaging.Routing.DynamicRouter<")
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        sb.AppendLine();
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var chainIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Messaging.Routing.DynamicRouter<")
             .Append(payloadType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .Append(", ")
             .Append(resultType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .Append("> ")
             .Append(factoryName)
             .AppendLine("()");
-        sb.Append("        => global::PatternKit.Messaging.Routing.DynamicRouter<")
+        sb.Append(chainIndent).Append("=> global::PatternKit.Messaging.Routing.DynamicRouter<")
             .Append(payloadType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .Append(", ")
             .Append(resultType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
             .AppendLine(">.Create()");
 
         foreach (var route in routes)
-            sb.Append("            .When(@\"").Append(route.Name).Append("\", ").Append(route.Order).Append(", ").Append(route.PredicateMethodName).Append(").Then(").Append(route.HandlerMethodName).AppendLine(")");
+            sb.Append(chainIndent).Append("    .When(@\"").Append(route.Name).Append("\", ").Append(route.Order).Append(", ").Append(route.PredicateMethodName).Append(").Then(").Append(route.HandlerMethodName).AppendLine(")");
 
         if (defaultHandler is not null)
-            sb.Append("            .Default(").Append(defaultHandler).AppendLine(")");
+            sb.Append(chainIndent).Append("    .Default(").Append(defaultHandler).AppendLine(")");
 
-        sb.AppendLine("            .Build();");
-        sb.AppendLine("}");
+        sb.Append(chainIndent).AppendLine("    .Build();");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
         return sb.ToString();
     }
 
-    private static string GetKind(INamedTypeSymbol type)
-        => type.TypeKind == TypeKind.Struct ? "struct" : "class";
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
+        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        if (type.IsStatic)
+            sb.Append("static ");
+        else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
+            sb.Append("abstract ");
+        else if (type.IsSealed && type.TypeKind == TypeKind.Class)
+            sb.Append("sealed ");
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
+    }
+
+    private static string GetAccessibility(Accessibility accessibility)
+        => accessibility switch
+        {
+            Accessibility.Public => "public",
+            Accessibility.Internal => "internal",
+            Accessibility.Private => "private",
+            Accessibility.Protected => "protected",
+            Accessibility.ProtectedAndInternal => "private protected",
+            Accessibility.ProtectedOrInternal => "protected internal",
+            _ => "internal"
+        };
 
     private static string? GetNamedString(AttributeData attribute, string name)
         => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;
