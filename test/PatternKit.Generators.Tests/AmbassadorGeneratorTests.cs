@@ -50,52 +50,146 @@ public sealed partial class AmbassadorGeneratorTests(ITestOutputHelper output) :
         .AssertPassed();
 
     [Scenario("Reports diagnostics for invalid ambassador declarations")]
+    [Theory]
+    [InlineData("public static class AmbassadorHost { [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB001")]
+    [InlineData("public static partial class AmbassadorHost;", "PKAMB002")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorCall] private static int One(AmbassadorContext<string> ctx) => 1; [AmbassadorCall] private static int Two(AmbassadorContext<string> ctx) => 2; }", "PKAMB002")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorConnectionPolicy] private static bool One(string request) => true; [AmbassadorConnectionPolicy] private static bool Two(string request) => true; [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB002")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorFallback] private static int One(AmbassadorContext<string> ctx) => 1; [AmbassadorFallback] private static int Two(AmbassadorContext<string> ctx) => 2; [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB002")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorTransform] private static int Transform(string request) => 1; [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB003")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorConnectionPolicy] private static string CanConnect(string request) => request; [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB003")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorTelemetry(\"trace\")] private static int Trace(AmbassadorContext<string> ctx) => 1; [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB003")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorCall] private static string Call(AmbassadorContext<string> ctx) => \"\"; }", "PKAMB003")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; [AmbassadorFallback] private static string Fallback(AmbassadorContext<string> ctx) => \"\"; }", "PKAMB003")]
+    [InlineData("public static partial class AmbassadorHost { [AmbassadorTelemetry(\"trace\")] private static void Trace(AmbassadorContext<string> ctx) { } [AmbassadorTelemetry(\"TRACE\")] private static void Trace2(AmbassadorContext<string> ctx) { } [AmbassadorCall] private static int Call(AmbassadorContext<string> ctx) => 1; }", "PKAMB004")]
+    public Task Reports_Diagnostics_For_Invalid_Ambassador_Declarations(string declaration, string expected)
+        => Given("an invalid ambassador declaration", () => Compile($$"""
+            using PatternKit.Cloud.Ambassador;
+            using PatternKit.Generators.Ambassador;
+            [GenerateAmbassador(typeof(string), typeof(int))]
+            {{declaration}}
+            """))
+        .Then("diagnostics identify invalid declarations", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == expected))
+        .AssertPassed();
+
+    [Scenario("Generates ambassador defaults and host shapes")]
     [Fact]
-    public Task Reports_Diagnostics_For_Invalid_Ambassador_Declarations()
-        => Given("invalid ambassador declarations", () => new[]
+    public Task Generates_Ambassador_Defaults_And_Host_Shapes()
+        => Given("ambassador declarations with default names and different host shapes", () => Compile("""
+            using PatternKit.Cloud.Ambassador;
+            using PatternKit.Generators.Ambassador;
+            namespace Demo;
+            public sealed record InventoryRequest(string Sku);
+            public sealed record InventoryResponse(string Status);
+
+            [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse))]
+            internal abstract partial class AbstractAmbassador
+            {
+                [AmbassadorCall]
+                private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+            }
+
+            [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse), AmbassadorName = "tenant\\\"ambassador")]
+            public sealed partial class SealedAmbassador
+            {
+                [AmbassadorCall]
+                private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+            }
+
+            [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse))]
+            internal partial struct StructAmbassador
+            {
+                [AmbassadorCall]
+                private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+            }
+            """))
+        .Then("generated sources preserve host shape and configured names", result =>
         {
-            Compile("""
-                using PatternKit.Generators.Ambassador;
-                [GenerateAmbassador(typeof(string), typeof(int))]
-                public static class AmbassadorHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.Ambassador;
-                [GenerateAmbassador(typeof(string), typeof(int))]
-                public static partial class AmbassadorHost;
-                """),
-            Compile("""
-                using PatternKit.Cloud.Ambassador;
-                using PatternKit.Generators.Ambassador;
-                [GenerateAmbassador(typeof(string), typeof(int))]
-                public static partial class AmbassadorHost
-                {
-                    [AmbassadorCall]
-                    private static string Call(AmbassadorContext<string> ctx) => "";
-                }
-                """),
-            Compile("""
-                using PatternKit.Cloud.Ambassador;
-                using PatternKit.Generators.Ambassador;
-                [GenerateAmbassador(typeof(string), typeof(int))]
-                public static partial class AmbassadorHost
-                {
-                    [AmbassadorTelemetry("trace")]
-                    private static void Trace(AmbassadorContext<string> ctx) { }
-                    [AmbassadorTelemetry("TRACE")]
-                    private static void Trace2(AmbassadorContext<string> ctx) { }
-                    [AmbassadorCall]
-                    private static int Call(AmbassadorContext<string> ctx) => 1;
-                }
-                """)
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractAmbassador", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedAmbassador", combined);
+            ScenarioExpect.Contains("internal partial struct StructAmbassador", combined);
+            ScenarioExpect.Contains("Create(\"ambassador\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"ambassador\")", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
-        .Then("diagnostics identify invalid declarations", results =>
+        .AssertPassed();
+
+    [Scenario("Generates nested ambassador host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Ambassador_Host_Wrappers()
+        => Given("nested ambassador declarations", () => Compile("""
+            using PatternKit.Cloud.Ambassador;
+            using PatternKit.Generators.Ambassador;
+            namespace Demo;
+            public sealed record InventoryRequest(string Sku);
+            public sealed record InventoryResponse(string Status);
+
+            public partial class AmbassadorContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse))]
+                    protected partial class ProtectedAmbassador
+                    {
+                        [AmbassadorCall]
+                        private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+                    }
+
+                    [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse))]
+                    private protected partial class PrivateProtectedAmbassador
+                    {
+                        [AmbassadorCall]
+                        private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+                    }
+
+                    [GenerateAmbassador(typeof(InventoryRequest), typeof(InventoryResponse))]
+                    protected internal partial class ProtectedInternalAmbassador
+                    {
+                        [AmbassadorCall]
+                        private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
         {
-            ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKAMB001");
-            ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKAMB002");
-            ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKAMB003");
-            ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKAMB004");
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class AmbassadorContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedAmbassador", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedAmbassador", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalAmbassador", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
+        .AssertPassed();
+
+    [Scenario("Skips malformed ambassador type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(InventoryResponse)")]
+    [InlineData("typeof(InventoryRequest)", "null!")]
+    public Task Skips_Malformed_Ambassador_Type_Arguments(string requestType, string responseType)
+        => Given("an ambassador declaration with a null type argument", () => Compile($$"""
+            using PatternKit.Cloud.Ambassador;
+            using PatternKit.Generators.Ambassador;
+            public sealed record InventoryRequest(string Sku);
+            public sealed record InventoryResponse(string Status);
+            [GenerateAmbassador({{requestType}}, {{responseType}})]
+            public static partial class InventoryAmbassador
+            {
+                [AmbassadorCall]
+                private static InventoryResponse Call(AmbassadorContext<InventoryRequest> ctx) => new("ok");
+            }
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
