@@ -69,50 +69,151 @@ public sealed partial class MaterializedViewGeneratorTests(ITestOutputHelper out
         .AssertPassed();
 
     [Scenario("Generator reports invalid materialized view declarations")]
-    [Fact]
-    public Task Generator_Reports_Invalid_Materialized_View_Declarations()
-        => Given("a non-partial materialized view declaration", () => Compile("""
+    [Theory]
+    [InlineData("public static class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => state; }", "PKMV001")]
+    [InlineData("public static partial class OrderProjection;", "PKMV002")]
+    [InlineData("public partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => state; }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OtherEvent))] private static OrderState ApplyOther(OrderState state, OtherEvent @event) => state; }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static OrderState ApplyPlaced() => new(string.Empty); }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static OrderState ApplyPlaced(OrderState state) => state; }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static OrderState ApplyPlaced(string state, OrderPlaced @event) => new(@event.OrderId); }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static OrderState ApplyPlaced(OrderState state, OrderEvent @event) => state; }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static string ApplyPlaced(OrderState state, OrderPlaced @event) => @event.OrderId; }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static ValueTask<OrderState> ApplyPlaced(OrderState state, OrderPlaced @event, string cancellationToken) => new(state); }", "PKMV003")]
+    [InlineData("public static partial class OrderProjection { [MaterializedViewHandler(typeof(OrderPlaced))] private static ValueTask<string> ApplyPlaced(OrderState state, OrderPlaced @event, CancellationToken cancellationToken) => new(@event.OrderId); }", "PKMV003")]
+    public Task Generator_Reports_Invalid_Materialized_View_Declarations(string declaration, string diagnosticId)
+        => Given("an invalid materialized view declaration", () => Compile($$"""
+            using System.Threading;
+            using System.Threading.Tasks;
             using PatternKit.Generators.MaterializedViews;
             public abstract record OrderEvent(string OrderId);
+            public sealed record OrderPlaced(string OrderId) : OrderEvent(OrderId);
+            public sealed record OtherEvent(string OrderId);
             public sealed record OrderState(string OrderId);
             [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
-            public static class OrderProjection;
+            {{declaration}}
             """))
-        .Then("the partial diagnostic is reported", result =>
-            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKMV001"))
+        .Then("the expected diagnostic is reported", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
         .AssertPassed();
 
-    [Scenario("Generator reports materialized view declarations without handlers")]
+    [Scenario("Generator emits materialized view defaults and host shapes")]
     [Fact]
-    public Task Generator_Reports_Materialized_View_Declarations_Without_Handlers()
-        => Given("a partial materialized view declaration without handlers", () => Compile("""
+    public Task Generator_Emits_Materialized_View_Defaults_And_Host_Shapes()
+        => Given("materialized view declarations with default names and different host shapes", () => Compile("""
             using PatternKit.Generators.MaterializedViews;
+            namespace Demo;
             public abstract record OrderEvent(string OrderId);
+            public sealed record OrderPlaced(string OrderId) : OrderEvent(OrderId);
             public sealed record OrderState(string OrderId);
+
             [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
-            public static partial class OrderProjection;
+            internal abstract partial class AbstractProjection
+            {
+                [MaterializedViewHandler(typeof(OrderPlaced))]
+                private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+            }
+
+            [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent), ViewName = "tenant\\\"projection")]
+            public sealed partial class SealedProjection
+            {
+                [MaterializedViewHandler(typeof(OrderPlaced))]
+                private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+            }
+
+            [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+            internal partial struct StructProjection
+            {
+                [MaterializedViewHandler(typeof(OrderPlaced))]
+                private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+            }
             """))
-        .Then("the missing handlers diagnostic is reported", result =>
-            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKMV002"))
+        .Then("generated sources preserve host shape and configured names", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractProjection", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedProjection", combined);
+            ScenarioExpect.Contains("internal partial struct StructProjection", combined);
+            ScenarioExpect.Contains("Create(\"AbstractProjection\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"projection\")", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
         .AssertPassed();
 
-    [Scenario("Generator reports invalid materialized view handlers")]
+    [Scenario("Generator emits nested materialized view host wrappers")]
     [Fact]
-    public Task Generator_Reports_Invalid_Materialized_View_Handlers()
-        => Given("a materialized view with invalid handler signature", () => Compile("""
+    public Task Generator_Emits_Nested_Materialized_View_Host_Wrappers()
+        => Given("nested materialized view declarations", () => Compile("""
+            using PatternKit.Generators.MaterializedViews;
+            namespace Demo;
+            public abstract record OrderEvent(string OrderId);
+            public sealed record OrderPlaced(string OrderId) : OrderEvent(OrderId);
+            public sealed record OrderState(string OrderId);
+
+            public partial class ProjectionContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+                    protected partial class ProtectedProjection
+                    {
+                        [MaterializedViewHandler(typeof(OrderPlaced))]
+                        private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+                    }
+
+                    [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+                    private protected partial class PrivateProtectedProjection
+                    {
+                        [MaterializedViewHandler(typeof(OrderPlaced))]
+                        private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+                    }
+
+                    [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+                    protected internal partial class ProtectedInternalProjection
+                    {
+                        [MaterializedViewHandler(typeof(OrderPlaced))]
+                        private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => new(@event.OrderId);
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class ProjectionContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedProjection", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedProjection", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalProjection", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generator skips malformed materialized view type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(OrderEvent)")]
+    [InlineData("typeof(OrderState)", "null!")]
+    public Task Generator_Skips_Malformed_Materialized_View_Type_Arguments(string stateType, string eventType)
+        => Given("a materialized view declaration with a null type argument", () => Compile($$"""
             using PatternKit.Generators.MaterializedViews;
             public abstract record OrderEvent(string OrderId);
             public sealed record OrderPlaced(string OrderId) : OrderEvent(OrderId);
             public sealed record OrderState(string OrderId);
-            [GenerateMaterializedView(typeof(OrderState), typeof(OrderEvent))]
+            [GenerateMaterializedView({{stateType}}, {{eventType}})]
             public static partial class OrderProjection
             {
                 [MaterializedViewHandler(typeof(OrderPlaced))]
-                private static string ApplyPlaced(OrderState state, OrderPlaced @event) => @event.OrderId;
+                private static OrderState ApplyPlaced(OrderState state, OrderPlaced @event) => state;
             }
             """))
-        .Then("the handler diagnostic is reported", result =>
-            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKMV003"))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
