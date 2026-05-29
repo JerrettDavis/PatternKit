@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -114,6 +115,52 @@ public sealed class CanonicalDataModelGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        sb.AppendLine();
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        var chainIndent = bodyIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.EnterpriseIntegration.CanonicalDataModel.CanonicalDataModel<").Append(canonicalTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
+        sb.Append(memberIndent).AppendLine("{");
+        sb.Append(bodyIndent).Append("return global::PatternKit.EnterpriseIntegration.CanonicalDataModel.CanonicalDataModel<").Append(canonicalTypeName).Append(">.Create(\"").Append(Escape(modelName)).AppendLine("\")");
+        sb.Append(chainIndent).Append(".From<").Append(sourceTypeName).Append(">(\"").Append(Escape(adapterName)).Append("\", ").Append(mapperName).AppendLine(")");
+        sb.Append(chainIndent).AppendLine(".Build();");
+        sb.Append(memberIndent).AppendLine("}");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
         sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
@@ -121,16 +168,7 @@ public sealed class CanonicalDataModelGenerator : IIncrementalGenerator
             sb.Append("abstract ");
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.EnterpriseIntegration.CanonicalDataModel.CanonicalDataModel<").Append(canonicalTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
-        sb.AppendLine("    {");
-        sb.Append("        return global::PatternKit.EnterpriseIntegration.CanonicalDataModel.CanonicalDataModel<").Append(canonicalTypeName).Append(">.Create(\"").Append(Escape(modelName)).AppendLine("\")");
-        sb.Append("            .From<").Append(sourceTypeName).Append(">(\"").Append(Escape(adapterName)).Append("\", ").Append(mapperName).AppendLine(")");
-        sb.AppendLine("            .Build();");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-        return sb.ToString();
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
     }
 
     private static string? GetNamedString(AttributeData attribute, string name)
