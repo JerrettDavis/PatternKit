@@ -15,9 +15,12 @@ public sealed partial class CompetingConsumerGroupGeneratorTests(ITestOutputHelp
     public Task Generates_Competing_Consumer_Group_Builder_Factory()
         => Given("a competing consumer group declaration", () => Compile("""
             using PatternKit.Generators.Messaging;
+
             namespace Demo;
+
             public sealed record FulfillmentWork(string OrderId);
             public sealed record FulfillmentResult(string OrderId, string Consumer);
+
             [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult), FactoryMethodName = "Build", GroupName = "fulfillment-consumers", MaxConcurrentDeliveries = 4)]
             public static partial class FulfillmentConsumers;
             """))
@@ -53,6 +56,103 @@ public sealed partial class CompetingConsumerGroupGeneratorTests(ITestOutputHelp
             ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKCNS001");
             ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKCNS002");
         })
+        .AssertPassed();
+
+    [Scenario("Generates competing consumer group defaults and type shapes")]
+    [Fact]
+    public Task Generates_Competing_Consumer_Group_Defaults_And_Type_Shapes()
+        => Given("competing consumer declarations using default names and different host shapes", () => Compile("""
+            using PatternKit.Generators.Messaging;
+
+            namespace Demo;
+
+            public sealed record FulfillmentWork(string OrderId);
+            public sealed record FulfillmentResult(string OrderId, string Consumer);
+
+            [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult))]
+            internal abstract partial class AbstractConsumers;
+
+            [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult), GroupName = "tenant\\\"consumers", MaxConcurrentDeliveries = 3)]
+            public sealed partial class SealedConsumers;
+
+            [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult))]
+            internal partial struct StructConsumers;
+            """))
+        .Then("generated sources preserve host shape and configured names", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractConsumers", combined);
+            ScenarioExpect.Contains("Create()", combined);
+            ScenarioExpect.Contains("Create(\"competing-consumers\")", combined);
+            ScenarioExpect.Contains(".WithMaxConcurrentDeliveries(1)", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedConsumers", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"consumers\")", combined);
+            ScenarioExpect.Contains(".WithMaxConcurrentDeliveries(3)", combined);
+            ScenarioExpect.Contains("internal partial struct StructConsumers", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates nested competing consumer group host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Competing_Consumer_Group_Host_Wrappers()
+        => Given("nested competing consumer declarations with non-public accessibility", () => Compile("""
+            using PatternKit.Generators.Messaging;
+
+            namespace Demo;
+
+            public sealed record FulfillmentWork(string OrderId);
+            public sealed record FulfillmentResult(string OrderId, string Consumer);
+
+            public partial class ConsumerContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult))]
+                    protected partial class ProtectedConsumers;
+
+                    [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult))]
+                    private protected partial class PrivateProtectedConsumers;
+
+                    [GenerateCompetingConsumerGroup(typeof(FulfillmentWork), typeof(FulfillmentResult))]
+                    protected internal partial class ProtectedInternalConsumers;
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class ConsumerContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedConsumers", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedConsumers", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalConsumers", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Skips malformed competing consumer group type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(FulfillmentResult)")]
+    [InlineData("typeof(FulfillmentWork)", "null!")]
+    public Task Skips_Malformed_Competing_Consumer_Group_Type_Arguments(string messageType, string resultType)
+        => Given("a competing consumer declaration with a null type argument", () => Compile($$"""
+            using PatternKit.Generators.Messaging;
+
+            public sealed record FulfillmentWork(string OrderId);
+            public sealed record FulfillmentResult(string OrderId, string Consumer);
+
+            [GenerateCompetingConsumerGroup({{messageType}}, {{resultType}})]
+            public static partial class FulfillmentConsumers;
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
