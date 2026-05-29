@@ -101,6 +101,51 @@ public sealed class TableDataGatewayGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine();
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Application.TableDataGateway.InMemoryTableDataGateway<")
+            .Append(rowName).Append(", ").Append(keyName).Append("> ").Append(factoryName).AppendLine("()");
+        sb.AppendLine(memberIndent + "{");
+        sb.Append(bodyIndent).Append("return global::PatternKit.Application.TableDataGateway.InMemoryTableDataGateway<")
+            .Append(rowName).Append(", ").Append(keyName).Append(">.Create(\"").Append(Escape(tableName)).Append("\", ").Append(selectorName).AppendLine(").Build();");
+        sb.AppendLine(memberIndent + "}");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
         sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
@@ -108,14 +153,7 @@ public sealed class TableDataGatewayGenerator : IIncrementalGenerator
             sb.Append("abstract ");
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Application.TableDataGateway.InMemoryTableDataGateway<")
-            .Append(rowName).Append(", ").Append(keyName).Append("> ").Append(factoryName).AppendLine("()");
-        sb.Append("        => global::PatternKit.Application.TableDataGateway.InMemoryTableDataGateway<")
-            .Append(rowName).Append(", ").Append(keyName).Append(">.Create(\"").Append(Escape(tableName)).Append("\", ").Append(selectorName).AppendLine(").Build();");
-        sb.AppendLine("}");
-        return sb.ToString();
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
     }
 
     private static bool IsKeySelector(IMethodSymbol method, INamedTypeSymbol rowType, INamedTypeSymbol keyType)
