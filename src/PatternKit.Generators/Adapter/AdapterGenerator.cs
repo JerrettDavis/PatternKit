@@ -693,6 +693,8 @@ public sealed class AdapterGenerator : IIncrementalGenerator
         INamedTypeSymbol adapteeType)
     {
         var mappings = new List<(IMethodSymbol, string)>();
+        var adapterAttributeCount = hostSymbol.GetAttributes().Count(a =>
+            a.AttributeClass?.ToDisplayString() == "PatternKit.Generators.Adapter.GenerateAdapterAttribute");
 
         foreach (var member in hostSymbol.GetMembers().OfType<IMethodSymbol>())
         {
@@ -702,13 +704,17 @@ public sealed class AdapterGenerator : IIncrementalGenerator
             if (mapAttr is null)
                 continue;
 
-            // Filter by first parameter type matching the adaptee type
-            if (member.Parameters.Length == 0)
-                continue;
+            // Multi-adapter hosts use the first parameter type to disambiguate mappings.
+            // Single-adapter hosts keep malformed methods so signature validation can report the precise diagnostic.
+            if (adapterAttributeCount > 1)
+            {
+                if (member.Parameters.Length == 0)
+                    continue;
 
-            var firstParamType = member.Parameters[0].Type;
-            if (!SymbolEqualityComparer.Default.Equals(firstParamType, adapteeType))
-                continue;
+                var firstParamType = member.Parameters[0].Type;
+                if (!SymbolEqualityComparer.Default.Equals(firstParamType, adapteeType))
+                    continue;
+            }
 
             var targetMember = mapAttr.NamedArguments
                 .FirstOrDefault(na => na.Key == "TargetMember")
