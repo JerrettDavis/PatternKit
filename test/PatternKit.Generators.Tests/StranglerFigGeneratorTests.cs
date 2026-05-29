@@ -43,56 +43,177 @@ public sealed partial class StranglerFigGeneratorTests(ITestOutputHelper output)
         .AssertPassed();
 
     [Scenario("Reports diagnostics for invalid Strangler Fig declarations")]
+    [Theory]
+    [InlineData("public static class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF001")]
+    [InlineData("public static partial class MigrationHost;", "PKSF002")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF002")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF002")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; }", "PKSF002")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int One(string value) => 1; [StranglerFigLegacy] private static int Two(string value) => 2; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF002")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int One(string value) => 1; [StranglerFigModern] private static int Two(string value) => 2; }", "PKSF002")]
+    [InlineData("public partial class MigrationHost { [StranglerFigRoute(\"modern\")] private bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static string Route(string value) => value; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route() => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(int value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static string Legacy(string value) => value; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(int value) => value; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private int Modern(string value) => 2; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static string Modern(string value) => value; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(int value) => value; }", "PKSF003")]
+    [InlineData("public static partial class MigrationHost { [StranglerFigRoute(\"modern\")] private static bool Route1(string value) => true; [StranglerFigRoute(\"MODERN\")] private static bool Route2(string value) => true; [StranglerFigLegacy] private static int Legacy(string value) => 1; [StranglerFigModern] private static int Modern(string value) => 2; }", "PKSF004")]
+    public Task Reports_Diagnostics_For_Invalid_Strangler_Fig_Declarations(string declaration, string diagnosticId)
+        => Given("an invalid Strangler Fig declaration", () => Compile($$"""
+            using PatternKit.Generators.StranglerFig;
+            [GenerateStranglerFig(typeof(string), typeof(int))]
+            {{declaration}}
+            """))
+        .Then("diagnostics identify invalid declarations", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
+        .AssertPassed();
+
+    [Scenario("Generates Strangler Fig defaults and host shapes")]
     [Fact]
-    public Task Reports_Diagnostics_For_Invalid_Strangler_Fig_Declarations()
-        => Given("invalid Strangler Fig declarations", () => new[]
+    public Task Generates_Strangler_Fig_Defaults_And_Host_Shapes()
+        => Given("Strangler Fig declarations with default names and different host shapes", () => Compile("""
+            using PatternKit.Generators.StranglerFig;
+            namespace Demo;
+            public sealed record CheckoutRequest(string Tenant);
+            public sealed record CheckoutResponse(string Confirmation);
+
+            [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse))]
+            internal abstract partial class AbstractMigration
+            {
+                [StranglerFigRoute("default")]
+                private static bool Route(CheckoutRequest request) => true;
+                [StranglerFigLegacy]
+                private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                [StranglerFigModern]
+                private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+            }
+
+            [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse), MigrationName = "tenant\\\"migration")]
+            public sealed partial class SealedMigration
+            {
+                [StranglerFigRoute("tenant")]
+                private static bool Route(CheckoutRequest request) => true;
+                [StranglerFigLegacy]
+                private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                [StranglerFigModern]
+                private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+            }
+
+            [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse))]
+            internal partial struct StructMigration
+            {
+                [StranglerFigRoute("struct")]
+                private static bool Route(CheckoutRequest request) => true;
+                [StranglerFigLegacy]
+                private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                [StranglerFigModern]
+                private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+            }
+            """))
+        .Then("generated sources preserve host shape and configured names", result =>
         {
-            Compile("""
-                using PatternKit.Generators.StranglerFig;
-                [GenerateStranglerFig(typeof(string), typeof(int))]
-                public static class MigrationHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.StranglerFig;
-                [GenerateStranglerFig(typeof(string), typeof(int))]
-                public static partial class MigrationHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.StranglerFig;
-                [GenerateStranglerFig(typeof(string), typeof(int))]
-                public static partial class MigrationHost
-                {
-                    [StranglerFigRoute("modern")]
-                    private static string ModernRoute(string value) => value;
-                    [StranglerFigLegacy]
-                    private static int Legacy(string value) => 1;
-                    [StranglerFigModern]
-                    private static int Modern(string value) => 2;
-                }
-                """),
-            Compile("""
-                using PatternKit.Generators.StranglerFig;
-                [GenerateStranglerFig(typeof(string), typeof(int))]
-                public static partial class MigrationHost
-                {
-                    [StranglerFigRoute("modern")]
-                    private static bool Route1(string value) => true;
-                    [StranglerFigRoute("MODERN")]
-                    private static bool Route2(string value) => true;
-                    [StranglerFigLegacy]
-                    private static int Legacy(string value) => 1;
-                    [StranglerFigModern]
-                    private static int Modern(string value) => 2;
-                }
-                """)
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractMigration", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedMigration", combined);
+            ScenarioExpect.Contains("internal partial struct StructMigration", combined);
+            ScenarioExpect.Contains("Create(\"strangler-fig\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"migration\")", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
-        .Then("diagnostics identify invalid declarations", results =>
+        .AssertPassed();
+
+    [Scenario("Generates nested Strangler Fig host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Strangler_Fig_Host_Wrappers()
+        => Given("nested Strangler Fig declarations", () => Compile("""
+            using PatternKit.Generators.StranglerFig;
+            namespace Demo;
+            public sealed record CheckoutRequest(string Tenant);
+            public sealed record CheckoutResponse(string Confirmation);
+
+            public partial class MigrationContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse))]
+                    protected partial class ProtectedMigration
+                    {
+                        [StranglerFigRoute("protected")]
+                        private static bool Route(CheckoutRequest request) => true;
+                        [StranglerFigLegacy]
+                        private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                        [StranglerFigModern]
+                        private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+                    }
+
+                    [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse))]
+                    private protected partial class PrivateProtectedMigration
+                    {
+                        [StranglerFigRoute("private-protected")]
+                        private static bool Route(CheckoutRequest request) => true;
+                        [StranglerFigLegacy]
+                        private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                        [StranglerFigModern]
+                        private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+                    }
+
+                    [GenerateStranglerFig(typeof(CheckoutRequest), typeof(CheckoutResponse))]
+                    protected internal partial class ProtectedInternalMigration
+                    {
+                        [StranglerFigRoute("protected-internal")]
+                        private static bool Route(CheckoutRequest request) => true;
+                        [StranglerFigLegacy]
+                        private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                        [StranglerFigModern]
+                        private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
         {
-            ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKSF001");
-            ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKSF002");
-            ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKSF003");
-            ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKSF004");
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class MigrationContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedMigration", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedMigration", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalMigration", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
+        .AssertPassed();
+
+    [Scenario("Skips malformed Strangler Fig type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(CheckoutResponse)")]
+    [InlineData("typeof(CheckoutRequest)", "null!")]
+    public Task Skips_Malformed_Strangler_Fig_Type_Arguments(string requestType, string responseType)
+        => Given("a Strangler Fig declaration with a null type argument", () => Compile($$"""
+            using PatternKit.Generators.StranglerFig;
+            public sealed record CheckoutRequest(string Tenant);
+            public sealed record CheckoutResponse(string Confirmation);
+            [GenerateStranglerFig({{requestType}}, {{responseType}})]
+            public static partial class CheckoutMigration
+            {
+                [StranglerFigRoute("modern")]
+                private static bool Route(CheckoutRequest request) => true;
+                [StranglerFigLegacy]
+                private static CheckoutResponse Legacy(CheckoutRequest request) => new("legacy");
+                [StranglerFigModern]
+                private static CheckoutResponse Modern(CheckoutRequest request) => new("modern");
+            }
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
