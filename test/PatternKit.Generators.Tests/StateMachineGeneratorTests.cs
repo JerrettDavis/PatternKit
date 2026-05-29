@@ -1214,4 +1214,171 @@ public class StateMachineGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("NamedHookArgumentsAndSignedEnums CoverHookCollectionBranches")]
+    [Fact]
+    public void NamedHookArgumentsAndSignedEnums_CoverHookCollectionBranches()
+    {
+        var source = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { Negative = -1, A = 0, B = 1 }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class Machine
+            {
+                [StateExit(State.A)]
+                private void Leaving() { }
+
+                [StateEntry(State.B)]
+                private void Entering() { }
+
+                [StateEntry(State.Negative)]
+                private void IgnoredNegativeEntry() { }
+
+                [StateEntry(null)]
+                private void IgnoredNullEntry() { }
+
+                [StateExit((State)99)]
+                private void IgnoredUnknownExit() { }
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(NamedHookArgumentsAndSignedEnums_CoverHookCollectionBranches));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("Leaving()", generated);
+        ScenarioExpect.Contains("Entering()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredNegativeEntry()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredNullEntry()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredUnknownExit()", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("InvalidCancellationTokenParameterSignatures ReportDiagnostics")]
+    [Fact]
+    public void InvalidCancellationTokenParameterSignatures_ReportDiagnostics()
+    {
+        var transitionSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class TransitionMachine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void BadTransition(int invalidParameter) { }
+            }
+            """;
+
+        var guardSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class GuardMachine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private bool BadGuard(int invalidParameter) => true;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var hookSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class HookMachine
+            {
+                [StateEntry(State.B)]
+                private void BadEntry(int invalidParameter) { }
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        AssertDiagnostic(transitionSource, "PKST005", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Transition");
+        AssertDiagnostic(guardSource, "PKST006", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Guard");
+        AssertDiagnostic(hookSource, "PKST007", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Hook");
+
+        static void AssertDiagnostic(string source, string id, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+            ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == id);
+        }
+    }
+
+    [Scenario("StateMachineWithoutTransitions EmitsInvalidTriggerPolicyBranches")]
+    [Fact]
+    public void StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches()
+    {
+        var throwingSource = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class ThrowingMachine
+            {
+            }
+            """;
+
+        var ignoringSource = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger), InvalidTrigger = StateMachineInvalidTriggerPolicy.Ignore)]
+            public partial class IgnoringMachine
+            {
+            }
+            """;
+
+        var throwingGenerated = Generate(throwingSource, nameof(StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches) + "Throwing");
+        ScenarioExpect.Contains("No transitions defined for state machine.", throwingGenerated);
+
+        var ignoringGenerated = Generate(ignoringSource, nameof(StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches) + "Ignoring");
+        ScenarioExpect.DoesNotContain("No transitions defined for state machine.", ignoringGenerated);
+        ScenarioExpect.Contains("public void Fire", ignoringGenerated);
+
+        static string Generate(string source, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+            ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+            var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+            var emit = updated.Emit(Stream.Null);
+            ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+            return generated;
+        }
+    }
 }
