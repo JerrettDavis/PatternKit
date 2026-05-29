@@ -415,6 +415,122 @@ public sealed class AbstractFactoryGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Formats additional char keys and base class products")]
+    [Fact]
+    public void FormatsAdditionalCharKeysAndBaseClassProducts()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public class Widget { }
+            public sealed class DerivedWidget : Widget { }
+
+            [GenerateAbstractFactory(typeof(char), ServiceProviderFactoryMethodName = "   ")]
+            [AbstractFactoryProduct('\\', typeof(Widget), typeof(DerivedWidget))]
+            [AbstractFactoryProduct('\'', typeof(Widget), typeof(DerivedWidget), IsDefaultFamily = true)]
+            [AbstractFactoryProduct('\r', typeof(Widget), typeof(DerivedWidget))]
+            [AbstractFactoryProduct('\t', typeof(Widget), typeof(DerivedWidget))]
+            [AbstractFactoryProduct('x', typeof(Widget), typeof(DerivedWidget))]
+            public static partial class CharFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(FormatsAdditionalCharKeysAndBaseClassProducts));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+
+        ScenarioExpect.Contains("builder.Family('\\\\')", text);
+        ScenarioExpect.Contains("builder.Family('\\r')", text);
+        ScenarioExpect.Contains("builder.Family('\\t')", text);
+        ScenarioExpect.Contains("builder.Family('x')", text);
+        ScenarioExpect.Contains("builder.DefaultProduct<global::Demo.Widget>(() => new global::Demo.DerivedWidget())", text);
+        ScenarioExpect.Contains("builder.Product<global::Demo.Widget>(() => new global::Demo.DerivedWidget())", text);
+        ScenarioExpect.DoesNotContain("IServiceProvider", text);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("Reports diagnostics for incompatible primitive abstract factory keys")]
+    [Fact]
+    public void ReportsDiagnosticsForIncompatiblePrimitiveAbstractFactoryKeys()
+    {
+        var source = """
+            using PatternKit.Generators.Factories;
+
+            namespace Demo;
+
+            public enum Platform { Windows = 1 }
+            public class Product { }
+
+            [GenerateAbstractFactory(null!)]
+            public static partial class NullKeyTypeFactory;
+
+            [GenerateAbstractFactory(typeof(string))]
+            [AbstractFactoryProduct(1, typeof(Product), typeof(Product))]
+            public static partial class StringKeyFactory;
+
+            [GenerateAbstractFactory(typeof(bool))]
+            [AbstractFactoryProduct("true", typeof(Product), typeof(Product))]
+            public static partial class BoolKeyFactory;
+
+            [GenerateAbstractFactory(typeof(char))]
+            [AbstractFactoryProduct("x", typeof(Product), typeof(Product))]
+            public static partial class CharKeyFactory;
+
+            [GenerateAbstractFactory(typeof(byte))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class ByteKeyFactory;
+
+            [GenerateAbstractFactory(typeof(sbyte))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class SByteKeyFactory;
+
+            [GenerateAbstractFactory(typeof(short))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class ShortKeyFactory;
+
+            [GenerateAbstractFactory(typeof(ushort))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class UShortKeyFactory;
+
+            [GenerateAbstractFactory(typeof(uint))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class UIntKeyFactory;
+
+            [GenerateAbstractFactory(typeof(long))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class LongKeyFactory;
+
+            [GenerateAbstractFactory(typeof(ulong))]
+            [AbstractFactoryProduct("1", typeof(Product), typeof(Product))]
+            public static partial class ULongKeyFactory;
+
+            [GenerateAbstractFactory(typeof(Platform))]
+            [AbstractFactoryProduct("windows", typeof(Product), typeof(Product))]
+            public static partial class EnumKeyFactory;
+
+            [GenerateAbstractFactory(typeof(double))]
+            [AbstractFactoryProduct(1.5, typeof(Product), typeof(Product))]
+            public static partial class DoubleKeyFactory;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticsForIncompatiblePrimitiveAbstractFactoryKeys));
+        var gen = new AbstractFactoryGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(result => result.Diagnostics).ToArray();
+        ScenarioExpect.Equal(12, diagnostics.Length);
+        ScenarioExpect.All(diagnostics, diagnostic => ScenarioExpect.Equal("PKAF003", diagnostic.Id));
+        ScenarioExpect.Empty(run.Results.SelectMany(result => result.GeneratedSources));
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
