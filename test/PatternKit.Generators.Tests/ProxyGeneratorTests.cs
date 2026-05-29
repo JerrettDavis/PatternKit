@@ -1226,6 +1226,8 @@ public class ProxyGeneratorTests
             public partial interface Worker
             {
                 void Copy(ref int source, out int destination, in bool enabled);
+                void Cancelable(CancellationToken cancellationToken = default);
+                int CountWithCancellation(ref int source, out int destination, in bool enabled, CancellationToken cancellationToken = default);
                 Task SaveAsync(int id, CancellationToken ct = default);
                 ValueTask FlushAsync(CancellationToken ct = default);
                 Task<int> CountAsync(CancellationToken ct = default);
@@ -1245,6 +1247,8 @@ public class ProxyGeneratorTests
         ScenarioExpect.Contains("for (int __i = 0; __i < _interceptors!.Count; __i++)", proxySource);
         ScenarioExpect.Contains("for (int __i = _interceptors!.Count - 1; __i >= 0; __i--)", proxySource);
         ScenarioExpect.Contains("_inner.Copy(ref source, out destination, in enabled);", proxySource);
+        ScenarioExpect.Contains("_inner.Cancelable(cancellationToken);", proxySource);
+        ScenarioExpect.Contains("var __result = _inner.CountWithCancellation(ref source, out destination, in enabled, cancellationToken);", proxySource);
         ScenarioExpect.Contains("await __task.ConfigureAwait(false);", proxySource);
         ScenarioExpect.Contains("var __result = await __task.ConfigureAwait(false);", proxySource);
         ScenarioExpect.Contains("return default!;", proxySource);
@@ -1306,6 +1310,7 @@ public class ProxyGeneratorTests
                 public static string StaticValue => "ignored";
 
                 public abstract void Copy(ref int source, out int destination, in bool enabled);
+                public abstract int CopyAndCount(ref int source, out int destination, in bool enabled);
                 public abstract int Calculate(int value);
                 public virtual string Virtual(string value) => value;
                 public string Concrete(string value) => value;
@@ -1328,6 +1333,7 @@ public class ProxyGeneratorTests
         ScenarioExpect.Contains("set => _inner.Name = value;", proxySource);
         ScenarioExpect.Contains("Version", proxySource);
         ScenarioExpect.Contains("_inner.Copy(ref source, out destination, in enabled);", proxySource);
+        ScenarioExpect.Contains("return _inner.CopyAndCount(ref source, out destination, in enabled);", proxySource);
         ScenarioExpect.Contains("return _inner.Calculate(value);", proxySource);
         ScenarioExpect.Contains("return _inner.Virtual(value);", proxySource);
         ScenarioExpect.DoesNotContain("Concrete", proxySource);
@@ -1361,5 +1367,124 @@ public class ProxyGeneratorTests
 
         ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
         ScenarioExpect.Empty(result.Results.SelectMany(r => r.GeneratedSources));
+    }
+
+    [Scenario("GenerateProxy GenerateAsyncTrue EmitsAsyncInterceptorsFromExplicitOption")]
+    [Fact]
+    public void GenerateProxy_GenerateAsyncTrue_EmitsAsyncInterceptorsFromExplicitOption()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(GenerateAsync = true)]
+            public partial interface IExplicitAsyncProxy
+            {
+                Task<string> LoadAsync(CancellationToken cancellationToken = default);
+                string Poll(CancellationToken cancellationToken = default);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_GenerateAsyncTrue_EmitsAsyncInterceptorsFromExplicitOption));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var interceptorSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IExplicitAsyncProxy.Proxy.Interceptor.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("BeforeAsync", interceptorSource);
+        ScenarioExpect.Contains("void Before(MethodContext context)", interceptorSource);
+    }
+
+    [Scenario("GenerateProxy InternalProtectedInternalMembers GenerateAccessibleOverrides")]
+    [Fact]
+    public void GenerateProxy_InternalProtectedInternalMembers_GenerateAccessibleOverrides()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            internal abstract partial class InternalContract
+            {
+                protected internal abstract string Name { get; set; }
+                protected internal abstract int Count(ref int source, out int destination, in bool enabled);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_InternalProtectedInternalMembers_GenerateAccessibleOverrides));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_InternalContract.Proxy.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("internal sealed partial class InternalContractProxy", proxySource);
+        ScenarioExpect.Contains("protected internal override string Name", proxySource);
+        ScenarioExpect.Contains("protected internal override int Count(ref int source, out int destination, in bool enabled)", proxySource);
+        ScenarioExpect.Contains("return _inner.Count(ref source, out destination, in enabled);", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("GenerateProxy Defaults CoverNullableEnumAndCharLiteralBranches")]
+    [Fact]
+    public void GenerateProxy_Defaults_CoverNullableEnumAndCharLiteralBranches()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            public enum Mode { None = 0, Known = 1 }
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.None)]
+            public partial interface IDefaultLiteralProxy
+            {
+                string Format(
+                    int? optional = null,
+                    Mode missing = (Mode)99,
+                    char slash = '\\',
+                    char carriageReturn = '\r',
+                    char tab = '\t',
+                    char zero = '\0',
+                    char plain = 'x');
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_Defaults_CoverNullableEnumAndCharLiteralBranches));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IDefaultLiteralProxy.Proxy.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("int? optional = null", proxySource);
+        ScenarioExpect.Contains("Mode missing = (global::TestNamespace.Mode)99", proxySource);
+        ScenarioExpect.Contains("char slash = '\\\\'", proxySource);
+        ScenarioExpect.Contains("char carriageReturn = '\\r'", proxySource);
+        ScenarioExpect.Contains("char tab = '\\t'", proxySource);
+        ScenarioExpect.Contains("char zero = '\\0'", proxySource);
+        ScenarioExpect.Contains("char plain = 'x'", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 }
