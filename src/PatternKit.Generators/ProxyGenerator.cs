@@ -883,7 +883,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         // Note: ref-returning methods cannot be async
         bool useAsync = contractInfo.HasAsyncMembers &&
                        config.InterceptorMode != ProxyInterceptorMode.None &&
-                       (member.IsAsync || member.HasCancellationToken) &&
+                       member.IsAsync &&
                        !member.ReturnsByRef &&
                        !member.ReturnsByRefReadonly;
         var asyncModifier = useAsync ? "async " : "";
@@ -1035,7 +1035,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         // Use async or sync based on detection and configuration
-        bool useAsync = contractInfo.HasAsyncMembers && (member.IsAsync || member.HasCancellationToken);
+        bool useAsync = contractInfo.HasAsyncMembers && member.IsAsync;
 
         if (useAsync)
         {
