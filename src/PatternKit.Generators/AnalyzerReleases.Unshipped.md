@@ -437,3 +437,8 @@ PKCSP001 | PatternKit.Generators.CacheStampedeProtection | Error | Cache Stamped
 PKCSP002 | PatternKit.Generators.CacheStampedeProtection | Error | Cache Stampede Protection configuration is invalid.
 PKRWTC001 | PatternKit.Generators.ReadWriteThroughCache | Error | Read/write-through cache policy host must be partial.
 PKRWTC002 | PatternKit.Generators.ReadWriteThroughCache | Error | Read/write-through cache policy configuration is invalid.
+PKWO001 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration host must be partial.
+PKWO002 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration must declare steps.
+PKWO003 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration step signature is invalid.
+PKWO004 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration step is duplicated.
+PKWO005 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration configuration is invalid.

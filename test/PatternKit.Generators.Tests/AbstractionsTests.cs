@@ -140,6 +140,54 @@ public class AbstractionsTests
 
     #endregion
 
+    #region WorkflowOrchestrationAttribute Tests
+
+    [Scenario("WorkflowOrchestrationAttribute Constructor Sets Properties")]
+    [Fact]
+    public void WorkflowOrchestrationAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.WorkflowOrchestration.WorkflowOrchestrationAttribute
+        {
+            FactoryMethodName = "CreateFulfillment",
+            WorkflowName = "fulfillment"
+        };
+        var step = new PatternKit.Generators.WorkflowOrchestration.WorkflowStepAttribute("reserve", 1)
+        {
+            MaxAttempts = 3,
+            Condition = "ShouldReserve",
+            Compensation = "ReleaseInventory"
+        };
+
+        ScenarioExpect.Equal("CreateFulfillment", attr.FactoryMethodName);
+        ScenarioExpect.Equal("fulfillment", attr.WorkflowName);
+        ScenarioExpect.Equal("reserve", step.Name);
+        ScenarioExpect.Equal(1, step.Order);
+        ScenarioExpect.Equal(3, step.MaxAttempts);
+        ScenarioExpect.Equal("ShouldReserve", step.Condition);
+        ScenarioExpect.Equal("ReleaseInventory", step.Compensation);
+    }
+
+    [Scenario("WorkflowOrchestrationAttributes Have Correct AttributeUsage")]
+    [Fact]
+    public void WorkflowOrchestrationAttributes_Have_Correct_AttributeUsage()
+    {
+        var orchestrationUsage = typeof(PatternKit.Generators.WorkflowOrchestration.WorkflowOrchestrationAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+        var stepUsage = typeof(PatternKit.Generators.WorkflowOrchestration.WorkflowStepAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, orchestrationUsage.ValidOn);
+        ScenarioExpect.False(orchestrationUsage.Inherited);
+        ScenarioExpect.Equal(AttributeTargets.Method, stepUsage.ValidOn);
+        ScenarioExpect.False(stepUsage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateStrategyAttribute Tests
 
     [Scenario("GenerateStrategyAttribute Action Constructor Sets Properties")]

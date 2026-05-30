@@ -681,6 +681,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["TimeoutManager"],
             ["reservation deadline tracking", "source-generated timeout manager factory", "DI composition"]),
         Descriptor(
+            "Fulfillment Workflow Orchestration",
+            "src/PatternKit.Examples/WorkflowOrchestrationDemo/FulfillmentWorkflowOrchestrationDemo.cs",
+            "test/PatternKit.Examples.Tests/WorkflowOrchestrationDemo/FulfillmentWorkflowOrchestrationDemoTests.cs",
+            "docs/examples/fulfillment-workflow-orchestration.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["WorkflowOrchestration"],
+            ["ordered fulfillment workflow", "source-generated annotated workflow", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

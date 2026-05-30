@@ -6,6 +6,7 @@ using PatternKit.Application.AntiCorruption;
 using PatternKit.Application.ManualTaskGates;
 using PatternKit.Application.Specification;
 using PatternKit.Application.Timeouts;
+using PatternKit.Application.WorkflowOrchestration;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
@@ -89,6 +90,7 @@ using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.ValueObjectDemo;
 using PatternKit.Examples.VisitorDemo;
+using PatternKit.Examples.WorkflowOrchestrationDemo;
 using PatternKit.Messaging.Activation;
 using PatternKit.Messaging.Adapters;
 using PatternKit.Messaging.Bridges;
@@ -256,6 +258,7 @@ public sealed record WarehouseLeaderElectionExample(WarehouseLeaderElectionDemoR
 public sealed record WarehouseSchedulerAgentSupervisorExample(WarehouseSchedulerDemoRunner Runner, WarehouseSchedulerService Service);
 public sealed record OrderApprovalManualTaskGatePatternExample(ManualTaskGate<Guid> Gate, OrderApprovalManualTaskGateDemoRunner Runner);
 public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> Manager, OrderReservationTimeoutDemoRunner Runner);
+public sealed record FulfillmentWorkflowOrchestrationPatternExample(WorkflowOrchestrator<FulfillmentWorkflowContext> Workflow, FulfillmentWorkflowOrchestrationDemoRunner Runner);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -373,7 +376,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddWarehouseLeaderElectionExample()
             .AddWarehouseSchedulerAgentSupervisorExample()
             .AddOrderApprovalManualTaskGatePatternExample()
-            .AddOrderReservationTimeoutPatternExample();
+            .AddOrderReservationTimeoutPatternExample()
+            .AddFulfillmentWorkflowOrchestrationPatternExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1354,6 +1358,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<ManualTaskGate<Guid>>(),
             sp.GetRequiredService<OrderApprovalManualTaskGateDemoRunner>()));
         return services.RegisterExample<OrderApprovalManualTaskGatePatternExample>("Order Approval Manual Task Gate", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddFulfillmentWorkflowOrchestrationPatternExample(this IServiceCollection services)
+    {
+        services.AddFulfillmentWorkflowOrchestrationDemo();
+        services.AddSingleton<FulfillmentWorkflowOrchestrationPatternExample>(sp => new(
+            sp.GetRequiredService<WorkflowOrchestrator<FulfillmentWorkflowContext>>(),
+            sp.GetRequiredService<FulfillmentWorkflowOrchestrationDemoRunner>()));
+        return services.RegisterExample<FulfillmentWorkflowOrchestrationPatternExample>("Fulfillment Workflow Orchestration", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

@@ -445,6 +445,8 @@
           href: application/table-data-gateway.md
         - name: Manual Task Gate
           href: application/manual-task-gate.md
+        - name: Workflow Orchestration
+          href: application/workflow-orchestration.md
         - name: Timeout Manager
           href: application/timeout-manager.md
         - name: Event Sourcing
