@@ -381,6 +381,8 @@
           href: cloud/circuit-breaker.md
         - name: Bulkhead
           href: cloud/bulkhead.md
+        - name: Cache Stampede Protection
+          href: cloud/cache-stampede-protection.md
         - name: Queue-Based Load Leveling
           href: cloud/queue-load-leveling.md
         - name: Health Endpoint Monitoring

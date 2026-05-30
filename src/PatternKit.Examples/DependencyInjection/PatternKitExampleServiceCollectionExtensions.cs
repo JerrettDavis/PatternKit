@@ -12,6 +12,7 @@ using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CacheAside;
+using PatternKit.Cloud.CacheStampedeProtection;
 using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.HealthEndpointMonitoring;
 using PatternKit.Cloud.PriorityQueue;
@@ -32,6 +33,7 @@ using PatternKit.Examples.BackendsForFrontendsDemo;
 using PatternKit.Examples.BoundedContextDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
+using PatternKit.Examples.CacheStampedeProtectionDemo;
 using PatternKit.Examples.CanonicalDataModelDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
@@ -238,6 +240,7 @@ public sealed record FulfillmentQueueLoadLevelingExample(QueueLoadLevelingPolicy
 public sealed record FulfillmentHealthEndpointExample(HealthEndpoint<FulfillmentHealthSnapshot> Endpoint, FulfillmentHealthEndpointService Service);
 public sealed record FulfillmentPriorityQueueExample(PriorityQueuePolicy<FulfillmentPriorityWork, int> Queue, FulfillmentPriorityQueueService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
+public sealed record ProductCatalogStampedeProtectionExample(CacheStampedeProtectionPolicy<ProductAvailabilitySnapshot> Policy, ProductCatalogStampedeProtectionDemoRunner Runner);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
 public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
@@ -354,6 +357,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddFulfillmentHealthEndpointExample()
             .AddFulfillmentPriorityQueueExample()
             .AddProductCatalogCacheAsideExample()
+            .AddProductCatalogStampedeProtectionExample()
             .AddProductSearchRateLimitingExample()
             .AddTenantExternalConfigurationStoreExample()
             .AddCustomerDashboardGatewayAggregationExample()
@@ -1220,6 +1224,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CacheAsidePolicy<ProductReadModel>>(),
             sp.GetRequiredService<ProductCatalogCacheAsideService>()));
         return services.RegisterExample<ProductCatalogCacheAsideExample>("Product Catalog Cache-Aside", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddProductCatalogStampedeProtectionExample(this IServiceCollection services)
+    {
+        services.AddProductCatalogStampedeProtectionDemo();
+        services.AddSingleton<ProductCatalogStampedeProtectionExample>(sp => new(
+            sp.GetRequiredService<CacheStampedeProtectionPolicy<ProductAvailabilitySnapshot>>(),
+            sp.GetRequiredService<ProductCatalogStampedeProtectionDemoRunner>()));
+        return services.RegisterExample<ProductCatalogStampedeProtectionExample>("Product Catalog Cache Stampede Protection", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddProductSearchRateLimitingExample(this IServiceCollection services)

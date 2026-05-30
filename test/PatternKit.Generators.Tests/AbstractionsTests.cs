@@ -8,6 +8,39 @@ namespace PatternKit.Generators.Tests;
 /// </summary>
 public class AbstractionsTests
 {
+    #region GenerateCacheStampedeProtectionAttribute Tests
+
+    [Scenario("GenerateCacheStampedeProtectionAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateCacheStampedeProtectionAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.CacheStampedeProtection.GenerateCacheStampedeProtectionAttribute(typeof(string))
+        {
+            FactoryMethodName = "CreateCatalogSingleFlight",
+            PolicyName = "catalog-single-flight"
+        };
+
+        ScenarioExpect.Equal(typeof(string), attr.ResultType);
+        ScenarioExpect.Equal("CreateCatalogSingleFlight", attr.FactoryMethodName);
+        ScenarioExpect.Equal("catalog-single-flight", attr.PolicyName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new PatternKit.Generators.CacheStampedeProtection.GenerateCacheStampedeProtectionAttribute(null!));
+    }
+
+    [Scenario("GenerateCacheStampedeProtectionAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateCacheStampedeProtectionAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.CacheStampedeProtection.GenerateCacheStampedeProtectionAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateManualTaskGateAttribute Tests
 
     [Scenario("GenerateManualTaskGateAttribute Constructor Sets Properties")]

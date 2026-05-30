@@ -31,6 +31,9 @@
 - name: Cache-Aside
   href: cache-aside.md
 
+- name: Cache Stampede Protection
+  href: cache-stampede-protection.md
+
 - name: Canonical Data Model
   href: canonical-data-model.md
 

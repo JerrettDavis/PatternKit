@@ -132,6 +132,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Health Endpoint Monitoring**](health-endpoint-monitoring.md) | Typed service health endpoint factories | `[GenerateHealthEndpoint]` |
 | [**Priority Queue**](priority-queue.md) | Business-priority queue factories | `[GeneratePriorityQueue]` |
 | [**Cache-Aside**](cache-aside.md) | Read-through cache policy factories with TTL and cache predicates | `[GenerateCacheAsidePolicy]` |
+| [**Cache Stampede Protection**](cache-stampede-protection.md) | Keyed single-flight policy factories for suppressing duplicate cache-miss loads | `[GenerateCacheStampedeProtection]` |
 | [**Rate Limiting**](rate-limiting.md) | Key-partitioned fixed-window rate limit policy factories | `[GenerateRateLimitPolicy]` |
 | [**External Configuration Store**](external-configuration-store.md) | Typed centralized configuration loaders | `[GenerateExternalConfigurationStore]` |
 | [**Gateway Aggregation**](gateway-aggregation.md) | API gateway response composition factories | `[GenerateGatewayAggregation]` |
