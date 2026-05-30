@@ -442,3 +442,5 @@ PKWO002 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchest
 PKWO003 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration step signature is invalid.
 PKWO004 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration step is duplicated.
 PKWO005 | PatternKit.Generators.WorkflowOrchestration | Error | Workflow orchestration configuration is invalid.
+PKSCP001 | PatternKit.Generators.SnapshotCheckpoints | Error | Snapshot checkpoint manager host must be partial.
+PKSCP002 | PatternKit.Generators.SnapshotCheckpoints | Error | Snapshot checkpoint manager configuration is invalid.

@@ -19,6 +19,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Messaging backplane facade** for host-style setup, typed request/reply, and publish/subscribe over an application-owned transport boundary.
 * **Production-readiness catalog** for DI, generic host, and ASP.NET Core diagnostics that maps every documented example to its source, TinyBDD tests, docs page, integration surfaces, and production checks.
 * **Workflow orchestration** for explicit ordered fulfillment steps with retries, conditional gates, compensation, and execution history.
+* **Snapshot / checkpoint management** for resumable event stream replay and projection rebuilds.
 
 ## Demos in this section
 
@@ -42,6 +43,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Fulfillment Workflow Orchestration**
   A Generic Host importable fulfillment workflow with fluent and source-generated routes for inventory reservation, fraud review, payment capture, retries, warehouse release, and compensation. See [Fulfillment Workflow Orchestration](fulfillment-workflow-orchestration.md).
+
+* **Order Replay Snapshot Checkpoint Management**
+  A Generic Host importable replay service with fluent and source-generated checkpoint manager routes for event-sourced order rebuilds. See [Order Replay Snapshot Checkpoint Management](order-replay-snapshot-checkpoint.md).
 
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.

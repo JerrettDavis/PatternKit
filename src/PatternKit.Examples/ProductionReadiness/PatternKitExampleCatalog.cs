@@ -967,7 +967,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/warehouse-scheduler-agent-supervisor.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["Scheduler Agent Supervisor"],
-            ["scheduled work dispatch", "source-generated supervisor factory", "Generic Host hosted service"])
+            ["scheduled work dispatch", "source-generated supervisor factory", "Generic Host hosted service"]),
+        Descriptor(
+            "Order Replay Snapshot Checkpoint Management",
+            "src/PatternKit.Examples/SnapshotCheckpointDemo/OrderReplaySnapshotCheckpointDemo.cs",
+            "test/PatternKit.Examples.Tests/SnapshotCheckpointDemo/OrderReplaySnapshotCheckpointDemoTests.cs",
+            "docs/examples/order-replay-snapshot-checkpoint.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Snapshot / Checkpoint Management", "Event Sourcing"],
+            ["event stream replay resume point", "stale checkpoint handling", "source-generated checkpoint manager factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;
