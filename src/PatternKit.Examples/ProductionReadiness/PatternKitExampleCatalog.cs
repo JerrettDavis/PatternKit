@@ -865,6 +865,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Cache-Aside"],
             ["read-through cache miss handling", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Product Catalog Cache Stampede Protection",
+            "src/PatternKit.Examples/CacheStampedeProtectionDemo/ProductCatalogStampedeProtectionDemo.cs",
+            "test/PatternKit.Examples.Tests/CacheStampedeProtectionDemo/ProductCatalogStampedeProtectionDemoTests.cs",
+            "docs/examples/product-catalog-cache-stampede-protection.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Cache Stampede Protection"],
+            ["keyed single-flight load coordination", "source-generated policy factory", "DI composition"]),
+        Descriptor(
             "Product Search Rate Limiting",
             "src/PatternKit.Examples/RateLimitingDemo/ProductSearchRateLimitingDemo.cs",
             "test/PatternKit.Examples.Tests/RateLimitingDemo/ProductSearchRateLimitingDemoTests.cs",

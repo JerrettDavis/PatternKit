@@ -280,6 +280,9 @@
 - name: Product Catalog Cache-Aside
   href: product-catalog-cache-aside.md
 
+- name: Product Catalog Cache Stampede Protection
+  href: product-catalog-cache-stampede-protection.md
+
 - name: Product Search Rate Limiting
   href: product-search-rate-limiting.md
 

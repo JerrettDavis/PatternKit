@@ -433,3 +433,5 @@ PKTM001 | PatternKit.Generators.Timeouts | Error | Timeout Manager host must be 
 PKTM002 | PatternKit.Generators.Timeouts | Error | Timeout Manager key type is invalid.
 PKMTG001 | PatternKit.Generators.ManualTaskGates | Error | Manual Task Gate host must be partial.
 PKMTG002 | PatternKit.Generators.ManualTaskGates | Error | Manual Task Gate configuration is invalid.
+PKCSP001 | PatternKit.Generators.CacheStampedeProtection | Error | Cache Stampede Protection host must be partial.
+PKCSP002 | PatternKit.Generators.CacheStampedeProtection | Error | Cache Stampede Protection configuration is invalid.

@@ -39,6 +39,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
+| Cache Stampede Protection | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
 | Canonical Data Model | Construction | 75.482 ns | 632 B | 59.947 ns | 496 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -234,19 +236,19 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 108 catalog patterns and 432 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 109 catalog patterns and 436 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
 | Application Architecture | 23 | 92 |
 | Behavioral | 11 | 44 |
-| Cloud Architecture | 17 | 68 |
+| Cloud Architecture | 18 | 72 |
 | Creational | 5 | 20 |
 | Enterprise Integration | 41 | 164 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 103 generator source route results.
+The generator matrix currently publishes 104 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -303,6 +305,7 @@ The generator matrix currently publishes 103 generator source route results.
 | Cloud Architecture | Ambassador | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Backends for Frontends | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Bulkhead | Covered | Covered | Covered | Covered |
+| Cloud Architecture | Cache Stampede Protection | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Cache-Aside | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Circuit Breaker | Covered | Covered | Covered | Covered |
 | Cloud Architecture | External Configuration Store | Covered | Covered | Covered | Covered |
@@ -391,6 +394,7 @@ The generator matrix currently publishes 103 generator source route results.
 | BuilderGenerator | `src/PatternKit.Generators/Builders/BuilderGenerator.cs` | Covered |
 | BulkheadPolicyGenerator | `src/PatternKit.Generators/Bulkhead/BulkheadPolicyGenerator.cs` | Covered |
 | CacheAsidePolicyGenerator | `src/PatternKit.Generators/CacheAside/CacheAsidePolicyGenerator.cs` | Covered |
+| CacheStampedeProtectionGenerator | `src/PatternKit.Generators/CacheStampedeProtection/CacheStampedeProtectionGenerator.cs` | Covered |
 | CanonicalDataModelGenerator | `src/PatternKit.Generators/CanonicalDataModel/CanonicalDataModelGenerator.cs` | Covered |
 | ChainGenerator | `src/PatternKit.Generators/Chain/ChainGenerator.cs` | Covered |
 | CircuitBreakerPolicyGenerator | `src/PatternKit.Generators/CircuitBreaker/CircuitBreakerPolicyGenerator.cs` | Covered |

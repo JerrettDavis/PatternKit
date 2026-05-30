@@ -90,6 +90,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Retry | `RetryPolicy<T>` | Retry generator |
 | Cloud Architecture | Circuit Breaker | `CircuitBreakerPolicy<T>` | Circuit Breaker generator |
 | Cloud Architecture | Bulkhead | `BulkheadPolicy<T>` | Bulkhead generator |
+| Cloud Architecture | Cache Stampede Protection | `CacheStampedeProtectionPolicy<TResult>` | Cache Stampede Protection generator |
 | Cloud Architecture | Queue-Based Load Leveling | `QueueLoadLevelingPolicy<T>` | Queue Load Leveling generator |
 | Cloud Architecture | Health Endpoint Monitoring | `HealthEndpoint<TContext>` | Health Endpoint Monitoring generator |
 | Cloud Architecture | Priority Queue | `PriorityQueuePolicy<TItem, TPriority>` | Priority Queue generator |
