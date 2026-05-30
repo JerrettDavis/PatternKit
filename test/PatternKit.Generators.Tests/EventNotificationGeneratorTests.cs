@@ -45,50 +45,140 @@ public sealed partial class EventNotificationGeneratorTests(ITestOutputHelper ou
         .AssertPassed();
 
     [Scenario("Reports diagnostics for invalid event notification declarations")]
+    [Theory]
+    [InlineData("public static class NotificationHost { [EventNotificationKey] private static string Key(OrderAccepted evt) => evt.OrderId; }", "PKEN001")]
+    [InlineData("public static partial class NotificationHost;", "PKEN002")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string One(OrderAccepted evt) => evt.OrderId; [EventNotificationKey] private static string Two(OrderAccepted evt) => evt.OrderId; }", "PKEN002")]
+    [InlineData("public partial class NotificationHost { [EventNotificationKey] private string Key(OrderAccepted evt) => evt.OrderId; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static int Key(OrderAccepted evt) => evt.OrderId.Length; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key() => string.Empty; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key(string evt) => evt; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key(OrderAccepted evt) => evt.OrderId; [EventNotificationCorrelation] private static int Correlation(OrderAccepted evt) => 1; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key(OrderAccepted evt) => evt.OrderId; [EventNotificationRule] private static string Rule(OrderAccepted evt) => evt.OrderId; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key(OrderAccepted evt) => evt.OrderId; [EventNotificationMetadata(\"source\")] private static int Source(OrderAccepted evt) => 1; }", "PKEN003")]
+    [InlineData("public static partial class NotificationHost { [EventNotificationKey] private static string Key(OrderAccepted evt) => evt.OrderId; [EventNotificationMetadata(\"source\")] private static string Source(OrderAccepted evt) => evt.Source; [EventNotificationMetadata(\"SOURCE\")] private static string OtherSource(OrderAccepted evt) => evt.Source; }", "PKEN004")]
+    public Task Reports_Diagnostics_For_Invalid_Event_Notification_Declarations(string declaration, string diagnosticId)
+        => Given("an invalid event notification declaration", () => Compile($$"""
+            using PatternKit.Generators.EventNotification;
+            public sealed record OrderAccepted(string OrderId, string CorrelationId, string Source, bool NotifySubscribers);
+            [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+            {{declaration}}
+            """))
+        .Then("diagnostics identify invalid declarations", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
+        .AssertPassed();
+
+    [Scenario("Generates event notification defaults and host shapes")]
     [Fact]
-    public Task Reports_Diagnostics_For_Invalid_Event_Notification_Declarations()
-        => Given("invalid event notification declarations", () => new[]
+    public Task Generates_Event_Notification_Defaults_And_Host_Shapes()
+        => Given("event notification declarations with default names and different host shapes", () => Compile("""
+            using PatternKit.Generators.EventNotification;
+            namespace Demo;
+            public sealed record OrderAccepted(string OrderId, string CorrelationId, string Source, bool NotifySubscribers);
+
+            [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+            internal abstract partial class AbstractNotification
+            {
+                [EventNotificationKey]
+                private static string Key(OrderAccepted evt) => evt.OrderId;
+            }
+
+            [GenerateEventNotification(typeof(OrderAccepted), typeof(string), NotificationName = "tenant\\\"notification")]
+            public sealed partial class SealedNotification
+            {
+                [EventNotificationKey]
+                private static string Key(OrderAccepted evt) => evt.OrderId;
+            }
+
+            [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+            internal partial struct StructNotification
+            {
+                [EventNotificationKey]
+                private static string Key(OrderAccepted evt) => evt.OrderId;
+            }
+            """))
+        .Then("generated sources preserve host shape and configured names", result =>
         {
-            Compile("""
-                using PatternKit.Generators.EventNotification;
-                [GenerateEventNotification(typeof(string), typeof(string))]
-                public static class NotificationHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.EventNotification;
-                [GenerateEventNotification(typeof(string), typeof(string))]
-                public static partial class NotificationHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.EventNotification;
-                [GenerateEventNotification(typeof(string), typeof(string))]
-                public static partial class NotificationHost
-                {
-                    [EventNotificationKey]
-                    private static int Key(string value) => value.Length;
-                }
-                """),
-            Compile("""
-                using PatternKit.Generators.EventNotification;
-                [GenerateEventNotification(typeof(string), typeof(string))]
-                public static partial class NotificationHost
-                {
-                    [EventNotificationKey]
-                    private static string Key(string value) => value;
-                    [EventNotificationMetadata("source")]
-                    private static string Source(string value) => value;
-                    [EventNotificationMetadata("SOURCE")]
-                    private static string OtherSource(string value) => value;
-                }
-                """)
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractNotification", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedNotification", combined);
+            ScenarioExpect.Contains("internal partial struct StructNotification", combined);
+            ScenarioExpect.Contains("Create(\"event-notification\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"notification\")", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
-        .Then("diagnostics identify invalid declarations", results =>
+        .AssertPassed();
+
+    [Scenario("Generates nested event notification host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Event_Notification_Host_Wrappers()
+        => Given("nested event notification declarations", () => Compile("""
+            using PatternKit.Generators.EventNotification;
+            namespace Demo;
+            public sealed record OrderAccepted(string OrderId, string CorrelationId, string Source, bool NotifySubscribers);
+
+            public partial class NotificationContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+                    protected partial class ProtectedNotification
+                    {
+                        [EventNotificationKey]
+                        private static string Key(OrderAccepted evt) => evt.OrderId;
+                    }
+
+                    [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+                    private protected partial class PrivateProtectedNotification
+                    {
+                        [EventNotificationKey]
+                        private static string Key(OrderAccepted evt) => evt.OrderId;
+                    }
+
+                    [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
+                    protected internal partial class ProtectedInternalNotification
+                    {
+                        [EventNotificationKey]
+                        private static string Key(OrderAccepted evt) => evt.OrderId;
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
         {
-            ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKEN001");
-            ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKEN002");
-            ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKEN003");
-            ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKEN004");
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class NotificationContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedNotification", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedNotification", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalNotification", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
+        .AssertPassed();
+
+    [Scenario("Skips malformed event notification type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(string)")]
+    [InlineData("typeof(OrderAccepted)", "null!")]
+    public Task Skips_Malformed_Event_Notification_Type_Arguments(string eventType, string keyType)
+        => Given("an event notification declaration with a null type argument", () => Compile($$"""
+            using PatternKit.Generators.EventNotification;
+            public sealed record OrderAccepted(string OrderId, string CorrelationId, string Source, bool NotifySubscribers);
+            [GenerateEventNotification({{eventType}}, {{keyType}})]
+            public static partial class OrderAcceptedNotification
+            {
+                [EventNotificationKey]
+                private static string Key(OrderAccepted evt) => evt.OrderId;
+            }
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
