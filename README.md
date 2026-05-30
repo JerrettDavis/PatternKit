@@ -473,11 +473,11 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 106 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 107 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 21 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Transaction Script, Unit of Work, Value Object |
+| Application Architecture | 22 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object |
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 17 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
@@ -497,6 +497,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
 | Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
+| Timeout Manager | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Timeout Manager | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |

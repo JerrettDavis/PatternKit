@@ -429,3 +429,5 @@ PKDOM004 | PatternKit.Generators.DomainServices | Error | Domain service operati
 PKVO001 | PatternKit.Generators.ValueObjects | Error | Value Object host must be partial.
 PKVO002 | PatternKit.Generators.ValueObjects | Error | Value Object host must be a class.
 PKVO003 | PatternKit.Generators.ValueObjects | Error | Value Object must declare at least one component.
+PKTM001 | PatternKit.Generators.Timeouts | Error | Timeout Manager host must be partial.
+PKTM002 | PatternKit.Generators.Timeouts | Error | Timeout Manager key type is invalid.

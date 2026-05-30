@@ -665,6 +665,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ActivityTracker"],
             ["tracked active work", "source-generated tracker factory", "DI composition"]),
         Descriptor(
+            "Order Reservation Timeout Manager",
+            "src/PatternKit.Examples/TimeoutManagerDemo/OrderReservationTimeoutDemo.cs",
+            "test/PatternKit.Examples.Tests/TimeoutManagerDemo/OrderReservationTimeoutDemoTests.cs",
+            "docs/examples/order-reservation-timeout-manager.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["TimeoutManager"],
+            ["reservation deadline tracking", "source-generated timeout manager factory", "DI composition"]),
+        Descriptor(
             "Generated Mailbox",
             "src/PatternKit.Examples/Messaging/MailboxExample.cs",
             "test/PatternKit.Examples.Tests/Messaging/MailboxExampleTests.cs",

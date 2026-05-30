@@ -34,6 +34,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Adapter | Execution | 59.084 ns | 416 B | 20.479 ns | 80 B | Generated adapter execution was faster and allocated less for shipment adaptation. |
 | Activity Tracker | Construction | 13.09 ns | 152 B | 12.98 ns | 152 B | Same allocation; generated was slightly faster in this microbenchmark. |
 | Activity Tracker | Execution | 446.88 ns | 1,656 B | 452.36 ns | 1,656 B | Same allocation; fluent was slightly faster for dashboard loading gates. |
+| Timeout Manager | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Timeout Manager | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |

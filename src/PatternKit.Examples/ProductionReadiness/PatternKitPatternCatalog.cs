@@ -1426,7 +1426,20 @@ public sealed class PatternKitPatternCatalog : IPatternKitPatternCatalog
             "docs/examples/dashboard-activity-tracker.md",
             "src/PatternKit.Examples/ActivityTrackingDemo/DashboardActivityTrackerDemo.cs",
             "test/PatternKit.Examples.Tests/ActivityTrackingDemo/DashboardActivityTrackerDemoTests.cs",
-            ["fluent activity gate", "generated tracker factory", "DI-importable loading gate example"])
+            ["fluent activity gate", "generated tracker factory", "DI-importable loading gate example"]),
+
+        Pattern("Timeout Manager", PatternFamily.ApplicationArchitecture,
+            "docs/patterns/application/timeout-manager.md",
+            "src/PatternKit.Core/Application/Timeouts/TimeoutManager.cs",
+            "test/PatternKit.Tests/Application/Timeouts/TimeoutManagerTests.cs",
+            "docs/generators/timeout-manager.md",
+            "src/PatternKit.Generators/Timeouts/TimeoutManagerGenerator.cs",
+            "test/PatternKit.Generators.Tests/TimeoutManagerGeneratorTests.cs",
+            null,
+            "docs/examples/order-reservation-timeout-manager.md",
+            "src/PatternKit.Examples/TimeoutManagerDemo/OrderReservationTimeoutDemo.cs",
+            "test/PatternKit.Examples.Tests/TimeoutManagerDemo/OrderReservationTimeoutDemoTests.cs",
+            ["fluent deadline registry", "generated timeout manager factory", "DI-importable order reservation expiration example"])
     ];
 
     public IReadOnlyList<PatternCoverageDescriptor> Patterns => Items;

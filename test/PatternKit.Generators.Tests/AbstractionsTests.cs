@@ -8,6 +8,38 @@ namespace PatternKit.Generators.Tests;
 /// </summary>
 public class AbstractionsTests
 {
+    #region GenerateTimeoutManagerAttribute Tests
+
+    [Scenario("GenerateTimeoutManagerAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateTimeoutManagerAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.Timeouts.GenerateTimeoutManagerAttribute(typeof(Guid))
+        {
+            FactoryMethodName = "CreateReservationTimeouts",
+            ManagerName = "reservation-timeouts"
+        };
+
+        ScenarioExpect.Equal(typeof(Guid), attr.KeyType);
+        ScenarioExpect.Equal("CreateReservationTimeouts", attr.FactoryMethodName);
+        ScenarioExpect.Equal("reservation-timeouts", attr.ManagerName);
+    }
+
+    [Scenario("GenerateTimeoutManagerAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateTimeoutManagerAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.Timeouts.GenerateTimeoutManagerAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateStrategyAttribute Tests
 
     [Scenario("GenerateStrategyAttribute Action Constructor Sets Properties")]
