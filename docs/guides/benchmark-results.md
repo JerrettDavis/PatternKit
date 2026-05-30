@@ -23,6 +23,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Workflow Orchestration | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Snapshot / Checkpoint Management | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Snapshot / Checkpoint Management | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Eventual Consistency Monitor | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Eventual Consistency Monitor | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Timeout Manager | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Timeout Manager | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
@@ -246,11 +248,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 113 catalog patterns and 452 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 114 catalog patterns and 456 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 25 | 100 |
+| Application Architecture | 26 | 104 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 20 | 80 |
 | Creational | 5 | 20 |
@@ -258,7 +260,7 @@ The coverage matrix currently publishes 113 catalog patterns and 452 pattern rou
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 107 generator source route results.
+The generator matrix currently publishes 108 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -282,6 +284,7 @@ The generator matrix currently publishes 107 generator source route results.
 | Application Architecture | Manual Task Gate | Covered | Covered | Covered | Covered |
 | Application Architecture | Workflow Orchestration | Covered | Covered | Covered | Covered |
 | Application Architecture | Snapshot / Checkpoint Management | Covered | Covered | Covered | Covered |
+| Application Architecture | Eventual Consistency Monitor | Covered | Covered | Covered | Covered |
 | Application Architecture | Timeout Manager | Covered | Covered | Covered | Covered |
 | Application Architecture | Aggregate Root | Covered | Covered | Covered | Covered |
 | Application Architecture | Anti-Corruption Layer | Covered | Covered | Covered | Covered |
@@ -400,6 +403,7 @@ The generator matrix currently publishes 107 generator source route results.
 | ManualTaskGateGenerator | `src/PatternKit.Generators/ManualTaskGates/ManualTaskGateGenerator.cs` | Covered |
 | WorkflowOrchestrationGenerator | `src/PatternKit.Generators/WorkflowOrchestration/WorkflowOrchestrationGenerator.cs` | Covered |
 | SnapshotCheckpointManagerGenerator | `src/PatternKit.Generators/SnapshotCheckpoints/SnapshotCheckpointManagerGenerator.cs` | Covered |
+| EventualConsistencyMonitorGenerator | `src/PatternKit.Generators/EventualConsistency/EventualConsistencyMonitorGenerator.cs` | Covered |
 | AggregateCommandHandlerGenerator | `src/PatternKit.Generators/Aggregates/AggregateCommandHandlerGenerator.cs` | Covered |
 | AdapterGenerator | `src/PatternKit.Generators/Adapter/AdapterGenerator.cs` | Covered |
 | AmbassadorGenerator | `src/PatternKit.Generators/Ambassador/AmbassadorGenerator.cs` | Covered |

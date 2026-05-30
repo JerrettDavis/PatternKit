@@ -140,6 +140,40 @@ public class AbstractionsTests
 
     #endregion
 
+    #region GenerateEventualConsistencyMonitorAttribute Tests
+
+    [Scenario("GenerateEventualConsistencyMonitorAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateEventualConsistencyMonitorAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.EventualConsistency.GenerateEventualConsistencyMonitorAttribute(typeof(Guid))
+        {
+            FactoryMethodName = "CreateOrderConsistency",
+            MonitorName = "order-consistency",
+            MaxAllowedLag = 2
+        };
+
+        ScenarioExpect.Equal(typeof(Guid), attr.KeyType);
+        ScenarioExpect.Equal("CreateOrderConsistency", attr.FactoryMethodName);
+        ScenarioExpect.Equal("order-consistency", attr.MonitorName);
+        ScenarioExpect.Equal(2, attr.MaxAllowedLag);
+    }
+
+    [Scenario("GenerateEventualConsistencyMonitorAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateEventualConsistencyMonitorAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.EventualConsistency.GenerateEventualConsistencyMonitorAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateSnapshotCheckpointManagerAttribute Tests
 
     [Scenario("GenerateSnapshotCheckpointManagerAttribute Constructor Sets Properties")]

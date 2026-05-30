@@ -279,6 +279,9 @@
 - name: Snapshot / Checkpoint Management
   href: snapshot-checkpoint-management.md
 
+- name: Eventual Consistency Monitor
+  href: eventual-consistency-monitor.md
+
 - name: Strategy
   href: strategy.md
 

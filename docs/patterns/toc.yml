@@ -449,6 +449,8 @@
           href: application/workflow-orchestration.md
         - name: Snapshot / Checkpoint Management
           href: application/snapshot-checkpoint-management.md
+        - name: Eventual Consistency Monitor
+          href: application/eventual-consistency-monitor.md
         - name: Timeout Manager
           href: application/timeout-manager.md
         - name: Event Sourcing

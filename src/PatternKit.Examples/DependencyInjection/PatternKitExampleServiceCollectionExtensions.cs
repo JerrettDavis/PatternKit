@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Application.ActivityTracking;
 using PatternKit.Application.AntiCorruption;
+using PatternKit.Application.EventualConsistency;
 using PatternKit.Application.ManualTaskGates;
 using PatternKit.Application.SnapshotCheckpoints;
 using PatternKit.Application.Specification;
@@ -49,6 +50,7 @@ using PatternKit.Examples.EnterpriseFeatureSlices;
 using PatternKit.Examples.EventCarriedStateTransferDemo;
 using PatternKit.Examples.EventNotificationDemo;
 using PatternKit.Examples.EventSourcingDemo;
+using PatternKit.Examples.EventualConsistencyDemo;
 using PatternKit.Examples.ExternalConfigurationStoreDemo;
 using PatternKit.Examples.FeatureToggleDemo;
 using PatternKit.Examples.FlyweightDemo;
@@ -262,6 +264,7 @@ public sealed record OrderApprovalManualTaskGatePatternExample(ManualTaskGate<Gu
 public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> Manager, OrderReservationTimeoutDemoRunner Runner);
 public sealed record FulfillmentWorkflowOrchestrationPatternExample(WorkflowOrchestrator<FulfillmentWorkflowContext> Workflow, FulfillmentWorkflowOrchestrationDemoRunner Runner);
 public sealed record OrderReplaySnapshotCheckpointPatternExample(SnapshotCheckpointManager<string, OrderReplaySnapshot> Manager, OrderReplaySnapshotCheckpointDemoRunner Runner);
+public sealed record OrderProjectionConsistencyPatternExample(EventualConsistencyMonitor<string> Monitor, OrderProjectionConsistencyDemoRunner Runner);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -381,7 +384,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderApprovalManualTaskGatePatternExample()
             .AddOrderReservationTimeoutPatternExample()
             .AddFulfillmentWorkflowOrchestrationPatternExample()
-            .AddOrderReplaySnapshotCheckpointPatternExample();
+            .AddOrderReplaySnapshotCheckpointPatternExample()
+            .AddOrderProjectionConsistencyPatternExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1380,6 +1384,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<SnapshotCheckpointManager<string, OrderReplaySnapshot>>(),
             sp.GetRequiredService<OrderReplaySnapshotCheckpointDemoRunner>()));
         return services.RegisterExample<OrderReplaySnapshotCheckpointPatternExample>("Order Replay Snapshot Checkpoint Management", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderProjectionConsistencyPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderProjectionConsistencyDemo();
+        services.AddSingleton<OrderProjectionConsistencyPatternExample>(sp => new(
+            sp.GetRequiredService<EventualConsistencyMonitor<string>>(),
+            sp.GetRequiredService<OrderProjectionConsistencyDemoRunner>()));
+        return services.RegisterExample<OrderProjectionConsistencyPatternExample>("Order Projection Eventual Consistency Monitor", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(
