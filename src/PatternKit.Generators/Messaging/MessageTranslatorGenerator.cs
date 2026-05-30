@@ -64,7 +64,7 @@ public sealed class MessageTranslatorGenerator : IIncrementalGenerator
 
         var inputType = attribute.ConstructorArguments.Length >= 1 ? attribute.ConstructorArguments[0].Value as INamedTypeSymbol : null;
         var outputType = attribute.ConstructorArguments.Length >= 2 ? attribute.ConstructorArguments[1].Value as INamedTypeSymbol : null;
-        if (inputType is null || outputType is null)
+        if (inputType is null || outputType is null || inputType.TypeKind == TypeKind.Error || outputType.TypeKind == TypeKind.Error)
             return;
 
         var handlers = type.GetMembers().OfType<IMethodSymbol>()
@@ -117,31 +117,39 @@ public sealed class MessageTranslatorGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
-        if (type.IsStatic)
-            sb.Append("static ");
-        else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
-            sb.Append("abstract ");
-        else if (type.IsSealed && type.TypeKind == TypeKind.Class)
-            sb.Append("sealed ");
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Messaging.Transformation.MessageTranslator<")
+        var indent = string.Empty;
+        foreach (var containingType in GetContainingTypes(type))
+        {
+            AppendTypeDeclaration(sb, containingType, indent);
+            sb.Append(indent).AppendLine("{");
+            indent += "    ";
+        }
+
+        AppendTypeDeclaration(sb, type, indent);
+        sb.Append(indent).AppendLine("{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Messaging.Transformation.MessageTranslator<")
             .Append(inputName).Append(", ").Append(outputName).Append("> ").Append(factoryName).AppendLine("()");
-        sb.AppendLine("    {");
-        sb.Append("        var builder = global::PatternKit.Messaging.Transformation.MessageTranslator<")
+        sb.Append(memberIndent).AppendLine("{");
+        sb.Append(bodyIndent).Append("var builder = global::PatternKit.Messaging.Transformation.MessageTranslator<")
             .Append(inputName).Append(", ").Append(outputName).Append(">.Create(\"").Append(Escape(translatorName)).AppendLine("\")");
-        sb.Append("            .PreserveHeaders(").Append(preserveHeaders ? "true" : "false").AppendLine(")");
-        sb.Append("            .TranslateWith(static (message, context) => ").Append(handlerName).AppendLine("(message, context));");
+        sb.Append(bodyIndent).Append("    .PreserveHeaders(").Append(preserveHeaders ? "true" : "false").AppendLine(")");
+        sb.Append(bodyIndent).Append("    .TranslateWith(static (message, context) => ").Append(handlerName).AppendLine("(message, context));");
 
         foreach (var drop in drops)
-            sb.Append("        builder.DropHeader(\"").Append(Escape(drop)).AppendLine("\");");
+            sb.Append(bodyIndent).Append("builder.DropHeader(\"").Append(Escape(drop)).AppendLine("\");");
         foreach (var set in sets)
-            sb.Append("        builder.SetHeader(\"").Append(Escape(set.Name)).Append("\", \"").Append(Escape(set.Value)).AppendLine("\");");
+            sb.Append(bodyIndent).Append("builder.SetHeader(\"").Append(Escape(set.Name)).Append("\", \"").Append(Escape(set.Value)).AppendLine("\");");
 
-        sb.AppendLine("        return builder.Build();");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
+        sb.Append(bodyIndent).AppendLine("return builder.Build();");
+        sb.Append(memberIndent).AppendLine("}");
+        sb.Append(indent).AppendLine("}");
+        while (indent.Length > 0)
+        {
+            indent = indent.Substring(0, indent.Length - 4);
+            sb.Append(indent).AppendLine("}");
+        }
         return sb.ToString();
     }
 
@@ -174,6 +182,26 @@ public sealed class MessageTranslatorGenerator : IIncrementalGenerator
                 attr.ConstructorArguments[1].Value as string ?? string.Empty))
             .Where(static header => !string.IsNullOrWhiteSpace(header.Name))
             .ToArray();
+
+    private static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(INamedTypeSymbol type)
+    {
+        var stack = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+            stack.Push(current);
+        return stack.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, string indent)
+    {
+        sb.Append(indent).Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        if (type.IsStatic)
+            sb.Append("static ");
+        else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
+            sb.Append("abstract ");
+        else if (type.IsSealed && type.TypeKind == TypeKind.Class)
+            sb.Append("sealed ");
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
+    }
 
     private static string? GetNamedString(AttributeData attribute, string name)
         => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;

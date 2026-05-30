@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -51,7 +52,7 @@ public sealed class QueueLoadLevelingPolicyGenerator : IIncrementalGenerator
         }
 
         var resultType = attribute.ConstructorArguments.Length >= 1 ? attribute.ConstructorArguments[0].Value as INamedTypeSymbol : null;
-        if (resultType is null)
+        if (resultType is null || resultType.TypeKind == TypeKind.Error)
             return;
 
         var maxConcurrentWorkers = GetNamedInt(attribute, "MaxConcurrentWorkers") ?? 1;
@@ -96,7 +97,46 @@ public sealed class QueueLoadLevelingPolicyGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        var indent = string.Empty;
+        foreach (var containingType in GetContainingTypes(type))
+        {
+            AppendTypeDeclaration(sb, containingType, indent);
+            sb.Append(indent).AppendLine("{");
+            indent += "    ";
+        }
+
+        AppendTypeDeclaration(sb, type, indent);
+        sb.Append(indent).AppendLine("{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Cloud.QueueLoadLeveling.QueueLoadLevelingPolicy<").Append(resultTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
+        sb.Append(memberIndent).AppendLine("{");
+        sb.Append(bodyIndent).Append("return global::PatternKit.Cloud.QueueLoadLeveling.QueueLoadLevelingPolicy<").Append(resultTypeName).Append(">.Create(\"").Append(Escape(policyName)).AppendLine("\")");
+        sb.Append(bodyIndent).Append("    .WithMaxConcurrentWorkers(").Append(maxConcurrentWorkers).AppendLine(")");
+        sb.Append(bodyIndent).Append("    .WithMaxQueueLength(").Append(maxQueueLength).AppendLine(")");
+        sb.Append(bodyIndent).Append("    .WithQueueTimeout(global::System.TimeSpan.FromMilliseconds(").Append(queueTimeoutMilliseconds).AppendLine("))");
+        sb.Append(bodyIndent).AppendLine("    .Build();");
+        sb.Append(memberIndent).AppendLine("}");
+        sb.Append(indent).AppendLine("}");
+        while (indent.Length > 0)
+        {
+            indent = indent.Substring(0, indent.Length - 4);
+            sb.Append(indent).AppendLine("}");
+        }
+        return sb.ToString();
+    }
+
+    private static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(INamedTypeSymbol type)
+    {
+        var stack = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+            stack.Push(current);
+        return stack.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, string indent)
+    {
+        sb.Append(indent).Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
         else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
@@ -104,17 +144,6 @@ public sealed class QueueLoadLevelingPolicyGenerator : IIncrementalGenerator
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
         sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Cloud.QueueLoadLeveling.QueueLoadLevelingPolicy<").Append(resultTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
-        sb.AppendLine("    {");
-        sb.Append("        return global::PatternKit.Cloud.QueueLoadLeveling.QueueLoadLevelingPolicy<").Append(resultTypeName).Append(">.Create(\"").Append(Escape(policyName)).AppendLine("\")");
-        sb.Append("            .WithMaxConcurrentWorkers(").Append(maxConcurrentWorkers).AppendLine(")");
-        sb.Append("            .WithMaxQueueLength(").Append(maxQueueLength).AppendLine(")");
-        sb.Append("            .WithQueueTimeout(global::System.TimeSpan.FromMilliseconds(").Append(queueTimeoutMilliseconds).AppendLine("))");
-        sb.AppendLine("            .Build();");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-        return sb.ToString();
     }
 
     private static string Escape(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"");

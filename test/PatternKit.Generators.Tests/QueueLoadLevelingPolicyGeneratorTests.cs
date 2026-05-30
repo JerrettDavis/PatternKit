@@ -47,12 +47,24 @@ public sealed partial class QueueLoadLevelingPolicyGeneratorTests(ITestOutputHel
                 using PatternKit.Generators.QueueLoadLeveling;
                 [GenerateQueueLoadLevelingPolicy(typeof(string), MaxConcurrentWorkers = 0)]
                 public static partial class QueueHost;
+                """),
+            Compile("""
+                using PatternKit.Generators.QueueLoadLeveling;
+                [GenerateQueueLoadLevelingPolicy(typeof(string), MaxQueueLength = -1)]
+                public static partial class QueueHost;
+                """),
+            Compile("""
+                using PatternKit.Generators.QueueLoadLeveling;
+                [GenerateQueueLoadLevelingPolicy(typeof(string), QueueTimeoutMilliseconds = -1)]
+                public static partial class QueueHost;
                 """)
         })
         .Then("diagnostics identify the invalid declarations", results =>
         {
             ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKQL001");
             ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKQL002");
+            ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKQL002");
+            ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKQL002");
         })
         .AssertPassed();
 
@@ -91,6 +103,48 @@ public sealed partial class QueueLoadLevelingPolicyGeneratorTests(ITestOutputHel
             ScenarioExpect.Contains("public abstract partial class EscapedQueue", escapedSource);
             ScenarioExpect.Contains("Create(\"queue\\\"\\\\level\")", escapedSource);
             ScenarioExpect.True(results[1].EmitSuccess, string.Join(Environment.NewLine, results[1].EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates queue load leveling policy inside nested hosts")]
+    [Fact]
+    public Task Generates_Queue_Load_Leveling_Policy_Inside_Nested_Hosts()
+        => Given("a nested queue load leveling declaration", () => Compile("""
+            using PatternKit.Generators.QueueLoadLeveling;
+            namespace Demo;
+            public static partial class FulfillmentModule
+            {
+                internal abstract partial class Queues
+                {
+                    [GenerateQueueLoadLevelingPolicy(typeof(string))]
+                    private sealed partial class WorkQueue;
+                }
+            }
+            """))
+        .Then("the generated source recreates each containing partial type", result =>
+        {
+            var source = ScenarioExpect.Single(result.GeneratedSources);
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Contains("public static partial class FulfillmentModule", source);
+            ScenarioExpect.Contains("internal abstract partial class Queues", source);
+            ScenarioExpect.Contains("private sealed partial class WorkQueue", source);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Skips queue load leveling generation for malformed result type")]
+    [Fact]
+    public Task Skips_Queue_Load_Leveling_Generation_For_Malformed_Result_Type()
+        => Given("a queue load leveling declaration with an unresolved result type", () => Compile("""
+            using PatternKit.Generators.QueueLoadLeveling;
+            [GenerateQueueLoadLevelingPolicy(typeof(MissingResult))]
+            public static partial class MissingQueue;
+            """))
+        .Then("no generated source is produced by the generator", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Empty(result.GeneratedSources);
+            ScenarioExpect.False(result.EmitSuccess);
         })
         .AssertPassed();
 
