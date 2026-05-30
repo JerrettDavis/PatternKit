@@ -2,100 +2,148 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using PatternKit.Generators.Bulkhead;
 using TinyBDD;
+using TinyBDD.Xunit;
+using Xunit.Abstractions;
 
 namespace PatternKit.Generators.Tests;
 
-public sealed class BulkheadPolicyGeneratorTests
+[Feature("Bulkhead Policy generator")]
+public sealed partial class BulkheadPolicyGeneratorTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     [Scenario("Generates bulkhead policy factory")]
     [Fact]
-    public void GeneratesBulkheadPolicyFactory()
-    {
-        var source = """
+    public Task Generates_Bulkhead_Policy_Factory()
+        => Given("a configured bulkhead policy declaration", () => Compile("""
             using PatternKit.Generators.Bulkhead;
-
             namespace Demo;
-
             [GenerateBulkheadPolicy(typeof(string), FactoryMethodName = "Build", PolicyName = "fulfillment", MaxConcurrency = 4, MaxQueueLength = 8, QueueTimeoutMilliseconds = 250)]
             public static partial class FulfillmentBulkhead;
-            """;
+            """))
+        .Then("generated source creates the configured policy", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            var source = ScenarioExpect.Single(result.GeneratedSources);
+            ScenarioExpect.Equal("FulfillmentBulkhead.BulkheadPolicy.g.cs", source.HintName);
+            ScenarioExpect.Contains("public static partial class FulfillmentBulkhead", source.Source);
+            ScenarioExpect.Contains("Build()", source.Source);
+            ScenarioExpect.Contains("BulkheadPolicy<string>.Create(\"fulfillment\")", source.Source);
+            ScenarioExpect.Contains(".WithMaxConcurrency(4)", source.Source);
+            ScenarioExpect.Contains(".WithMaxQueueLength(8)", source.Source);
+            ScenarioExpect.Contains(".WithQueueTimeout(global::System.TimeSpan.FromMilliseconds(250))", source.Source);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
 
-        var comp = CreateCompilation(source, nameof(GeneratesBulkheadPolicyFactory));
-        var gen = new BulkheadPolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-
-        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
-        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        var text = generated.SourceText.ToString();
-        ScenarioExpect.Equal("FulfillmentBulkhead.BulkheadPolicy.g.cs", generated.HintName);
-        ScenarioExpect.Contains("Build()", text);
-        ScenarioExpect.Contains("BulkheadPolicy<string>.Create(\"fulfillment\")", text);
-        ScenarioExpect.Contains(".WithMaxConcurrency(4)", text);
-        ScenarioExpect.Contains(".WithMaxQueueLength(8)", text);
-        ScenarioExpect.Contains(".WithQueueTimeout(global::System.TimeSpan.FromMilliseconds(250))", text);
-
-        var emit = updated.Emit(Stream.Null);
-        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
-    }
-
-    [Scenario("Reports diagnostic for non-partial bulkhead host")]
-    [Fact]
-    public void ReportsDiagnosticForNonPartialBulkheadHost()
-    {
-        var source = """
+    [Scenario("Reports diagnostics for invalid bulkhead declarations")]
+    [Theory]
+    [InlineData("public static class BulkheadHost;", "PKBH001")]
+    [InlineData("public static partial class BulkheadHost;", "PKBH002", "MaxConcurrency = 0")]
+    [InlineData("public static partial class BulkheadHost;", "PKBH002", "MaxQueueLength = -1")]
+    [InlineData("public static partial class BulkheadHost;", "PKBH002", "QueueTimeoutMilliseconds = -1")]
+    public Task Reports_Diagnostics_For_Invalid_Bulkhead_Declarations(string declaration, string diagnosticId, string configuration = "")
+        => Given("an invalid bulkhead policy declaration", () => Compile($$"""
             using PatternKit.Generators.Bulkhead;
+            [GenerateBulkheadPolicy(typeof(string){{(string.IsNullOrWhiteSpace(configuration) ? "" : ", " + configuration)}})]
+            {{declaration}}
+            """))
+        .Then("the expected diagnostic is reported", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
+        .AssertPassed();
 
+    [Scenario("Generates bulkhead defaults and host shapes")]
+    [Fact]
+    public Task Generates_Bulkhead_Defaults_And_Host_Shapes()
+        => Given("bulkhead policy declarations with default names and host shapes", () => Compile("""
+            using PatternKit.Generators.Bulkhead;
             namespace Demo;
 
             [GenerateBulkheadPolicy(typeof(string))]
-            public static class BulkheadHost;
-            """;
+            internal abstract partial class AbstractBulkhead;
 
-        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForNonPartialBulkheadHost));
+            [GenerateBulkheadPolicy(typeof(string), PolicyName = "tenant\\\"bulkhead")]
+            public sealed partial class SealedBulkhead;
 
-        ScenarioExpect.Equal("PKBH001", diagnostic.Id);
-    }
+            [GenerateBulkheadPolicy(typeof(int))]
+            internal partial struct StructBulkhead;
+            """))
+        .Then("generated sources preserve host shape and configured defaults", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
 
-    [Scenario("Reports diagnostic for invalid bulkhead configuration")]
+            var combined = string.Join("\n", result.GeneratedSources.Select(static source => source.Source));
+            ScenarioExpect.Contains("internal abstract partial class AbstractBulkhead", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedBulkhead", combined);
+            ScenarioExpect.Contains("internal partial struct StructBulkhead", combined);
+            ScenarioExpect.Contains("Create(\"bulkhead\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"bulkhead\")", combined);
+            ScenarioExpect.Contains(".WithMaxConcurrency(8)", combined);
+            ScenarioExpect.Contains(".WithMaxQueueLength(0)", combined);
+            ScenarioExpect.Contains("FromMilliseconds(0)", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates nested bulkhead host wrappers")]
     [Fact]
-    public void ReportsDiagnosticForInvalidBulkheadConfiguration()
-    {
-        var source = """
+    public Task Generates_Nested_Bulkhead_Host_Wrappers()
+        => Given("nested bulkhead policy declarations", () => Compile("""
             using PatternKit.Generators.Bulkhead;
-
             namespace Demo;
 
-            [GenerateBulkheadPolicy(typeof(string), MaxConcurrency = 0)]
-            public static partial class BulkheadHost;
-            """;
+            public partial class BulkheadContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateBulkheadPolicy(typeof(string))]
+                    protected partial class ProtectedBulkhead;
 
-        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForInvalidBulkheadConfiguration));
+                    [GenerateBulkheadPolicy(typeof(string))]
+                    private protected partial class PrivateProtectedBulkhead;
 
-        ScenarioExpect.Equal("PKBH002", diagnostic.Id);
-    }
+                    [GenerateBulkheadPolicy(typeof(string))]
+                    protected internal partial class ProtectedInternalBulkhead;
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
 
-    [Scenario("Generates bulkhead policy factory for global struct host")]
+            var combined = string.Join("\n", result.GeneratedSources.Select(static source => source.Source));
+            ScenarioExpect.Contains("public partial class BulkheadContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedBulkhead", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedBulkhead", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalBulkhead", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Skips malformed bulkhead result type")]
     [Fact]
-    public void GeneratesBulkheadPolicyFactoryForGlobalStructHost()
-    {
-        var source = """
+    public Task Skips_Malformed_Bulkhead_Result_Type()
+        => Given("a bulkhead policy declaration with a null result type", () => Compile("""
             using PatternKit.Generators.Bulkhead;
+            [GenerateBulkheadPolicy(null!)]
+            public static partial class BulkheadHost;
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
+        .AssertPassed();
 
-            [GenerateBulkheadPolicy(typeof(int), FactoryMethodName = "CreateNumbers", PolicyName = "numbers")]
-            internal partial struct BulkheadHost;
-            """;
-
-        var comp = CreateCompilation(source, nameof(GeneratesBulkheadPolicyFactoryForGlobalStructHost));
-        var gen = new BulkheadPolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-
-        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
-        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        var text = generated.SourceText.ToString();
-        ScenarioExpect.Contains("internal partial struct BulkheadHost", text);
-        ScenarioExpect.Contains("CreateNumbers()", text);
-        ScenarioExpect.DoesNotContain("namespace Demo;", text);
-        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    private static GeneratorResult Compile(string source)
+    {
+        var compilation = CreateCompilation(source, "BulkheadPolicyGeneratorTests");
+        _ = RoslynTestHelpers.Run(compilation, new BulkheadPolicyGenerator(), out var run, out var updated);
+        var result = run.Results.Single();
+        var emit = updated.Emit(Stream.Null);
+        return new GeneratorResult(
+            result.Diagnostics.ToArray(),
+            result.GeneratedSources.Select(static source => new GeneratedSource(source.HintName, source.SourceText.ToString())).ToArray(),
+            emit.Success,
+            emit.Diagnostics.Select(static diagnostic => diagnostic.ToString()).ToArray());
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
@@ -113,11 +161,11 @@ public sealed class BulkheadPolicyGeneratorTests
             Path.GetDirectoryName(typeof(BulkheadPolicyGenerator).Assembly.Location)!,
             "PatternKit.Generators.Abstractions.dll");
 
-    private static Diagnostic RunAndGetSingleDiagnostic(string source, string assemblyName)
-    {
-        var comp = CreateCompilation(source, assemblyName);
-        var gen = new BulkheadPolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
-        return ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
-    }
+    private sealed record GeneratorResult(
+        IReadOnlyList<Diagnostic> Diagnostics,
+        IReadOnlyList<GeneratedSource> GeneratedSources,
+        bool EmitSuccess,
+        IReadOnlyList<string> EmitDiagnostics);
+
+    private sealed record GeneratedSource(string HintName, string Source);
 }
