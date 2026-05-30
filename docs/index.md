@@ -66,11 +66,11 @@ if (parser.Execute("123", out var value))
 
 ## 📚 Available Patterns
 
-PatternKit covers 113 production-readiness patterns with fluent APIs, source-generated routes where applicable, IoC integration examples, TinyBDD coverage, and BenchmarkDotNet coverage-matrix validation:
+PatternKit covers 114 production-readiness patterns with fluent APIs, source-generated routes where applicable, IoC integration examples, TinyBDD coverage, and BenchmarkDotNet coverage-matrix validation:
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 25 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Manual Task Gate, Materialized View, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
+| Application Architecture | 26 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Manual Task Gate, Materialized View, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 20 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |

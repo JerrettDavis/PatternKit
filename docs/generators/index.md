@@ -65,6 +65,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Manual Task Gate**](manual-task-gate.md) | Human approval gates for workflow pauses and manual decisions | `[GenerateManualTaskGate]` |
 | [**Workflow Orchestration**](workflow-orchestration.md) | Ordered workflow factories from annotated step methods | `[WorkflowOrchestration]` |
 | [**Snapshot / Checkpoint Management**](snapshot-checkpoint-management.md) | Replay checkpoint manager factories for resumable processors | `[GenerateSnapshotCheckpointManager]` |
+| [**Eventual Consistency Monitor**](eventual-consistency-monitor.md) | Watermark lag monitor factories for projection convergence | `[GenerateEventualConsistencyMonitor]` |
 | [**Timeout Manager**](timeout-manager.md) | Deadline registry for expiring pending workflow work | `[GenerateTimeoutManager]` |
 | [**Audit Log**](audit-log.md) | Append-only audit log factories from key selectors | `[GenerateAuditLog]` |
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |

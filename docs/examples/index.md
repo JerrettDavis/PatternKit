@@ -20,6 +20,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Production-readiness catalog** for DI, generic host, and ASP.NET Core diagnostics that maps every documented example to its source, TinyBDD tests, docs page, integration surfaces, and production checks.
 * **Workflow orchestration** for explicit ordered fulfillment steps with retries, conditional gates, compensation, and execution history.
 * **Snapshot / checkpoint management** for resumable event stream replay and projection rebuilds.
+* **Eventual consistency monitoring** for projection and integration lag visibility.
 
 ## Demos in this section
 
@@ -46,6 +47,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Order Replay Snapshot Checkpoint Management**
   A Generic Host importable replay service with fluent and source-generated checkpoint manager routes for event-sourced order rebuilds. See [Order Replay Snapshot Checkpoint Management](order-replay-snapshot-checkpoint.md).
+
+* **Order Projection Eventual Consistency Monitor**
+  A Generic Host importable monitor with fluent and source-generated routes for source/target watermark convergence. See [Order Projection Eventual Consistency Monitor](order-projection-eventual-consistency-monitor.md).
 
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.

@@ -19,6 +19,9 @@
 - name: Order Replay Snapshot Checkpoint Management
   href: order-replay-snapshot-checkpoint.md
 
+- name: Order Projection Eventual Consistency Monitor
+  href: order-projection-eventual-consistency-monitor.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 

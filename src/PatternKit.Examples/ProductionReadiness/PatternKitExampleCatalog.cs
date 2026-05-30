@@ -975,7 +975,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/order-replay-snapshot-checkpoint.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["Snapshot / Checkpoint Management", "Event Sourcing"],
-            ["event stream replay resume point", "stale checkpoint handling", "source-generated checkpoint manager factory", "DI composition"])
+            ["event stream replay resume point", "stale checkpoint handling", "source-generated checkpoint manager factory", "DI composition"]),
+        Descriptor(
+            "Order Projection Eventual Consistency Monitor",
+            "src/PatternKit.Examples/EventualConsistencyDemo/OrderProjectionConsistencyDemo.cs",
+            "test/PatternKit.Examples.Tests/EventualConsistencyDemo/OrderProjectionConsistencyDemoTests.cs",
+            "docs/examples/order-projection-eventual-consistency-monitor.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Eventual Consistency Monitor", "Materialized View"],
+            ["source and target watermarks", "projection lag threshold", "source-generated monitor factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

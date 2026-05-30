@@ -131,6 +131,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Manual Task Gate | `ManualTaskGate<TKey>` | Manual Task Gate generator |
 | Application Architecture | Workflow Orchestration | `WorkflowOrchestrator<TContext>` | Workflow Orchestration generator |
 | Application Architecture | Snapshot / Checkpoint Management | `SnapshotCheckpointManager<TKey, TSnapshot>` | Snapshot / Checkpoint Management generator |
+| Application Architecture | Eventual Consistency Monitor | `EventualConsistencyMonitor<TKey>` | Eventual Consistency Monitor generator |
 | Application Architecture | Timeout Manager | `TimeoutManager<TKey>` | Timeout Manager generator |
 
 ## Research Baselines

@@ -118,6 +118,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Domain Event",
         "Table Data Gateway",
         "Event Sourcing",
+        "Eventual Consistency Monitor",
         "Feature Toggle",
         "Audit Log",
         "Materialized View",
@@ -170,7 +171,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(41, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(20, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
-                ScenarioExpect.Equal(25, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(26, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
