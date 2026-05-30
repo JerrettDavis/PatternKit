@@ -8,6 +8,38 @@ namespace PatternKit.Generators.Tests;
 /// </summary>
 public class AbstractionsTests
 {
+    #region GenerateManualTaskGateAttribute Tests
+
+    [Scenario("GenerateManualTaskGateAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateManualTaskGateAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.ManualTaskGates.GenerateManualTaskGateAttribute(typeof(Guid))
+        {
+            FactoryMethodName = "CreateApprovalGate",
+            GateName = "approval-gate"
+        };
+
+        ScenarioExpect.Equal(typeof(Guid), attr.KeyType);
+        ScenarioExpect.Equal("CreateApprovalGate", attr.FactoryMethodName);
+        ScenarioExpect.Equal("approval-gate", attr.GateName);
+    }
+
+    [Scenario("GenerateManualTaskGateAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateManualTaskGateAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.ManualTaskGates.GenerateManualTaskGateAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateTimeoutManagerAttribute Tests
 
     [Scenario("GenerateTimeoutManagerAttribute Constructor Sets Properties")]

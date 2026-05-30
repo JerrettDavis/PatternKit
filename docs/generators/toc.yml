@@ -97,6 +97,9 @@
 - name: Materialized View
   href: materialized-view.md
 
+- name: Manual Task Gate
+  href: manual-task-gate.md
+
 - name: Iterator
   href: iterator.md
 

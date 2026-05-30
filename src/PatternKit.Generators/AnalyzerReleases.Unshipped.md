@@ -431,3 +431,5 @@ PKVO002 | PatternKit.Generators.ValueObjects | Error | Value Object host must be
 PKVO003 | PatternKit.Generators.ValueObjects | Error | Value Object must declare at least one component.
 PKTM001 | PatternKit.Generators.Timeouts | Error | Timeout Manager host must be partial.
 PKTM002 | PatternKit.Generators.Timeouts | Error | Timeout Manager key type is invalid.
+PKMTG001 | PatternKit.Generators.ManualTaskGates | Error | Manual Task Gate host must be partial.
+PKMTG002 | PatternKit.Generators.ManualTaskGates | Error | Manual Task Gate configuration is invalid.
