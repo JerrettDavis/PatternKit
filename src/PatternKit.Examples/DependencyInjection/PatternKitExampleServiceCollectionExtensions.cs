@@ -18,6 +18,7 @@ using PatternKit.Cloud.HealthEndpointMonitoring;
 using PatternKit.Cloud.PriorityQueue;
 using PatternKit.Cloud.QueueLoadLeveling;
 using PatternKit.Cloud.RateLimiting;
+using PatternKit.Cloud.ReadWriteThroughCache;
 using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
 using PatternKit.Creational.Prototype;
@@ -70,6 +71,7 @@ using PatternKit.Examples.PrototypeDemo;
 using PatternKit.Examples.ProxyDemo;
 using PatternKit.Examples.QueueLoadLevelingDemo;
 using PatternKit.Examples.RateLimitingDemo;
+using PatternKit.Examples.ReadWriteThroughCacheDemo;
 using PatternKit.Examples.RepositoryDemo;
 using PatternKit.Examples.RetryDemo;
 using PatternKit.Examples.SchedulerAgentSupervisorDemo;
@@ -241,6 +243,7 @@ public sealed record FulfillmentHealthEndpointExample(HealthEndpoint<Fulfillment
 public sealed record FulfillmentPriorityQueueExample(PriorityQueuePolicy<FulfillmentPriorityWork, int> Queue, FulfillmentPriorityQueueService Service);
 public sealed record ProductCatalogCacheAsideExample(CacheAsidePolicy<ProductReadModel> Policy, ProductCatalogCacheAsideService Service);
 public sealed record ProductCatalogStampedeProtectionExample(CacheStampedeProtectionPolicy<ProductAvailabilitySnapshot> Policy, ProductCatalogStampedeProtectionDemoRunner Runner);
+public sealed record ProductCatalogReadWriteThroughExample(ReadWriteThroughCachePolicy<CatalogProduct> Policy, ProductCatalogReadWriteThroughDemoRunner Runner);
 public sealed record ProductSearchRateLimitingExample(RateLimitPolicy<SearchResponse> Policy, ProductSearchRateLimitService Service);
 public sealed record TenantExternalConfigurationStoreExample(TenantExternalConfigurationStoreDemoRunner Runner, TenantExternalConfigurationService Service);
 public sealed record CustomerDashboardGatewayAggregationExample(CustomerDashboardGatewayAggregationDemoRunner Runner, CustomerDashboardGatewayService Service);
@@ -358,6 +361,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddFulfillmentPriorityQueueExample()
             .AddProductCatalogCacheAsideExample()
             .AddProductCatalogStampedeProtectionExample()
+            .AddProductCatalogReadWriteThroughExample()
             .AddProductSearchRateLimitingExample()
             .AddTenantExternalConfigurationStoreExample()
             .AddCustomerDashboardGatewayAggregationExample()
@@ -1233,6 +1237,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CacheStampedeProtectionPolicy<ProductAvailabilitySnapshot>>(),
             sp.GetRequiredService<ProductCatalogStampedeProtectionDemoRunner>()));
         return services.RegisterExample<ProductCatalogStampedeProtectionExample>("Product Catalog Cache Stampede Protection", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddProductCatalogReadWriteThroughExample(this IServiceCollection services)
+    {
+        services.AddProductCatalogReadWriteThroughDemo();
+        services.AddSingleton<ProductCatalogReadWriteThroughExample>(sp => new(
+            sp.GetRequiredService<ReadWriteThroughCachePolicy<CatalogProduct>>(),
+            sp.GetRequiredService<ProductCatalogReadWriteThroughDemoRunner>()));
+        return services.RegisterExample<ProductCatalogReadWriteThroughExample>("Product Catalog Read-Through and Write-Through Cache", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
     }
 
     public static IServiceCollection AddProductSearchRateLimitingExample(this IServiceCollection services)

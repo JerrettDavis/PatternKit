@@ -41,6 +41,41 @@ public class AbstractionsTests
 
     #endregion
 
+    #region GenerateReadWriteThroughCachePolicyAttribute Tests
+
+    [Scenario("GenerateReadWriteThroughCachePolicyAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateReadWriteThroughCachePolicyAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.ReadWriteThroughCache.GenerateReadWriteThroughCachePolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "CreateCatalogCache",
+            PolicyName = "catalog-read-write-through",
+            TimeToLiveMilliseconds = 500
+        };
+
+        ScenarioExpect.Equal(typeof(string), attr.ResultType);
+        ScenarioExpect.Equal("CreateCatalogCache", attr.FactoryMethodName);
+        ScenarioExpect.Equal("catalog-read-write-through", attr.PolicyName);
+        ScenarioExpect.Equal(500, attr.TimeToLiveMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new PatternKit.Generators.ReadWriteThroughCache.GenerateReadWriteThroughCachePolicyAttribute(null!));
+    }
+
+    [Scenario("GenerateReadWriteThroughCachePolicyAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateReadWriteThroughCachePolicyAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.ReadWriteThroughCache.GenerateReadWriteThroughCachePolicyAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateManualTaskGateAttribute Tests
 
     [Scenario("GenerateManualTaskGateAttribute Constructor Sets Properties")]

@@ -60,6 +60,12 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
+| Read-Through / Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Read-Through / Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Read-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Read-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Canonical Data Model | Construction | 75.482 ns | 632 B | 59.947 ns | 496 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Canonical Data Model | Execution | 116.680 ns | 832 B | 92.082 ns | 696 B | Generated reduced execution time and allocation for order normalization. |
 | Channel Adapter | Construction | 38.469 ns | 384 B | 38.681 ns | 384 B | Effectively equivalent for this microbenchmark. |

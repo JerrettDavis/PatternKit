@@ -95,6 +95,8 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Cloud Architecture | Health Endpoint Monitoring | `HealthEndpoint<TContext>` | Health Endpoint Monitoring generator |
 | Cloud Architecture | Priority Queue | `PriorityQueuePolicy<TItem, TPriority>` | Priority Queue generator |
 | Cloud Architecture | Cache-Aside | `CacheAsidePolicy<T>` | Cache-Aside generator |
+| Cloud Architecture | Read-Through Cache | `ReadWriteThroughCachePolicy<T>` | Read/write-through cache generator |
+| Cloud Architecture | Write-Through Cache | `ReadWriteThroughCachePolicy<T>` | Read/write-through cache generator |
 | Cloud Architecture | Rate Limiting | `RateLimitPolicy<T>` | Rate Limiting generator |
 | Cloud Architecture | External Configuration Store | `ExternalConfigurationStore<TSettings>` | External Configuration Store generator |
 | Cloud Architecture | Gateway Aggregation | `GatewayAggregation<TRequest,TResponse>` | Gateway Aggregation generator |
