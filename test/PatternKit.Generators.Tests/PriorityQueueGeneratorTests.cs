@@ -93,6 +93,64 @@ public sealed partial class PriorityQueueGeneratorTests(ITestOutputHelper output
         })
         .AssertPassed();
 
+    [Scenario("Generates priority queue inside nested hosts")]
+    [Fact]
+    public Task Generates_Priority_Queue_Inside_Nested_Hosts()
+        => Given("a nested priority queue declaration", () => Compile("""
+            using PatternKit.Generators.PriorityQueue;
+            namespace Demo;
+            public static partial class FulfillmentModule
+            {
+                internal abstract partial class Queues
+                {
+                    [GeneratePriorityQueue(typeof(string), typeof(int))]
+                    private sealed partial class WorkPriorityQueue
+                    {
+                        [PriorityQueuePrioritySelector]
+                        private static int SelectPriority(string item) => item.Length;
+                    }
+                }
+            }
+            """))
+        .Then("the generated source recreates each containing partial type", result =>
+        {
+            var source = ScenarioExpect.Single(result.GeneratedSources);
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Contains("public static partial class FulfillmentModule", source);
+            ScenarioExpect.Contains("internal abstract partial class Queues", source);
+            ScenarioExpect.Contains("private sealed partial class WorkPriorityQueue", source);
+            ScenarioExpect.Contains(".WithPrioritySelector(SelectPriority)", source);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Skips priority queue generation for malformed type arguments")]
+    [Fact]
+    public Task Skips_Priority_Queue_Generation_For_Malformed_Type_Arguments()
+        => Given("priority queue declarations with unresolved item and priority types", () => new[]
+        {
+            Compile("""
+                using PatternKit.Generators.PriorityQueue;
+                [GeneratePriorityQueue(typeof(MissingItem), typeof(int))]
+                public static partial class MissingItemQueue;
+                """),
+            Compile("""
+                using PatternKit.Generators.PriorityQueue;
+                [GeneratePriorityQueue(typeof(string), typeof(MissingPriority))]
+                public static partial class MissingPriorityQueue;
+                """)
+        })
+        .Then("no generated sources are produced by the generator", results =>
+        {
+            foreach (var result in results)
+            {
+                ScenarioExpect.Empty(result.Diagnostics);
+                ScenarioExpect.Empty(result.GeneratedSources);
+                ScenarioExpect.False(result.EmitSuccess);
+            }
+        })
+        .AssertPassed();
+
     private static GeneratorResult Compile(string source)
     {
         var compilation = RoslynTestHelpers.CreateCompilation(
