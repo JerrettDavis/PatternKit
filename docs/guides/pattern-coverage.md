@@ -145,6 +145,16 @@ The catalog is allowed to grow beyond GoF when an external catalog describes a r
 
 Entries should still be selective. A pattern belongs in the catalog only when PatternKit can demonstrate a runtime path, a source-generated path or tracked generator issue, documentation, TinyBDD coverage, and an importable example.
 
+## Completed Expansion Batches
+
+The current catalog includes the accepted candidates from the recent domain modeling, workflow/orchestration, and data consistency expansion batches:
+
+| Batch | Implemented patterns |
+| --- | --- |
+| Domain modeling | Aggregate Root, Bounded Context, Context Map, Domain Service, Specification, Value Object |
+| Workflow and orchestration | Manual Task Gate, Timeout Manager, Workflow Orchestration, Saga / Process Manager, Scheduler Agent Supervisor |
+| Data consistency and caching | Cache Stampede Protection, Eventual Consistency Monitor, Read-Through Cache, Snapshot / Checkpoint Management, Transactional Outbox, Write-Through Cache |
+
 ## Adding Or Extending A Pattern
 
 1. Add or update the fluent runtime implementation and TinyBDD tests.
