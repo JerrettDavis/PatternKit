@@ -132,6 +132,58 @@ public sealed class DomainEventDispatcherGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        sb.AppendLine();
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Application.DomainEvents.DomainEventDispatcher<")
+            .Append(eventBaseName).Append("> ").Append(factoryName).AppendLine("()");
+        sb.Append(memberIndent).AppendLine("{");
+        sb.Append(bodyIndent).Append("var builder = global::PatternKit.Application.DomainEvents.DomainEventDispatcher<")
+            .Append(eventBaseName).Append(">.Create(\"").Append(Escape(dispatcherName)).AppendLine("\");");
+        foreach (var handler in handlers)
+        {
+            var eventTypeName = handler.EventType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            sb.Append(bodyIndent).Append("builder.Handle<").Append(eventTypeName).Append(">(").Append(handler.Method.Name).AppendLine(");");
+        }
+
+        sb.Append(bodyIndent).AppendLine("return builder.Build();");
+        sb.AppendLine(memberIndent + "}");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
         sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
@@ -139,23 +191,7 @@ public sealed class DomainEventDispatcherGenerator : IIncrementalGenerator
             sb.Append("abstract ");
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Application.DomainEvents.DomainEventDispatcher<")
-            .Append(eventBaseName).Append("> ").Append(factoryName).AppendLine("()");
-        sb.AppendLine("    {");
-        sb.Append("        var builder = global::PatternKit.Application.DomainEvents.DomainEventDispatcher<")
-            .Append(eventBaseName).Append(">.Create(\"").Append(Escape(dispatcherName)).AppendLine("\");");
-        foreach (var handler in handlers)
-        {
-            var eventTypeName = handler.EventType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            sb.Append("        builder.Handle<").Append(eventTypeName).Append(">(").Append(handler.Method.Name).AppendLine(");");
-        }
-
-        sb.AppendLine("        return builder.Build();");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-        return sb.ToString();
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
     }
 
     private static bool IsHandler(IMethodSymbol method, INamedTypeSymbol eventType, INamedTypeSymbol eventBaseType)
