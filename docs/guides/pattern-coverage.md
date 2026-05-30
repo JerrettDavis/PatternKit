@@ -129,6 +129,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 | Application Architecture | Activity Tracker | `ActivityTracker` | Activity Tracker generator |
 | Application Architecture | Manual Task Gate | `ManualTaskGate<TKey>` | Manual Task Gate generator |
+| Application Architecture | Workflow Orchestration | `WorkflowOrchestrator<TContext>` | Workflow Orchestration generator |
 | Application Architecture | Timeout Manager | `TimeoutManager<TKey>` | Timeout Manager generator |
 
 ## Research Baselines

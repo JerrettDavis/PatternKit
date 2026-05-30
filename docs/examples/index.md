@@ -18,6 +18,7 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Enterprise messaging workflows** for envelopes, routers, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, and outboxes.
 * **Messaging backplane facade** for host-style setup, typed request/reply, and publish/subscribe over an application-owned transport boundary.
 * **Production-readiness catalog** for DI, generic host, and ASP.NET Core diagnostics that maps every documented example to its source, TinyBDD tests, docs page, integration surfaces, and production checks.
+* **Workflow orchestration** for explicit ordered fulfillment steps with retries, conditional gates, compensation, and execution history.
 
 ## Demos in this section
 
@@ -38,6 +39,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Enterprise Feature Slices with .NET DI**
   A checkout feature slice registered with `Microsoft.Extensions.DependencyInjection`, exposing a typed `IEnterpriseCheckout` facade while the container owns Flyweight, Factory, Prototype, Chain, Strategy, Decorator, Abstract Factory, Proxy, TypeDispatcher, State Machine, Memento, Observer, and Flow artifacts. See [Enterprise Feature Slices with .NET DI](enterprise-feature-slices.md).
+
+* **Fulfillment Workflow Orchestration**
+  A Generic Host importable fulfillment workflow with fluent and source-generated routes for inventory reservation, fraud review, payment capture, retries, warehouse release, and compensation. See [Fulfillment Workflow Orchestration](fulfillment-workflow-orchestration.md).
 
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.

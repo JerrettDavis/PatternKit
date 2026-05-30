@@ -106,6 +106,9 @@
 - name: Manual Task Gate
   href: manual-task-gate.md
 
+- name: Workflow Orchestration
+  href: workflow-orchestration.md
+
 - name: Iterator
   href: iterator.md
 

@@ -13,6 +13,9 @@
 - name: Order Reservation Timeout Manager
   href: order-reservation-timeout-manager.md
 
+- name: Fulfillment Workflow Orchestration
+  href: fulfillment-workflow-orchestration.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 
