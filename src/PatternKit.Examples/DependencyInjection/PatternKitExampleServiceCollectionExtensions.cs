@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Application.ActivityTracking;
 using PatternKit.Application.AntiCorruption;
 using PatternKit.Application.Specification;
+using PatternKit.Application.Timeouts;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
 using PatternKit.Behavioral.Strategy;
@@ -77,6 +78,7 @@ using PatternKit.Examples.Strategies.Coercion;
 using PatternKit.Examples.Strategies.Composed;
 using PatternKit.Examples.TableDataGatewayDemo;
 using PatternKit.Examples.TemplateDemo;
+using PatternKit.Examples.TimeoutManagerDemo;
 using PatternKit.Examples.TransactionScriptDemo;
 using PatternKit.Examples.UnitOfWorkDemo;
 using PatternKit.Examples.ValueObjectDemo;
@@ -244,6 +246,7 @@ public sealed record CommerceBackendsForFrontendsExample(CommerceBackendsForFron
 public sealed record InventoryAmbassadorExample(InventoryAmbassadorDemoRunner Runner, InventoryAmbassadorService Service);
 public sealed record WarehouseLeaderElectionExample(WarehouseLeaderElectionDemoRunner Runner, WarehouseLeaderElectionService Service);
 public sealed record WarehouseSchedulerAgentSupervisorExample(WarehouseSchedulerDemoRunner Runner, WarehouseSchedulerService Service);
+public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> Manager, OrderReservationTimeoutDemoRunner Runner);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -357,7 +360,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddCommerceBackendsForFrontendsExample()
             .AddInventoryAmbassadorExample()
             .AddWarehouseLeaderElectionExample()
-            .AddWarehouseSchedulerAgentSupervisorExample();
+            .AddWarehouseSchedulerAgentSupervisorExample()
+            .AddOrderReservationTimeoutPatternExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1302,6 +1306,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<WarehouseSchedulerDemoRunner>(),
             sp.GetRequiredService<WarehouseSchedulerService>()));
         return services.RegisterExample<WarehouseSchedulerAgentSupervisorExample>("Warehouse Scheduler Agent Supervisor", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderReservationTimeoutPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderReservationTimeoutDemo();
+        services.AddSingleton<OrderReservationTimeoutPatternExample>(sp => new(
+            sp.GetRequiredService<TimeoutManager<Guid>>(),
+            sp.GetRequiredService<OrderReservationTimeoutDemoRunner>()));
+        return services.RegisterExample<OrderReservationTimeoutPatternExample>("Order Reservation Timeout Manager", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

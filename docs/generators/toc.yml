@@ -261,6 +261,9 @@
 - name: Table Data Gateway
   href: table-data-gateway.md
 
+- name: Timeout Manager
+  href: timeout-manager.md
+
 - name: Strategy
   href: strategy.md
 

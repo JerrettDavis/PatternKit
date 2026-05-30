@@ -7,6 +7,9 @@
 - name: Dashboard Activity Tracker
   href: dashboard-activity-tracker.md
 
+- name: Order Reservation Timeout Manager
+  href: order-reservation-timeout-manager.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 

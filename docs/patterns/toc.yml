@@ -439,6 +439,8 @@
           href: application/context-map.md
         - name: Table Data Gateway
           href: application/table-data-gateway.md
+        - name: Timeout Manager
+          href: application/timeout-manager.md
         - name: Event Sourcing
           href: application/event-sourcing.md
         - name: Feature Toggle

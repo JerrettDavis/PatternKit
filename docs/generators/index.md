@@ -62,6 +62,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Repository**](repository.md) | In-memory repository factories from key selectors | `[GenerateRepository]` |
 | [**Anti-Corruption Layer**](anti-corruption-layer.md) | External-to-domain translation boundaries with validation | `[GenerateAntiCorruptionLayer]` |
 | [**Activity Tracker**](activity-tracker.md) | Active-work tracker gates for loading and readiness workflows | `[GenerateActivityTracker]` |
+| [**Timeout Manager**](timeout-manager.md) | Deadline registry for expiring pending workflow work | `[GenerateTimeoutManager]` |
 | [**Audit Log**](audit-log.md) | Append-only audit log factories from key selectors | `[GenerateAuditLog]` |
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
