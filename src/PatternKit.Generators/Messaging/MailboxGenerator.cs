@@ -204,20 +204,34 @@ public sealed class MailboxGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Messaging.Mailboxes.Mailbox<")
+        var containingTypes = GetContainingTypes(type);
+        var indentLevel = 0;
+        foreach (var containingType in containingTypes)
+        {
+            AppendTypeDeclaration(sb, containingType, indentLevel);
+            sb.AppendLine();
+            sb.AppendLine(new string(' ', indentLevel * 4) + "{");
+            indentLevel++;
+        }
+
+        AppendTypeDeclaration(sb, type, indentLevel);
+        sb.AppendLine();
+        var indent = new string(' ', indentLevel * 4);
+        sb.AppendLine(indent + "{");
+        var memberIndent = indent + "    ";
+        var bodyIndent = memberIndent + "    ";
+        sb.Append(memberIndent).Append("public static global::PatternKit.Messaging.Mailboxes.Mailbox<")
             .Append(payload)
             .Append("> ")
             .Append(factoryName)
             .AppendLine("()");
-        sb.Append("        => global::PatternKit.Messaging.Mailboxes.Mailbox<")
+        sb.Append(bodyIndent).Append("=> global::PatternKit.Messaging.Mailboxes.Mailbox<")
             .Append(payload)
             .AppendLine(">.Create(" + handlerName + ")");
 
         if (capacity > 0)
         {
-            sb.Append("            .Bounded(")
+            sb.Append(bodyIndent).Append("    .Bounded(")
                 .Append(capacity)
                 .Append(", global::PatternKit.Messaging.Mailboxes.MailboxBackpressurePolicy.")
                 .Append(backpressurePolicy)
@@ -225,22 +239,63 @@ public sealed class MailboxGenerator : IIncrementalGenerator
         }
         else
         {
-            sb.AppendLine("            .Unbounded()");
+            sb.Append(bodyIndent).AppendLine("    .Unbounded()");
         }
 
-        sb.Append("            .OnError(global::PatternKit.Messaging.Mailboxes.MailboxErrorPolicy.")
+        sb.Append(bodyIndent).Append("    .OnError(global::PatternKit.Messaging.Mailboxes.MailboxErrorPolicy.")
             .Append(errorPolicy);
         if (errorHandlerName is not null)
             sb.Append(", ").Append(errorHandlerName);
         sb.AppendLine(")");
 
         if (eventSinkName is not null)
-            sb.Append("            .OnEvent(").Append(eventSinkName).AppendLine(")");
+            sb.Append(bodyIndent).Append("    .OnEvent(").Append(eventSinkName).AppendLine(")");
 
-        sb.AppendLine("            .Build();");
-        sb.AppendLine("}");
+        sb.Append(bodyIndent).AppendLine("    .Build();");
+        sb.AppendLine(indent + "}");
+        for (var i = containingTypes.Length - 1; i >= 0; i--)
+        {
+            sb.AppendLine(new string(' ', i * 4) + "}");
+        }
+
         return sb.ToString();
     }
+
+    private static INamedTypeSymbol[] GetContainingTypes(INamedTypeSymbol type)
+    {
+        var containingTypes = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+        {
+            containingTypes.Push(current);
+        }
+
+        return containingTypes.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, int indentLevel)
+    {
+        sb.Append(new string(' ', indentLevel * 4));
+        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        if (type.IsStatic)
+            sb.Append("static ");
+        else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
+            sb.Append("abstract ");
+        else if (type.IsSealed && type.TypeKind == TypeKind.Class)
+            sb.Append("sealed ");
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name);
+    }
+
+    private static string GetAccessibility(Accessibility accessibility)
+        => accessibility switch
+        {
+            Accessibility.Public => "public",
+            Accessibility.Internal => "internal",
+            Accessibility.Private => "private",
+            Accessibility.Protected => "protected",
+            Accessibility.ProtectedAndInternal => "private protected",
+            Accessibility.ProtectedOrInternal => "protected internal",
+            _ => "internal"
+        };
 
     private static string? GetNamedString(AttributeData attribute, string name)
         => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as string;
