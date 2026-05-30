@@ -873,6 +873,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Cache Stampede Protection"],
             ["keyed single-flight load coordination", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Product Catalog Read-Through and Write-Through Cache",
+            "src/PatternKit.Examples/ReadWriteThroughCacheDemo/ProductCatalogReadWriteThroughCacheDemo.cs",
+            "test/PatternKit.Examples.Tests/ReadWriteThroughCacheDemo/ProductCatalogReadWriteThroughCacheDemoTests.cs",
+            "docs/examples/product-catalog-read-write-through-cache.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection,
+            ["Read-Through Cache", "Write-Through Cache"],
+            ["cache-owned repository reads", "write-through persistence before cache update", "DI composition"]),
+        Descriptor(
             "Product Search Rate Limiting",
             "src/PatternKit.Examples/RateLimitingDemo/ProductSearchRateLimitingDemo.cs",
             "test/PatternKit.Examples.Tests/RateLimitingDemo/ProductSearchRateLimitingDemoTests.cs",

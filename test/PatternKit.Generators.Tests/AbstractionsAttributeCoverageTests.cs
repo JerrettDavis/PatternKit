@@ -44,6 +44,7 @@ using PatternKit.Generators.Prototype;
 using PatternKit.Generators.Proxy;
 using PatternKit.Generators.QueueLoadLeveling;
 using PatternKit.Generators.RateLimiting;
+using PatternKit.Generators.ReadWriteThroughCache;
 using PatternKit.Generators.Repository;
 using PatternKit.Generators.Retry;
 using PatternKit.Generators.SchedulerAgentSupervisor;
@@ -96,6 +97,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateBulkheadPolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCacheAsidePolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CacheAsidePredicateAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateReadWriteThroughCachePolicyAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateCanonicalDataModelAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(CanonicalDataModelMapperAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateEventCarriedStateTransferAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -351,6 +353,12 @@ public sealed class AbstractionsAttributeCoverageTests
             PolicyName = "products",
             TimeToLiveMilliseconds = 250
         };
+        var readWriteThrough = new GenerateReadWriteThroughCachePolicyAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildProductReadWriteCache",
+            PolicyName = "products-read-write-through",
+            TimeToLiveMilliseconds = 500
+        };
         var externalConfig = new GenerateExternalConfigurationStoreAttribute(typeof(string))
         {
             FactoryName = "BuildTenantConfig",
@@ -363,6 +371,10 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("BuildProductCache", cacheAside.FactoryMethodName);
         ScenarioExpect.Equal("products", cacheAside.PolicyName);
         ScenarioExpect.Equal(250, cacheAside.TimeToLiveMilliseconds);
+        ScenarioExpect.Equal(typeof(string), readWriteThrough.ResultType);
+        ScenarioExpect.Equal("BuildProductReadWriteCache", readWriteThrough.FactoryMethodName);
+        ScenarioExpect.Equal("products-read-write-through", readWriteThrough.PolicyName);
+        ScenarioExpect.Equal(500, readWriteThrough.TimeToLiveMilliseconds);
         ScenarioExpect.Equal(typeof(string), externalConfig.SettingsType);
         ScenarioExpect.Equal("BuildTenantConfig", externalConfig.FactoryName);
         ScenarioExpect.Equal("tenant-config", externalConfig.StoreName);
@@ -370,6 +382,7 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("Endpoint is required.", externalValidator.RejectionReason);
         ScenarioExpect.Equal(10, externalValidator.Order);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateCacheAsidePolicyAttribute(null!));
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateReadWriteThroughCachePolicyAttribute(null!));
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateExternalConfigurationStoreAttribute(null!));
         ScenarioExpect.Throws<ArgumentException>(() => new ExternalConfigurationValidatorAttribute("", 1));
         ScenarioExpect.IsType<CacheAsidePredicateAttribute>(new CacheAsidePredicateAttribute());

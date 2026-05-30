@@ -43,6 +43,12 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
+| Read-Through / Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Read-Through / Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Read-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Read-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
+| Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Canonical Data Model | Construction | 75.482 ns | 632 B | 59.947 ns | 496 B | Generated reduced construction time and allocation in this microbenchmark. |
 | Canonical Data Model | Execution | 116.680 ns | 832 B | 92.082 ns | 696 B | Generated reduced execution time and allocation for order normalization. |
 | Channel Adapter | Construction | 38.469 ns | 384 B | 38.681 ns | 384 B | Effectively equivalent for this microbenchmark. |
@@ -236,19 +242,19 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 109 catalog patterns and 436 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 111 catalog patterns and 444 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
 | Application Architecture | 23 | 92 |
 | Behavioral | 11 | 44 |
-| Cloud Architecture | 18 | 72 |
+| Cloud Architecture | 20 | 80 |
 | Creational | 5 | 20 |
 | Enterprise Integration | 41 | 164 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 104 generator source route results.
+The generator matrix currently publishes 105 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -316,10 +322,12 @@ The generator matrix currently publishes 104 generator source route results.
 | Cloud Architecture | Priority Queue | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Queue-Based Load Leveling | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Rate Limiting | Covered | Covered | Covered | Covered |
+| Cloud Architecture | Read-Through Cache | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Retry | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Scheduler Agent Supervisor | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Sidecar | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Strangler Fig | Covered | Covered | Covered | Covered |
+| Cloud Architecture | Write-Through Cache | Covered | Covered | Covered | Covered |
 | Creational | Abstract Factory | Covered | Covered | Covered | Covered |
 | Creational | Builder | Covered | Covered | Covered | Covered |
 | Creational | Factory Method | Covered | Covered | Covered | Covered |
@@ -395,6 +403,7 @@ The generator matrix currently publishes 104 generator source route results.
 | BulkheadPolicyGenerator | `src/PatternKit.Generators/Bulkhead/BulkheadPolicyGenerator.cs` | Covered |
 | CacheAsidePolicyGenerator | `src/PatternKit.Generators/CacheAside/CacheAsidePolicyGenerator.cs` | Covered |
 | CacheStampedeProtectionGenerator | `src/PatternKit.Generators/CacheStampedeProtection/CacheStampedeProtectionGenerator.cs` | Covered |
+| ReadWriteThroughCachePolicyGenerator | `src/PatternKit.Generators/ReadWriteThroughCache/ReadWriteThroughCachePolicyGenerator.cs` | Covered |
 | CanonicalDataModelGenerator | `src/PatternKit.Generators/CanonicalDataModel/CanonicalDataModelGenerator.cs` | Covered |
 | ChainGenerator | `src/PatternKit.Generators/Chain/ChainGenerator.cs` | Covered |
 | CircuitBreakerPolicyGenerator | `src/PatternKit.Generators/CircuitBreaker/CircuitBreakerPolicyGenerator.cs` | Covered |

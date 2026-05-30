@@ -283,6 +283,9 @@
 - name: Product Catalog Cache Stampede Protection
   href: product-catalog-cache-stampede-protection.md
 
+- name: Product Catalog Read-Through and Write-Through Cache
+  href: product-catalog-read-write-through-cache.md
+
 - name: Product Search Rate Limiting
   href: product-search-rate-limiting.md
 

@@ -391,6 +391,8 @@
           href: cloud/priority-queue.md
         - name: Cache-Aside
           href: cloud/cache-aside.md
+        - name: Read-Through and Write-Through Cache
+          href: cloud/read-write-through-cache.md
         - name: Rate Limiting
           href: cloud/rate-limiting.md
         - name: External Configuration Store

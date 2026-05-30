@@ -90,6 +90,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Priority Queue",
         "Cache-Aside",
         "Cache Stampede Protection",
+        "Read-Through Cache",
+        "Write-Through Cache",
         "Rate Limiting",
         "External Configuration Store",
         "Gateway Aggregation",
@@ -165,7 +167,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             {
                 ScenarioExpect.Equal(41, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
-                ScenarioExpect.Equal(18, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
+                ScenarioExpect.Equal(20, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(23, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
