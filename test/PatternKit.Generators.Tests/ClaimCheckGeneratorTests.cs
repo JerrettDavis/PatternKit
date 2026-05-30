@@ -3,16 +3,18 @@ using Microsoft.CodeAnalysis.CSharp;
 using PatternKit.Generators.Messaging;
 using PatternKit.Messaging.Transformation;
 using TinyBDD;
+using TinyBDD.Xunit;
+using Xunit.Abstractions;
 
 namespace PatternKit.Generators.Tests;
 
-public sealed class ClaimCheckGeneratorTests
+[Feature("Claim Check generator")]
+public sealed partial class ClaimCheckGeneratorTests(ITestOutputHelper output) : TinyBddXunitBase(output)
 {
     [Scenario("Generates claim check factory")]
     [Fact]
-    public void GeneratesClaimCheckFactory()
-    {
-        var source = """
+    public Task Generates_Claim_Check_Factory()
+        => Given("a valid claim check declaration", () => Compile("""
             using PatternKit.Generators.Messaging;
             using PatternKit.Messaging.Transformation;
 
@@ -26,80 +28,180 @@ public sealed class ClaimCheckGeneratorTests
                 [ClaimCheckStoreFactory]
                 private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
             }
-            """;
+            """))
+        .Then("the generated source creates the configured claim check", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            var generated = ScenarioExpect.Single(result.GeneratedSources);
+            ScenarioExpect.Equal("DocumentClaimCheck.ClaimCheck.g.cs", generated.HintName);
+            ScenarioExpect.Contains("Build()", generated.Source);
+            ScenarioExpect.Contains("ClaimCheck<global::Demo.LargeDocument>.Create(\"documents\")", generated.Source);
+            ScenarioExpect.Contains(".InStore(\"blob-store\")", generated.Source);
+            ScenarioExpect.Contains(".UseStore(CreateStore())", generated.Source);
+            ScenarioExpect.Contains("\"doc:\" + (message.Headers.MessageId", generated.Source);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
 
-        var comp = CreateCompilation(source, nameof(GeneratesClaimCheckFactory));
-        var gen = new ClaimCheckGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
-
-        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
-        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
-        var text = generated.SourceText.ToString();
-        ScenarioExpect.Equal("DocumentClaimCheck.ClaimCheck.g.cs", generated.HintName);
-        ScenarioExpect.Contains("Build()", text);
-        ScenarioExpect.Contains("ClaimCheck<global::Demo.LargeDocument>.Create(\"documents\")", text);
-        ScenarioExpect.Contains(".InStore(\"blob-store\")", text);
-        ScenarioExpect.Contains(".UseStore(CreateStore())", text);
-        ScenarioExpect.Contains("\"doc:\" + (message.Headers.MessageId", text);
-        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
-    }
-
-    [Scenario("Reports diagnostic for non-partial claim check host")]
-    [Fact]
-    public void ReportsDiagnosticForNonPartialClaimCheckHost()
-    {
-        var source = """
+    [Scenario("Reports diagnostics for invalid claim check declarations")]
+    [Theory]
+    [InlineData("public static class Host { [ClaimCheckStoreFactory] private static IClaimCheckStore<string> CreateStore() => new InMemoryClaimCheckStore<string>(); }", "PKCC001")]
+    [InlineData("public static partial class Host;", "PKCC002")]
+    [InlineData("public static partial class Host { [ClaimCheckStoreFactory] private static IClaimCheckStore<string> One() => new InMemoryClaimCheckStore<string>(); [ClaimCheckStoreFactory] private static IClaimCheckStore<string> Two() => new InMemoryClaimCheckStore<string>(); }", "PKCC002")]
+    [InlineData("public partial class Host { [ClaimCheckStoreFactory] private IClaimCheckStore<string> CreateStore() => new InMemoryClaimCheckStore<string>(); }", "PKCC003")]
+    [InlineData("public static partial class Host { [ClaimCheckStoreFactory] private static IClaimCheckStore<string> CreateStore<T>() => new InMemoryClaimCheckStore<string>(); }", "PKCC003")]
+    [InlineData("public static partial class Host { [ClaimCheckStoreFactory] private static IClaimCheckStore<string> CreateStore(string name) => new InMemoryClaimCheckStore<string>(); }", "PKCC003")]
+    [InlineData("public static partial class Host { [ClaimCheckStoreFactory] private static string CreateStore() => string.Empty; }", "PKCC003")]
+    [InlineData("public static partial class Host { [ClaimCheckStoreFactory] private static IClaimCheckStore<int> CreateStore() => new InMemoryClaimCheckStore<int>(); }", "PKCC003")]
+    public Task Reports_Diagnostics_For_Invalid_Claim_Check_Declarations(string declaration, string diagnosticId)
+        => Given("an invalid claim check declaration", () => Compile($$"""
             using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging.Transformation;
 
             namespace Demo;
 
             [GenerateClaimCheck(typeof(string))]
-            public static class Host;
-            """;
+            {{declaration}}
+            """))
+        .Then("the expected diagnostic is reported", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
+        .AssertPassed();
 
-        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForNonPartialClaimCheckHost));
-
-        ScenarioExpect.Equal("PKCC001", diagnostic.Id);
-    }
-
-    [Scenario("Reports diagnostic for missing claim check store factory")]
+    [Scenario("Generates claim check defaults and host shapes")]
     [Fact]
-    public void ReportsDiagnosticForMissingClaimCheckStoreFactory()
-    {
-        var source = """
+    public Task Generates_Claim_Check_Defaults_And_Host_Shapes()
+        => Given("claim check declarations with default names and different host shapes", () => Compile("""
             using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging.Transformation;
 
             namespace Demo;
 
-            [GenerateClaimCheck(typeof(string))]
-            public static partial class Host;
-            """;
+            public sealed record LargeDocument(string Id, string Content);
 
-        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForMissingClaimCheckStoreFactory));
-
-        ScenarioExpect.Equal("PKCC002", diagnostic.Id);
-    }
-
-    [Scenario("Reports diagnostic for invalid claim check store factory")]
-    [Fact]
-    public void ReportsDiagnosticForInvalidClaimCheckStoreFactory()
-    {
-        var source = """
-            using PatternKit.Generators.Messaging;
-
-            namespace Demo;
-
-            [GenerateClaimCheck(typeof(string))]
-            public static partial class Host
+            [GenerateClaimCheck(typeof(LargeDocument))]
+            internal abstract partial class AbstractClaimCheck
             {
                 [ClaimCheckStoreFactory]
-                private static string CreateStore() => "";
+                private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
             }
-            """;
 
-        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForInvalidClaimCheckStoreFactory));
+            [GenerateClaimCheck(typeof(LargeDocument), ClaimCheckName = "tenant\\\"claim", StoreName = "tenant\\\"store", ClaimIdPrefix = "tenant\\\"prefix")]
+            public sealed partial class SealedClaimCheck
+            {
+                [ClaimCheckStoreFactory]
+                private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
+            }
 
-        ScenarioExpect.Equal("PKCC003", diagnostic.Id);
+            [GenerateClaimCheck(typeof(LargeDocument))]
+            internal partial struct StructClaimCheck
+            {
+                [ClaimCheckStoreFactory]
+                private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
+            }
+            """))
+        .Then("generated sources preserve host shape and configured names", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources.Select(static source => source.Source));
+            ScenarioExpect.Contains("internal abstract partial class AbstractClaimCheck", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedClaimCheck", combined);
+            ScenarioExpect.Contains("internal partial struct StructClaimCheck", combined);
+            ScenarioExpect.Contains("Create(\"claim-check\")", combined);
+            ScenarioExpect.Contains(".InStore(\"claim-store\")", combined);
+            ScenarioExpect.Contains("\"claim:\" + (message.Headers.MessageId", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"claim\")", combined);
+            ScenarioExpect.Contains(".InStore(\"tenant\\\\\\\"store\")", combined);
+            ScenarioExpect.Contains("\"tenant\\\\\\\"prefix:\" + (message.Headers.MessageId", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates nested claim check host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Claim_Check_Host_Wrappers()
+        => Given("nested claim check declarations", () => Compile("""
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging.Transformation;
+
+            namespace Demo;
+
+            public sealed record LargeDocument(string Id, string Content);
+
+            public partial class ClaimCheckContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateClaimCheck(typeof(LargeDocument))]
+                    protected partial class ProtectedClaimCheck
+                    {
+                        [ClaimCheckStoreFactory]
+                        private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
+                    }
+
+                    [GenerateClaimCheck(typeof(LargeDocument))]
+                    private protected partial class PrivateProtectedClaimCheck
+                    {
+                        [ClaimCheckStoreFactory]
+                        private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
+                    }
+
+                    [GenerateClaimCheck(typeof(LargeDocument))]
+                    protected internal partial class ProtectedInternalClaimCheck
+                    {
+                        [ClaimCheckStoreFactory]
+                        private static IClaimCheckStore<LargeDocument> CreateStore() => new InMemoryClaimCheckStore<LargeDocument>();
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources.Select(static source => source.Source));
+            ScenarioExpect.Contains("public partial class ClaimCheckContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedClaimCheck", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedClaimCheck", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalClaimCheck", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Skips malformed claim check type arguments")]
+    [Fact]
+    public Task Skips_Malformed_Claim_Check_Type_Arguments()
+        => Given("a claim check declaration with a null type argument", () => Compile("""
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging.Transformation;
+
+            [GenerateClaimCheck(null!)]
+            public static partial class DocumentClaimCheck
+            {
+                [ClaimCheckStoreFactory]
+                private static IClaimCheckStore<string> CreateStore() => new InMemoryClaimCheckStore<string>();
+            }
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
+        .AssertPassed();
+
+    private static GeneratorResult Compile(string source)
+    {
+        var compilation = CreateCompilation(source, "ClaimCheckGeneratorTests");
+        _ = RoslynTestHelpers.Run(compilation, new ClaimCheckGenerator(), out var run, out var updated);
+        var result = run.Results.Single();
+        var emit = updated.Emit(Stream.Null);
+        return new GeneratorResult(
+            result.Diagnostics.ToArray(),
+            result.GeneratedSources
+                .Select(static source => new GeneratedSource(source.HintName, source.SourceText.ToString()))
+                .ToArray(),
+            emit.Success,
+            emit.Diagnostics.Select(static diagnostic => diagnostic.ToString()).ToArray());
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
@@ -117,11 +219,11 @@ public sealed class ClaimCheckGeneratorTests
             Path.GetDirectoryName(typeof(ClaimCheckGenerator).Assembly.Location)!,
             "PatternKit.Generators.Abstractions.dll");
 
-    private static Diagnostic RunAndGetSingleDiagnostic(string source, string assemblyName)
-    {
-        var comp = CreateCompilation(source, assemblyName);
-        var gen = new ClaimCheckGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
-        return ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
-    }
+    private sealed record GeneratorResult(
+        IReadOnlyList<Diagnostic> Diagnostics,
+        IReadOnlyList<GeneratedSource> GeneratedSources,
+        bool EmitSuccess,
+        IReadOnlyList<string> EmitDiagnostics);
+
+    private sealed record GeneratedSource(string HintName, string Source);
 }
