@@ -113,6 +113,108 @@ public sealed class BulkheadPolicyTests
         ScenarioExpect.Equal(1, policy.AvailableSlots);
     }
 
+    [Scenario("Synchronous bulkhead rejects calls when concurrency and queue are full")]
+    [Fact]
+    public async Task Synchronous_Bulkhead_Rejects_Calls_When_Concurrency_And_Queue_Are_Full()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var policy = BulkheadPolicy<string>.Create("sync-reject")
+            .WithMaxConcurrency(1)
+            .WithMaxQueueLength(0)
+            .Build();
+
+        var first = Task.Run(() => policy.Execute(() =>
+        {
+            entered.SetResult();
+            release.Task.GetAwaiter().GetResult();
+            return "accepted";
+        }));
+        await entered.Task;
+
+        var rejected = policy.Execute(static () => "overflow");
+        release.SetResult();
+        var completed = await first;
+
+        ScenarioExpect.Equal("sync-reject", policy.Name);
+        ScenarioExpect.Equal(1, policy.MaxConcurrency);
+        ScenarioExpect.Equal(0, policy.MaxQueueLength);
+        ScenarioExpect.Equal(TimeSpan.Zero, policy.QueueTimeout);
+        ScenarioExpect.True(completed.Succeeded);
+        ScenarioExpect.True(rejected.Rejected);
+        ScenarioExpect.False(rejected.Succeeded);
+        ScenarioExpect.False(rejected.TimedOut);
+        ScenarioExpect.False(rejected.Queued);
+        ScenarioExpect.Equal(0, rejected.AvailableSlots);
+    }
+
+    [Scenario("Synchronous bulkhead queues calls inside the configured queue length")]
+    [Fact]
+    public async Task Synchronous_Bulkhead_Queues_Calls_Inside_Configured_Queue_Length()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var policy = BulkheadPolicy<int>.Create("sync-queue")
+            .WithMaxConcurrency(1)
+            .WithMaxQueueLength(1)
+            .WithQueueTimeout(TimeSpan.FromSeconds(5))
+            .Build();
+
+        var first = Task.Run(() => policy.Execute(() =>
+        {
+            entered.SetResult();
+            release.Task.GetAwaiter().GetResult();
+            return 1;
+        }));
+        await entered.Task;
+
+        var second = Task.Run(() => policy.Execute(static () => 2));
+        SpinWait.SpinUntil(() => policy.QueuedCount == 1, TimeSpan.FromSeconds(2));
+        release.SetResult();
+
+        var firstResult = await first;
+        var secondResult = await second;
+
+        ScenarioExpect.True(firstResult.Succeeded);
+        ScenarioExpect.True(secondResult.Succeeded);
+        ScenarioExpect.True(secondResult.Queued);
+        ScenarioExpect.Equal(2, secondResult.Value);
+        ScenarioExpect.Equal(0, secondResult.AvailableSlots);
+        ScenarioExpect.Equal(0, policy.QueuedCount);
+    }
+
+    [Scenario("Synchronous bulkhead times out queued calls")]
+    [Fact]
+    public async Task Synchronous_Bulkhead_Times_Out_Queued_Calls()
+    {
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var policy = BulkheadPolicy<string>.Create("sync-timeout")
+            .WithMaxConcurrency(1)
+            .WithMaxQueueLength(1)
+            .WithQueueTimeout(TimeSpan.FromMilliseconds(10))
+            .Build();
+
+        var first = Task.Run(() => policy.Execute(() =>
+        {
+            entered.SetResult();
+            release.Task.GetAwaiter().GetResult();
+            return "accepted";
+        }));
+        await entered.Task;
+
+        var timedOut = policy.Execute(static () => "late");
+        release.SetResult();
+        _ = await first;
+
+        ScenarioExpect.False(timedOut.Succeeded);
+        ScenarioExpect.False(timedOut.Rejected);
+        ScenarioExpect.True(timedOut.TimedOut);
+        ScenarioExpect.True(timedOut.Queued);
+        ScenarioExpect.Equal(0, timedOut.AvailableSlots);
+        ScenarioExpect.Equal(0, policy.QueuedCount);
+    }
+
     [Scenario("Async bulkhead preserves cancellation")]
     [Fact]
     public async Task AsyncBulkhead_Preserves_Cancellation()
