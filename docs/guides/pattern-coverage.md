@@ -125,6 +125,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 | Application Architecture | Materialized View | `IMaterializedView<TState,TEvent>` and `MaterializedView<TState,TEvent>` | Materialized View generator |
 | Application Architecture | Anti-Corruption Layer | `AntiCorruptionLayer<TExternal, TDomain>` | Anti-Corruption Layer generator |
 | Application Architecture | Activity Tracker | `ActivityTracker` | Activity Tracker generator |
+| Application Architecture | Manual Task Gate | `ManualTaskGate<TKey>` | Manual Task Gate generator |
 | Application Architecture | Timeout Manager | `TimeoutManager<TKey>` | Timeout Manager generator |
 
 ## Research Baselines

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Application.ActivityTracking;
 using PatternKit.Application.AntiCorruption;
+using PatternKit.Application.ManualTaskGates;
 using PatternKit.Application.Specification;
 using PatternKit.Application.Timeouts;
 using PatternKit.Behavioral.Chain;
@@ -53,6 +54,7 @@ using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.HealthEndpointMonitoringDemo;
 using PatternKit.Examples.IdentityMapDemo;
 using PatternKit.Examples.LeaderElectionDemo;
+using PatternKit.Examples.ManualTaskGateDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
 using PatternKit.Examples.Messaging;
@@ -246,6 +248,7 @@ public sealed record CommerceBackendsForFrontendsExample(CommerceBackendsForFron
 public sealed record InventoryAmbassadorExample(InventoryAmbassadorDemoRunner Runner, InventoryAmbassadorService Service);
 public sealed record WarehouseLeaderElectionExample(WarehouseLeaderElectionDemoRunner Runner, WarehouseLeaderElectionService Service);
 public sealed record WarehouseSchedulerAgentSupervisorExample(WarehouseSchedulerDemoRunner Runner, WarehouseSchedulerService Service);
+public sealed record OrderApprovalManualTaskGatePatternExample(ManualTaskGate<Guid> Gate, OrderApprovalManualTaskGateDemoRunner Runner);
 public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> Manager, OrderReservationTimeoutDemoRunner Runner);
 
 /// <summary>
@@ -361,6 +364,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddInventoryAmbassadorExample()
             .AddWarehouseLeaderElectionExample()
             .AddWarehouseSchedulerAgentSupervisorExample()
+            .AddOrderApprovalManualTaskGatePatternExample()
             .AddOrderReservationTimeoutPatternExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
@@ -1315,6 +1319,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<TimeoutManager<Guid>>(),
             sp.GetRequiredService<OrderReservationTimeoutDemoRunner>()));
         return services.RegisterExample<OrderReservationTimeoutPatternExample>("Order Reservation Timeout Manager", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderApprovalManualTaskGatePatternExample(this IServiceCollection services)
+    {
+        services.AddOrderApprovalManualTaskGateDemo();
+        services.AddSingleton<OrderApprovalManualTaskGatePatternExample>(sp => new(
+            sp.GetRequiredService<ManualTaskGate<Guid>>(),
+            sp.GetRequiredService<OrderApprovalManualTaskGateDemoRunner>()));
+        return services.RegisterExample<OrderApprovalManualTaskGatePatternExample>("Order Approval Manual Task Gate", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

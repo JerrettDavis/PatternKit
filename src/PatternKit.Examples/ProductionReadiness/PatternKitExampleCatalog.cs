@@ -665,6 +665,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["ActivityTracker"],
             ["tracked active work", "source-generated tracker factory", "DI composition"]),
         Descriptor(
+            "Order Approval Manual Task Gate",
+            "src/PatternKit.Examples/ManualTaskGateDemo/OrderApprovalManualTaskGateDemo.cs",
+            "test/PatternKit.Examples.Tests/ManualTaskGateDemo/OrderApprovalManualTaskGateDemoTests.cs",
+            "docs/examples/order-approval-manual-task-gate.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["ManualTaskGate"],
+            ["manual approval gate", "source-generated gate factory", "DI composition"]),
+        Descriptor(
             "Order Reservation Timeout Manager",
             "src/PatternKit.Examples/TimeoutManagerDemo/OrderReservationTimeoutDemo.cs",
             "test/PatternKit.Examples.Tests/TimeoutManagerDemo/OrderReservationTimeoutDemoTests.cs",

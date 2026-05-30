@@ -7,6 +7,9 @@
 - name: Dashboard Activity Tracker
   href: dashboard-activity-tracker.md
 
+- name: Order Approval Manual Task Gate
+  href: order-approval-manual-task-gate.md
+
 - name: Order Reservation Timeout Manager
   href: order-reservation-timeout-manager.md
 
