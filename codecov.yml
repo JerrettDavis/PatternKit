@@ -5,6 +5,10 @@ ignore:
   - "**/obj/**"
   - "**/*.g.cs"
 
+parsers:
+  cobertura:
+    partials_as_hits: true
+
 coverage:
   status:
     project:
