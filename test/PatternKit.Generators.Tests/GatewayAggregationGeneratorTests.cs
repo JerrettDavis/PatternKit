@@ -46,54 +46,160 @@ public sealed partial class GatewayAggregationGeneratorTests(ITestOutputHelper o
         .AssertPassed();
 
     [Scenario("Reports diagnostics for invalid gateway aggregation declarations")]
+    [Theory]
+    [InlineData("public static class GatewayHost;", "PKGA001")]
+    [InlineData("public static partial class GatewayHost;", "PKGA002")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static void Profile(DashboardRequest request) { } [GatewayAggregationComposer] private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId); }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private DashboardRequest Profile(DashboardRequest request) => request; [GatewayAggregationComposer] private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId); }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static DashboardRequest Profile(string request) => new(request); [GatewayAggregationComposer] private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId); }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static DashboardRequest Profile(DashboardRequest request) => request; [GatewayAggregationComposer] private static string Compose(GatewayAggregationContext<DashboardRequest> ctx) => ctx.Request.CustomerId; }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static DashboardRequest Profile(DashboardRequest request) => request; [GatewayAggregationComposer] private DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId); }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static DashboardRequest Profile(DashboardRequest request) => request; [GatewayAggregationComposer] private static DashboardResponse Compose(string ctx) => new(ctx); }", "PKGA003")]
+    [InlineData("public static partial class GatewayHost { [GatewayAggregationFetch(\"profile\")] private static DashboardRequest Profile(DashboardRequest request) => request; [GatewayAggregationFetch(\"PROFILE\")] private static DashboardRequest Profile2(DashboardRequest request) => request; [GatewayAggregationComposer] private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId); }", "PKGA004")]
+    public Task Reports_Diagnostics_For_Invalid_Gateway_Aggregation_Declarations(string declaration, string diagnosticId)
+        => Given("an invalid gateway aggregation declaration", () => Compile($$"""
+            using PatternKit.Cloud.GatewayAggregation;
+            using PatternKit.Generators.GatewayAggregation;
+            public sealed record DashboardRequest(string CustomerId);
+            public sealed record DashboardResponse(string CustomerId);
+            [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+            {{declaration}}
+            """))
+        .Then("the expected diagnostic is reported", result =>
+            ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == diagnosticId))
+        .AssertPassed();
+
+    [Scenario("Generates gateway aggregation defaults and host shapes")]
     [Fact]
-    public Task Reports_Diagnostics_For_Invalid_Gateway_Aggregation_Declarations()
-        => Given("invalid gateway aggregation declarations", () => new[]
+    public Task Generates_Gateway_Aggregation_Defaults_And_Host_Shapes()
+        => Given("gateway aggregation declarations with default names and host shapes", () => Compile("""
+            using PatternKit.Cloud.GatewayAggregation;
+            using PatternKit.Generators.GatewayAggregation;
+            namespace Demo;
+            public sealed record DashboardRequest(string CustomerId);
+            public sealed record DashboardResponse(string CustomerId);
+
+            [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+            internal abstract partial class AbstractGateway
+            {
+                [GatewayAggregationFetch("profile")]
+                private static DashboardRequest Profile(DashboardRequest request) => request;
+                [GatewayAggregationComposer]
+                private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+            }
+
+            [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse), GatewayName = "tenant\\\"gateway")]
+            public sealed partial class SealedGateway
+            {
+                [GatewayAggregationFetch("profile")]
+                private static DashboardRequest Profile(DashboardRequest request) => request;
+                [GatewayAggregationComposer]
+                private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+            }
+
+            [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+            internal partial struct StructGateway
+            {
+                [GatewayAggregationFetch("profile")]
+                private static DashboardRequest Profile(DashboardRequest request) => request;
+                [GatewayAggregationComposer]
+                private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+            }
+            """))
+        .Then("generated sources preserve host shape and configured defaults", result =>
         {
-            Compile("""
-                using PatternKit.Generators.GatewayAggregation;
-                [GenerateGatewayAggregation(typeof(string), typeof(int))]
-                public static class GatewayHost;
-                """),
-            Compile("""
-                using PatternKit.Generators.GatewayAggregation;
-                [GenerateGatewayAggregation(typeof(string), typeof(int))]
-                public static partial class GatewayHost;
-                """),
-            Compile("""
-                using PatternKit.Cloud.GatewayAggregation;
-                using PatternKit.Generators.GatewayAggregation;
-                [GenerateGatewayAggregation(typeof(string), typeof(int))]
-                public static partial class GatewayHost
-                {
-                    [GatewayAggregationFetch("profile")]
-                    private static void Profile(string value) { }
-                    [GatewayAggregationComposer]
-                    private static int Compose(GatewayAggregationContext<string> ctx) => 1;
-                }
-                """),
-            Compile("""
-                using PatternKit.Cloud.GatewayAggregation;
-                using PatternKit.Generators.GatewayAggregation;
-                [GenerateGatewayAggregation(typeof(string), typeof(int))]
-                public static partial class GatewayHost
-                {
-                    [GatewayAggregationFetch("profile")]
-                    private static string Profile(string value) => value;
-                    [GatewayAggregationFetch("PROFILE")]
-                    private static string Profile2(string value) => value;
-                    [GatewayAggregationComposer]
-                    private static int Compose(GatewayAggregationContext<string> ctx) => 1;
-                }
-                """)
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("internal abstract partial class AbstractGateway", combined);
+            ScenarioExpect.Contains("public sealed partial class SealedGateway", combined);
+            ScenarioExpect.Contains("internal partial struct StructGateway", combined);
+            ScenarioExpect.Contains("Create(\"gateway-aggregation\")", combined);
+            ScenarioExpect.Contains("Create(\"tenant\\\\\\\"gateway\")", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
-        .Then("diagnostics identify invalid declarations", results =>
+        .AssertPassed();
+
+    [Scenario("Generates nested gateway aggregation host wrappers")]
+    [Fact]
+    public Task Generates_Nested_Gateway_Aggregation_Host_Wrappers()
+        => Given("nested gateway aggregation declarations", () => Compile("""
+            using PatternKit.Cloud.GatewayAggregation;
+            using PatternKit.Generators.GatewayAggregation;
+            namespace Demo;
+            public sealed record DashboardRequest(string CustomerId);
+            public sealed record DashboardResponse(string CustomerId);
+
+            public partial class GatewayContainer
+            {
+                private partial class PrivateHost
+                {
+                    [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+                    protected partial class ProtectedGateway
+                    {
+                        [GatewayAggregationFetch("profile")]
+                        private static DashboardRequest Profile(DashboardRequest request) => request;
+                        [GatewayAggregationComposer]
+                        private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+                    }
+
+                    [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+                    private protected partial class PrivateProtectedGateway
+                    {
+                        [GatewayAggregationFetch("profile")]
+                        private static DashboardRequest Profile(DashboardRequest request) => request;
+                        [GatewayAggregationComposer]
+                        private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+                    }
+
+                    [GenerateGatewayAggregation(typeof(DashboardRequest), typeof(DashboardResponse))]
+                    protected internal partial class ProtectedInternalGateway
+                    {
+                        [GatewayAggregationFetch("profile")]
+                        private static DashboardRequest Profile(DashboardRequest request) => request;
+                        [GatewayAggregationComposer]
+                        private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+                    }
+                }
+            }
+            """))
+        .Then("generated sources preserve containing partial type wrappers", result =>
         {
-            ScenarioExpect.Contains(results[0].Diagnostics, diagnostic => diagnostic.Id == "PKGA001");
-            ScenarioExpect.Contains(results[1].Diagnostics, diagnostic => diagnostic.Id == "PKGA002");
-            ScenarioExpect.Contains(results[2].Diagnostics, diagnostic => diagnostic.Id == "PKGA003");
-            ScenarioExpect.Contains(results[3].Diagnostics, diagnostic => diagnostic.Id == "PKGA004");
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(3, result.GeneratedSources.Count);
+
+            var combined = string.Join("\n", result.GeneratedSources);
+            ScenarioExpect.Contains("public partial class GatewayContainer", combined);
+            ScenarioExpect.Contains("private partial class PrivateHost", combined);
+            ScenarioExpect.Contains("protected partial class ProtectedGateway", combined);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedGateway", combined);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalGateway", combined);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
         })
+        .AssertPassed();
+
+    [Scenario("Skips malformed gateway aggregation type arguments")]
+    [Theory]
+    [InlineData("null!", "typeof(DashboardResponse)")]
+    [InlineData("typeof(DashboardRequest)", "null!")]
+    public Task Skips_Malformed_Gateway_Aggregation_Type_Arguments(string requestType, string responseType)
+        => Given("a gateway aggregation declaration with a null type argument", () => Compile($$"""
+            using PatternKit.Cloud.GatewayAggregation;
+            using PatternKit.Generators.GatewayAggregation;
+            public sealed record DashboardRequest(string CustomerId);
+            public sealed record DashboardResponse(string CustomerId);
+            [GenerateGatewayAggregation({{requestType}}, {{responseType}})]
+            public static partial class GatewayHost
+            {
+                [GatewayAggregationFetch("profile")]
+                private static DashboardRequest Profile(DashboardRequest request) => request;
+                [GatewayAggregationComposer]
+                private static DashboardResponse Compose(GatewayAggregationContext<DashboardRequest> ctx) => new(ctx.Request.CustomerId);
+            }
+            """))
+        .Then("no source is generated", result =>
+            ScenarioExpect.Empty(result.GeneratedSources))
         .AssertPassed();
 
     private static GeneratorResult Compile(string source)
