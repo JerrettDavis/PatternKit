@@ -473,11 +473,11 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 112 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 113 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 24 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Manual Task Gate, Materialized View, Repository, Service Layer, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
+| Application Architecture | 25 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Feature Toggle, Identity Map, Manual Task Gate, Materialized View, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
 | Behavioral | 11 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 20 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 5 | Abstract Factory, Builder, Factory Method, Prototype, Singleton |
@@ -501,6 +501,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Manual Task Gate | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Workflow Orchestration | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Workflow Orchestration | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Snapshot / Checkpoint Management | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Snapshot / Checkpoint Management | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Timeout Manager | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Timeout Manager | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |

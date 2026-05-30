@@ -276,6 +276,9 @@
 - name: Timeout Manager
   href: timeout-manager.md
 
+- name: Snapshot / Checkpoint Management
+  href: snapshot-checkpoint-management.md
+
 - name: Strategy
   href: strategy.md
 

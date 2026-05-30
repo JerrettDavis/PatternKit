@@ -16,6 +16,9 @@
 - name: Fulfillment Workflow Orchestration
   href: fulfillment-workflow-orchestration.md
 
+- name: Order Replay Snapshot Checkpoint Management
+  href: order-replay-snapshot-checkpoint.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PatternKit.Application.ActivityTracking;
 using PatternKit.Application.AntiCorruption;
 using PatternKit.Application.ManualTaskGates;
+using PatternKit.Application.SnapshotCheckpoints;
 using PatternKit.Application.Specification;
 using PatternKit.Application.Timeouts;
 using PatternKit.Application.WorkflowOrchestration;
@@ -79,6 +80,7 @@ using PatternKit.Examples.SchedulerAgentSupervisorDemo;
 using PatternKit.Examples.ServiceLayerDemo;
 using PatternKit.Examples.SidecarDemo;
 using PatternKit.Examples.Singleton;
+using PatternKit.Examples.SnapshotCheckpointDemo;
 using PatternKit.Examples.SpecificationDemo;
 using PatternKit.Examples.StranglerFigDemo;
 using PatternKit.Examples.Strategies.Coercion;
@@ -259,6 +261,7 @@ public sealed record WarehouseSchedulerAgentSupervisorExample(WarehouseScheduler
 public sealed record OrderApprovalManualTaskGatePatternExample(ManualTaskGate<Guid> Gate, OrderApprovalManualTaskGateDemoRunner Runner);
 public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> Manager, OrderReservationTimeoutDemoRunner Runner);
 public sealed record FulfillmentWorkflowOrchestrationPatternExample(WorkflowOrchestrator<FulfillmentWorkflowContext> Workflow, FulfillmentWorkflowOrchestrationDemoRunner Runner);
+public sealed record OrderReplaySnapshotCheckpointPatternExample(SnapshotCheckpointManager<string, OrderReplaySnapshot> Manager, OrderReplaySnapshotCheckpointDemoRunner Runner);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -377,7 +380,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddWarehouseSchedulerAgentSupervisorExample()
             .AddOrderApprovalManualTaskGatePatternExample()
             .AddOrderReservationTimeoutPatternExample()
-            .AddFulfillmentWorkflowOrchestrationPatternExample();
+            .AddFulfillmentWorkflowOrchestrationPatternExample()
+            .AddOrderReplaySnapshotCheckpointPatternExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1367,6 +1371,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<WorkflowOrchestrator<FulfillmentWorkflowContext>>(),
             sp.GetRequiredService<FulfillmentWorkflowOrchestrationDemoRunner>()));
         return services.RegisterExample<FulfillmentWorkflowOrchestrationPatternExample>("Fulfillment Workflow Orchestration", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderReplaySnapshotCheckpointPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderReplaySnapshotCheckpointDemo();
+        services.AddSingleton<OrderReplaySnapshotCheckpointPatternExample>(sp => new(
+            sp.GetRequiredService<SnapshotCheckpointManager<string, OrderReplaySnapshot>>(),
+            sp.GetRequiredService<OrderReplaySnapshotCheckpointDemoRunner>()));
+        return services.RegisterExample<OrderReplaySnapshotCheckpointPatternExample>("Order Replay Snapshot Checkpoint Management", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

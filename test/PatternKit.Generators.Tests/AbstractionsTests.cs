@@ -140,6 +140,39 @@ public class AbstractionsTests
 
     #endregion
 
+    #region GenerateSnapshotCheckpointManagerAttribute Tests
+
+    [Scenario("GenerateSnapshotCheckpointManagerAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateSnapshotCheckpointManagerAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.SnapshotCheckpoints.GenerateSnapshotCheckpointManagerAttribute(typeof(Guid), typeof(string))
+        {
+            FactoryMethodName = "CreateOrderReplayCheckpoints",
+            ManagerName = "order-replay-checkpoints"
+        };
+
+        ScenarioExpect.Equal(typeof(Guid), attr.KeyType);
+        ScenarioExpect.Equal(typeof(string), attr.SnapshotType);
+        ScenarioExpect.Equal("CreateOrderReplayCheckpoints", attr.FactoryMethodName);
+        ScenarioExpect.Equal("order-replay-checkpoints", attr.ManagerName);
+    }
+
+    [Scenario("GenerateSnapshotCheckpointManagerAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateSnapshotCheckpointManagerAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.SnapshotCheckpoints.GenerateSnapshotCheckpointManagerAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region WorkflowOrchestrationAttribute Tests
 
     [Scenario("WorkflowOrchestrationAttribute Constructor Sets Properties")]
