@@ -1070,4 +1070,50 @@ public class ObserverGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("Invalid enum configuration falls back to observer defaults")]
+    [Fact]
+    public void Invalid_Enum_Configuration_Falls_Back_To_Observer_Defaults()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            namespace Test;
+
+            public record Payload(int Value);
+
+            [Observer(
+                typeof(Payload),
+                Threading = (ObserverThreadingPolicy)99,
+                Exceptions = (ObserverExceptionPolicy)99,
+                Order = (ObserverOrderPolicy)99)]
+            internal partial class DomainEvent
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(Invalid_Enum_Configuration_Falls_Back_To_Observer_Defaults));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single()
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("namespace Test;", generated);
+        ScenarioExpect.Contains("internal partial class DomainEvent", generated);
+        ScenarioExpect.Contains("public readonly object Lock = new();", generated);
+        ScenarioExpect.Contains("lock (_state.Lock)", generated);
+        ScenarioExpect.Contains("OnSubscriberError(ex);", generated);
+        ScenarioExpect.DoesNotContain("System.AggregateException", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
