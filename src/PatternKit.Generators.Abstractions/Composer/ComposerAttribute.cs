@@ -21,11 +21,10 @@ public sealed class ComposerAttribute : Attribute
 
     /// <summary>
     /// Gets or sets whether to generate async methods.
-    /// When null (default), async generation is inferred from the presence of async steps or terminal.
-    /// Note: Nullable bool in attributes is non-standard but supported by C#. 
-    /// Set to true/false explicitly to control async generation, or leave unset for inference.
+    /// When omitted, async generation is inferred from the presence of async steps or terminal.
+    /// Set to true/false explicitly to control async generation.
     /// </summary>
-    public bool? GenerateAsync { get; set; }
+    public bool GenerateAsync { get; set; }
 
     /// <summary>
     /// Gets or sets whether to force async generation even if all steps are synchronous.

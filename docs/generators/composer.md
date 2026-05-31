@@ -116,7 +116,7 @@ Main attribute for marking pipeline host types.
 |---|---|---|---|
 | `InvokeMethodName` | `string` | `"Invoke"` | Name of generated sync method |
 | `InvokeAsyncMethodName` | `string` | `"InvokeAsync"` | Name of generated async method |
-| `GenerateAsync` | `bool?` | `null` | Explicit async control; null = infer from steps |
+| `GenerateAsync` | `bool` | Inferred when omitted | Explicit async control |
 | `ForceAsync` | `bool` | `false` | Force async generation even if all steps are sync |
 | `WrapOrder` | `ComposerWrapOrder` | `OuterFirst` | Determines wrapping order |
 

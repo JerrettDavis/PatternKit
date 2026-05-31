@@ -1111,4 +1111,150 @@ public class ComposerGeneratorTests
         ScenarioExpect.Equal("PKCOM006", diagnostic.Id);
         ScenarioExpect.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
     }
+
+    [Scenario("GenerateAsyncFalse WithAsyncStep ReportsDiagnostic")]
+    [Fact]
+    public void GenerateAsyncFalse_WithAsyncStep_ReportsDiagnostic()
+    {
+        var source = """
+            using System;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer(GenerateAsync = false)]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private ValueTask<Response> StepAsync(Request req, Func<Request, ValueTask<Response>> next)
+                    => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateAsyncFalse_WithAsyncStep_ReportsDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostic = ScenarioExpect.Single(result.Results.SelectMany(r => r.Diagnostics));
+        ScenarioExpect.Equal("PKCOM008", diagnostic.Id);
+        ScenarioExpect.Contains("StepAsync", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
+
+    [Scenario("NamedOrderAndIgnoredStep GenerateDeterministicPipeline")]
+    [Fact]
+    public void NamedOrderAndIgnoredStep_GenerateDeterministicPipeline()
+    {
+        var source = """
+            using System;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(99, Order = 2, Name = "Audit")]
+                private Response Audit(in Request req, Func<Request, Response> next) => next(req);
+
+                [ComposeStep(1)]
+                private Response Auth(in Request req, Func<Request, Response> next) => next(req);
+
+                [ComposeStep(0)]
+                [ComposeIgnore]
+                private Response Ignored(in Request req, Func<Request, Response> next) => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(NamedOrderAndIgnoredStep_GenerateDeterministicPipeline));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("Audit(in arg, pipeline)", generatedSource);
+        ScenarioExpect.Contains("Auth(in arg, pipeline)", generatedSource);
+        ScenarioExpect.DoesNotContain("Ignored", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("StructAsyncTerminalWithoutCancellationToken GeneratesAsyncPipeline")]
+    [Fact]
+    public void StructAsyncTerminalWithoutCancellationToken_GeneratesAsyncPipeline()
+    {
+        var source = """
+            using System;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial struct RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Audit(in Request req, Func<Request, Response> next) => next(req);
+
+                [ComposeTerminal]
+                private ValueTask<Response> TerminalAsync(Request req)
+                    => new(new Response(200));
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(StructAsyncTerminalWithoutCancellationToken_GeneratesAsyncPipeline));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("terminalFunc", generatedSource);
+        ScenarioExpect.Contains("self.TerminalAsync(arg)", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("InvalidStep WithFunctionPointerNext ReportsDiagnostic")]
+    [Fact]
+    public void InvalidStep_WithFunctionPointerNext_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private unsafe Response Step(in Request req, delegate*<Request, Response> next)
+                    => new(200);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req) => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidStep_WithFunctionPointerNext_ReportsDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostic = ScenarioExpect.Single(result.Results.SelectMany(r => r.Diagnostics));
+        ScenarioExpect.Equal("PKCOM006", diagnostic.Id);
+        ScenarioExpect.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
 }
