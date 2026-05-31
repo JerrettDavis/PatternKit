@@ -259,6 +259,52 @@ public sealed class ContentEnricherGeneratorTests
         ScenarioExpect.Equal("PKMCE004", diagnostic.Id);
     }
 
+    [Scenario("Reports diagnostic for invalid default content enricher policy")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidDefaultContentEnricherPolicy()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+
+            namespace Demo;
+
+            [GenerateContentEnricher(typeof(string), DefaultPolicy = (ContentEnrichmentErrorPolicy)99)]
+            public static partial class Host;
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForInvalidDefaultContentEnricherPolicy));
+
+        ScenarioExpect.Equal("PKMCE004", diagnostic.Id);
+        ScenarioExpect.Contains("default policy '99' is not supported", diagnostic.GetMessage());
+    }
+
+    [Scenario("Reports diagnostic for invalid content enricher step policy")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidContentEnricherStepPolicy()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace Demo;
+
+            [GenerateContentEnricher(typeof(string))]
+            public static partial class Host
+            {
+                [ContentEnrichmentStep("invalid", Policy = (ContentEnrichmentErrorPolicy)99)]
+                private static ValueTask<string> Add(string payload, MessageContext context, CancellationToken cancellationToken)
+                    => ValueTask.FromResult(payload);
+            }
+            """;
+
+        var diagnostic = RunAndGetSingleDiagnostic(source, nameof(ReportsDiagnosticForInvalidContentEnricherStepPolicy));
+
+        ScenarioExpect.Equal("PKMCE004", diagnostic.Id);
+        ScenarioExpect.Contains("step 'invalid' policy '99' is not supported", diagnostic.GetMessage());
+    }
+
     [Scenario("Reports diagnostic for invalid default content enricher factory")]
     [Fact]
     public void ReportsDiagnosticForInvalidDefaultContentEnricherFactory()
