@@ -1035,4 +1035,43 @@ public class PrototypeGeneratorTests
         ScenarioExpect.Contains("Cloneable.Clone()", generatedSource);
         ScenarioExpect.Contains("this.NonCloneable", generatedSource);
     }
+
+    [Scenario("ShallowPrototype CopiesArraysAndCollections")]
+    [Fact]
+    public void ShallowPrototype_CopiesArraysAndCollections()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            [Prototype(Mode = PrototypeMode.Shallow)]
+            public partial class Snapshot
+            {
+                [PrototypeStrategy(PrototypeCloneStrategy.ShallowCopy)]
+                public int[] Scores { get; set; } = [];
+
+                [PrototypeStrategy(PrototypeCloneStrategy.ShallowCopy)]
+                public List<string> Tags { get; set; } = [];
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ShallowPrototype_CopiesArraysAndCollections));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Snapshot.Prototype.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("((int[])this.Scores.Clone())", generatedSource);
+        ScenarioExpect.Contains("new global::System.Collections.Generic.List<string>(this.Tags)", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
