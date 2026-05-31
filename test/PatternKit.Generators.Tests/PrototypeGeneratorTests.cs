@@ -1074,4 +1074,152 @@ public class PrototypeGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("MutableRecordPrototype UsesCopyConstructor")]
+    [Fact]
+    public void MutableRecordPrototype_UsesCopyConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial record class MutableSnapshot
+            {
+                public string Name { get; set; } = "";
+                public int Version { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MutableRecordPrototype_UsesCopyConstructor));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "MutableSnapshot.Prototype.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("new global::TestNamespace.MutableSnapshot(this)", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("MutableRecordStructPrototype UsesParameterlessConstruction")]
+    [Fact]
+    public void MutableRecordStructPrototype_UsesParameterlessConstruction()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            [Prototype]
+            public partial record struct MutablePoint
+            {
+                public int X { get; set; }
+                public int Y { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MutableRecordStructPrototype_UsesParameterlessConstruction));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "MutablePoint.Prototype.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("return new global::TestNamespace.MutablePoint", generatedSource);
+        ScenarioExpect.Contains("X = this.X", generatedSource);
+        ScenarioExpect.Contains("Y = this.Y", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("ImmutableCollectionDoesNotWarnInShallowWithWarningsMode")]
+    [Fact]
+    public void ImmutableCollectionDoesNotWarnInShallowWithWarningsMode()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace
+            {
+                [Prototype]
+                public partial class ImmutableSnapshot
+                {
+                    public System.Collections.Immutable.ImmutableTags Tags { get; set; } = new();
+                }
+            }
+
+            namespace System.Collections.Immutable
+            {
+                public sealed class ImmutableTags
+                {
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ImmutableCollectionDoesNotWarnInShallowWithWarningsMode));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKPRO003");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("PrototypeIncludesFieldsAndShallowCopyReferenceFallback")]
+    [Fact]
+    public void PrototypeIncludesFieldsAndShallowCopyReferenceFallback()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace;
+
+            public sealed class Payload
+            {
+                public string Value { get; set; } = "";
+            }
+
+            [Prototype(Mode = PrototypeMode.Shallow)]
+            public partial class Snapshot
+            {
+                public int Version;
+
+                [PrototypeStrategy(PrototypeCloneStrategy.ShallowCopy)]
+                public Payload Data { get; set; } = new();
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(PrototypeIncludesFieldsAndShallowCopyReferenceFallback));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "Snapshot.Prototype.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("Version = this.Version", generatedSource);
+        ScenarioExpect.Contains("Data = this.Data", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
