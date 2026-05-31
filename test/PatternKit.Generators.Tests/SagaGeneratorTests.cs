@@ -99,6 +99,57 @@ public sealed class SagaGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GeneratesSagaFactoriesForGlobalStructHostWithSyncAndAsyncSteps")]
+    [Fact]
+    public void GeneratesSagaFactoriesForGlobalStructHostWithSyncAndAsyncSteps()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            public readonly record struct OrderState(bool Started, bool Paid);
+            public sealed record Started(string OrderId);
+            public sealed record Paid(string OrderId);
+
+            [GenerateSaga(typeof(OrderState), FactoryName = "BuildSync", AsyncFactoryName = "BuildAsync")]
+            public partial struct OrderSaga
+            {
+                [SagaStep(typeof(Started), 10)]
+                private static OrderState Start(OrderState state, Message<Started> message, MessageContext context)
+                    => state with { Started = true };
+
+                [SagaStep(typeof(Paid), 20)]
+                private static ValueTask<OrderState> PayAsync(OrderState state, Message<Paid> message, MessageContext context, CancellationToken cancellationToken)
+                    => ValueTask.FromResult(state with { Paid = true });
+
+                [SagaCompleteWhen]
+                private static bool IsComplete(OrderState state) => state.Started && state.Paid;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesSagaFactoriesForGlobalStructHostWithSyncAndAsyncSteps));
+        var gen = new SagaGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+        ScenarioExpect.Equal("OrderSaga.Saga.g.cs", generated.HintName);
+        ScenarioExpect.DoesNotContain("namespace ", text);
+        ScenarioExpect.Contains("partial struct OrderSaga", text);
+        ScenarioExpect.Contains("BuildSync()", text);
+        ScenarioExpect.Contains("BuildAsync()", text);
+        ScenarioExpect.Contains(".On<global::Started>().Then(Start)", text);
+        ScenarioExpect.Contains(".On<global::Paid>().Then(PayAsync)", text);
+        ScenarioExpect.Equal(2, CountOccurrences(text, ".CompleteWhen(IsComplete)"));
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("ReportsDiagnosticForNonPartialSaga")]
     [Fact]
     public void ReportsDiagnosticForNonPartialSaga()
@@ -177,6 +228,38 @@ public sealed class SagaGeneratorTests
         ScenarioExpect.Equal("PKSG003", ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics)).Id);
     }
 
+    [Scenario("ReportsDiagnosticForInvalidSagaStepShapes")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidSagaStepShapes()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record OrderState(bool Started);
+            public sealed record Started(string OrderId);
+
+            [GenerateSaga(typeof(OrderState))]
+            public static partial class OrderSaga
+            {
+                [SagaStep(typeof(Started), 10)]
+                private static OrderState MissingContext(OrderState state, Message<Started> message) => state;
+
+                [SagaStep(typeof(Started), 20)]
+                private OrderState InstanceStep(OrderState state, Message<Started> message, MessageContext context) => state;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForInvalidSagaStepShapes));
+        var gen = new SagaGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(result => result.Diagnostics).ToArray();
+        ScenarioExpect.Equal(2, diagnostics.Count(diagnostic => diagnostic.Id == "PKSG003"));
+    }
+
     [Scenario("ReportsDiagnosticForInvalidCompletionSignature")]
     [Fact]
     public void ReportsDiagnosticForInvalidCompletionSignature()
@@ -213,4 +296,17 @@ public sealed class SagaGeneratorTests
             source,
             assemblyName,
             extra: MetadataReference.CreateFromFile(typeof(PatternKit.Messaging.Message<>).Assembly.Location));
+
+    private static int CountOccurrences(string value, string match)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = value.IndexOf(match, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += match.Length;
+        }
+
+        return count;
+    }
 }
