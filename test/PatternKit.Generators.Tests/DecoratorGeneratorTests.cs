@@ -1206,4 +1206,39 @@ public class DecoratorGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("Diagnostic PKDEC004 InaccessiblePropertyDeclaration")]
+    [Fact]
+    public void Diagnostic_PKDEC004_InaccessiblePropertyDeclaration()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public abstract class SecretRepository
+            {
+                private protected abstract string Confidential { get; }
+                public abstract string Visible { get; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC004_InaccessiblePropertyDeclaration));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKDEC004" && d.GetMessage().Contains("Confidential"));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_SecretRepository.Decorator.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("Visible", generatedSource);
+        ScenarioExpect.DoesNotContain("Confidential", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
