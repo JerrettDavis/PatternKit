@@ -105,6 +105,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 - **[Creational.Factory](creational/factory/factory.md)**
   Key → creator mapping with optional default; immutable and allocation-light.
 
+- **[Creational.ObjectPool](creational/object-pool/index.md)**
+  Bounded, lease-based reuse for expensive resettable resources.
+
 - **[Creational.Prototype](creational/prototype/prototype.md)**
   Clone-and-tweak via fluent builders and keyed registries.
 

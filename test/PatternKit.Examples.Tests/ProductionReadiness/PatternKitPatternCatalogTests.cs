@@ -127,7 +127,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Manual Task Gate",
         "Workflow Orchestration",
         "Snapshot / Checkpoint Management",
-        "Timeout Manager"
+        "Timeout Manager",
+        "Object Pool"
     ];
 
     [Scenario("Catalog covers every canonical GoF pattern")]

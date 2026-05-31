@@ -983,7 +983,15 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             "docs/examples/order-projection-eventual-consistency-monitor.md",
             ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
             ["Eventual Consistency Monitor", "Materialized View"],
-            ["source and target watermarks", "projection lag threshold", "source-generated monitor factory", "DI composition"])
+            ["source and target watermarks", "projection lag threshold", "source-generated monitor factory", "DI composition"]),
+        Descriptor(
+            "Spreadsheet Formula Object Pool",
+            "src/PatternKit.Examples/ObjectPoolDemo/SpreadsheetFormulaObjectPoolDemo.cs",
+            "test/PatternKit.Examples.Tests/ObjectPoolDemo/SpreadsheetFormulaObjectPoolDemoTests.cs",
+            "docs/examples/spreadsheet-formula-object-pool.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Object Pool"],
+            ["bounded retained buffers", "source-generated pool factory", "DI composition"])
     ];
 
     public IReadOnlyList<PatternKitExampleDescriptor> Entries => Items;

@@ -44,6 +44,7 @@ The source of truth is `PatternKitPatternCatalog` in `src/PatternKit.Examples/Pr
 
 | Family | Pattern | Fluent/runtime path | Source-generated path |
 | --- | --- | --- | --- |
+| Creational | Object Pool | `ObjectPool<T>` | Object Pool generator |
 | Enterprise Integration | Message Channel | `MessageChannel<TPayload>` | Message Channel generator |
 | Enterprise Integration | Channel Purger | `ChannelPurger<TPayload>` | Channel Purger generator |
 | Enterprise Integration | Invalid Message Channel | `InvalidMessageChannel<TPayload>` | Invalid Message Channel generator |

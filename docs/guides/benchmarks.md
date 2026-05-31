@@ -58,6 +58,8 @@ The following numbers were captured on Windows 11, Intel Core i9-14900K, .NET SD
 | Backends For Frontends | Execution | 25.40 ns | 216 B | 29.77 ns | 216 B | Same allocation; fluent was faster for the web summary shaping workflow. |
 | Builder | Construction | 48.24 ns | 320 B | 160.455 us | 129,236 B | Fluent builder construction is much lighter; generated measures full HostApplicationBuilder composition. |
 | Builder | Execution | 65.14 ns | 352 B | 500.676 us | 279,923 B | Fluent option building is much lighter; generated exercises the full host-backed application build. |
+| Object Pool | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Object Pool | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Bridge | Construction | 53.115 ns | 504 B | 3.821 ns | 24 B | Generated bridge construction was materially faster and allocated less. |
 | Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
