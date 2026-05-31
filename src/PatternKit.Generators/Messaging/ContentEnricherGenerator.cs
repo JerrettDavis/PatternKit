@@ -85,6 +85,12 @@ public sealed class ContentEnricherGenerator : IIncrementalGenerator
             return;
         }
 
+        if (!IsKnownPolicy(defaultPolicy))
+        {
+            context.ReportDiagnostic(Diagnostic.Create(InvalidConfiguration, node.Identifier.GetLocation(), type.Name, $"default policy '{defaultPolicy}' is not supported"));
+            return;
+        }
+
         var steps = type.GetMembers().OfType<IMethodSymbol>()
             .Select(method => (Method: method, Attribute: method.GetAttributes().FirstOrDefault(static attr => attr.AttributeClass?.ToDisplayString() == StepAttributeName)))
             .Where(static item => item.Attribute is not null)
@@ -104,6 +110,12 @@ public sealed class ContentEnricherGenerator : IIncrementalGenerator
             if (!IsStep(step.Method, payloadType))
             {
                 context.ReportDiagnostic(Diagnostic.Create(InvalidStep, step.Method.Locations.FirstOrDefault(), step.Method.Name));
+                return;
+            }
+
+            if (!IsKnownPolicy(step.Policy))
+            {
+                context.ReportDiagnostic(Diagnostic.Create(InvalidConfiguration, step.Method.Locations.FirstOrDefault(), type.Name, $"step '{step.Name}' policy '{step.Policy}' is not supported"));
                 return;
             }
 
@@ -224,6 +236,9 @@ public sealed class ContentEnricherGenerator : IIncrementalGenerator
 
     private static int? GetNamedInt(AttributeData attribute, string name)
         => attribute.NamedArguments.FirstOrDefault(kv => kv.Key == name).Value.Value as int?;
+
+    private static bool IsKnownPolicy(string policy)
+        => policy is "Throw" or "Skip" or "UseDefault";
 
     private static string Escape(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 
