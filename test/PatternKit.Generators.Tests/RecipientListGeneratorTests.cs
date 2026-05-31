@@ -101,6 +101,56 @@ public sealed class RecipientListGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Generates recipient-list factories for global struct with sync and async recipients")]
+    [Fact]
+    public void GeneratesRecipientListFactoriesForGlobalStructWithSyncAndAsyncRecipients()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            public sealed record Order(string Channel);
+
+            [GenerateRecipientList(typeof(Order), FactoryName = "BuildSync", AsyncFactoryName = "BuildAsync")]
+            public partial struct OrderRecipients
+            {
+                private static bool IsRetail(Message<Order> message, MessageContext context)
+                    => message.Payload.Channel == "retail";
+
+                private static ValueTask<bool> IsPriority(Message<Order> message, MessageContext context, CancellationToken cancellationToken)
+                    => ValueTask.FromResult(message.Payload.Channel == "priority");
+
+                [RecipientListRecipient("retail\"audit", 10, nameof(IsRetail))]
+                private static void RetailAudit(Message<Order> message, MessageContext context) { }
+
+                [RecipientListRecipient("priority-audit", 20, nameof(IsPriority))]
+                private static ValueTask PriorityAudit(Message<Order> message, MessageContext context, CancellationToken cancellationToken)
+                    => ValueTask.CompletedTask;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesRecipientListFactoriesForGlobalStructWithSyncAndAsyncRecipients));
+        var gen = new RecipientListGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+        ScenarioExpect.Equal("OrderRecipients.RecipientList.g.cs", generated.HintName);
+        ScenarioExpect.DoesNotContain("namespace ", text);
+        ScenarioExpect.Contains("partial struct OrderRecipients", text);
+        ScenarioExpect.Contains("BuildSync()", text);
+        ScenarioExpect.Contains("BuildAsync()", text);
+        ScenarioExpect.Contains(".When(\"retail\\\"audit\", IsRetail).Then(RetailAudit)", text);
+        ScenarioExpect.Contains(".When(\"priority-audit\", IsPriority).Then(PriorityAudit)", text);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("Reports diagnostic for non-partial recipient list")]
     [Fact]
     public void ReportsDiagnosticForNonPartialRecipientList()
@@ -182,6 +232,46 @@ public sealed class RecipientListGeneratorTests
 
         var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
         ScenarioExpect.Equal("PKRL003", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostics for invalid recipient-list recipient shapes")]
+    [Fact]
+    public void ReportsDiagnosticsForInvalidRecipientListRecipientShapes()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record Order(string Channel);
+
+            [GenerateRecipientList(typeof(Order))]
+            public static partial class OrderRecipients
+            {
+                private static bool IsRetail(Message<Order> message, MessageContext context) => true;
+                private static int InvalidPredicate(Message<Order> message, MessageContext context) => 1;
+
+                [RecipientListRecipient(" ", 10, nameof(IsRetail))]
+                private static void BlankName(Message<Order> message, MessageContext context) { }
+
+                [RecipientListRecipient("missing-predicate", 20, "Missing")]
+                private static void MissingPredicate(Message<Order> message, MessageContext context) { }
+
+                [RecipientListRecipient("invalid-predicate", 30, nameof(InvalidPredicate))]
+                private static void InvalidPredicateRecipient(Message<Order> message, MessageContext context) { }
+
+                [RecipientListRecipient("instance", 40, nameof(IsRetail))]
+                private void Instance(Message<Order> message, MessageContext context) { }
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticsForInvalidRecipientListRecipientShapes));
+        var gen = new RecipientListGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(result => result.Diagnostics).ToArray();
+        ScenarioExpect.Equal(4, diagnostics.Count(diagnostic => diagnostic.Id == "PKRL003"));
     }
 
     [Scenario("Reports diagnostic for duplicate recipient name or order")]
