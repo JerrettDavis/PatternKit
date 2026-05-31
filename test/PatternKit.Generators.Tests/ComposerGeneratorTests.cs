@@ -1077,4 +1077,38 @@ public class ComposerGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("InvalidStep WithNonFuncNext ReportsDiagnostic")]
+    [Fact]
+    public void InvalidStep_WithNonFuncNext_ReportsDiagnostic()
+    {
+        var source = """
+            using PatternKit.Generators.Composer;
+
+            public readonly record struct Request(string Path);
+            public readonly record struct Response(int Status);
+
+            public delegate Response RequestDelegate(Request request);
+
+            [Composer]
+            public partial class RequestPipeline
+            {
+                [ComposeStep(0)]
+                private Response Step(in Request req, RequestDelegate next)
+                    => next(req);
+
+                [ComposeTerminal]
+                private Response Terminal(in Request req)
+                    => new(200);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(InvalidStep_WithNonFuncNext_ReportsDiagnostic));
+        var gen = new ComposerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        var diagnostic = ScenarioExpect.Single(result.Results.SelectMany(r => r.Diagnostics));
+        ScenarioExpect.Equal("PKCOM006", diagnostic.Id);
+        ScenarioExpect.Contains("Step", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
 }
