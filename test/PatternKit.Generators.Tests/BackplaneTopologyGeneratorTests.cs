@@ -132,6 +132,220 @@ public sealed class BackplaneTopologyGeneratorTests
         ScenarioExpect.Equal("PKBT003", diagnostic.Id);
     }
 
+    [Scenario("Reports diagnostic for missing backplane topology")]
+    [Fact]
+    public void ReportsDiagnosticForMissingBackplaneTopology()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed class OrderServices { }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForMissingBackplaneTopology));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT002", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for duplicate default request routes")]
+    [Fact]
+    public void ReportsDiagnosticForDuplicateDefaultRequestRoutes()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed record SubmitOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            public sealed class OrderServices
+            {
+                public ValueTask<OrderAccepted> AcceptAAsync(Message<SubmitOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(new OrderAccepted(message.Payload.Id));
+
+                public ValueTask<OrderAccepted> AcceptBAsync(Message<SubmitOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(new OrderAccepted(message.Payload.Id));
+            }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            [BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders.a", nameof(OrderServices.AcceptAAsync))]
+            [BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders.b", nameof(OrderServices.AcceptBAsync))]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForDuplicateDefaultRequestRoutes));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT005", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for invalid request predicate")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidRequestPredicate()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed record SubmitOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            public sealed class OrderServices
+            {
+                public ValueTask<OrderAccepted> AcceptAsync(Message<SubmitOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(new OrderAccepted(message.Payload.Id));
+            }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            [BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), "orders", nameof(OrderServices.AcceptAsync), PredicateMethodName = nameof(IsPriority))]
+            public static partial class OrderBackplane
+            {
+                private static string IsPriority(Message<SubmitOrder> message, MessageContext context) => "wrong";
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForInvalidRequestPredicate));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT003", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for invalid subscription handler")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidSubscriptionHandler()
+    {
+        var source = """
+            using PatternKit.Generators.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed record OrderSubmitted(string Id);
+            public sealed class OrderServices { public void Audit(OrderSubmitted submitted) { } }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            [BackplaneSubscription(typeof(OrderSubmitted), "orders.submitted", "audit-service", nameof(OrderServices.Audit))]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForInvalidSubscriptionHandler));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT004", diagnostic.Id);
+    }
+
+    [Scenario("Skips malformed backplane topology attribute")]
+    [Fact]
+    public void SkipsMalformedBackplaneTopologyAttribute()
+    {
+        var source = """
+            namespace PatternKit.Generators.Messaging;
+
+            [System.AttributeUsage(System.AttributeTargets.Class | System.AttributeTargets.Struct)]
+            public sealed class GenerateBackplaneTopologyAttribute : System.Attribute;
+
+            namespace PatternKit.Examples.Messaging;
+
+            [PatternKit.Generators.Messaging.GenerateBackplaneTopology]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(SkipsMalformedBackplaneTopologyAttribute));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        ScenarioExpect.Empty(run.Results.SelectMany(result => result.GeneratedSources));
+    }
+
+    [Scenario("Reports diagnostic for blank request reply endpoint")]
+    [Fact]
+    public void ReportsDiagnosticForBlankRequestReplyEndpoint()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed record SubmitOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            public sealed class OrderServices
+            {
+                public ValueTask<OrderAccepted> AcceptAsync(Message<SubmitOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(new OrderAccepted(message.Payload.Id));
+            }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            [BackplaneRequestReply(typeof(SubmitOrder), typeof(OrderAccepted), " ", nameof(OrderServices.AcceptAsync))]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForBlankRequestReplyEndpoint));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT003", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for blank subscription topic")]
+    [Fact]
+    public void ReportsDiagnosticForBlankSubscriptionTopic()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace PatternKit.Examples.Messaging;
+
+            public sealed record OrderSubmitted(string Id);
+
+            public sealed class OrderServices
+            {
+                public ValueTask AuditAsync(Message<OrderSubmitted> message, MessageContext context, CancellationToken cancellationToken)
+                    => default;
+            }
+
+            [GenerateBackplaneTopology(typeof(OrderServices))]
+            [BackplaneSubscription(typeof(OrderSubmitted), " ", "audit", nameof(OrderServices.AuditAsync))]
+            public static partial class OrderBackplane;
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForBlankSubscriptionTopic));
+        var gen = new BackplaneTopologyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKBT004", diagnostic.Id);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
