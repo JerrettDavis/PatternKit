@@ -1,4 +1,5 @@
 using PatternKit.Examples.Chain;
+using PatternKit.Examples.Chain.ConfigDriven;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -278,6 +279,171 @@ public sealed class NickelCashOnlyRuleTests
         var delta = rule.ComputeDelta(ctx);
 
         ScenarioExpect.Equal(0.02m, delta); // 10.03 -> 10.05
+    }
+}
+
+public sealed class MediatedTransactionPipelineCoverageTests
+{
+    [Scenario("TransactionPipelineBuilder FluentHooks Cover CustomStagesRulesAndCouponDiscounts")]
+    [Fact]
+    public void TransactionPipelineBuilder_FluentHooks_Cover_CustomStagesRulesAndCouponDiscounts()
+    {
+        var couponContext = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items =
+            [
+                new LineItem("MFG", 10m, Qty: 2, ManufacturerCoupon: 1m),
+                new LineItem("HOUSE", 5m, Qty: 1, InHouseCoupon: 0.50m),
+            ]
+        };
+        var couponPipeline = TransactionPipelineBuilder.New()
+            .WithRoundingRules()
+            .AddDiscountsAndTax()
+            .Build();
+
+        var couponResult = couponPipeline.Run(couponContext);
+
+        ScenarioExpect.True(couponResult.Result.Ok);
+        ScenarioExpect.Contains(couponResult.Ctx.Log, entry => entry.StartsWith("discount: manufacturer coupons", StringComparison.Ordinal));
+        ScenarioExpect.Contains(couponResult.Ctx.Log, entry => entry.StartsWith("discount: in-house coupons", StringComparison.Ordinal));
+
+        var customContext = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("STOP", 1m)]
+        };
+        var customPipeline = TransactionPipelineBuilder.New()
+            .AddStage(ctx =>
+            {
+                ctx.Result = TxResult.Fail("custom", "custom stop");
+                return false;
+            })
+            .Build();
+
+        var customResult = customPipeline.Run(customContext);
+
+        ScenarioExpect.False(customResult.Result.Ok);
+        ScenarioExpect.Equal("custom", customResult.Result.Code);
+    }
+
+    [Scenario("TransactionPipelineBuilder Preauth Blocks EmptyBaskets")]
+    [Fact]
+    public void TransactionPipelineBuilder_Preauth_Blocks_EmptyBaskets()
+    {
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = []
+        };
+        var pipeline = TransactionPipelineBuilder.New()
+            .AddPreauth()
+            .Build();
+
+        var result = pipeline.Run(context);
+
+        ScenarioExpect.False(result.Result.Ok);
+        ScenarioExpect.Equal("empty", result.Result.Code);
+        ScenarioExpect.True(result.Ctx.Log.Contains("preauth: empty basket"));
+    }
+
+    [Scenario("CardTenderHandlers Surface AuthorizationAndCaptureFailures")]
+    [Fact]
+    public void CardTenderHandlers_Surface_AuthorizationAndCaptureFailures()
+    {
+        var authProcessor = new ConfigurableProcessor(
+            TxResult.Fail("declined", "declined"),
+            TxResult.Success("capture"));
+        var captureProcessor = new ConfigurableProcessor(
+            TxResult.Success("auth"),
+            TxResult.Fail("capture-failed", "capture failed"));
+        var authContext = CreateContext(20m);
+        var captureContext = CreateContext(20m);
+
+        var configAuthTender = new CardTender(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = authProcessor
+        }));
+        var configCaptureTender = new CardTender(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = captureProcessor
+        }));
+        var strategyAuthTender = new CardTenderStrategy(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = authProcessor
+        }));
+        var strategyCaptureTender = new CardTenderStrategy(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = captureProcessor
+        }));
+
+        var tender = new Tender(PaymentKind.Card, Vendor: CardVendor.Unknown);
+        var configAuthResult = configAuthTender.Handle(authContext, tender);
+        var configCaptureResult = configCaptureTender.Handle(captureContext, tender);
+        var strategyAuthResult = strategyAuthTender.TryApply(CreateContext(20m), tender);
+        var strategyCaptureResult = strategyCaptureTender.TryApply(CreateContext(20m), tender);
+
+        ScenarioExpect.Equal("tender:card", configAuthTender.Key);
+        ScenarioExpect.False(configAuthResult.Ok);
+        ScenarioExpect.Equal("declined", configAuthResult.Code);
+        ScenarioExpect.True(authContext.Log.Contains("auth: declined (declined)"));
+        ScenarioExpect.False(configCaptureResult.Ok);
+        ScenarioExpect.Equal("capture-failed", configCaptureResult.Code);
+        ScenarioExpect.True(captureContext.Log.Contains("auth: capture failed"));
+        ScenarioExpect.NotNull(strategyAuthResult);
+        ScenarioExpect.Equal("declined", strategyAuthResult!.Value.Code);
+        ScenarioExpect.NotNull(strategyCaptureResult);
+        ScenarioExpect.Equal("capture-failed", strategyCaptureResult!.Value.Code);
+    }
+
+    [Scenario("CharityRoundUpRule NotifiesTrackerWhenApplied")]
+    [Fact]
+    public void CharityRoundUpRule_NotifiesTracker_WhenApplied()
+    {
+        var tracker = new RecordingCharityTracker();
+        var rule = new CharityRoundUpRule(tracker);
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("CHARITY:KidsFund", 10.25m)]
+        };
+        context.RecomputeSubtotal();
+
+        RoundingPipeline.Apply(context, [rule]);
+
+        ScenarioExpect.Equal("KidsFund", tracker.Charity);
+        ScenarioExpect.Equal(0.75m, tracker.Delta);
+        ScenarioExpect.Contains(context.Log, entry => entry.StartsWith("charity: KidsFund notified", StringComparison.Ordinal));
+    }
+
+    private static TransactionContext CreateContext(decimal price)
+    {
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("CARD", price)]
+        };
+        context.RecomputeSubtotal();
+        return context;
+    }
+
+    private sealed class ConfigurableProcessor(TxResult authorization, TxResult capture) : ICardProcessor
+    {
+        public TxResult Authorize(TransactionContext ctx) => authorization;
+
+        public TxResult Capture(TransactionContext ctx) => capture;
+    }
+
+    private sealed class RecordingCharityTracker : ICharityTracker
+    {
+        public string? Charity { get; private set; }
+        public decimal Delta { get; private set; }
+
+        public void Track(string charity, Guid transactionId, decimal delta, decimal newTotal)
+        {
+            Charity = charity;
+            Delta = delta;
+        }
     }
 }
 

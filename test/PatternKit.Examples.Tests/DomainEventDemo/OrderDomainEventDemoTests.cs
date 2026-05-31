@@ -52,4 +52,41 @@ public sealed partial class OrderDomainEventDemoTests(ITestOutputHelper output) 
             ScenarioExpect.Equal("placed:order-300:50", ScenarioExpect.Single(summary.AuditEntries));
         })
         .AssertPassed();
+
+    [Scenario("Order Domain Event demo dispatches billed events")]
+    [Fact]
+    public Task Order_Domain_Event_Demo_Dispatches_Billed_Events()
+        => Given("fluent and generated order domain event dispatchers", () =>
+        {
+            var fluentProjection = new OrderEventProjection();
+            var fluentAudit = new List<string>();
+            GeneratedOrderDomainEvents.Projection = new OrderEventProjection();
+            GeneratedOrderDomainEvents.Audit = [];
+
+            return new BilledEventDispatchers(
+                OrderDomainEventPolicies.CreateFluentDispatcher(fluentProjection, fluentAudit),
+                fluentAudit,
+                GeneratedOrderDomainEvents.CreateDispatcher());
+        })
+        .When("order billed events are dispatched", (Func<BilledEventDispatchers, ValueTask<(IReadOnlyList<string> FluentAudit, IReadOnlyList<string> GeneratedAudit)>>)(async dispatchers =>
+        {
+            var fluentEvent = new OrderBilled(Guid.NewGuid(), DateTimeOffset.UtcNow, "order-400", 25m);
+            var generatedEvent = new OrderBilled(Guid.NewGuid(), DateTimeOffset.UtcNow, "order-500", 30m);
+
+            await dispatchers.Fluent.DispatchAsync(fluentEvent);
+            await dispatchers.Generated.DispatchAsync(generatedEvent);
+
+            return (dispatchers.FluentAudit.ToArray(), GeneratedOrderDomainEvents.Audit.ToArray());
+        }))
+        .Then("both paths audit billed events", result =>
+        {
+            ScenarioExpect.Equal("billed:order-400:25", ScenarioExpect.Single(result.FluentAudit));
+            ScenarioExpect.Equal("billed:order-500:30", ScenarioExpect.Single(result.GeneratedAudit));
+        })
+        .AssertPassed();
+
+    private sealed record BilledEventDispatchers(
+        PatternKit.Application.DomainEvents.DomainEventDispatcher<OrderDomainEvent> Fluent,
+        List<string> FluentAudit,
+        PatternKit.Application.DomainEvents.IDomainEventDispatcher<OrderDomainEvent> Generated);
 }
