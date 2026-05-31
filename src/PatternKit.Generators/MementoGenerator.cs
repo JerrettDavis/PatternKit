@@ -348,17 +348,20 @@ public sealed class MementoGenerator : IIncrementalGenerator
         }
         sb.AppendLine();
 
-        // Constructor
-        sb.Append($"    private {typeInfo.TypeName}Memento(");
-        sb.Append(string.Join(", ", typeInfo.Members.Select(m => $"{m.Type} {ToCamelCase(m.Name)}")));
-        sb.AppendLine(")");
-        sb.AppendLine("    {");
-        foreach (var member in typeInfo.Members)
+        if (typeInfo.Members.Count > 0)
         {
-            sb.AppendLine($"        {member.Name} = {ToCamelCase(member.Name)};");
+            // Constructor
+            sb.Append($"    private {typeInfo.TypeName}Memento(");
+            sb.Append(string.Join(", ", typeInfo.Members.Select(m => $"{m.Type} {ToCamelCase(m.Name)}")));
+            sb.AppendLine(")");
+            sb.AppendLine("    {");
+            foreach (var member in typeInfo.Members)
+            {
+                sb.AppendLine($"        {member.Name} = {ToCamelCase(member.Name)};");
+            }
+            sb.AppendLine("    }");
+            sb.AppendLine();
         }
-        sb.AppendLine("    }");
-        sb.AppendLine();
 
         // Capture method
         GenerateCaptureMethod(sb, typeInfo);
@@ -449,7 +452,7 @@ public sealed class MementoGenerator : IIncrementalGenerator
                 else
                 {
                     // Fall back to object initializer
-                    sb.AppendLine("()");
+                    AppendRecordFallbackConstructor(sb, typeInfo);
                     sb.AppendLine("        {");
                     foreach (var member in typeInfo.Members)
                     {
@@ -485,6 +488,24 @@ public sealed class MementoGenerator : IIncrementalGenerator
         }
 
         sb.AppendLine("    }");
+    }
+
+    private static void AppendRecordFallbackConstructor(StringBuilder sb, TypeInfo typeInfo)
+    {
+        var fallbackCtor = typeInfo.TypeSymbol.Constructors
+            .Where(c => !c.IsStatic && c.DeclaredAccessibility == Accessibility.Public)
+            .OrderBy(c => c.Parameters.Length)
+            .FirstOrDefault();
+
+        if (fallbackCtor is null || fallbackCtor.Parameters.Length == 0)
+        {
+            sb.AppendLine("()");
+            return;
+        }
+
+        sb.Append("(");
+        sb.Append(string.Join(", ", fallbackCtor.Parameters.Select(_ => "default!")));
+        sb.AppendLine(")");
     }
 
     private void GenerateInPlaceRestoreMethod(StringBuilder sb, TypeInfo typeInfo)

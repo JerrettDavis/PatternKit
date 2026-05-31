@@ -399,4 +399,192 @@ public class MementoGeneratorTests
         ScenarioExpect.Matches(@"private\s+const\s+int\s+MaxCapacity\s*=\s*50", caretakerSource);
         ScenarioExpect.Matches(@"if\s*\(\s*_states\.Count\s*>\s*MaxCapacity\s*\)", caretakerSource);
     }
+
+    [Scenario("ExplicitCaptureStrategies AreAcceptedWithoutReferenceWarnings")]
+    [Fact]
+    public void ExplicitCaptureStrategies_AreAcceptedWithoutReferenceWarnings()
+    {
+        const string source = """
+            using PatternKit.Generators;
+            using System.Collections.Generic;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public partial class Document
+            {
+                [MementoStrategy(MementoCaptureStrategy.ByReference)]
+                public List<string> Tags { get; set; } = new();
+
+                [MementoStrategy(MementoCaptureStrategy.Clone)]
+                public CloneableBuffer Cloneable { get; set; } = new();
+
+                [MementoStrategy(MementoCaptureStrategy.DeepCopy)]
+                public CloneableBuffer Deep { get; set; } = new();
+
+                [MementoStrategy(MementoCaptureStrategy.Custom)]
+                public CloneableBuffer Custom { get; set; } = new();
+            }
+
+            public sealed class CloneableBuffer
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ExplicitCaptureStrategies_AreAcceptedWithoutReferenceWarnings));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.DoesNotContain(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKMEM003");
+
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "Document.Memento.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("global::System.Collections.Generic.List<string> Tags", mementoSource);
+        ScenarioExpect.Contains("global::TestNamespace.CloneableBuffer Cloneable", mementoSource);
+        ScenarioExpect.Contains("global::TestNamespace.CloneableBuffer Deep", mementoSource);
+        ScenarioExpect.Contains("global::TestNamespace.CloneableBuffer Custom", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("RecordWithoutPrimaryConstructor RestoresWithObjectInitializer")]
+    [Fact]
+    public void RecordWithoutPrimaryConstructor_RestoresWithObjectInitializer()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public partial record class EditorState
+            {
+                public string Text { get; init; } = "";
+                public int Cursor { get; init; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(RecordWithoutPrimaryConstructor_RestoresWithObjectInitializer));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "EditorState.Memento.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("return new global::TestNamespace.EditorState()", mementoSource);
+        ScenarioExpect.Contains("Text = this.Text,", mementoSource);
+        ScenarioExpect.Contains("Cursor = this.Cursor,", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("ClassWithOnlyReadonlyMembers RestoresWithDefaultConstructor")]
+    [Fact]
+    public void ClassWithOnlyReadonlyMembers_RestoresWithDefaultConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public partial class ReadOnlyState
+            {
+                public readonly int Version;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ClassWithOnlyReadonlyMembers_RestoresWithDefaultConstructor));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ReadOnlyState.Memento.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public int Version { get; }", mementoSource);
+        ScenarioExpect.Contains("return new global::TestNamespace.ReadOnlyState();", mementoSource);
+        ScenarioExpect.DoesNotContain("originator.Version = this.Version;", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("RecordWithNoCapturedMembers RestoresWithDefaultConstructor")]
+    [Fact]
+    public void RecordWithNoCapturedMembers_RestoresWithDefaultConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public partial record class EmptyState;
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(RecordWithNoCapturedMembers_RestoresWithDefaultConstructor));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "EmptyState.Memento.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.DoesNotContain("private EmptyStateMemento()", mementoSource);
+        ScenarioExpect.Contains("return new global::TestNamespace.EmptyState();", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("RecordWithIgnoredPrimaryConstructorMember FallsBackToObjectInitializer")]
+    [Fact]
+    public void RecordWithIgnoredPrimaryConstructorMember_FallsBackToObjectInitializer()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public partial record class FilteredState([property: MementoIgnore] string Raw)
+            {
+                public string Name { get; init; } = Raw;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(RecordWithIgnoredPrimaryConstructorMember_FallsBackToObjectInitializer));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "FilteredState.Memento.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("return new global::TestNamespace.FilteredState(default!)", mementoSource);
+        ScenarioExpect.Contains("Name = this.Name,", mementoSource);
+        ScenarioExpect.DoesNotContain("Raw = this.Raw", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }
