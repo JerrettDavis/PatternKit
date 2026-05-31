@@ -1012,5 +1012,61 @@ public class TemplateGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("ForceAsync Template GeneratesAsyncPathForSynchronousSteps")]
+    [Fact]
+    public void ForceAsync_Template_GeneratesAsyncPathForSynchronousSteps()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System.Collections.Generic;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public List<string> Log { get; } = new();
+            }
+
+            [Template(GenerateAsync = true, ForceAsync = true, ErrorPolicy = TemplateErrorPolicy.HandleAndContinue)]
+            public partial class ImportWorkflow
+            {
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void Open(ImportContext ctx) => ctx.Log.Add("open");
+
+                [TemplateStep(0, Optional = true)]
+                private void Validate(ImportContext ctx) => ctx.Log.Add("validate");
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void Close(ImportContext ctx) => ctx.Log.Add("close");
+
+                [TemplateHook(HookPoint.OnError)]
+                private void CaptureError(ImportContext ctx, System.Exception ex) => ctx.Log.Add(ex.Message);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ForceAsync_Template_GeneratesAsyncPathForSynchronousSteps));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync", generated);
+        ScenarioExpect.Contains("Open(ctx);", generated);
+        ScenarioExpect.Contains("Validate(ctx);", generated);
+        ScenarioExpect.Contains("Close(ctx);", generated);
+        ScenarioExpect.Contains("catch (System.Exception ex)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     #endregion
 }
