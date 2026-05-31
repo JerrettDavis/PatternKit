@@ -1160,4 +1160,50 @@ public class DecoratorGeneratorTests
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("Field"));
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("NestedType"));
     }
+
+    [Scenario("GenerateDecorator PreservesPrimitiveAndStringDefaultLiterals")]
+    [Fact]
+    public void GenerateDecorator_PreservesPrimitiveAndStringDefaultLiterals()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            public enum Mode { None = 0, Known = 1 }
+
+            [GenerateDecorator]
+            public interface ILiteralService
+            {
+                string Format(
+                    string text = "line\n\"quoted\"\tend",
+                    bool enabled = true,
+                    float ratio = 1.25f,
+                    double weight = 2.5d,
+                    decimal amount = 3.75m,
+                    Mode mode = (Mode)99);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecorator_PreservesPrimitiveAndStringDefaultLiterals));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_ILiteralService.Decorator.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("string text = \"line\\n\\\"quoted\\\"\\tend\"", generatedSource);
+        ScenarioExpect.Contains("bool enabled = true", generatedSource);
+        ScenarioExpect.Contains("float ratio = 1.25f", generatedSource);
+        ScenarioExpect.Contains("double weight = 2.5d", generatedSource);
+        ScenarioExpect.Contains("decimal amount = 3.75m", generatedSource);
+        ScenarioExpect.Contains("global::TestNamespace.Mode mode = (global::TestNamespace.Mode)99", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

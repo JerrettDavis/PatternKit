@@ -1487,4 +1487,48 @@ public class ProxyGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("GenerateProxy Defaults CoverPrimitiveStringAndNumericBranches")]
+    [Fact]
+    public void GenerateProxy_Defaults_CoverPrimitiveStringAndNumericBranches()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.None)]
+            public partial interface ILiteralProxy
+            {
+                string Format(
+                    string text = "line\n\"quoted\"\tend",
+                    bool enabled = true,
+                    float ratio = 1.25f,
+                    double weight = 2.5d,
+                    decimal amount = 3.75m,
+                    char apostrophe = '\'');
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_Defaults_CoverPrimitiveStringAndNumericBranches));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_ILiteralProxy.Proxy.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("string text = \"line\\n\\\"quoted\\\"\\tend\"", proxySource);
+        ScenarioExpect.Contains("bool enabled = true", proxySource);
+        ScenarioExpect.Contains("float ratio = 1.25f", proxySource);
+        ScenarioExpect.Contains("double weight = 2.5d", proxySource);
+        ScenarioExpect.Contains("decimal amount = 3.75m", proxySource);
+        ScenarioExpect.Contains("char apostrophe = '\\''", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
 }

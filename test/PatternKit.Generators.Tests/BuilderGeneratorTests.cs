@@ -798,4 +798,81 @@ public class BuilderGeneratorTests
         var emit = updated.Emit(pe);
         ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
     }
+
+    [Scenario("BuilderDiagnostics CoverNameConflictAndPrivateSetter")]
+    [Fact]
+    public void BuilderDiagnostics_CoverNameConflictAndPrivateSetter()
+    {
+        const string source = """
+            using PatternKit.Generators.Builders;
+
+            namespace PatternKit.Examples.Builders;
+
+            public sealed class ConflictingBuilder
+            {
+            }
+
+            [GenerateBuilder(BuilderTypeName = "ConflictingBuilder")]
+            public partial class Conflicting
+            {
+                public string? Name { get; set; }
+            }
+
+            [GenerateBuilder]
+            public partial class PrivateSetterSample
+            {
+                public string? Name { get; private set; }
+                public int Count { get; set; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(BuilderDiagnostics_CoverNameConflictAndPrivateSetter));
+        var gen = new BuilderGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, diagnostic => diagnostic.Id == "B002");
+        ScenarioExpect.Contains(diagnostics, diagnostic => diagnostic.Id == "B005" && diagnostic.GetMessage().Contains("Name"));
+    }
+
+    [Scenario("StateProjectionBuilder GeneratesValueTaskDefaultProjectorPath")]
+    [Fact]
+    public void StateProjectionBuilder_GeneratesValueTaskDefaultProjectorPath()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Builders;
+
+            namespace PatternKit.Examples.Builders;
+
+            public readonly record struct AsyncState(string Name);
+            public sealed record AsyncDto(string Name);
+
+            [GenerateBuilder(Model = BuilderModel.StateProjection, GenerateBuilderMethods = true)]
+            public static partial class AsyncProjectionHost
+            {
+                public static AsyncState Seed() => default;
+
+                [BuilderProjector]
+                public static ValueTask<AsyncDto> ProjectAsync(AsyncState state)
+                    => new(new AsyncDto(state.Name ?? ""));
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(StateProjectionBuilder_GeneratesValueTaskDefaultProjectorPath));
+        var gen = new BuilderGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generatedSource = string.Join(Environment.NewLine, run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Select(source => source.SourceText.ToString()));
+
+        ScenarioExpect.Contains("public ValueTask<global::PatternKit.Examples.Builders.AsyncDto> BuildAsync()", generatedSource);
+        ScenarioExpect.Contains("AsyncProjectionHost.ProjectAsync(state)", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join(Environment.NewLine, emit.Diagnostics));
+    }
 }
