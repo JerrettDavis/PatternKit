@@ -149,6 +149,75 @@ public sealed class CacheAsidePolicyGeneratorTests
         ScenarioExpect.True(updated.Emit(Stream.Null).Success);
     }
 
+    [Scenario("Generates cache-aside policy factory for abstract and sealed hosts")]
+    [Fact]
+    public void GeneratesCacheAsidePolicyFactoryForAbstractAndSealedHosts()
+    {
+        var source = """
+            using PatternKit.Generators.CacheAside;
+
+            namespace Demo;
+
+            [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractCacheAsideHost;
+
+            [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedCacheAsideHost;
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesCacheAsidePolicyFactoryForAbstractAndSealedHosts));
+        var gen = new CacheAsidePolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = run.Results.SelectMany(result => result.GeneratedSources).ToArray();
+        ScenarioExpect.Equal(2, generated.Length);
+        var abstractText = ScenarioExpect.Single(generated.Where(source => source.HintName == "AbstractCacheAsideHost.CacheAsidePolicy.g.cs")).SourceText.ToString();
+        var sealedText = ScenarioExpect.Single(generated.Where(source => source.HintName == "SealedCacheAsideHost.CacheAsidePolicy.g.cs")).SourceText.ToString();
+        ScenarioExpect.Contains("public abstract partial class AbstractCacheAsideHost", abstractText);
+        ScenarioExpect.Contains("CreateAbstract()", abstractText);
+        ScenarioExpect.Contains("public sealed partial class SealedCacheAsideHost", sealedText);
+        ScenarioExpect.Contains("CreateSealed()", sealedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Generates cache-aside policy source for nested accessibility variants")]
+    [Fact]
+    public void GeneratesCacheAsidePolicySourceForNestedAccessibilityVariants()
+    {
+        var source = """
+            using PatternKit.Generators.CacheAside;
+
+            namespace Demo;
+
+            public partial class Outer
+            {
+                [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateCacheAsideHost;
+
+                [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedCacheAsideHost;
+
+                [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalCacheAsideHost;
+
+                [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedCacheAsideHost;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesCacheAsidePolicySourceForNestedAccessibilityVariants));
+        var gen = new CacheAsidePolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("private partial class PrivateCacheAsideHost", generatedText);
+        ScenarioExpect.Contains("protected partial class ProtectedCacheAsideHost", generatedText);
+        ScenarioExpect.Contains("protected internal partial class ProtectedInternalCacheAsideHost", generatedText);
+        ScenarioExpect.Contains("private protected partial class PrivateProtectedCacheAsideHost", generatedText);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
