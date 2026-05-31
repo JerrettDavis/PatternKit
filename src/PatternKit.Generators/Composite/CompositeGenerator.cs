@@ -131,7 +131,8 @@ public sealed class CompositeGenerator : IIncrementalGenerator
         sb.AppendLine("{");
         foreach (var property in GetContractProperties(component))
         {
-            sb.Append("    public abstract ").Append(property.Type.ToDisplayString(TypeFormat)).Append(' ').Append(property.Name).Append(" { get; }").AppendLine();
+            sb.Append(component.TypeKind == TypeKind.Class ? "    public abstract override " : "    public abstract ")
+                .Append(property.Type.ToDisplayString(TypeFormat)).Append(' ').Append(property.Name).Append(" { get; }").AppendLine();
             sb.AppendLine();
         }
         sb.AppendLine("    public virtual bool IsLeaf => true;");
