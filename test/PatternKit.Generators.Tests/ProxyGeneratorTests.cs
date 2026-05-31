@@ -1531,4 +1531,161 @@ public class ProxyGeneratorTests
         var emit = updated.Emit(Stream.Null);
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
+
+    [Scenario("GenerateProxy GenerateAsyncFalse ReportsWarningsAndSuppressesAsyncHooks")]
+    [Fact]
+    public void GenerateProxy_GenerateAsyncFalse_ReportsWarningsAndSuppressesAsyncHooks()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(GenerateAsync = false)]
+            public partial interface IExplicitSyncProxy
+            {
+                Task SaveAsync(CancellationToken cancellationToken = default);
+                string Poll(CancellationToken cancellationToken = default);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_GenerateAsyncFalse_ReportsWarningsAndSuppressesAsyncHooks));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Equal(2, diagnostics.Count(d => d.Id == "PKPRX005"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRX005" && d.GetMessage().Contains("SaveAsync"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRX005" && d.GetMessage().Contains("Poll"));
+
+        var interceptorSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IExplicitSyncProxy.Proxy.Interceptor.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.DoesNotContain("BeforeAsync", interceptorSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("GenerateProxy Defaults CoverDynamicNullParamsAndReservedContextNames")]
+    [Fact]
+    public void GenerateProxy_Defaults_CoverDynamicNullParamsAndReservedContextNames()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IContextNameProxy
+            {
+                string Format(
+                    dynamic payload = null,
+                    string methodName = "calculate",
+                    string arguments = "items",
+                    string result = "ok",
+                    params string[] tags);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            nameof(GenerateProxy_Defaults_CoverDynamicNullParamsAndReservedContextNames),
+            extra:
+            [
+                MetadataReference.CreateFromFile(typeof(System.Runtime.CompilerServices.DynamicAttribute).Assembly.Location),
+                MetadataReference.CreateFromFile(typeof(Microsoft.CSharp.RuntimeBinder.CSharpArgumentInfo).Assembly.Location)
+            ]);
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IContextNameProxy.Proxy.g.cs")
+            .SourceText.ToString();
+        var interceptorSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IContextNameProxy.Proxy.Interceptor.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("dynamic payload = null", proxySource);
+        ScenarioExpect.Contains("params string[] tags", proxySource);
+        ScenarioExpect.Contains("Arg_MethodName", interceptorSource);
+        ScenarioExpect.Contains("Arg_Arguments", interceptorSource);
+        ScenarioExpect.Contains("Arg_Result", interceptorSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("GenerateProxy NoInterceptorVoidMethodWithPlainParameter Delegates")]
+    [Fact]
+    public void GenerateProxy_NoInterceptorVoidMethodWithPlainParameter_Delegates()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+
+            namespace TestNamespace;
+
+            [GenerateProxy(InterceptorMode = ProxyInterceptorMode.None)]
+            public partial interface IVoidDelegateProxy
+            {
+                void Track(string message);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_NoInterceptorVoidMethodWithPlainParameter_Delegates));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IVoidDelegateProxy.Proxy.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("_inner.Track(message);", proxySource);
+        ScenarioExpect.DoesNotContain("return _inner.Track", proxySource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("GenerateProxy AsyncInterceptedRefOutInArguments AreForwarded")]
+    [Fact]
+    public void GenerateProxy_AsyncInterceptedRefOutInArguments_AreForwarded()
+    {
+        const string source = """
+            using PatternKit.Generators.Proxy;
+            using System.Threading.Tasks;
+
+            namespace TestNamespace;
+
+            [GenerateProxy]
+            public partial interface IAsyncRefArgumentProxy
+            {
+                Task<int> CountAsync(ref int source, out int destination, in bool enabled);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateProxy_AsyncInterceptedRefOutInArguments_AreForwarded));
+        var gen = new ProxyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var proxySource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_IAsyncRefArgumentProxy.Proxy.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("_inner.CountAsync(ref source, out destination, in enabled);", proxySource);
+    }
 }
