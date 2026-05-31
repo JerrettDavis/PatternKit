@@ -21,8 +21,8 @@ public sealed class ComposerAttribute : Attribute
 
     /// <summary>
     /// Gets or sets whether to generate async methods.
-    /// When omitted, async generation is inferred from the presence of async steps or terminal.
-    /// Set to true/false explicitly to control async generation.
+    /// When this named property is omitted, async generation is inferred from async steps or terminal.
+    /// Set to true or false explicitly in source to control async generation.
     /// </summary>
     public bool GenerateAsync { get; set; }
 

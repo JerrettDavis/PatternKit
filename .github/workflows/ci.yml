@@ -99,9 +99,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v6
         with:
-          files: |
-            **/TestResults/*/coverage.cobertura.xml
+          files: ./coverage-report/Cobertura.xml
           flags: unittests
+          disable_search: true
           fail_ci_if_error: true
           verbose: true
         env:

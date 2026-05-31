@@ -1,3 +1,4 @@
+using System.Globalization;
 using PatternKit.Examples.Generators.Facade;
 using TinyBDD;
 
@@ -9,7 +10,7 @@ namespace PatternKit.Examples.Tests.Generators;
 /// </summary>
 public class FacadeSpecsTests
 {
-    [Scenario("ShippingFacade CalculatesCostCorrectly")]
+    [Scenario("Shipping facade calculates cost correctly")]
     [Fact]
     public void ShippingFacade_CalculatesCostCorrectly()
     {
@@ -28,7 +29,7 @@ public class FacadeSpecsTests
         ScenarioExpect.Equal(5.99m, cost); // local base rate, 3.5 lbs (under 5 lbs, no surcharge)
     }
 
-    [Scenario("ShippingFacade ValidatesShipmentCorrectly")]
+    [Scenario("Shipping facade validates shipment correctly")]
     [Fact]
     public void ShippingFacade_ValidatesShipmentCorrectly()
     {
@@ -53,7 +54,7 @@ public class FacadeSpecsTests
         ScenarioExpect.False(isInvalid);
     }
 
-    [Scenario("ShippingFacade EstimatesDeliveryCorrectly")]
+    [Scenario("Shipping facade estimates delivery correctly")]
     [Fact]
     public void ShippingFacade_EstimatesDeliveryCorrectly()
     {
@@ -74,7 +75,7 @@ public class FacadeSpecsTests
         ScenarioExpect.True(days > 0 && days <= 12);
     }
 
-    [Scenario("ShippingSubsystems CoverFallbackDestinationsAndSpeeds")]
+    [Scenario("Shipping subsystems cover fallback destinations and speeds")]
     [Fact]
     public void ShippingSubsystems_CoverFallbackDestinationsAndSpeeds()
     {
@@ -88,7 +89,7 @@ public class FacadeSpecsTests
         ScenarioExpect.Equal(29.99m, rates.CalculateBaseRate("international"));
         ScenarioExpect.Equal(1.50m, rates.CalculateWeightSurcharge(8m));
         ScenarioExpect.Equal(12, estimator.EstimateDays("international", "economy"));
-        ScenarioExpect.Equal("$31.49 - Delivery in 12 business days", quote);
+        ScenarioExpect.Equal($"${31.49m.ToString("F2", CultureInfo.CurrentCulture)} - Delivery in 12 business days", quote);
         ScenarioExpect.Equal("Invalid shipment parameters", invalidQuote);
     }
 

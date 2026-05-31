@@ -284,7 +284,7 @@ public sealed class NickelCashOnlyRuleTests
 
 public sealed class MediatedTransactionPipelineCoverageTests
 {
-    [Scenario("TransactionPipelineBuilder FluentHooks Cover CustomStagesRulesAndCouponDiscounts")]
+    [Scenario("Transaction pipeline builder fluent hooks cover custom stages rules and coupon discounts")]
     [Fact]
     public void TransactionPipelineBuilder_FluentHooks_Cover_CustomStagesRulesAndCouponDiscounts()
     {
@@ -327,7 +327,7 @@ public sealed class MediatedTransactionPipelineCoverageTests
         ScenarioExpect.Equal("custom", customResult.Result.Code);
     }
 
-    [Scenario("TransactionPipelineBuilder Preauth Blocks EmptyBaskets")]
+    [Scenario("Transaction pipeline builder preauth blocks empty baskets")]
     [Fact]
     public void TransactionPipelineBuilder_Preauth_Blocks_EmptyBaskets()
     {
@@ -347,7 +347,7 @@ public sealed class MediatedTransactionPipelineCoverageTests
         ScenarioExpect.True(result.Ctx.Log.Contains("preauth: empty basket"));
     }
 
-    [Scenario("CardTenderHandlers Surface AuthorizationAndCaptureFailures")]
+    [Scenario("Card tender handlers surface authorization and capture failures")]
     [Fact]
     public void CardTenderHandlers_Surface_AuthorizationAndCaptureFailures()
     {
@@ -396,7 +396,7 @@ public sealed class MediatedTransactionPipelineCoverageTests
         ScenarioExpect.Equal("capture-failed", strategyCaptureResult!.Value.Code);
     }
 
-    [Scenario("CharityRoundUpRule NotifiesTrackerWhenApplied")]
+    [Scenario("Charity round up rule notifies tracker when applied")]
     [Fact]
     public void CharityRoundUpRule_NotifiesTracker_WhenApplied()
     {
