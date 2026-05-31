@@ -182,6 +182,185 @@ public sealed class ReliabilityPipelineGeneratorTests
         ScenarioExpect.Equal("PKRP005", diagnostic.Id);
     }
 
+    [Scenario("Generates reliability pipeline with default policies and no key selector")]
+    [Fact]
+    public void GeneratesReliabilityPipelineWithDefaultPoliciesAndNoKeySelector()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record AcceptOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
+            public partial struct OrderReliability
+            {
+                [ReliabilityHandler]
+                private static ValueTask<string> Handle(Message<AcceptOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(message.Payload.Id);
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesReliabilityPipelineWithDefaultPoliciesAndNoKeySelector));
+        var gen = new ReliabilityPipelineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources));
+        var text = generated.SourceText.ToString();
+        ScenarioExpect.Contains("partial struct OrderReliability", text);
+        ScenarioExpect.Contains("CreateReceiver", text);
+        ScenarioExpect.DoesNotContain(".KeyBy(", text);
+        ScenarioExpect.Contains(".OnDuplicate(global::PatternKit.Messaging.Reliability.DuplicateMessagePolicy.Suppress)", text);
+        ScenarioExpect.Contains(".OnMissingKey(global::PatternKit.Messaging.Reliability.MissingIdempotencyKeyPolicy.Reject)", text);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Generates reliability pipeline with case-insensitive policies")]
+    [Fact]
+    public void GeneratesReliabilityPipelineWithCaseInsensitivePolicies()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record AcceptOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted), DuplicatePolicy = "suppress", MissingKeyPolicy = "PROCESS")]
+            public static partial class OrderReliability
+            {
+                [ReliabilityHandler]
+                private static ValueTask<string> Handle(Message<AcceptOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(message.Payload.Id);
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesReliabilityPipelineWithCaseInsensitivePolicies));
+        var gen = new ReliabilityPipelineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var text = ScenarioExpect.Single(run.Results.SelectMany(result => result.GeneratedSources)).SourceText.ToString();
+        ScenarioExpect.Contains("DuplicateMessagePolicy.Suppress", text);
+        ScenarioExpect.Contains("MissingIdempotencyKeyPolicy.Process", text);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Reports diagnostic for duplicate reliability key selectors")]
+    [Fact]
+    public void ReportsDiagnosticForDuplicateReliabilityKeySelectors()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record AcceptOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
+            public static partial class OrderReliability
+            {
+                [ReliabilityHandler]
+                private static ValueTask<string> Handle(Message<AcceptOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(message.Payload.Id);
+
+                [ReliabilityKeySelector]
+                private static string? SelectA(Message<AcceptOrder> message, MessageContext context) => message.Payload.Id;
+
+                [ReliabilityKeySelector]
+                private static string? SelectB(Message<AcceptOrder> message, MessageContext context) => message.Payload.Id;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForDuplicateReliabilityKeySelectors));
+        var gen = new ReliabilityPipelineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRP004", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for invalid reliability key selector")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidReliabilityKeySelector()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record AcceptOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]
+            public static partial class OrderReliability
+            {
+                [ReliabilityHandler]
+                private static ValueTask<string> Handle(Message<AcceptOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(message.Payload.Id);
+
+                [ReliabilityKeySelector]
+                private static int SelectKey(Message<AcceptOrder> message, MessageContext context) => message.Payload.Id.Length;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForInvalidReliabilityKeySelector));
+        var gen = new ReliabilityPipelineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRP004", diagnostic.Id);
+    }
+
+    [Scenario("Reports diagnostic for invalid reliability missing key policy")]
+    [Fact]
+    public void ReportsDiagnosticForInvalidReliabilityMissingKeyPolicy()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.Messaging;
+            using PatternKit.Messaging;
+
+            namespace MyApp;
+
+            public sealed record AcceptOrder(string Id);
+            public sealed record OrderAccepted(string Id);
+
+            [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted), MissingKeyPolicy = "Ignore")]
+            public static partial class OrderReliability
+            {
+                [ReliabilityHandler]
+                private static ValueTask<string> Handle(Message<AcceptOrder> message, MessageContext context, CancellationToken cancellationToken)
+                    => new(message.Payload.Id);
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticForInvalidReliabilityMissingKeyPolicy));
+        var gen = new ReliabilityPipelineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostic = ScenarioExpect.Single(run.Results.SelectMany(result => result.Diagnostics));
+        ScenarioExpect.Equal("PKRP005", diagnostic.Id);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
