@@ -59,27 +59,42 @@ public sealed class ProductCatalogStampedeProtectionDemoRunner(ProductCatalogSta
 {
     public async ValueTask<IReadOnlyList<ProductAvailabilitySummary>> RunGeneratedAsync(ProductAvailabilityRequest request)
     {
-        var first = service.GetAvailabilityAsync(request).AsTask();
-        var second = service.GetAvailabilityAsync(request).AsTask();
-        return await Task.WhenAll(first, second).ConfigureAwait(false);
+        return await RunConcurrentLoadsAsync(service, request).ConfigureAwait(false);
     }
 
     public static async ValueTask<IReadOnlyList<ProductAvailabilitySummary>> RunFluentAsync(ProductAvailabilityRequest request)
     {
         var origin = new ProductCatalogOrigin();
         var service = new ProductCatalogStampedeProtectionService(ProductCatalogStampedeProtectionPolicies.CreateFluent(), origin);
-        var first = service.GetAvailabilityAsync(request).AsTask();
-        var second = service.GetAvailabilityAsync(request).AsTask();
-        return await Task.WhenAll(first, second).ConfigureAwait(false);
+        return await RunConcurrentLoadsAsync(service, request).ConfigureAwait(false);
     }
 
     public static async ValueTask<IReadOnlyList<ProductAvailabilitySummary>> RunGeneratedStaticAsync(ProductAvailabilityRequest request)
     {
         var origin = new ProductCatalogOrigin();
         var service = new ProductCatalogStampedeProtectionService(GeneratedProductCatalogStampedeProtectionPolicy.CreateGenerated(), origin);
-        var first = service.GetAvailabilityAsync(request).AsTask();
-        var second = service.GetAvailabilityAsync(request).AsTask();
+        return await RunConcurrentLoadsAsync(service, request).ConfigureAwait(false);
+    }
+
+    private static async ValueTask<IReadOnlyList<ProductAvailabilitySummary>> RunConcurrentLoadsAsync(
+        ProductCatalogStampedeProtectionService service,
+        ProductAvailabilityRequest request)
+    {
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = WaitThenLoadAsync(start.Task, service, request);
+        var second = WaitThenLoadAsync(start.Task, service, request);
+
+        start.SetResult();
         return await Task.WhenAll(first, second).ConfigureAwait(false);
+    }
+
+    private static async Task<ProductAvailabilitySummary> WaitThenLoadAsync(
+        Task start,
+        ProductCatalogStampedeProtectionService service,
+        ProductAvailabilityRequest request)
+    {
+        await start.ConfigureAwait(false);
+        return await service.GetAvailabilityAsync(request).ConfigureAwait(false);
     }
 }
 
