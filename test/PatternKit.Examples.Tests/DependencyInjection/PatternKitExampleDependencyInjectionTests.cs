@@ -134,6 +134,14 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var productCacheAside = provider.GetRequiredService<ProductCatalogCacheAsideExample>();
         var productRateLimit = provider.GetRequiredService<ProductSearchRateLimitingExample>();
         var externalConfiguration = provider.GetRequiredService<TenantExternalConfigurationStoreExample>();
+        var identity = provider.GetRequiredService<IIdentityService>();
+        var presence = provider.GetRequiredService<IPresenceService>();
+        var rateLimiter = provider.GetRequiredService<IRateLimiter>();
+        var preferences = provider.GetRequiredService<IPreferenceService>();
+        var email = provider.GetRequiredService<IEmailSender>();
+        var sms = provider.GetRequiredService<ISmsSender>();
+        var push = provider.GetRequiredService<IPushSender>();
+        var im = provider.GetRequiredService<IImSender>();
 
         auth.Chain.Execute(new PatternKit.Examples.Chain.HttpRequest("GET", "/admin/metrics", new Dictionary<string, string>()));
 
@@ -157,6 +165,24 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var send = notifications.Strategy.ExecuteAsync(new SendContext(Guid.NewGuid(), "hello", false), CancellationToken.None)
             .GetAwaiter()
             .GetResult();
+        var userId = Guid.NewGuid();
+        var directEmail = email.SendAsync(new SendContext(userId, "email", false), CancellationToken.None).GetAwaiter().GetResult();
+        var directSms = sms.SendAsync(new SendContext(userId, "sms", true), CancellationToken.None).GetAwaiter().GetResult();
+        var directPush = push.SendAsync(new SendContext(userId, "push", false), CancellationToken.None).GetAwaiter().GetResult();
+        var directIm = im.SendAsync(new SendContext(userId, "im", false), CancellationToken.None).GetAwaiter().GetResult();
+        var preferredChannels = preferences.GetPreferredOrderAsync(userId, CancellationToken.None).GetAwaiter().GetResult();
+        var identityReady =
+            identity.HasVerifiedEmailAsync(userId, CancellationToken.None).GetAwaiter().GetResult()
+            && identity.HasSmsOptInAsync(userId, CancellationToken.None).GetAwaiter().GetResult()
+            && identity.HasPushTokenAsync(userId, CancellationToken.None).GetAwaiter().GetResult();
+        var presenceReady =
+            presence.IsOnlineInImAsync(userId, CancellationToken.None).GetAwaiter().GetResult()
+            && !presence.IsDoNotDisturbAsync(userId, CancellationToken.None).GetAwaiter().GetResult();
+        var allChannelsRateLimited =
+            rateLimiter.CanSendAsync(Channel.Email, userId, CancellationToken.None).GetAwaiter().GetResult()
+            && rateLimiter.CanSendAsync(Channel.Sms, userId, CancellationToken.None).GetAwaiter().GetResult()
+            && rateLimiter.CanSendAsync(Channel.Push, userId, CancellationToken.None).GetAwaiter().GetResult()
+            && rateLimiter.CanSendAsync(Channel.Im, userId, CancellationToken.None).GetAwaiter().GetResult();
         var state = asyncState.RunAsync(["connect", "ok"]).GetAwaiter().GetResult();
         var asyncResult = asyncTemplate.Pipeline.ExecuteAsync(7, CancellationToken.None).GetAwaiter().GetResult();
         var generatedRecipientList = generatedRecipients.Runner.RunGenerated();
@@ -223,7 +249,15 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("generated queue load leveling accepts fulfillment work", queueLoadLeveling.Service.EnqueueAsync(new FulfillmentWorkItem("ORDER-QL", "central")).GetAwaiter().GetResult().Accepted),
             ("generated cache-aside reuses product catalog reads", CacheAsideHits(productCacheAside.Service)),
             ("generated rate limit rejects product search overflow", RateLimitRejects(productRateLimit.Service)),
-            ("generated external configuration store loads tenant settings", externalConfiguration.Service.LoadAsync().AsTask().GetAwaiter().GetResult().Loaded)
+            ("generated external configuration store loads tenant settings", externalConfiguration.Service.LoadAsync().AsTask().GetAwaiter().GetResult().Loaded),
+            ("notification identity service approves reachable users", identityReady),
+            ("notification presence service permits delivery", presenceReady),
+            ("notification rate limiter permits every channel", allChannelsRateLimited),
+            ("notification preferences include every registered channel", preferredChannels.SequenceEqual([Channel.Push, Channel.Email, Channel.Sms])),
+            ("notification email sender accepts messages", directEmail is { Channel: Channel.Email, Success: true }),
+            ("notification sms sender accepts messages", directSms is { Channel: Channel.Sms, Success: true }),
+            ("notification push sender accepts messages", directPush is { Channel: Channel.Push, Success: true }),
+            ("notification im sender accepts messages", directIm is { Channel: Channel.Im, Success: true })
         ];
     }
 

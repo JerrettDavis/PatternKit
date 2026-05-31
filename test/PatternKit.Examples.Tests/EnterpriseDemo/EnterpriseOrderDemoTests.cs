@@ -139,6 +139,21 @@ public sealed class EnterpriseOrderDemoTests
         ScenarioExpect.False(detector.IsFraudulent(order));
     }
 
+    [Scenario("AsiaFraudDetector Always Passes")]
+    [Fact]
+    public void AsiaFraudDetector_Always_Passes()
+    {
+        var detector = new AsiaFraudDetector();
+        var order = new Order
+        {
+            Id = "test",
+            CustomerId = "cust",
+            Region = Region.Asia
+        };
+
+        ScenarioExpect.False(detector.IsFraudulent(order));
+    }
+
     [Scenario("CreateOrderTemplates Creates Standard Order")]
     [Fact]
     public void CreateOrderTemplates_Creates_Standard_Order()

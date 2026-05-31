@@ -36,12 +36,26 @@ public sealed class CommerceContextMapDemoTests(ITestOutputHelper output) : Tiny
                 services.AddCommerceContextMapDemo();
                 return services.BuildServiceProvider();
             })
-            .When("summarizing the context map", sp => sp.GetRequiredService<CommerceContextMapDemo.CommerceContextMapReporter>().Summarize())
-            .Then("the summary reflects the production relationships", summary =>
+            .When("summarizing the context map and translating catalog products", sp =>
             {
-                ScenarioExpect.Equal(2, summary.RelationshipCount);
-                ScenarioExpect.True(summary.HasPublishedLanguage);
-                ScenarioExpect.True(summary.HasCustomerSupplier);
+                var summary = sp.GetRequiredService<CommerceContextMapDemo.CommerceContextMapReporter>().Summarize();
+                var translator = sp.GetRequiredService<CommerceContextMapDemo.CatalogToFulfillmentTranslator>();
+                var product = translator.Translate(new CommerceContextMapDemo.CatalogProduct("SKU-42", "Trail Jacket"));
+                var shipment = new CommerceContextMapDemo.BillingShipment("SHIP-42", 9.95m);
+                return new { Summary = summary, Product = product, Shipment = shipment };
+            })
+            .Then("the summary reflects the production relationships", result =>
+            {
+                ScenarioExpect.Equal(2, result.Summary.RelationshipCount);
+                ScenarioExpect.True(result.Summary.HasPublishedLanguage);
+                ScenarioExpect.True(result.Summary.HasCustomerSupplier);
+            })
+            .And("the translator maps catalog language into fulfillment language", result =>
+            {
+                ScenarioExpect.Equal("SKU-42", result.Product.Sku);
+                ScenarioExpect.Equal("Trail Jacket", result.Product.Description);
+                ScenarioExpect.Equal("SHIP-42", result.Shipment.ShipmentId);
+                ScenarioExpect.Equal(9.95m, result.Shipment.Charge);
             })
             .AssertPassed();
 

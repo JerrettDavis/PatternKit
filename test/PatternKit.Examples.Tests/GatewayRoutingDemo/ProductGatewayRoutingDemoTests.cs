@@ -18,12 +18,15 @@ public sealed class ProductGatewayRoutingDemoTests(ITestOutputHelper output) : T
         .When("requests are routed", router => new
         {
             Inventory = router.Route(new ProductGatewayRequest("/inventory/SKU-100", "tenant-a")),
+            Pricing = router.Route(new ProductGatewayRequest("/pricing/SKU-100", "tenant-a")),
             Fallback = router.Route(new ProductGatewayRequest("/unknown/SKU-100", "tenant-a"))
         })
         .Then("matching traffic uses downstream APIs and unknown traffic uses fallback", result =>
         {
             ScenarioExpect.Equal("inventory", result.Inventory.RouteName);
             ScenarioExpect.Equal("inventory", result.Inventory.Response.Source);
+            ScenarioExpect.Equal("pricing", result.Pricing.RouteName);
+            ScenarioExpect.Equal("pricing", result.Pricing.Response.Source);
             ScenarioExpect.True(result.Fallback.Fallback);
             ScenarioExpect.Equal("fallback", result.Fallback.Response.Source);
         })

@@ -72,6 +72,24 @@ public sealed class PricingDemoTests(ITestOutputHelper output) : TinyBddXunitBas
             .AssertPassed();
     }
 
+    [Scenario("Default pricing artifacts expose importable collaborators")]
+    [Fact]
+    public Task Default_Pricing_Artifacts_Expose_Importable_Collaborators()
+        => Given("default pricing artifacts", PricingDemo.BuildDefault)
+            .Then("all pipeline collaborators are available to importing applications", artifacts =>
+            {
+                ScenarioExpect.NotNull(artifacts.Pipeline);
+                ScenarioExpect.NotNull(artifacts.Sources);
+                ScenarioExpect.NotNull(artifacts.Db);
+                ScenarioExpect.NotNull(artifacts.Api);
+                ScenarioExpect.NotNull(artifacts.File);
+                ScenarioExpect.Equal(3, artifacts.Loyalty.Length);
+                ScenarioExpect.NotNull(artifacts.Taxes);
+                ScenarioExpect.Equal(2, artifacts.Rounding.Length);
+                ScenarioExpect.Equal(3, artifacts.PayDiscounts.Count);
+            })
+            .AssertPassed();
+
     [Scenario("Source routing: api and file sources resolve when tagged")]
     [Fact]
     public async Task SourceRouting_Api_File()

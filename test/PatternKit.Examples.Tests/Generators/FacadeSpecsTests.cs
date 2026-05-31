@@ -74,6 +74,24 @@ public class FacadeSpecsTests
         ScenarioExpect.True(days > 0 && days <= 12);
     }
 
+    [Scenario("ShippingSubsystems CoverFallbackDestinationsAndSpeeds")]
+    [Fact]
+    public void ShippingSubsystems_CoverFallbackDestinationsAndSpeeds()
+    {
+        var rates = new RateCalculator();
+        var estimator = new DeliveryEstimator();
+        var facade = new ShippingFacade(estimator, rates, new ShippingValidator());
+
+        var quote = facade.GetQuote(destination: "international", weight: 8m, speed: "economy");
+        var invalidQuote = facade.GetQuote(destination: "", weight: 8m, speed: "economy");
+
+        ScenarioExpect.Equal(29.99m, rates.CalculateBaseRate("international"));
+        ScenarioExpect.Equal(1.50m, rates.CalculateWeightSurcharge(8m));
+        ScenarioExpect.Equal(12, estimator.EstimateDays("international", "economy"));
+        ScenarioExpect.Equal("$31.49 - Delivery in 12 business days", quote);
+        ScenarioExpect.Equal("Invalid shipment parameters", invalidQuote);
+    }
+
     [Scenario("BillingFacade ProcessesPaymentCorrectly")]
     [Fact]
     public void BillingFacade_ProcessesPaymentCorrectly()
@@ -217,6 +235,21 @@ public class FacadeSpecsTests
         ScenarioExpect.Equal("Payment not found", missingPaymentRefund.ErrorMessage);
         ScenarioExpect.False(excessiveRefund.Success);
         ScenarioExpect.Equal("Refund amount exceeds original payment", excessiveRefund.ErrorMessage);
+    }
+
+    [Scenario("BillingSubsystems CoverSuccessfulRefundPath")]
+    [Fact]
+    public void BillingSubsystems_CoverSuccessfulRefundPath()
+    {
+        var payments = new PaymentProcessor();
+
+        var paid = payments.ProcessPayment("CUST001", 25m, "CreditCard");
+        var refund = payments.RefundPayment(paid.ReceiptNumber!, 10m);
+
+        ScenarioExpect.True(refund.Success);
+        ScenarioExpect.NotNull(refund.RefundId);
+        ScenarioExpect.Equal(10m, refund.RefundedAmount);
+        ScenarioExpect.NotNull(refund.ProcessedDate);
     }
 
     [Scenario("BillingFacade HandlesPaymentAndRefundFailures")]
