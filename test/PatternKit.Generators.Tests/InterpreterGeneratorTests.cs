@@ -114,6 +114,48 @@ public sealed class InterpreterGeneratorTests
         ScenarioExpect.Equal("PKINT003", diagnostic.Id);
     }
 
+    [Scenario("Reports diagnostics for invalid interpreter rule shapes")]
+    [Fact]
+    public void ReportsDiagnosticsForInvalidInterpreterRuleShapes()
+    {
+        var source = """
+            using PatternKit.Generators.Interpreter;
+
+            namespace Demo;
+
+            public sealed class PricingContext;
+
+            [GenerateInterpreter(typeof(PricingContext), typeof(decimal))]
+            public static partial class PricingRules
+            {
+                [InterpreterTerminal(" ")]
+                private static decimal BlankName(string token) => 0m;
+
+                [InterpreterTerminal("void")]
+                private static void VoidTerminal(string token) { }
+
+                [InterpreterTerminal("generic")]
+                private static decimal GenericTerminal<T>(string token) => 0m;
+
+                [InterpreterTerminal("missing-parameter")]
+                private static decimal MissingParameter() => 0m;
+
+                [InterpreterNonTerminal("wrong-first")]
+                private static decimal WrongFirst(string token) => 0m;
+
+                [InterpreterTerminal("wrong-context")]
+                private static decimal WrongContext(string token, object context) => 0m;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(ReportsDiagnosticsForInvalidInterpreterRuleShapes));
+        var gen = new InterpreterGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(result => result.Diagnostics).ToArray();
+        ScenarioExpect.Equal(6, diagnostics.Count(diagnostic => diagnostic.Id == "PKINT003"));
+    }
+
     [Scenario("Reports diagnostic for duplicate interpreter rules")]
     [Fact]
     public void ReportsDiagnosticForDuplicateInterpreterRules()
