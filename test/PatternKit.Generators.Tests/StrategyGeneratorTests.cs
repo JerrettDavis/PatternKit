@@ -425,4 +425,29 @@ public class StrategyGeneratorTests
 
         ScenarioExpect.Equal("int:42|str:hello", result);
     }
+
+    [Scenario("Unsupported strategy kind does not emit source")]
+    [Fact]
+    public void UnsupportedStrategyKindDoesNotEmitSource()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace PatternKit.Examples.Generators;
+
+            [GenerateStrategy(nameof(UnsupportedRouter), typeof(int), (StrategyKind)99)]
+            public partial class UnsupportedRouter { }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(UnsupportedStrategyKindDoesNotEmitSource),
+            extra: [MetadataReference.CreateFromFile(typeof(BranchBuilder<,>).Assembly.Location)]);
+        var gen = new StrategyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        ScenarioExpect.Empty(run.Results.SelectMany(r => r.GeneratedSources));
+    }
+
 }
