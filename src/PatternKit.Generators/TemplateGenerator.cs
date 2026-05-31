@@ -566,7 +566,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                 }
                 else
                 {
-                    sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                    var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
+                    var args = hasCt ? "ctx, ct" : "ctx";
+                    sb.AppendLine($"        {hook.Method.Name}({args});");
                 }
             }
 
@@ -588,7 +590,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"            {step.Method.Name}(ctx);");
+                        var hasCt = step.Method.Parameters.Any(IsCancellationToken);
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"            {step.Method.Name}({args});");
                     }
                 }
 
@@ -604,7 +608,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"            {hook.Method.Name}(ctx);");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"            {hook.Method.Name}({args});");
                     }
                 }
 
@@ -624,7 +630,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"            {hook.Method.Name}(ctx, ex);");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
+                        var args = hasCt ? "ctx, ex, ct" : "ctx, ex";
+                        sb.AppendLine($"            {hook.Method.Name}({args});");
                     }
                 }
 
@@ -649,7 +657,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"        {step.Method.Name}(ctx);");
+                        var hasCt = step.Method.Parameters.Any(IsCancellationToken);
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"        {step.Method.Name}({args});");
                     }
                 }
 
@@ -665,7 +675,9 @@ public sealed class TemplateGenerator : IIncrementalGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"        {hook.Method.Name}(ctx);");
+                        var hasCt = hook.Method.Parameters.Any(IsCancellationToken);
+                        var args = hasCt ? "ctx, ct" : "ctx";
+                        sb.AppendLine($"        {hook.Method.Name}({args});");
                     }
                 }
             }
