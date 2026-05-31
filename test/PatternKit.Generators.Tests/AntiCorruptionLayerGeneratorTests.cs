@@ -134,6 +134,114 @@ public sealed class AntiCorruptionLayerGeneratorTests
         ScenarioExpect.Equal("PKACL004", diagnostic.Id);
     }
 
+    [Scenario("Generates anti-corruption layer factory for abstract and sealed hosts")]
+    [Fact]
+    public void GeneratesAntiCorruptionLayerFactoryForAbstractAndSealedHosts()
+    {
+        var source = """
+            using PatternKit.Generators.AntiCorruption;
+
+            namespace Demo;
+
+            public sealed record ExternalOrder(string Id);
+            public sealed record DomainOrder(string Id);
+
+            [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractAcl
+            {
+                [AntiCorruptionTranslator]
+                private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+            }
+
+            [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedAcl
+            {
+                [AntiCorruptionTranslator]
+                private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesAntiCorruptionLayerFactoryForAbstractAndSealedHosts));
+        var gen = new AntiCorruptionLayerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = run.Results.SelectMany(result => result.GeneratedSources).ToArray();
+        ScenarioExpect.Equal(2, generated.Length);
+        var abstractText = ScenarioExpect.Single(generated.Where(source => source.HintName == "AbstractAcl.AntiCorruptionLayer.g.cs")).SourceText.ToString();
+        var sealedText = ScenarioExpect.Single(generated.Where(source => source.HintName == "SealedAcl.AntiCorruptionLayer.g.cs")).SourceText.ToString();
+        ScenarioExpect.Contains("public abstract partial class AbstractAcl", abstractText);
+        ScenarioExpect.Contains("CreateAbstract()", abstractText);
+        ScenarioExpect.Contains(".FromSource(\"external\")", abstractText);
+        ScenarioExpect.Contains("public sealed partial class SealedAcl", sealedText);
+        ScenarioExpect.Contains("CreateSealed()", sealedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Generates anti-corruption layer source for struct and nested accessibility variants")]
+    [Fact]
+    public void GeneratesAntiCorruptionLayerSourceForStructAndNestedAccessibilityVariants()
+    {
+        var source = """
+            using PatternKit.Generators.AntiCorruption;
+
+            namespace Demo;
+
+            public sealed record ExternalOrder(string Id);
+            public sealed record DomainOrder(string Id);
+
+            [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreateInternal")]
+            internal partial struct InternalAcl
+            {
+                [AntiCorruptionTranslator]
+                private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+            }
+
+            public partial class Outer
+            {
+                [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateAcl
+                {
+                    [AntiCorruptionTranslator]
+                    private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+                }
+
+                [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedAcl
+                {
+                    [AntiCorruptionTranslator]
+                    private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+                }
+
+                [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalAcl
+                {
+                    [AntiCorruptionTranslator]
+                    private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+                }
+
+                [GenerateAntiCorruptionLayer(typeof(ExternalOrder), typeof(DomainOrder), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedAcl
+                {
+                    [AntiCorruptionTranslator]
+                    private static DomainOrder Translate(ExternalOrder order) => new(order.Id);
+                }
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesAntiCorruptionLayerSourceForStructAndNestedAccessibilityVariants));
+        var gen = new AntiCorruptionLayerGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("internal partial struct InternalAcl", generatedText);
+        ScenarioExpect.Contains("private partial class PrivateAcl", generatedText);
+        ScenarioExpect.Contains("protected partial class ProtectedAcl", generatedText);
+        ScenarioExpect.Contains("protected internal partial class ProtectedInternalAcl", generatedText);
+        ScenarioExpect.Contains("private protected partial class PrivateProtectedAcl", generatedText);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,

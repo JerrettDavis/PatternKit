@@ -97,6 +97,94 @@ public sealed partial class HealthEndpointMonitoringGeneratorTests(ITestOutputHe
         })
         .AssertPassed();
 
+    [Scenario("Generates health endpoint factories for abstract and sealed hosts")]
+    [Fact]
+    public Task Generates_Health_Endpoint_Factories_For_Abstract_And_Sealed_Hosts()
+        => Given("health endpoint declarations on abstract and sealed hosts", () => Compile("""
+            using PatternKit.Cloud.HealthEndpointMonitoring;
+            using PatternKit.Generators.HealthEndpointMonitoring;
+            namespace Demo;
+            public sealed record HealthState(bool Ready);
+
+            [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractHealthEndpoint
+            {
+                [HealthEndpointCheck("ready")]
+                private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("ready");
+            }
+
+            [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedHealthEndpoint
+            {
+                [HealthEndpointCheck("ready")]
+                private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("ready");
+            }
+            """))
+        .Then("the generated source preserves host shape", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(2, result.GeneratedSources.Count);
+            var generatedText = string.Join(Environment.NewLine, result.GeneratedSources);
+            ScenarioExpect.Contains("public abstract partial class AbstractHealthEndpoint", generatedText);
+            ScenarioExpect.Contains("CreateAbstract()", generatedText);
+            ScenarioExpect.Contains("public sealed partial class SealedHealthEndpoint", generatedText);
+            ScenarioExpect.Contains("CreateSealed()", generatedText);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates health endpoint source for nested accessibility variants")]
+    [Fact]
+    public Task Generates_Health_Endpoint_Source_For_Nested_Accessibility_Variants()
+        => Given("health endpoint declarations with nested accessibility", () => CompileWithoutEmit("""
+            using PatternKit.Cloud.HealthEndpointMonitoring;
+            using PatternKit.Generators.HealthEndpointMonitoring;
+            namespace Demo;
+            public sealed record HealthState(bool Ready);
+
+            public partial class Outer
+            {
+                [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateHealthEndpoint
+                {
+                    [HealthEndpointCheck("private")]
+                    private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("private");
+                }
+
+                [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedHealthEndpoint
+                {
+                    [HealthEndpointCheck("protected")]
+                    private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("protected");
+                }
+
+                [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalHealthEndpoint
+                {
+                    [HealthEndpointCheck("protected-internal")]
+                    private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("protected-internal");
+                }
+
+                [GenerateHealthEndpoint(typeof(HealthState), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedHealthEndpoint
+                {
+                    [HealthEndpointCheck("private-protected")]
+                    private static HealthEndpointCheckResult Ready(HealthState state) => HealthEndpointCheckResult.HealthyCheck("private-protected");
+                }
+            }
+            """))
+        .Then("the generated source preserves accessibility", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(4, result.GeneratedSources.Count);
+            var generatedText = string.Join(Environment.NewLine, result.GeneratedSources);
+            ScenarioExpect.Contains("private partial class PrivateHealthEndpoint", generatedText);
+            ScenarioExpect.Contains("protected partial class ProtectedHealthEndpoint", generatedText);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalHealthEndpoint", generatedText);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedHealthEndpoint", generatedText);
+        })
+        .AssertPassed();
+
     private static GeneratorResult Compile(string source)
     {
         var compilation = RoslynTestHelpers.CreateCompilation(
@@ -111,6 +199,21 @@ public sealed partial class HealthEndpointMonitoringGeneratorTests(ITestOutputHe
             result.GeneratedSources.Select(static source => source.SourceText.ToString()).ToArray(),
             emit.Success,
             emit.Diagnostics.Select(static diagnostic => diagnostic.ToString()).ToArray());
+    }
+
+    private static GeneratorResult CompileWithoutEmit(string source)
+    {
+        var compilation = RoslynTestHelpers.CreateCompilation(
+            source,
+            "HealthEndpointMonitoringGeneratorTests",
+            extra: MetadataReference.CreateFromFile(typeof(HealthEndpoint<>).Assembly.Location));
+        _ = RoslynTestHelpers.Run(compilation, new HealthEndpointMonitoringGenerator(), out var run, out _);
+        var result = run.Results.Single();
+        return new GeneratorResult(
+            result.Diagnostics.ToArray(),
+            result.GeneratedSources.Select(static source => source.SourceText.ToString()).ToArray(),
+            EmitSuccess: true,
+            EmitDiagnostics: []);
     }
 
     private sealed record GeneratorResult(
