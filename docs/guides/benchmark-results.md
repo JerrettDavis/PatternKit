@@ -41,6 +41,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Backends For Frontends | Execution | 25.40 ns | 216 B | 29.77 ns | 216 B | Same allocation; fluent was faster for the web summary shaping workflow. |
 | Builder | Construction | 48.24 ns | 320 B | 160.455 us | 129,236 B | Fluent builder construction is much lighter; generated measures full HostApplicationBuilder composition. |
 | Builder | Execution | 65.14 ns | 352 B | 500.676 us | 279,923 B | Fluent option building is much lighter; generated exercises the full host-backed application build. |
+| Object Pool | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Object Pool | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Bridge | Construction | 53.115 ns | 504 B | 3.821 ns | 24 B | Generated bridge construction was materially faster and allocated less. |
 | Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
@@ -248,19 +250,19 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 114 catalog patterns and 456 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 115 catalog patterns and 460 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
 | Application Architecture | 26 | 104 |
 | Behavioral | 11 | 44 |
 | Cloud Architecture | 20 | 80 |
-| Creational | 5 | 20 |
+| Creational | 6 | 24 |
 | Enterprise Integration | 41 | 164 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 108 generator source route results.
+The generator matrix currently publishes 109 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -340,6 +342,7 @@ The generator matrix currently publishes 108 generator source route results.
 | Creational | Abstract Factory | Covered | Covered | Covered | Covered |
 | Creational | Builder | Covered | Covered | Covered | Covered |
 | Creational | Factory Method | Covered | Covered | Covered | Covered |
+| Creational | Object Pool | Covered | Covered | Covered | Covered |
 | Creational | Prototype | Covered | Covered | Covered | Covered |
 | Creational | Singleton | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Aggregator | Covered | Covered | Covered | Covered |
@@ -485,6 +488,7 @@ The generator matrix currently publishes 108 generator source route results.
 | SplitterAggregatorGenerator | `src/PatternKit.Generators/Messaging/SplitterAggregatorGenerator.cs` | Covered |
 | WireTapGenerator | `src/PatternKit.Generators/Messaging/WireTapGenerator.cs` | Covered |
 | ObserverGenerator | `src/PatternKit.Generators/Observer/ObserverGenerator.cs` | Covered |
+| ObjectPoolGenerator | `src/PatternKit.Generators/ObjectPool/ObjectPoolGenerator.cs` | Covered |
 | PriorityQueueGenerator | `src/PatternKit.Generators/PriorityQueue/PriorityQueueGenerator.cs` | Covered |
 | PrototypeGenerator | `src/PatternKit.Generators/PrototypeGenerator.cs` | Covered |
 | ProxyGenerator | `src/PatternKit.Generators/ProxyGenerator.cs` | Covered |

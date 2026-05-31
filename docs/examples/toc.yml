@@ -22,6 +22,9 @@
 - name: Order Projection Eventual Consistency Monitor
   href: order-projection-eventual-consistency-monitor.md
 
+- name: Spreadsheet Formula Object Pool
+  href: spreadsheet-formula-object-pool.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
 

@@ -24,6 +24,7 @@ using PatternKit.Cloud.RateLimiting;
 using PatternKit.Cloud.ReadWriteThroughCache;
 using PatternKit.Cloud.Retry;
 using PatternKit.Creational.AbstractFactory;
+using PatternKit.Creational.ObjectPool;
 using PatternKit.Creational.Prototype;
 using PatternKit.Creational.Singleton;
 using PatternKit.Examples.ActivityTrackingDemo;
@@ -65,6 +66,7 @@ using PatternKit.Examples.ManualTaskGateDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
 using PatternKit.Examples.Messaging;
+using PatternKit.Examples.ObjectPoolDemo;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PatternShowcase;
 using PatternKit.Examples.PointOfSale;
@@ -265,6 +267,7 @@ public sealed record OrderReservationTimeoutPatternExample(TimeoutManager<Guid> 
 public sealed record FulfillmentWorkflowOrchestrationPatternExample(WorkflowOrchestrator<FulfillmentWorkflowContext> Workflow, FulfillmentWorkflowOrchestrationDemoRunner Runner);
 public sealed record OrderReplaySnapshotCheckpointPatternExample(SnapshotCheckpointManager<string, OrderReplaySnapshot> Manager, OrderReplaySnapshotCheckpointDemoRunner Runner);
 public sealed record OrderProjectionConsistencyPatternExample(EventualConsistencyMonitor<string> Monitor, OrderProjectionConsistencyDemoRunner Runner);
+public sealed record SpreadsheetFormulaObjectPoolExample(ObjectPool<FormulaEvaluationBuffer> Pool, SpreadsheetFormulaObjectPoolDemoRunner Runner);
 
 /// <summary>
 /// Fluent registration helpers for importing every documented PatternKit example into Microsoft.Extensions.DependencyInjection.
@@ -385,7 +388,8 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderReservationTimeoutPatternExample()
             .AddFulfillmentWorkflowOrchestrationPatternExample()
             .AddOrderReplaySnapshotCheckpointPatternExample()
-            .AddOrderProjectionConsistencyPatternExample();
+            .AddOrderProjectionConsistencyPatternExample()
+            .AddSpreadsheetFormulaObjectPoolExample();
 
     public static IServiceCollection AddProductionReadyExampleIntegrations(this IServiceCollection services)
     {
@@ -1393,6 +1397,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<EventualConsistencyMonitor<string>>(),
             sp.GetRequiredService<OrderProjectionConsistencyDemoRunner>()));
         return services.RegisterExample<OrderProjectionConsistencyPatternExample>("Order Projection Eventual Consistency Monitor", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddSpreadsheetFormulaObjectPoolExample(this IServiceCollection services)
+    {
+        services.AddSpreadsheetFormulaObjectPoolDemo();
+        services.AddSingleton<SpreadsheetFormulaObjectPoolExample>(sp => new(
+            sp.GetRequiredService<ObjectPool<FormulaEvaluationBuffer>>(),
+            sp.GetRequiredService<SpreadsheetFormulaObjectPoolDemoRunner>()));
+        return services.RegisterExample<SpreadsheetFormulaObjectPoolExample>("Spreadsheet Formula Object Pool", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     private static IServiceCollection RegisterExample<T>(

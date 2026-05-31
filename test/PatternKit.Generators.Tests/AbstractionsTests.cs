@@ -8,6 +8,41 @@ namespace PatternKit.Generators.Tests;
 /// </summary>
 public class AbstractionsTests
 {
+    #region GenerateObjectPoolAttribute Tests
+
+    [Scenario("GenerateObjectPoolAttribute Constructor Sets Properties")]
+    [Fact]
+    public void GenerateObjectPoolAttribute_Constructor_Sets_Properties()
+    {
+        var attr = new PatternKit.Generators.ObjectPool.GenerateObjectPoolAttribute(typeof(List<string>))
+        {
+            FactoryMethodName = "CreateBuffers",
+            MaxRetained = 16,
+            ResetMethodName = "Clear"
+        };
+
+        ScenarioExpect.Equal(typeof(List<string>), attr.ItemType);
+        ScenarioExpect.Equal("CreateBuffers", attr.FactoryMethodName);
+        ScenarioExpect.Equal(16, attr.MaxRetained);
+        ScenarioExpect.Equal("Clear", attr.ResetMethodName);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new PatternKit.Generators.ObjectPool.GenerateObjectPoolAttribute(null!));
+    }
+
+    [Scenario("GenerateObjectPoolAttribute Has Correct AttributeUsage")]
+    [Fact]
+    public void GenerateObjectPoolAttribute_Has_Correct_AttributeUsage()
+    {
+        var usage = typeof(PatternKit.Generators.ObjectPool.GenerateObjectPoolAttribute)
+            .GetCustomAttributes(typeof(AttributeUsageAttribute), false)
+            .Cast<AttributeUsageAttribute>()
+            .Single();
+
+        ScenarioExpect.Equal(AttributeTargets.Class | AttributeTargets.Struct, usage.ValidOn);
+        ScenarioExpect.False(usage.Inherited);
+    }
+
+    #endregion
+
     #region GenerateCacheStampedeProtectionAttribute Tests
 
     [Scenario("GenerateCacheStampedeProtectionAttribute Constructor Sets Properties")]

@@ -191,6 +191,8 @@
           href: creational/factory/real-world-examples.md
         - name: Factory
           href: creational/factory/factory.md
+    - name: Object Pool
+      href: creational/object-pool/index.md
     - name: Prototype
       href: creational/prototype/index.md
       items:

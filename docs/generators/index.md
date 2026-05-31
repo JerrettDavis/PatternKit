@@ -30,6 +30,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Builder**](builder.md) | GoF-aligned builders with mutable or state-projection models, sync/async pipelines | `[GenerateBuilder]` |
 | [**Factory Method**](factory-method.md) | Keyed dispatcher from a static partial class | `[FactoryMethod]` |
 | [**Factory Class**](factory-class.md) | GoF-style factory mapping keys to products | `[FactoryClass]` |
+| [**Object Pool**](object-pool.md) | Bounded pooled-resource factories with optional reset hooks | `[GenerateObjectPool]` |
 | [**Prototype**](prototype.md) | Clone/deep-copy generation for types | `[Prototype]` |
 | [**Singleton**](singleton.md) | Thread-safe singleton accessors with optional factory hooks | `[Singleton]` |
 
