@@ -148,6 +148,130 @@ public sealed partial class GatewayRoutingGeneratorTests(ITestOutputHelper outpu
         })
         .AssertPassed();
 
+    [Scenario("Generates Gateway Routing factories for abstract and sealed hosts")]
+    [Fact]
+    public Task Generates_Gateway_Routing_Factories_For_Abstract_And_Sealed_Hosts()
+        => Given("Gateway Routing declarations on abstract and sealed hosts", () => Compile("""
+            using PatternKit.Generators.GatewayRouting;
+            namespace Demo;
+            public sealed record GatewayRequest(string Path);
+            public sealed record GatewayResponse(string Body);
+
+            [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractGateway
+            {
+                [GatewayRoute("inventory")]
+                private static bool IsInventory(GatewayRequest request) => true;
+                [GatewayRouteHandler("inventory")]
+                private static GatewayResponse Inventory(GatewayRequest request) => new("inventory");
+                [GatewayRouteFallback]
+                private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+            }
+
+            [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedGateway
+            {
+                [GatewayRoute("billing")]
+                private static bool IsBilling(GatewayRequest request) => true;
+                [GatewayRouteHandler("billing")]
+                private static GatewayResponse Billing(GatewayRequest request) => new("billing");
+                [GatewayRouteFallback]
+                private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+            }
+            """))
+        .Then("the generated source preserves host shape", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(2, result.GeneratedSources.Count);
+            var generatedText = string.Join(Environment.NewLine, result.GeneratedSources);
+            ScenarioExpect.Contains("public abstract partial class AbstractGateway", generatedText);
+            ScenarioExpect.Contains("CreateAbstract()", generatedText);
+            ScenarioExpect.Contains("public sealed partial class SealedGateway", generatedText);
+            ScenarioExpect.Contains("CreateSealed()", generatedText);
+            ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+        })
+        .AssertPassed();
+
+    [Scenario("Generates Gateway Routing source for struct and nested accessibility variants")]
+    [Fact]
+    public Task Generates_Gateway_Routing_Source_For_Struct_And_Nested_Accessibility_Variants()
+        => Given("Gateway Routing declarations with struct and nested host accessibility", () => CompileWithoutEmit("""
+            using PatternKit.Generators.GatewayRouting;
+            namespace Demo;
+            public sealed record GatewayRequest(string Path);
+            public sealed record GatewayResponse(string Body);
+
+            [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreateInternal")]
+            internal partial struct InternalGateway
+            {
+                [GatewayRoute("internal")]
+                private static bool IsInternal(GatewayRequest request) => true;
+                [GatewayRouteHandler("internal")]
+                private static GatewayResponse Handle(GatewayRequest request) => new("internal");
+                [GatewayRouteFallback]
+                private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+            }
+
+            public partial class Outer
+            {
+                [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateGateway
+                {
+                    [GatewayRoute("private")]
+                    private static bool IsPrivate(GatewayRequest request) => true;
+                    [GatewayRouteHandler("private")]
+                    private static GatewayResponse Handle(GatewayRequest request) => new("private");
+                    [GatewayRouteFallback]
+                    private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+                }
+
+                [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedGateway
+                {
+                    [GatewayRoute("protected")]
+                    private static bool IsProtected(GatewayRequest request) => true;
+                    [GatewayRouteHandler("protected")]
+                    private static GatewayResponse Handle(GatewayRequest request) => new("protected");
+                    [GatewayRouteFallback]
+                    private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+                }
+
+                [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalGateway
+                {
+                    [GatewayRoute("protected-internal")]
+                    private static bool IsProtectedInternal(GatewayRequest request) => true;
+                    [GatewayRouteHandler("protected-internal")]
+                    private static GatewayResponse Handle(GatewayRequest request) => new("protected-internal");
+                    [GatewayRouteFallback]
+                    private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+                }
+
+                [GenerateGatewayRouting(typeof(GatewayRequest), typeof(GatewayResponse), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedGateway
+                {
+                    [GatewayRoute("private-protected")]
+                    private static bool IsPrivateProtected(GatewayRequest request) => true;
+                    [GatewayRouteHandler("private-protected")]
+                    private static GatewayResponse Handle(GatewayRequest request) => new("private-protected");
+                    [GatewayRouteFallback]
+                    private static GatewayResponse Fallback(GatewayRequest request) => new("fallback");
+                }
+            }
+            """))
+        .Then("the generated source preserves accessibility", result =>
+        {
+            ScenarioExpect.Empty(result.Diagnostics);
+            ScenarioExpect.Equal(5, result.GeneratedSources.Count);
+            var generatedText = string.Join(Environment.NewLine, result.GeneratedSources);
+            ScenarioExpect.Contains("internal partial struct InternalGateway", generatedText);
+            ScenarioExpect.Contains("private partial class PrivateGateway", generatedText);
+            ScenarioExpect.Contains("protected partial class ProtectedGateway", generatedText);
+            ScenarioExpect.Contains("protected internal partial class ProtectedInternalGateway", generatedText);
+            ScenarioExpect.Contains("private protected partial class PrivateProtectedGateway", generatedText);
+        })
+        .AssertPassed();
+
     private static GeneratorResult Compile(string source)
     {
         var compilation = RoslynTestHelpers.CreateCompilation(
@@ -158,6 +282,17 @@ public sealed partial class GatewayRoutingGeneratorTests(ITestOutputHelper outpu
         var result = run.Results.Single();
         var emit = updated.Emit(Stream.Null);
         return new(result.Diagnostics.ToArray(), result.GeneratedSources.Select(static source => source.SourceText.ToString()).ToArray(), emit.Success, emit.Diagnostics.Select(static diagnostic => diagnostic.ToString()).ToArray());
+    }
+
+    private static GeneratorResult CompileWithoutEmit(string source)
+    {
+        var compilation = RoslynTestHelpers.CreateCompilation(
+            source,
+            "GatewayRoutingGeneratorTests",
+            extra: MetadataReference.CreateFromFile(typeof(GatewayRouting<,>).Assembly.Location));
+        _ = RoslynTestHelpers.Run(compilation, new GatewayRoutingGenerator(), out var run, out _);
+        var result = run.Results.Single();
+        return new(result.Diagnostics.ToArray(), result.GeneratedSources.Select(static source => source.SourceText.ToString()).ToArray(), EmitSuccess: true, EmitDiagnostics: []);
     }
 
     private sealed record GeneratorResult(IReadOnlyList<Diagnostic> Diagnostics, IReadOnlyList<string> GeneratedSources, bool EmitSuccess, IReadOnlyList<string> EmitDiagnostics);
