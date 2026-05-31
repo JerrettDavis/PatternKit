@@ -204,6 +204,75 @@ public sealed class CircuitBreakerPolicyGeneratorTests
         ScenarioExpect.Equal("PKCB004", diagnostic.Id);
     }
 
+    [Scenario("Generates circuit breaker policy factory for abstract and sealed hosts")]
+    [Fact]
+    public void GeneratesCircuitBreakerPolicyFactoryForAbstractAndSealedHosts()
+    {
+        var source = """
+            using PatternKit.Generators.CircuitBreaker;
+
+            namespace Demo;
+
+            [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractCircuitBreakerHost;
+
+            [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedCircuitBreakerHost;
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesCircuitBreakerPolicyFactoryForAbstractAndSealedHosts));
+        var gen = new CircuitBreakerPolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = run.Results.SelectMany(result => result.GeneratedSources).ToArray();
+        ScenarioExpect.Equal(2, generated.Length);
+        var abstractText = ScenarioExpect.Single(generated.Where(source => source.HintName == "AbstractCircuitBreakerHost.CircuitBreakerPolicy.g.cs")).SourceText.ToString();
+        var sealedText = ScenarioExpect.Single(generated.Where(source => source.HintName == "SealedCircuitBreakerHost.CircuitBreakerPolicy.g.cs")).SourceText.ToString();
+        ScenarioExpect.Contains("public abstract partial class AbstractCircuitBreakerHost", abstractText);
+        ScenarioExpect.Contains("CreateAbstract()", abstractText);
+        ScenarioExpect.Contains("public sealed partial class SealedCircuitBreakerHost", sealedText);
+        ScenarioExpect.Contains("CreateSealed()", sealedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Generates circuit breaker policy source for nested accessibility variants")]
+    [Fact]
+    public void GeneratesCircuitBreakerPolicySourceForNestedAccessibilityVariants()
+    {
+        var source = """
+            using PatternKit.Generators.CircuitBreaker;
+
+            namespace Demo;
+
+            public partial class Outer
+            {
+                [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateCircuitBreakerHost;
+
+                [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedCircuitBreakerHost;
+
+                [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalCircuitBreakerHost;
+
+                [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedCircuitBreakerHost;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesCircuitBreakerPolicySourceForNestedAccessibilityVariants));
+        var gen = new CircuitBreakerPolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("private partial class PrivateCircuitBreakerHost", generatedText);
+        ScenarioExpect.Contains("protected partial class ProtectedCircuitBreakerHost", generatedText);
+        ScenarioExpect.Contains("protected internal partial class ProtectedInternalCircuitBreakerHost", generatedText);
+        ScenarioExpect.Contains("private protected partial class PrivateProtectedCircuitBreakerHost", generatedText);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,

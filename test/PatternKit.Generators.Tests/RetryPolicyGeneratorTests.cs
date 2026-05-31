@@ -205,6 +205,75 @@ public sealed class RetryPolicyGeneratorTests
         ScenarioExpect.Equal("PKRET004", diagnostic.Id);
     }
 
+    [Scenario("Generates retry policy factory for abstract and sealed hosts")]
+    [Fact]
+    public void GeneratesRetryPolicyFactoryForAbstractAndSealedHosts()
+    {
+        var source = """
+            using PatternKit.Generators.Retry;
+
+            namespace Demo;
+
+            [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreateAbstract")]
+            public abstract partial class AbstractRetryHost;
+
+            [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreateSealed")]
+            public sealed partial class SealedRetryHost;
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesRetryPolicyFactoryForAbstractAndSealedHosts));
+        var gen = new RetryPolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = run.Results.SelectMany(result => result.GeneratedSources).ToArray();
+        ScenarioExpect.Equal(2, generated.Length);
+        var abstractText = ScenarioExpect.Single(generated.Where(source => source.HintName == "AbstractRetryHost.RetryPolicy.g.cs")).SourceText.ToString();
+        var sealedText = ScenarioExpect.Single(generated.Where(source => source.HintName == "SealedRetryHost.RetryPolicy.g.cs")).SourceText.ToString();
+        ScenarioExpect.Contains("public abstract partial class AbstractRetryHost", abstractText);
+        ScenarioExpect.Contains("CreateAbstract()", abstractText);
+        ScenarioExpect.Contains("public sealed partial class SealedRetryHost", sealedText);
+        ScenarioExpect.Contains("CreateSealed()", sealedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
+    [Scenario("Generates retry policy source for nested accessibility variants")]
+    [Fact]
+    public void GeneratesRetryPolicySourceForNestedAccessibilityVariants()
+    {
+        var source = """
+            using PatternKit.Generators.Retry;
+
+            namespace Demo;
+
+            public partial class Outer
+            {
+                [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
+                private partial class PrivateRetryHost;
+
+                [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreateProtected")]
+                protected partial class ProtectedRetryHost;
+
+                [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreateProtectedInternal")]
+                protected internal partial class ProtectedInternalRetryHost;
+
+                [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreatePrivateProtected")]
+                private protected partial class PrivateProtectedRetryHost;
+            }
+            """;
+
+        var comp = CreateCompilation(source, nameof(GeneratesRetryPolicySourceForNestedAccessibilityVariants));
+        var gen = new RetryPolicyGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("private partial class PrivateRetryHost", generatedText);
+        ScenarioExpect.Contains("protected partial class ProtectedRetryHost", generatedText);
+        ScenarioExpect.Contains("protected internal partial class ProtectedInternalRetryHost", generatedText);
+        ScenarioExpect.Contains("private protected partial class PrivateProtectedRetryHost", generatedText);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
