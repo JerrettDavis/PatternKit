@@ -63,6 +63,48 @@ public sealed class ContextMapDescriptorGeneratorTests
         ScenarioExpect.Equal(expected, diagnostic.Id);
     }
 
+    [Scenario("Generates context map descriptor for struct host and all relationship kinds")]
+    [Fact]
+    public void Generates_Context_Map_Descriptor_For_Struct_Host_And_All_Relationship_Kinds()
+    {
+        var source = """
+            using PatternKit.Generators.ContextMaps;
+
+            [GenerateContextMapDescriptor("Enterprise", FactoryMethodName = "CreateEnterprise")]
+            [ContextMapRelationship("A", "B", ContextMapRelationshipKind.Partnership, "AB")]
+            [ContextMapRelationship("B", "C", ContextMapRelationshipKind.SharedKernel, "BC")]
+            [ContextMapRelationship("C", "D", ContextMapRelationshipKind.CustomerSupplier, "CD")]
+            [ContextMapRelationship("D", "E", ContextMapRelationshipKind.Conformist, "DE")]
+            [ContextMapRelationship("E", "F", ContextMapRelationshipKind.AntiCorruptionLayer, "EF")]
+            [ContextMapRelationship("F", "G", ContextMapRelationshipKind.OpenHostService, "FG")]
+            [ContextMapRelationship("G", "H", ContextMapRelationshipKind.PublishedLanguage, "GH")]
+            [ContextMapRelationship("H", "I", ContextMapRelationshipKind.SeparateWays, "HI")]
+            [ContextMapRelationship("I", "J", (ContextMapRelationshipKind)99, "IJ")]
+            public partial struct EnterpriseMap;
+            """;
+
+        var comp = CreateCompilation(source, nameof(Generates_Context_Map_Descriptor_For_Struct_Host_And_All_Relationship_Kinds));
+        var gen = new ContextMapDescriptorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
+        var generated = ScenarioExpect.Single(run.Results.SelectMany(static result => result.GeneratedSources));
+        ScenarioExpect.Equal("EnterpriseMap.ContextMapDescriptor.g.cs", generated.HintName);
+        var text = generated.SourceText.ToString();
+        ScenarioExpect.Contains("partial struct EnterpriseMap", text);
+        ScenarioExpect.Contains("CreateEnterprise()", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.Partnership", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.SharedKernel", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.CustomerSupplier", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.Conformist", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.AntiCorruptionLayer", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.OpenHostService", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.PublishedLanguage", text);
+        ScenarioExpect.Contains("ContextRelationshipKind.SeparateWays", text);
+        ScenarioExpect.DoesNotContain("namespace Demo;", text);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success);
+    }
+
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)
         => RoslynTestHelpers.CreateCompilation(
             source,
