@@ -107,7 +107,7 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
             .Then("every catalog pattern appears in the benchmark results matrix", ctx =>
                 ScenarioExpect.Empty(ctx.MissingPatterns))
             .And("the guide publishes the route result total", ctx =>
-                ScenarioExpect.Contains("476 pattern route results", ctx.ResultsGuide))
+                ScenarioExpect.Contains("480 pattern route results", ctx.ResultsGuide))
             .AssertPassed();
 
     [Scenario("Published benchmark results include reusable hosting integrations")]
@@ -241,6 +241,9 @@ public sealed class PatternKitBenchmarkCoverageTests(ITestOutputHelper output) :
 
         if (patternName == "PortsAndAdapters")
             return "Ports and Adapters";
+
+        if (patternName == "DistributedLock")
+            return "Distributed Lock / Lease";
 
         if (patternName == "EventSourcing")
             return "Event Sourcing";

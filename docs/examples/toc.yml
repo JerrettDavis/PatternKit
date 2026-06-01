@@ -340,6 +340,9 @@
 - name: Warehouse Leader Election
   href: warehouse-leader-election.md
 
+- name: Order Allocation Distributed Lock
+  href: order-allocation-distributed-lock.md
+
 - name: Warehouse Scheduler Agent Supervisor
   href: warehouse-scheduler-agent-supervisor.md
 

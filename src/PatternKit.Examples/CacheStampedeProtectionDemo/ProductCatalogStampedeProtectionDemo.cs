@@ -31,7 +31,7 @@ public sealed class ProductCatalogOrigin
             throw new ArgumentNullException(nameof(request));
 
         Interlocked.Increment(ref _loads);
-        await Task.Delay(50, cancellationToken).ConfigureAwait(false);
+        await Task.Delay(150, cancellationToken).ConfigureAwait(false);
         return new ProductAvailabilitySnapshot(request.Sku, request.Region, 42, DateTimeOffset.UtcNow);
     }
 }

@@ -250,6 +250,9 @@
 - name: Leader Election
   href: leader-election.md
 
+- name: Distributed Lock
+  href: distributed-lock.md
+
 - name: Scheduler Agent Supervisor
   href: scheduler-agent-supervisor.md
 

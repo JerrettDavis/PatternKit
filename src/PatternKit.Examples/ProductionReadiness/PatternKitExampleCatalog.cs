@@ -1001,6 +1001,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Leader Election"],
             ["single active worker lease", "source-generated candidate factory", "Generic Host hosted service"]),
         Descriptor(
+            "Order Allocation Distributed Lock",
+            "src/PatternKit.Examples/DistributedLockDemo/OrderAllocationDistributedLockDemo.cs",
+            "test/PatternKit.Examples.Tests/DistributedLockDemo/OrderAllocationDistributedLockDemoTests.cs",
+            "docs/examples/order-allocation-distributed-lock.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Distributed Lock / Lease"],
+            ["resource lease contention", "source-generated lock factory", "DI composition"]),
+        Descriptor(
             "Warehouse Scheduler Agent Supervisor",
             "src/PatternKit.Examples/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemo.cs",
             "test/PatternKit.Examples.Tests/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemoTests.cs",
