@@ -130,31 +130,93 @@ public sealed class CacheAsidePolicyGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
+        var indent = "";
+        foreach (var containingType in GetContainingTypes(type))
+        {
+            AppendTypeDeclaration(sb, containingType, indent);
+            sb.Append(indent).AppendLine("{");
+            indent += "    ";
+        }
+
+        AppendTypeDeclaration(sb, type, indent);
+        sb.AppendLine("{");
+        sb.Append(indent).Append("    public static global::PatternKit.Cloud.CacheAside.CacheAsidePolicy<").Append(resultTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
+        sb.Append(indent).AppendLine("    {");
+        sb.Append(indent).Append("        var builder = global::PatternKit.Cloud.CacheAside.CacheAsidePolicy<").Append(resultTypeName).Append(">.Create(\"").Append(Escape(policyName)).AppendLine("\");");
+
+        if (timeToLiveMilliseconds > 0)
+            sb.Append(indent).Append("        builder.WithTimeToLive(global::System.TimeSpan.FromMilliseconds(").Append(timeToLiveMilliseconds).AppendLine("));");
+        else
+            sb.Append(indent).AppendLine("        builder.WithoutExpiration();");
+
+        if (predicate is not null)
+            sb.Append(indent).Append("        builder.CacheWhen(static value => ").Append(predicate.Name).AppendLine("(value));");
+
+        sb.Append(indent).AppendLine("        return builder.Build();");
+        sb.Append(indent).AppendLine("    }");
+        sb.Append(indent).AppendLine("}");
+
+        while (indent.Length > 0)
+        {
+            indent = indent.Substring(4);
+            sb.Append(indent).AppendLine("}");
+        }
+
+        return sb.ToString();
+    }
+
+    private static IReadOnlyList<INamedTypeSymbol> GetContainingTypes(INamedTypeSymbol type)
+    {
+        var stack = new Stack<INamedTypeSymbol>();
+        for (var current = type.ContainingType; current is not null; current = current.ContainingType)
+            stack.Push(current);
+        return stack.ToArray();
+    }
+
+    private static void AppendTypeDeclaration(StringBuilder sb, INamedTypeSymbol type, string indent)
+    {
+        sb.Append(indent).Append(GetAccessibility(type.DeclaredAccessibility)).Append(' ');
         if (type.IsStatic)
             sb.Append("static ");
         else if (type.IsAbstract && type.TypeKind == TypeKind.Class)
             sb.Append("abstract ");
         else if (type.IsSealed && type.TypeKind == TypeKind.Class)
             sb.Append("sealed ");
-        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ').Append(type.Name).AppendLine();
-        sb.AppendLine("{");
-        sb.Append("    public static global::PatternKit.Cloud.CacheAside.CacheAsidePolicy<").Append(resultTypeName).Append("> ").Append(factoryMethodName).AppendLine("()");
-        sb.AppendLine("    {");
-        sb.Append("        var builder = global::PatternKit.Cloud.CacheAside.CacheAsidePolicy<").Append(resultTypeName).Append(">.Create(\"").Append(Escape(policyName)).AppendLine("\");");
+        sb.Append("partial ").Append(type.TypeKind == TypeKind.Struct ? "struct" : "class").Append(' ')
+            .Append(type.Name).Append(GetTypeParameterList(type)).Append(GetConstraintClauses(type)).AppendLine();
+    }
 
-        if (timeToLiveMilliseconds > 0)
-            sb.Append("        builder.WithTimeToLive(global::System.TimeSpan.FromMilliseconds(").Append(timeToLiveMilliseconds).AppendLine("));");
-        else
-            sb.AppendLine("        builder.WithoutExpiration();");
+    private static string GetTypeParameterList(INamedTypeSymbol type)
+        => type.TypeParameters.Length == 0
+            ? string.Empty
+            : "<" + string.Join(", ", type.TypeParameters.Select(static parameter => parameter.Name)) + ">";
 
-        if (predicate is not null)
-            sb.Append("        builder.CacheWhen(static value => ").Append(predicate.Name).AppendLine("(value));");
+    private static string GetConstraintClauses(INamedTypeSymbol type)
+    {
+        if (type.TypeParameters.Length == 0)
+            return string.Empty;
 
-        sb.AppendLine("        return builder.Build();");
-        sb.AppendLine("    }");
-        sb.AppendLine("}");
-        return sb.ToString();
+        var clauses = new List<string>();
+        foreach (var parameter in type.TypeParameters)
+        {
+            var constraints = new List<string>();
+            if (parameter.HasReferenceTypeConstraint)
+                constraints.Add(parameter.ReferenceTypeConstraintNullableAnnotation == NullableAnnotation.Annotated ? "class?" : "class");
+            if (parameter.HasNotNullConstraint)
+                constraints.Add("notnull");
+            if (parameter.HasUnmanagedTypeConstraint)
+                constraints.Add("unmanaged");
+            else if (parameter.HasValueTypeConstraint)
+                constraints.Add("struct");
+
+            constraints.AddRange(parameter.ConstraintTypes.Select(static constraint => constraint.ToDisplayString(TypeFormat)));
+            if (parameter.HasConstructorConstraint)
+                constraints.Add("new()");
+            if (constraints.Count > 0)
+                clauses.Add($" where {parameter.Name} : {string.Join(", ", constraints)}");
+        }
+
+        return string.Concat(clauses);
     }
 
     private static bool IsCachePredicate(IMethodSymbol method, ITypeSymbol resultType)

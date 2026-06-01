@@ -1181,6 +1181,79 @@ public class PrototypeGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("MutableCollectionWithImmutableTypeArgumentWarnsInShallowWithWarningsMode")]
+    [Fact]
+    public void MutableCollectionWithImmutableTypeArgumentWarnsInShallowWithWarningsMode()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace
+            {
+                [Prototype(Mode = PrototypeMode.ShallowWithWarnings)]
+                public partial class MutableSnapshot
+                {
+                    public Dictionary<string, System.Collections.Immutable.ImmutableTags> Values { get; set; } = new();
+                }
+            }
+
+            namespace System.Collections.Immutable
+            {
+                public sealed class ImmutableTags
+                {
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(MutableCollectionWithImmutableTypeArgumentWarnsInShallowWithWarningsMode));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO003");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("ImmutableCollectionNamespacePrefixDoesNotSuppressMutableWarnings")]
+    [Fact]
+    public void ImmutableCollectionNamespacePrefixDoesNotSuppressMutableWarnings()
+    {
+        const string source = """
+            using PatternKit.Generators.Prototype;
+
+            namespace TestNamespace
+            {
+                [Prototype(Mode = PrototypeMode.ShallowWithWarnings)]
+                public partial class MutableSnapshot
+                {
+                    public System.Collections.ImmutableExtras.MutableTags Tags { get; set; } = new();
+                }
+            }
+
+            namespace System.Collections.ImmutableExtras
+            {
+                public sealed class MutableTags
+                {
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ImmutableCollectionNamespacePrefixDoesNotSuppressMutableWarnings));
+        var gen = new PrototypeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKPRO003");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Severity == DiagnosticSeverity.Error);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("PrototypeIncludesFieldsAndShallowCopyReferenceFallback")]
     [Fact]
     public void PrototypeIncludesFieldsAndShallowCopyReferenceFallback()

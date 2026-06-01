@@ -63,7 +63,7 @@ public sealed class DurableSubscriber<TPayload>
                 }
             }
 
-            if (messageFailed && _errorPolicy == DurableSubscriberErrorPolicy.StopOnFirstFailure)
+            if (messageFailed)
                 break;
 
             if (!messageFailed)

@@ -258,6 +258,8 @@ public sealed class SagaGeneratorTests
 
         var diagnostics = run.Results.SelectMany(result => result.Diagnostics).ToArray();
         ScenarioExpect.Equal(2, diagnostics.Count(diagnostic => diagnostic.Id == "PKSG003"));
+        ScenarioExpect.Equal(2, diagnostics.Length);
+        ScenarioExpect.All(diagnostics, diagnostic => ScenarioExpect.Equal("PKSG003", diagnostic.Id));
     }
 
     [Scenario("ReportsDiagnosticForInvalidCompletionSignature")]

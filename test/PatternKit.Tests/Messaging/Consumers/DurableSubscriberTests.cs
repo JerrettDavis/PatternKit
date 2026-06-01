@@ -59,6 +59,35 @@ public sealed class DurableSubscriberTests
         ScenarioExpect.Equal(1L, checkpoints.Load("shipping").LastSequence);
     }
 
+    [Scenario("CatchUp ContinuePolicyDoesNotCheckpointPastFailedMessage")]
+    [Fact]
+    public void CatchUp_ContinuePolicyDoesNotCheckpointPastFailedMessage()
+    {
+        var store = CreateStore();
+        var checkpoints = new InMemoryDurableSubscriberCheckpointStore();
+        var handled = new List<string>();
+        _ = store.Append(Message<Order>.Create(new("order-1")).WithMessageId("m1"));
+        _ = store.Append(Message<Order>.Create(new("order-2")).WithMessageId("m2"));
+        var subscriber = DurableSubscriber<Order>.Create("shipping")
+            .From(store)
+            .TrackWith(checkpoints)
+            .Handle("reject", (stored, _) => stored.Message.Payload.Id == "order-1"
+                ? DurableSubscriberHandlerResult.Failure("reject", "projection unavailable")
+                : DurableSubscriberHandlerResult.Success("reject"))
+            .Handle("audit", (stored, _) => handled.Add(stored.Message.Payload.Id))
+            .OnError(DurableSubscriberErrorPolicy.Continue)
+            .Build();
+
+        var result = subscriber.CatchUp();
+
+        ScenarioExpect.False(result.Completed);
+        ScenarioExpect.Equal(0, result.DeliveredCount);
+        ScenarioExpect.Equal(0L, result.LastSequence);
+        ScenarioExpect.Equal(0L, checkpoints.Load("shipping").LastSequence);
+        ScenarioExpect.Equal(["order-1"], handled);
+        ScenarioExpect.Single(result.Failures);
+    }
+
     [Scenario("BuilderRejectsInvalidDurableSubscriberConfiguration")]
     [Fact]
     public void Builder_RejectsInvalidDurableSubscriberConfiguration()

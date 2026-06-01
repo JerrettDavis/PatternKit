@@ -663,12 +663,36 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         var value = param.ExplicitDefaultValue;
         return value switch
         {
-            float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f",
-            double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture) + "d",
+            float f => FormatSingleDefault(f),
+            double d => FormatDoubleDefault(d),
             decimal m => m.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m",
             _ => Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false)
                 ?? "default"
         };
+    }
+
+    private static string FormatSingleDefault(float value)
+    {
+        if (float.IsNaN(value))
+            return "float.NaN";
+        if (float.IsPositiveInfinity(value))
+            return "float.PositiveInfinity";
+        if (float.IsNegativeInfinity(value))
+            return "float.NegativeInfinity";
+
+        return value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "f";
+    }
+
+    private static string FormatDoubleDefault(double value)
+    {
+        if (double.IsNaN(value))
+            return "double.NaN";
+        if (double.IsPositiveInfinity(value))
+            return "double.PositiveInfinity";
+        if (double.IsNegativeInfinity(value))
+            return "double.NegativeInfinity";
+
+        return value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "d";
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)

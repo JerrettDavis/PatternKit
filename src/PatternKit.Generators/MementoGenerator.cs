@@ -494,6 +494,7 @@ public sealed class MementoGenerator : IIncrementalGenerator
     {
         var fallbackCtor = typeInfo.TypeSymbol.Constructors
             .Where(c => !c.IsStatic && c.DeclaredAccessibility == Accessibility.Public)
+            .Where(c => !IsRecordCopyConstructor(c, typeInfo.TypeSymbol))
             .OrderBy(c => c.Parameters.Length)
             .FirstOrDefault();
 
@@ -507,6 +508,10 @@ public sealed class MementoGenerator : IIncrementalGenerator
         sb.Append(string.Join(", ", fallbackCtor.Parameters.Select(_ => "default!")));
         sb.AppendLine(")");
     }
+
+    private static bool IsRecordCopyConstructor(IMethodSymbol constructor, INamedTypeSymbol type)
+        => constructor.Parameters.Length == 1 &&
+           SymbolEqualityComparer.Default.Equals(constructor.Parameters[0].Type, type);
 
     private void GenerateInPlaceRestoreMethod(StringBuilder sb, TypeInfo typeInfo)
     {
