@@ -66,11 +66,11 @@ if (parser.Execute("123", out var value))
 
 ## 📚 Available Patterns
 
-PatternKit covers 118 production-readiness patterns with fluent APIs, source-generated routes where applicable, IoC integration examples, TinyBDD coverage, and BenchmarkDotNet coverage-matrix validation:
+PatternKit covers 119 production-readiness patterns with fluent APIs, source-generated routes where applicable, IoC integration examples, TinyBDD coverage, and BenchmarkDotNet coverage-matrix validation:
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 27 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Lazy Load, Manual Task Gate, Materialized View, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
+| Application Architecture | 28 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Lazy Load, Manual Task Gate, Materialized View, Ports and Adapters, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
 | Behavioral | 12 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Null Object, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 20 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 6 | Abstract Factory, Builder, Factory Method, Object Pool, Prototype, Singleton |

@@ -53,6 +53,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Backpressure | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Lazy Load | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Lazy Load | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Ports and Adapters | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Ports and Adapters | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
@@ -258,11 +260,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 118 catalog patterns and 472 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 119 catalog patterns and 476 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 27 | 108 |
+| Application Architecture | 28 | 112 |
 | Behavioral | 12 | 48 |
 | Cloud Architecture | 20 | 80 |
 | Creational | 6 | 24 |
@@ -270,7 +272,7 @@ The coverage matrix currently publishes 118 catalog patterns and 472 pattern rou
 | Messaging Reliability | 4 | 16 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 113 generator source route results.
+The generator matrix currently publishes 114 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -313,6 +315,7 @@ The generator matrix currently publishes 113 generator source route results.
 | Application Architecture | Identity Map | Covered | Covered | Covered | Covered |
 | Application Architecture | Lazy Load | Covered | Covered | Covered | Covered |
 | Application Architecture | Materialized View | Covered | Covered | Covered | Covered |
+| Application Architecture | Ports and Adapters | Covered | Covered | Covered | Covered |
 | Application Architecture | Repository | Covered | Covered | Covered | Covered |
 | Application Architecture | Service Layer | Covered | Covered | Covered | Covered |
 | Application Architecture | Specification | Covered | Covered | Covered | Covered |
@@ -517,6 +520,7 @@ The generator matrix currently publishes 113 generator source route results.
 | RetryPolicyGenerator | `src/PatternKit.Generators/Retry/RetryPolicyGenerator.cs` | Covered |
 | SchedulerAgentSupervisorGenerator | `src/PatternKit.Generators/SchedulerAgentSupervisor/SchedulerAgentSupervisorGenerator.cs` | Covered |
 | ServiceLayerOperationGenerator | `src/PatternKit.Generators/ServiceLayer/ServiceLayerOperationGenerator.cs` | Covered |
+| PortsAndAdaptersGenerator | `src/PatternKit.Generators/PortsAndAdapters/PortsAndAdaptersGenerator.cs` | Covered |
 | SidecarGenerator | `src/PatternKit.Generators/Sidecar/SidecarGenerator.cs` | Covered |
 | SingletonGenerator | `src/PatternKit.Generators/Singleton/SingletonGenerator.cs` | Covered |
 | SpecificationGenerator | `src/PatternKit.Generators/Specification/SpecificationGenerator.cs` | Covered |
