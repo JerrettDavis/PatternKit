@@ -68,6 +68,7 @@ public sealed partial class CompensatingTransactionGeneratorTests(ITestOutputHel
 
     [Scenario("Reports diagnostics for invalid compensating transaction steps")]
     [Theory]
+    [InlineData("[CompensatingTransactionStep(\"x\", 1, Compensation = nameof(Undo))] private static ValueTask Do(MissingContext c, CancellationToken ct) => default; private static ValueTask Undo(MissingContext c, CancellationToken ct) => default;")]
     [InlineData("[CompensatingTransactionStep(\"x\", 1, Compensation = nameof(Undo))] private static Task Do(Ctx c, CancellationToken ct) => Task.CompletedTask; private static ValueTask Undo(Ctx c, CancellationToken ct) => default;")]
     [InlineData("[CompensatingTransactionStep(\"x\", 1, Compensation = nameof(Undo))] private ValueTask Do(Ctx c, CancellationToken ct) => default; private static ValueTask Undo(Ctx c, CancellationToken ct) => default;")]
     [InlineData("[CompensatingTransactionStep(\"x\", 1)] private static ValueTask Do(Ctx c, CancellationToken ct) => default;")]
@@ -107,6 +108,85 @@ public sealed partial class CompensatingTransactionGeneratorTests(ITestOutputHel
             """))
             .Then("the duplicate diagnostic is reported", result =>
                 ScenarioExpect.Contains(result.Diagnostics, diagnostic => diagnostic.Id == "PKCOMP004"))
+            .AssertPassed();
+
+    [Scenario("Generates compensating transaction host type shapes")]
+    [Fact]
+    public Task Generates_Compensating_Transaction_Host_Type_Shapes()
+        => Given("compensating transaction hosts with different accessibility and type shapes", () => Compile("""
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.CompensatingTransactions;
+            namespace Demo;
+            public sealed class Ctx;
+
+            [GenerateCompensatingTransaction(TransactionName = "shape-\"one")]
+            internal abstract partial class AbstractHost
+            {
+                [CompensatingTransactionStep("abstract\\\"step", 1, Compensation = nameof(Undo))]
+                private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+            }
+
+            [GenerateCompensatingTransaction]
+            public sealed partial class SealedHost
+            {
+                [CompensatingTransactionStep("sealed", 1, Compensation = nameof(Undo))]
+                private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+            }
+
+            [GenerateCompensatingTransaction]
+            internal partial struct StructHost
+            {
+                [CompensatingTransactionStep("struct", 1, Compensation = nameof(Undo))]
+                private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+            }
+
+            public partial class Container
+            {
+                [GenerateCompensatingTransaction]
+                private partial class PrivateHost
+                {
+                    [CompensatingTransactionStep("private", 1, Compensation = nameof(Undo))]
+                    private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                    private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+                }
+
+                [GenerateCompensatingTransaction]
+                private protected partial class PrivateProtectedHost
+                {
+                    [CompensatingTransactionStep("private-protected", 1, Compensation = nameof(Undo))]
+                    private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                    private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+                }
+
+                [GenerateCompensatingTransaction]
+                protected internal partial class ProtectedInternalHost
+                {
+                    [CompensatingTransactionStep("protected-internal", 1, Compensation = nameof(Undo))]
+                    private static ValueTask Do(Ctx c, CancellationToken ct) => default;
+                    private static ValueTask Undo(Ctx c, CancellationToken ct) => default;
+                }
+            }
+            """))
+            .Then("the generated sources preserve shape and escaping", result =>
+            {
+                ScenarioExpect.Empty(result.Diagnostics);
+                ScenarioExpect.Equal(6, result.GeneratedSources.Count);
+
+                var combined = string.Join("\n", result.GeneratedSources);
+                ScenarioExpect.Contains("internal abstract partial class AbstractHost", combined);
+                ScenarioExpect.Contains("CompensatingTransaction<global::Demo.Ctx>.Create(\"shape-\\\"one\")", combined);
+                ScenarioExpect.Contains(".AddStep(\"abstract\\\\\\\"step\"", combined);
+                ScenarioExpect.Contains("public sealed partial class SealedHost", combined);
+                ScenarioExpect.Contains("internal partial struct StructHost", combined);
+                ScenarioExpect.Contains("private partial class PrivateHost", combined);
+                ScenarioExpect.Contains("private protected partial class PrivateProtectedHost", combined);
+                ScenarioExpect.Contains("protected internal partial class ProtectedInternalHost", combined);
+                ScenarioExpect.True(result.EmitSuccess, string.Join(Environment.NewLine, result.EmitDiagnostics));
+            })
             .AssertPassed();
 
     [Scenario("Generates nested record host wrappers")]

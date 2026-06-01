@@ -1117,6 +1117,7 @@ public class DecoratorGeneratorTests
             public abstract class RepositoryBase
             {
                 public abstract string Name { get; internal set; }
+                public abstract string Secret { protected internal get; set; }
                 public abstract int Version { set; }
                 public abstract void Copy(ref int source, out int destination, in bool enabled);
                 public abstract ref int GetCurrent();
@@ -1144,6 +1145,7 @@ public class DecoratorGeneratorTests
         ScenarioExpect.Contains("public abstract partial class RepositoryBaseDecoratorBase", generatedSource);
         ScenarioExpect.Contains("override string Name", generatedSource);
         ScenarioExpect.Contains("internal set => Inner.Name = value;", generatedSource);
+        ScenarioExpect.Contains("protected internal get => Inner.Secret;", generatedSource);
         ScenarioExpect.Contains("override int Version", generatedSource);
         ScenarioExpect.Contains("set => Inner.Version = value;", generatedSource);
         ScenarioExpect.Contains("public override void Copy(ref int source, out int destination, in bool enabled)", generatedSource);
@@ -1194,6 +1196,42 @@ public class DecoratorGeneratorTests
         ScenarioExpect.Contains(diagnostics, d => d.Id == "PKDEC002" && d.GetMessage().Contains("NestedType"));
     }
 
+    [Scenario("Diagnostic PKDEC004 InaccessibleProtectedPropertyDeclaration")]
+    [Fact]
+    public void Diagnostic_PKDEC004_InaccessibleProtectedPropertyDeclaration()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public abstract class SecretRepository
+            {
+                protected abstract string Secret { get; }
+                public abstract string Visible { get; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(Diagnostic_PKDEC004_InaccessibleProtectedPropertyDeclaration));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == "PKDEC004" && d.GetMessage().Contains("Secret"));
+
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "TestNamespace_SecretRepository.Decorator.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("override string Visible => Inner.Visible;", generatedSource);
+        ScenarioExpect.DoesNotContain("override string Secret", generatedSource);
+        ScenarioExpect.DoesNotContain("=> Inner.Secret", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("GenerateDecorator PreservesPrimitiveAndStringDefaultLiterals")]
     [Fact]
     public void GenerateDecorator_PreservesPrimitiveAndStringDefaultLiterals()
@@ -1210,10 +1248,18 @@ public class DecoratorGeneratorTests
             {
                 string Format(
                     string text = "line\n\"quoted\"\tend",
+                    string? optionalText = null,
+                    object boxed = null,
+                    int? retryCount = null,
                     bool enabled = true,
+                    float missing = float.NaN,
+                    float negativeWeight = float.NegativeInfinity,
                     float ratio = 1.25f,
+                    double overflow = double.PositiveInfinity,
+                    double underflow = double.NegativeInfinity,
                     double weight = 2.5d,
                     decimal amount = 3.75m,
+                    Mode known = Mode.Known,
                     Mode mode = (Mode)99);
             }
             """;
@@ -1230,10 +1276,18 @@ public class DecoratorGeneratorTests
             .SourceText.ToString();
 
         ScenarioExpect.Contains("string text = \"line\\n\\\"quoted\\\"\\tend\"", generatedSource);
+        ScenarioExpect.Contains("string? optionalText = null", generatedSource);
+        ScenarioExpect.Contains("object boxed = null", generatedSource);
+        ScenarioExpect.Contains("int? retryCount = null", generatedSource);
         ScenarioExpect.Contains("bool enabled = true", generatedSource);
+        ScenarioExpect.Contains("float missing = float.NaN", generatedSource);
+        ScenarioExpect.Contains("float negativeWeight = float.NegativeInfinity", generatedSource);
         ScenarioExpect.Contains("float ratio = 1.25f", generatedSource);
+        ScenarioExpect.Contains("double overflow = double.PositiveInfinity", generatedSource);
+        ScenarioExpect.Contains("double underflow = double.NegativeInfinity", generatedSource);
         ScenarioExpect.Contains("double weight = 2.5d", generatedSource);
         ScenarioExpect.Contains("decimal amount = 3.75m", generatedSource);
+        ScenarioExpect.Contains("global::TestNamespace.Mode known = global::TestNamespace.Mode.Known", generatedSource);
         ScenarioExpect.Contains("global::TestNamespace.Mode mode = (global::TestNamespace.Mode)99", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
