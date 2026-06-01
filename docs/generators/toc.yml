@@ -312,6 +312,9 @@
 - name: Service Layer
   href: service-layer.md
 
+- name: Ports and Adapters
+  href: ports-and-adapters.md
+
 - name: Visitor Generator
   href: visitor-generator.md
 

@@ -74,6 +74,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
 | [**Identity Map**](identity-map.md) | Scoped object identity caches from key selectors | `[GenerateIdentityMap]` |
 | [**Lazy Load**](lazy-load.md) | Deferred value factories with caching, TTL, and invalidation | `[GenerateLazyLoad]` |
+| [**Ports and Adapters**](ports-and-adapters.md) | Hexagonal inbound adapters, application ports, and outbound adapters | `[GeneratePortsAndAdapters]` |
 | [**Materialized View**](materialized-view.md) | Event projection read-model factories from handlers | `[GenerateMaterializedView]` |
 | [**Transaction Script**](transaction-script.md) | Typed application workflow factories | `[GenerateTransactionScript]` |
 | [**Service Layer**](service-layer.md) | Application operation boundary factories | `[GenerateServiceLayerOperation]` |

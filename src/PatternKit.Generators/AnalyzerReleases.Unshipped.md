@@ -465,3 +465,7 @@ PKCDC004 | PatternKit.Generators.ChangeDataCapture | Error | Change Data Capture
 PKLL001 | PatternKit.Generators.LazyLoading | Error | Lazy load host must be partial.
 PKLL002 | PatternKit.Generators.LazyLoading | Error | Lazy load configuration is invalid.
 PKLL003 | PatternKit.Generators.LazyLoading | Error | Lazy load member name is invalid.
+PKPA001 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters host must be partial.
+PKPA002 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters method is missing.
+PKPA003 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters method signature is invalid.
+PKPA004 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters factory name is invalid.

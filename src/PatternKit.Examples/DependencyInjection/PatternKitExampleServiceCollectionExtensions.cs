@@ -75,6 +75,7 @@ using PatternKit.Examples.ObjectPoolDemo;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PatternShowcase;
 using PatternKit.Examples.PointOfSale;
+using PatternKit.Examples.PortsAndAdaptersDemo;
 using PatternKit.Examples.Pricing;
 using PatternKit.Examples.PriorityQueueDemo;
 using PatternKit.Examples.ProductionReadiness;
@@ -231,6 +232,7 @@ public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Run
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
 public sealed record CustomerProfileLazyLoadPatternExample(CustomerProfileLazyLoadService Service);
 public sealed record ProductCatalogChangeDataCaptureExample(ProductCatalogChangeDataCaptureService Service);
+public sealed record OrderEntryPortsAndAdaptersPatternExample(OrderEntryPortsAndAdaptersWorkflow Workflow);
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
@@ -357,6 +359,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderIdentityMapPatternExample()
             .AddCustomerProfileLazyLoadPatternExample()
             .AddProductCatalogChangeDataCaptureExample()
+            .AddOrderEntryPortsAndAdaptersPatternExample()
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
             .AddOrderDomainEventPatternExample()
@@ -1056,6 +1059,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddProductCatalogChangeDataCaptureDemo();
         services.AddSingleton<ProductCatalogChangeDataCaptureExample>(sp => new(sp.GetRequiredService<ProductCatalogChangeDataCaptureService>()));
         return services.RegisterExample<ProductCatalogChangeDataCaptureExample>("Product Catalog Change Data Capture", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderEntryPortsAndAdaptersPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderEntryPortsAndAdaptersDemo();
+        services.AddSingleton<OrderEntryPortsAndAdaptersPatternExample>(sp => new(sp.GetRequiredService<OrderEntryPortsAndAdaptersWorkflow>()));
+        return services.RegisterExample<OrderEntryPortsAndAdaptersPatternExample>("Order Entry Ports and Adapters", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderTransactionScriptPatternExample(this IServiceCollection services)

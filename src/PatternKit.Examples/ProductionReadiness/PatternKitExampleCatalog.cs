@@ -609,6 +609,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Change Data Capture"],
             ["ordered mutation capture", "source-generated CDC pipeline factory", "DI composition"]),
         Descriptor(
+            "Order Entry Ports and Adapters",
+            "src/PatternKit.Examples/PortsAndAdaptersDemo/OrderEntryPortsAndAdaptersDemo.cs",
+            "test/PatternKit.Examples.Tests/PortsAndAdaptersDemo/OrderEntryPortsAndAdaptersDemoTests.cs",
+            "docs/examples/order-entry-ports-and-adapters.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Ports and Adapters"],
+            ["hexagonal delivery boundary", "source-generated adapter factory", "DI composition"]),
+        Descriptor(
             "Order Transaction Script Pattern",
             "src/PatternKit.Examples/TransactionScriptDemo/OrderTransactionScriptDemo.cs",
             "test/PatternKit.Examples.Tests/TransactionScriptDemo/OrderTransactionScriptDemoTests.cs",
