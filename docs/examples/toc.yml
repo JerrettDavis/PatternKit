@@ -343,6 +343,9 @@
 - name: Order Allocation Distributed Lock
   href: order-allocation-distributed-lock.md
 
+- name: Checkout Compensating Transaction
+  href: checkout-compensating-transaction-pattern.md
+
 - name: Warehouse Scheduler Agent Supervisor
   href: warehouse-scheduler-agent-supervisor.md
 

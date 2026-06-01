@@ -435,6 +435,8 @@
           href: application/repository.md
         - name: Unit of Work
           href: application/unit-of-work.md
+        - name: Compensating Transaction
+          href: application/compensating-transaction.md
         - name: Data Mapper
           href: application/data-mapper.md
         - name: Identity Map

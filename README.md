@@ -473,11 +473,11 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 120 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 121 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
-| Application Architecture | 28 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Lazy Load, Manual Task Gate, Materialized View, Ports and Adapters, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Value Object, Workflow Orchestration |
+| Application Architecture | 29 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Lazy Load, Manual Task Gate, Materialized View, Ports and Adapters, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Compensating Transaction, Value Object, Workflow Orchestration |
 | Behavioral | 12 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Null Object, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 21 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, Distributed Lock / Lease, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 6 | Abstract Factory, Builder, Factory Method, Object Pool, Prototype, Singleton |
@@ -623,6 +623,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Identity Map | Execution | 108.91 ns | 968 B | 94.83 ns | 968 B | Same allocation; generated was faster for scoped identity-map reuse. |
 | Leader Election | Construction | 14.28 ns | 104 B | 15.91 ns | 104 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Leader Election | Execution | 43.62 ns | 360 B | 144.37 ns | 312 B | Generated allocated about 13% less memory, while fluent was faster in this path. |
+| Compensating Transaction | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Compensating Transaction | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Distributed Lock / Lease | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Distributed Lock / Lease | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Materialized View | Construction | 140.9 ns | 1.05 KB | 147.4 ns | 1.05 KB | Same allocation; fluent was slightly faster in this microbenchmark. |

@@ -309,6 +309,9 @@
 - name: Unit of Work
   href: unit-of-work.md
 
+- name: Compensating Transaction
+  href: compensating-transaction.md
+
 - name: Transaction Script
   href: transaction-script.md
 

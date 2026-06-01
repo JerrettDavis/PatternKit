@@ -199,6 +199,7 @@ dotnet test PatternKit.slnx -c Release
 * **Inventory Ambassador:** `InventoryAmbassadorDemo` (+ `InventoryAmbassadorDemoTests`) — fluent and generated outbound connectivity wrapper with DI and ASP.NET Core mapping.
 * **Warehouse Leader Election:** `WarehouseLeaderElectionDemo` (+ `WarehouseLeaderElectionDemoTests`) — fluent and generated active worker lease coordination with DI and Generic Host mapping.
 * **Order Allocation Distributed Lock:** `OrderAllocationDistributedLockDemo` (+ `OrderAllocationDistributedLockDemoTests`) — fluent and generated resource lease coordination with DI and Generic Host mapping.
+* **Checkout Compensating Transaction:** `CheckoutCompensatingTransactionDemo` (+ `CheckoutCompensatingTransactionDemoTests`) — fluent and generated reversible checkout steps with DI and Generic Host mapping.
 * **Warehouse Scheduler Agent Supervisor:** `WarehouseSchedulerAgentSupervisorDemo` (+ `WarehouseSchedulerAgentSupervisorDemoTests`) — fluent and generated scheduled worker supervision with DI and Generic Host mapping.
 * **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.

@@ -71,6 +71,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Timeout Manager**](timeout-manager.md) | Deadline registry for expiring pending workflow work | `[GenerateTimeoutManager]` |
 | [**Audit Log**](audit-log.md) | Append-only audit log factories from key selectors | `[GenerateAuditLog]` |
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |
+| [**Compensating Transaction**](compensating-transaction.md) | Reversible business transactions from annotated step methods | `[GenerateCompensatingTransaction]` |
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
 | [**Identity Map**](identity-map.md) | Scoped object identity caches from key selectors | `[GenerateIdentityMap]` |
 | [**Lazy Load**](lazy-load.md) | Deferred value factories with caching, TTL, and invalidation | `[GenerateLazyLoad]` |

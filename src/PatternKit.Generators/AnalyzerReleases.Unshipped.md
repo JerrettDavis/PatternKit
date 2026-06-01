@@ -471,3 +471,8 @@ PKPA003 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters me
 PKPA004 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters factory name is invalid.
 PKDLOCK001 | PatternKit.Generators.DistributedLocks | Error | Distributed Lock host must be partial.
 PKDLOCK002 | PatternKit.Generators.DistributedLocks | Error | Distributed Lock configuration is invalid.
+PKCOMP001 | PatternKit.Generators.CompensatingTransactions | Error | Compensating Transaction host must be partial.
+PKCOMP002 | PatternKit.Generators.CompensatingTransactions | Error | Compensating Transaction must declare steps.
+PKCOMP003 | PatternKit.Generators.CompensatingTransactions | Error | Compensating Transaction step signature is invalid.
+PKCOMP004 | PatternKit.Generators.CompensatingTransactions | Error | Compensating Transaction step is duplicated.
+PKCOMP005 | PatternKit.Generators.CompensatingTransactions | Error | Compensating Transaction configuration is invalid.
