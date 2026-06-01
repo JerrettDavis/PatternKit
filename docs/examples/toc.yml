@@ -286,6 +286,9 @@
 - name: Shipping Bulkhead
   href: shipping-bulkhead.md
 
+- name: Checkout Backpressure
+  href: checkout-backpressure.md
+
 - name: Fulfillment Queue Load Leveling
   href: fulfillment-queue-load-leveling.md
 

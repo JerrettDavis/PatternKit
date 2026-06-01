@@ -454,3 +454,7 @@ PKSCP001 | PatternKit.Generators.SnapshotCheckpoints | Error | Snapshot checkpoi
 PKSCP002 | PatternKit.Generators.SnapshotCheckpoints | Error | Snapshot checkpoint manager configuration is invalid.
 PKECM001 | PatternKit.Generators.EventualConsistency | Error | Eventual consistency monitor host must be partial.
 PKECM002 | PatternKit.Generators.EventualConsistency | Error | Eventual consistency monitor configuration is invalid.
+PKBP001 | PatternKit.Generators.Backpressure | Error | Backpressure policy host must be partial.
+PKBP002 | PatternKit.Generators.Backpressure | Error | Backpressure policy configuration is invalid.
+PKBP003 | PatternKit.Generators.Backpressure | Error | Backpressure factory method name is invalid.
+PKBP004 | PatternKit.Generators.Backpressure | Error | Backpressure mode is invalid.

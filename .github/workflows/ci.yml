@@ -57,6 +57,7 @@ jobs:
         run: |
           dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -65,6 +66,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -73,6 +75,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -81,6 +84,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -198,6 +202,7 @@ jobs:
         run: |
           dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -206,6 +211,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -214,6 +220,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
@@ -222,6 +229,7 @@ jobs:
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
           dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \

@@ -36,6 +36,7 @@ using PatternKit.Examples.ApiGateway;
 using PatternKit.Examples.AsyncStateDemo;
 using PatternKit.Examples.AuditLogDemo;
 using PatternKit.Examples.BackendsForFrontendsDemo;
+using PatternKit.Examples.BackpressureDemo;
 using PatternKit.Examples.BoundedContextDemo;
 using PatternKit.Examples.BulkheadDemo;
 using PatternKit.Examples.CacheAsideDemo;
@@ -111,6 +112,7 @@ using PatternKit.Messaging.Diagnostics;
 using PatternKit.Messaging.Gateways;
 using PatternKit.Messaging.PipesAndFilters;
 using PatternKit.Messaging.Reliability;
+using PatternKit.Messaging.Reliability.Backpressure;
 using PatternKit.Messaging.Routing;
 using PatternKit.Messaging.Storage;
 using PatternKit.Messaging.Transformation;
@@ -237,6 +239,7 @@ public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, Prot
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
 public sealed record CustomerNotificationNullObjectExample(NullObject<ICustomerNotificationChannel> Fallback, ICustomerNotificationChannel Channel, CustomerNotificationWorkflow Workflow);
+public sealed record CheckoutBackpressureExample(BackpressurePolicy<CheckoutAdmission> Policy, CheckoutBackpressureService Service);
 public sealed record TextEditorMementoExample(MementoDemo.MementoDemo.TextEditor Editor);
 public sealed record ObserverEventHubExample(EventHub<UserEvent> Hub);
 public sealed record ReactiveViewModelExample(ProfileViewModel ViewModel);
@@ -372,6 +375,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddInventoryRetryExample()
             .AddFulfillmentCircuitBreakerExample()
             .AddShippingBulkheadExample()
+            .AddCheckoutBackpressureExample()
             .AddFulfillmentQueueLoadLevelingExample()
             .AddFulfillmentHealthEndpointExample()
             .AddFulfillmentPriorityQueueExample()
@@ -1218,6 +1222,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<BulkheadPolicy<ShippingAllocation>>(),
             sp.GetRequiredService<ShippingBulkheadService>()));
         return services.RegisterExample<ShippingBulkheadExample>("Shipping Bulkhead", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCheckoutBackpressureExample(this IServiceCollection services)
+    {
+        services.AddCheckoutBackpressureDemo();
+        services.AddSingleton<CheckoutBackpressureExample>(sp => new(
+            sp.GetRequiredService<BackpressurePolicy<CheckoutAdmission>>(),
+            sp.GetRequiredService<CheckoutBackpressureService>()));
+        return services.RegisterExample<CheckoutBackpressureExample>("Checkout Backpressure", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddDashboardActivityTrackerExample(this IServiceCollection services)

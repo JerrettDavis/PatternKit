@@ -65,6 +65,12 @@ services
         bulkhead => bulkhead
             .WithMaxConcurrency(8)
             .WithMaxQueueLength(32))
+    .AddPatternKitBackpressurePolicy<ServiceReply>(
+        "inventory-backpressure",
+        backpressure => backpressure
+            .WithCapacity(8)
+            .WithMode(BackpressureMode.Wait)
+            .WithWaitTimeout(TimeSpan.FromMilliseconds(50)))
     .AddPatternKitRateLimitPolicy<ServiceReply>(
         "inventory-rate-limit",
         rateLimit => rateLimit
@@ -115,6 +121,7 @@ Every catalog pattern is importable through the production example catalog. The 
 | Retry | `AddPatternKitRetryPolicy<TResult>` | Register named retry policies for synchronous service calls. |
 | Circuit Breaker | `AddPatternKitCircuitBreakerPolicy<TResult>` | Register named circuit breakers with shared state. |
 | Bulkhead | `AddPatternKitBulkheadPolicy<TResult>` | Register concurrency and queue isolation policies. |
+| Backpressure | `AddPatternKitBackpressurePolicy<TResult>` | Register admission gates for saturated work boundaries. |
 | Rate Limiting | `AddPatternKitRateLimitPolicy<TResult>` | Register per-key rate windows. |
 | Queue-Based Load Leveling | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | Register queue-backed worker policies. |
 | Priority Queue | `AddPatternKitPriorityQueue<TItem, TPriority>` | Register priority-ordered work queues. |
