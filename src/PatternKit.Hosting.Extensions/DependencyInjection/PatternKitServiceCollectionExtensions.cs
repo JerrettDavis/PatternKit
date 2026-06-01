@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Application.LazyLoading;
 using PatternKit.Behavioral.NullObject;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CircuitBreaker;
@@ -208,6 +209,29 @@ public static class PatternKitServiceCollectionExtensions
             _ =>
             {
                 var builder = BackpressurePolicy<TResult>.Create(name);
+                configure?.Invoke(builder);
+                return builder.Build();
+            });
+    }
+
+    public static IServiceCollection AddPatternKitLazyLoad<TValue>(
+        this IServiceCollection services,
+        Func<IServiceProvider, CancellationToken, ValueTask<TValue>> loader,
+        string name = "lazy-load",
+        Action<LazyLoad<TValue>.Builder>? configure = null,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton)
+    {
+        if (services is null)
+            throw new ArgumentNullException(nameof(services));
+        if (loader is null)
+            throw new ArgumentNullException(nameof(loader));
+
+        return services.AddPatternKitService(
+            lifetime,
+            provider =>
+            {
+                var builder = LazyLoad<TValue>.Create(name)
+                    .LoadWith(cancellationToken => loader(provider, cancellationToken));
                 configure?.Invoke(builder);
                 return builder.Build();
             });

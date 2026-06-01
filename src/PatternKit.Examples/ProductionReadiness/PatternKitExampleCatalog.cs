@@ -593,6 +593,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["IdentityMap"],
             ["request-scoped identity reuse", "source-generated map factory", "DI composition"]),
         Descriptor(
+            "Customer Profile Lazy Load",
+            "src/PatternKit.Examples/LazyLoadDemo/CustomerProfileLazyLoadDemo.cs",
+            "test/PatternKit.Examples.Tests/LazyLoadDemo/CustomerProfileLazyLoadDemoTests.cs",
+            "docs/examples/customer-profile-lazy-load.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Lazy Load"],
+            ["deferred profile relationship", "source-generated lazy-load factory", "DI composition"]),
+        Descriptor(
             "Order Transaction Script Pattern",
             "src/PatternKit.Examples/TransactionScriptDemo/OrderTransactionScriptDemo.cs",
             "test/PatternKit.Examples.Tests/TransactionScriptDemo/OrderTransactionScriptDemoTests.cs",

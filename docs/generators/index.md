@@ -73,6 +73,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Unit of Work**](unit-of-work.md) | Ordered commit and rollback units | `[GenerateUnitOfWork]` |
 | [**Data Mapper**](data-mapper.md) | Domain/data model mapper factories | `[GenerateDataMapper]` |
 | [**Identity Map**](identity-map.md) | Scoped object identity caches from key selectors | `[GenerateIdentityMap]` |
+| [**Lazy Load**](lazy-load.md) | Deferred value factories with caching, TTL, and invalidation | `[GenerateLazyLoad]` |
 | [**Materialized View**](materialized-view.md) | Event projection read-model factories from handlers | `[GenerateMaterializedView]` |
 | [**Transaction Script**](transaction-script.md) | Typed application workflow factories | `[GenerateTransactionScript]` |
 | [**Service Layer**](service-layer.md) | Application operation boundary factories | `[GenerateServiceLayerOperation]` |
@@ -233,6 +234,10 @@ public static partial class InventoryStateTransfer { }
 // Event notification - compact event signals
 [GenerateEventNotification(typeof(OrderAccepted), typeof(string))]
 public static partial class OrderAcceptedNotification { }
+
+// Lazy load - deferred value factory
+[GenerateLazyLoad(typeof(CustomerProfile), LoaderMethodName = "LoadProfileAsync", TimeToLiveMilliseconds = 300000)]
+public static partial class CustomerProfileLazyLoad { }
 
 // Claim check - external payload storage reference
 [GenerateClaimCheck(typeof(LargeOrderDocument), StoreName = "document-archive")]

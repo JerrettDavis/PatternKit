@@ -114,6 +114,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Unit of Work",
         "Data Mapper",
         "Identity Map",
+        "Lazy Load",
         "Transaction Script",
         "Service Layer",
         "Domain Event",
@@ -174,7 +175,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(41, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
                 ScenarioExpect.Equal(4, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(20, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
-                ScenarioExpect.Equal(26, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
+                ScenarioExpect.Equal(27, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
             .AssertPassed();
 
@@ -254,6 +255,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                         "Bulkhead",
                         "Circuit Breaker",
                         "Guaranteed Delivery",
+                        "Lazy Load",
                         "Message Channel",
                         "Message Store",
                         "Null Object",

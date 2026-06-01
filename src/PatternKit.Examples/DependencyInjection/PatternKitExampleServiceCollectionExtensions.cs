@@ -63,6 +63,7 @@ using PatternKit.Examples.Generators.Builders.CorporateApplicationBuilderDemo;
 using PatternKit.Examples.Generators.Visitors;
 using PatternKit.Examples.HealthEndpointMonitoringDemo;
 using PatternKit.Examples.IdentityMapDemo;
+using PatternKit.Examples.LazyLoadDemo;
 using PatternKit.Examples.LeaderElectionDemo;
 using PatternKit.Examples.ManualTaskGateDemo;
 using PatternKit.Examples.MaterializedViewDemo;
@@ -227,6 +228,7 @@ public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Run
 public sealed record CheckoutUnitOfWorkPatternExample(CheckoutUnitOfWorkDemoRunner Runner, CheckoutUnitOfWorkWorkflow Workflow);
 public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Runner, OrderDataMapperWorkflow Workflow);
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
+public sealed record CustomerProfileLazyLoadPatternExample(CustomerProfileLazyLoadService Service);
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
@@ -351,6 +353,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddCheckoutUnitOfWorkPatternExample()
             .AddOrderDataMapperPatternExample()
             .AddOrderIdentityMapPatternExample()
+            .AddCustomerProfileLazyLoadPatternExample()
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
             .AddOrderDomainEventPatternExample()
@@ -1036,6 +1039,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderIdentityMapDemo();
         services.AddSingleton<OrderIdentityMapPatternExample>(sp => new(sp.GetRequiredService<OrderIdentityMapDemoRunner>()));
         return services.RegisterExample<OrderIdentityMapPatternExample>("Order Identity Map Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddCustomerProfileLazyLoadPatternExample(this IServiceCollection services)
+    {
+        services.AddCustomerProfileLazyLoadDemo();
+        services.AddSingleton<CustomerProfileLazyLoadPatternExample>(sp => new(sp.GetRequiredService<CustomerProfileLazyLoadService>()));
+        return services.RegisterExample<CustomerProfileLazyLoadPatternExample>("Customer Profile Lazy Load", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderTransactionScriptPatternExample(this IServiceCollection services)

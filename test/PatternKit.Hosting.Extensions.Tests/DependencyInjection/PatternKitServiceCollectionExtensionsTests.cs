@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Application.LazyLoading;
 using PatternKit.Behavioral.NullObject;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CircuitBreaker;
@@ -79,6 +80,9 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                     .AddPatternKitBackpressurePolicy<ServiceReply>(
                         "inventory-backpressure",
                         builder => builder.WithCapacity(2).WithMode(BackpressureMode.Wait))
+                    .AddPatternKitLazyLoad<ServiceReply>(
+                        (_, _) => new ValueTask<ServiceReply>(new ServiceReply(true)),
+                        "inventory-lazy")
                     .AddPatternKitRateLimitPolicy<ServiceReply>(
                         "inventory-rate-limit",
                         builder => builder.WithPermitLimit(1).WithWindow(TimeSpan.FromMinutes(1)))
@@ -99,6 +103,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                     var breaker = provider.GetRequiredService<CircuitBreakerPolicy<ServiceReply>>();
                     var bulkhead = provider.GetRequiredService<BulkheadPolicy<ServiceReply>>();
                     var backpressure = provider.GetRequiredService<BackpressurePolicy<ServiceReply>>();
+                    var lazy = provider.GetRequiredService<LazyLoad<ServiceReply>>();
                     var rateLimit = provider.GetRequiredService<RateLimitPolicy<ServiceReply>>();
                     var leveling = provider.GetRequiredService<QueueLoadLevelingPolicy<ServiceReply>>();
                     var priority = provider.GetRequiredService<PriorityQueuePolicy<WorkItem, int>>();
@@ -107,6 +112,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                     var breakerResult = breaker.Execute(static () => new ServiceReply(true));
                     var bulkheadResult = bulkhead.Execute(static () => new ServiceReply(true));
                     var backpressureResult = backpressure.Execute(static () => new ServiceReply(true));
+                    var lazyResult = lazy.GetAsync().AsTask().GetAwaiter().GetResult();
                     var rateLimitResult = rateLimit.Execute("tenant-a", static () => new ServiceReply(true));
                     var levelingResult = leveling.Execute(static () => new ServiceReply(true));
                     priority.Enqueue(new("slow", 1));
@@ -118,6 +124,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                         breaker,
                         bulkhead,
                         backpressure,
+                        lazy,
                         rateLimit,
                         leveling,
                         priority,
@@ -125,6 +132,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                         breakerResult,
                         bulkheadResult,
                         backpressureResult,
+                        lazyResult,
                         rateLimitResult,
                         levelingResult,
                         next);
@@ -140,6 +148,8 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                 ScenarioExpect.True(result.BulkheadResult.Succeeded);
                 ScenarioExpect.Equal("inventory-backpressure", result.Backpressure.Name);
                 ScenarioExpect.True(result.BackpressureResult.Accepted);
+                ScenarioExpect.Equal("inventory-lazy", result.Lazy.Name);
+                ScenarioExpect.True(result.LazyResult.Value.Available);
                 ScenarioExpect.Equal("inventory-rate-limit", result.RateLimit.Name);
                 ScenarioExpect.True(result.RateLimitResult.Allowed);
                 ScenarioExpect.Equal("inventory-leveling", result.Leveling.Name);
@@ -206,6 +216,10 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                 ScenarioExpect.Throws<ArgumentNullException>(
                     () => inputs.MissingServices!.AddPatternKitBackpressurePolicy<ServiceReply>()),
                 ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.MissingServices!.AddPatternKitLazyLoad<ServiceReply>((_, _) => new ValueTask<ServiceReply>(new ServiceReply(true)))),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.Services.AddPatternKitLazyLoad<ServiceReply>(null!)),
+                ScenarioExpect.Throws<ArgumentNullException>(
                     () => inputs.MissingServices!.AddPatternKitNullObject<INotificationSink>(new SilentNotificationSink())),
                 ScenarioExpect.Throws<ArgumentNullException>(
                     () => inputs.MissingServices!.AddPatternKitNullObject<INotificationSink>(_ => new SilentNotificationSink())),
@@ -222,6 +236,8 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                 ScenarioExpect.Equal("services", results.MissingServicesException.ParamName);
                 ScenarioExpect.Equal("prioritySelector", results.PrioritySelectorException.ParamName);
                 ScenarioExpect.Equal("services", results.BackpressureMissingServicesException.ParamName);
+                ScenarioExpect.Equal("services", results.LazyLoadMissingServicesException.ParamName);
+                ScenarioExpect.Equal("loader", results.LazyLoadLoaderException.ParamName);
                 ScenarioExpect.Equal("services", results.NullObjectInstanceMissingServicesException.ParamName);
                 ScenarioExpect.Equal("services", results.NullObjectFactoryMissingServicesException.ParamName);
                 ScenarioExpect.Equal("instance", results.NullObjectInstanceException.ParamName);
@@ -260,6 +276,8 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
         ArgumentNullException MissingServicesException,
         ArgumentNullException PrioritySelectorException,
         ArgumentNullException BackpressureMissingServicesException,
+        ArgumentNullException LazyLoadMissingServicesException,
+        ArgumentNullException LazyLoadLoaderException,
         ArgumentNullException NullObjectInstanceMissingServicesException,
         ArgumentNullException NullObjectFactoryMissingServicesException,
         ArgumentNullException NullObjectInstanceException,
@@ -280,6 +298,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
         CircuitBreakerPolicy<ServiceReply> Breaker,
         BulkheadPolicy<ServiceReply> Bulkhead,
         BackpressurePolicy<ServiceReply> Backpressure,
+        LazyLoad<ServiceReply> Lazy,
         RateLimitPolicy<ServiceReply> RateLimit,
         QueueLoadLevelingPolicy<ServiceReply> Leveling,
         PriorityQueuePolicy<WorkItem, int> Priority,
@@ -287,6 +306,7 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
         CircuitBreakerResult<ServiceReply> BreakerResult,
         BulkheadResult<ServiceReply> BulkheadResult,
         BackpressureResult<ServiceReply> BackpressureResult,
+        LazyLoadResult<ServiceReply> LazyResult,
         RateLimitResult<ServiceReply> RateLimitResult,
         QueueLoadLevelingResult<ServiceReply> LevelingResult,
         PriorityQueueDequeueResult<WorkItem, int> Next);
