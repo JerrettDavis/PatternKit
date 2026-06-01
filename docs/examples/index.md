@@ -54,6 +54,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Customer Notification Null Object**
   A Generic Host importable notification fallback with fluent and source-generated routes, `IServiceCollection` registration, and deterministic no-op behavior for optional collaborators. See [Customer Notification Null Object](null-object-notification.md).
 
+* **Checkout Backpressure**
+  A Generic Host importable checkout admission gate with fluent and source-generated routes, `IServiceCollection` registration, and explicit saturation behavior. See [Checkout Backpressure](checkout-backpressure.md).
+
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
 

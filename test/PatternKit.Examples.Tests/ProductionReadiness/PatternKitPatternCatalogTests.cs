@@ -77,6 +77,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Routing Slip",
         "Saga / Process Manager",
         "Mailbox",
+        "Backpressure",
         "Idempotent Receiver",
         "Inbox",
         "Outbox",
@@ -171,7 +172,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
             .And("enterprise entries are grouped by integration reliability and architecture families", patterns =>
             {
                 ScenarioExpect.Equal(41, patterns.Count(static p => p.Family == PatternFamily.EnterpriseIntegration));
-                ScenarioExpect.Equal(3, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
+                ScenarioExpect.Equal(4, patterns.Count(static p => p.Family == PatternFamily.MessagingReliability));
                 ScenarioExpect.Equal(20, patterns.Count(static p => p.Family == PatternFamily.CloudArchitecture));
                 ScenarioExpect.Equal(26, patterns.Count(static p => p.Family == PatternFamily.ApplicationArchitecture));
             })
@@ -249,6 +250,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                 ScenarioExpect.Equal(
                     new[]
                     {
+                        "Backpressure",
                         "Bulkhead",
                         "Circuit Breaker",
                         "Guaranteed Delivery",

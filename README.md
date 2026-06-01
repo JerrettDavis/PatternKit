@@ -473,7 +473,7 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 115 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 116 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
@@ -482,7 +482,7 @@ PatternKit currently tracks 115 production-readiness patterns. Each catalog patt
 | Cloud Architecture | 20 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 6 | Abstract Factory, Builder, Factory Method, Object Pool, Prototype, Singleton |
 | Enterprise Integration | 41 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content Enricher, Content-Based Router, Control Bus, Correlation Identifier, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Guaranteed Delivery, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Expiration, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
-| Messaging Reliability | 3 | Idempotent Receiver, Inbox, Outbox |
+| Messaging Reliability | 4 | Backpressure, Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
 ## Benchmark Snapshot
@@ -527,6 +527,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
+| Backpressure | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Backpressure | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |

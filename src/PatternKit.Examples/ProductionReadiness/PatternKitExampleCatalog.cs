@@ -849,6 +849,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Bulkhead"],
             ["concurrency isolation", "source-generated policy factory", "DI composition"]),
         Descriptor(
+            "Checkout Backpressure",
+            "src/PatternKit.Examples/BackpressureDemo/CheckoutBackpressureDemo.cs",
+            "test/PatternKit.Examples.Tests/BackpressureDemo/CheckoutBackpressureDemoTests.cs",
+            "docs/examples/checkout-backpressure.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Backpressure"],
+            ["saturation admission policy", "source-generated policy factory", "DI composition"]),
+        Descriptor(
             "Fulfillment Queue Load Leveling",
             "src/PatternKit.Examples/QueueLoadLevelingDemo/FulfillmentQueueLoadLevelingDemo.cs",
             "test/PatternKit.Examples.Tests/QueueLoadLevelingDemo/FulfillmentQueueLoadLevelingDemoTests.cs",

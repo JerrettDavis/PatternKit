@@ -60,6 +60,7 @@ public sealed class PatternKitHostingIntegrationCatalog : IPatternKitHostingInte
             ["Rate Limiting"] = "AddPatternKitRateLimitPolicy<TResult>",
             ["Queue-Based Load Leveling"] = "AddPatternKitQueueLoadLevelingPolicy<TResult>",
             ["Priority Queue"] = "AddPatternKitPriorityQueue<TItem, TPriority>",
+            ["Backpressure"] = "AddPatternKitBackpressurePolicy<TResult>",
             ["Null Object"] = "AddPatternKitNullObject<TContract>"
         };
 

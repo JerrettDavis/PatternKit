@@ -8,6 +8,7 @@ using PatternKit.Cloud.RateLimiting;
 using PatternKit.Cloud.Retry;
 using PatternKit.Messaging.Channels;
 using PatternKit.Messaging.Reliability;
+using PatternKit.Messaging.Reliability.Backpressure;
 using PatternKit.Messaging.Storage;
 
 namespace PatternKit.Hosting.DependencyInjection;
@@ -188,6 +189,25 @@ public static class PatternKitServiceCollectionExtensions
             {
                 var builder = PriorityQueuePolicy<TItem, TPriority>.Create(name)
                     .WithPrioritySelector(prioritySelector);
+                configure?.Invoke(builder);
+                return builder.Build();
+            });
+    }
+
+    public static IServiceCollection AddPatternKitBackpressurePolicy<TResult>(
+        this IServiceCollection services,
+        string name = "backpressure",
+        Action<BackpressurePolicy<TResult>.Builder>? configure = null,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton)
+    {
+        if (services is null)
+            throw new ArgumentNullException(nameof(services));
+
+        return services.AddPatternKitService(
+            lifetime,
+            _ =>
+            {
+                var builder = BackpressurePolicy<TResult>.Create(name);
                 configure?.Invoke(builder);
                 return builder.Build();
             });

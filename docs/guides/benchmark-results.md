@@ -49,6 +49,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Bridge | Execution | 91.848 ns | 664 B | 30.004 ns | 160 B | Generated bridge forwarding was faster and allocated less for notice rendering. |
 | Bulkhead | Construction | 20.56 ns | 216 B | 20.48 ns | 216 B | Effectively equivalent for this microbenchmark. |
 | Bulkhead | Execution | 102.70 ns | 592 B | 106.11 ns | 592 B | Same allocation; fluent was slightly faster for the shipping allocation workflow. |
+| Backpressure | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Backpressure | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache Stampede Protection | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Cache-Aside | Construction | 19.91 ns | 200 B | 19.85 ns | 200 B | Effectively equivalent for this microbenchmark. |
@@ -252,7 +254,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 115 catalog patterns and 460 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 10 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 116 catalog patterns and 464 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 11 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -261,15 +263,16 @@ The coverage matrix currently publishes 115 catalog patterns and 460 pattern rou
 | Cloud Architecture | 20 | 80 |
 | Creational | 6 | 24 |
 | Enterprise Integration | 41 | 164 |
-| Messaging Reliability | 3 | 12 |
+| Messaging Reliability | 4 | 16 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 110 generator source route results.
+The generator matrix currently publishes 111 generator source route results.
 
 ## Hosting Integration Matrix Results
 
 | Pattern | Route | Registration | Source | Tests | Docs |
 | --- | --- | --- | --- | --- | --- |
+| Backpressure | `IServiceCollection` | `AddPatternKitBackpressurePolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Bulkhead | `IServiceCollection` | `AddPatternKitBulkheadPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Circuit Breaker | `IServiceCollection` | `AddPatternKitCircuitBreakerPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Guaranteed Delivery | `IServiceCollection` | `AddPatternKitGuaranteedDelivery<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
@@ -390,6 +393,7 @@ The generator matrix currently publishes 110 generator source route results.
 | Enterprise Integration | Service Activator | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Splitter | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Wire Tap | Covered | Covered | Covered | Covered |
+| Messaging Reliability | Backpressure | Covered | Covered | Covered | Covered |
 | Messaging Reliability | Idempotent Receiver | Covered | Covered | Covered | Covered |
 | Messaging Reliability | Inbox | Covered | Covered | Covered | Covered |
 | Messaging Reliability | Outbox | Covered | Covered | Covered | Covered |
@@ -417,6 +421,7 @@ The generator matrix currently publishes 110 generator source route results.
 | AntiCorruptionLayerGenerator | `src/PatternKit.Generators/AntiCorruption/AntiCorruptionLayerGenerator.cs` | Covered |
 | AuditLogGenerator | `src/PatternKit.Generators/AuditLog/AuditLogGenerator.cs` | Covered |
 | BackendsForFrontendsGenerator | `src/PatternKit.Generators/BackendsForFrontends/BackendsForFrontendsGenerator.cs` | Covered |
+| BackpressurePolicyGenerator | `src/PatternKit.Generators/Backpressure/BackpressurePolicyGenerator.cs` | Covered |
 | BridgeGenerator | `src/PatternKit.Generators/Bridge/BridgeGenerator.cs` | Covered |
 | BuilderGenerator | `src/PatternKit.Generators/Builders/BuilderGenerator.cs` | Covered |
 | BulkheadPolicyGenerator | `src/PatternKit.Generators/Bulkhead/BulkheadPolicyGenerator.cs` | Covered |
