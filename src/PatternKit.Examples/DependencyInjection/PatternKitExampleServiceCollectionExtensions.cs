@@ -46,6 +46,7 @@ using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
 using PatternKit.Examples.ChangeDataCaptureDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
+using PatternKit.Examples.CompensatingTransactionDemo;
 using PatternKit.Examples.ContextMapDemo;
 using PatternKit.Examples.DataMapperDemo;
 using PatternKit.Examples.DistributedLockDemo;
@@ -229,6 +230,7 @@ public sealed record LoanApprovalSpecificationsExample(SpecificationRegistry<Loa
 public sealed record OrderValueObjectPatternExample(OrderValueObjectService Service);
 public sealed record OrderRepositoryPatternExample(OrderRepositoryDemoRunner Runner, OrderRepositoryWorkflow Workflow);
 public sealed record CheckoutUnitOfWorkPatternExample(CheckoutUnitOfWorkDemoRunner Runner, CheckoutUnitOfWorkWorkflow Workflow);
+public sealed record CheckoutCompensatingTransactionPatternExample(CheckoutCompensatingTransactionDemoRunner Runner, CheckoutCompensatingTransactionWorkflow Workflow);
 public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Runner, OrderDataMapperWorkflow Workflow);
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
 public sealed record CustomerProfileLazyLoadPatternExample(CustomerProfileLazyLoadService Service);
@@ -357,6 +359,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderValueObjectPatternExample()
             .AddOrderRepositoryPatternExample()
             .AddCheckoutUnitOfWorkPatternExample()
+            .AddCheckoutCompensatingTransactionPatternExample()
             .AddOrderDataMapperPatternExample()
             .AddOrderIdentityMapPatternExample()
             .AddCustomerProfileLazyLoadPatternExample()
@@ -1032,6 +1035,15 @@ public static class PatternKitExampleServiceCollectionExtensions
             sp.GetRequiredService<CheckoutUnitOfWorkDemoRunner>(),
             sp.GetRequiredService<CheckoutUnitOfWorkWorkflow>()));
         return services.RegisterExample<CheckoutUnitOfWorkPatternExample>("Checkout Unit of Work Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddCheckoutCompensatingTransactionPatternExample(this IServiceCollection services)
+    {
+        services.AddCheckoutCompensatingTransactionDemo();
+        services.AddSingleton<CheckoutCompensatingTransactionPatternExample>(sp => new(
+            sp.GetRequiredService<CheckoutCompensatingTransactionDemoRunner>(),
+            sp.GetRequiredService<CheckoutCompensatingTransactionWorkflow>()));
+        return services.RegisterExample<CheckoutCompensatingTransactionPatternExample>("Checkout Compensating Transaction Pattern", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderDataMapperPatternExample(this IServiceCollection services)

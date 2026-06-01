@@ -151,6 +151,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Identity Map | Execution | 108.91 ns | 968 B | 94.83 ns | 968 B | Same allocation; generated was faster for scoped identity-map reuse. |
 | Leader Election | Construction | 14.28 ns | 104 B | 15.91 ns | 104 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Leader Election | Execution | 43.62 ns | 360 B | 144.37 ns | 312 B | Generated allocated about 13% less memory, while fluent was faster in this path. |
+| Compensating Transaction | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Compensating Transaction | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Distributed Lock / Lease | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Distributed Lock / Lease | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Materialized View | Construction | 140.9 ns | 1.05 KB | 147.4 ns | 1.05 KB | Same allocation; fluent was slightly faster in this microbenchmark. |
@@ -262,11 +264,11 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 120 catalog patterns and 480 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 121 catalog patterns and 484 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
-| Application Architecture | 28 | 112 |
+| Application Architecture | 29 | 116 |
 | Behavioral | 12 | 48 |
 | Cloud Architecture | 21 | 84 |
 | Creational | 6 | 24 |
@@ -274,7 +276,7 @@ The coverage matrix currently publishes 120 catalog patterns and 480 pattern rou
 | Messaging Reliability | 4 | 16 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 115 generator source route results.
+The generator matrix currently publishes 116 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -309,6 +311,7 @@ The generator matrix currently publishes 115 generator source route results.
 | Application Architecture | Bounded Context | Covered | Covered | Covered | Covered |
 | Application Architecture | Context Map | Covered | Covered | Covered | Covered |
 | Application Architecture | CQRS | Covered | Covered | Covered | Covered |
+| Application Architecture | Compensating Transaction | Covered | Covered | Covered | Covered |
 | Application Architecture | Data Mapper | Covered | Covered | Covered | Covered |
 | Application Architecture | Domain Event | Covered | Covered | Covered | Covered |
 | Application Architecture | Domain Service | Covered | Covered | Covered | Covered |
@@ -446,6 +449,7 @@ The generator matrix currently publishes 115 generator source route results.
 | CircuitBreakerPolicyGenerator | `src/PatternKit.Generators/CircuitBreaker/CircuitBreakerPolicyGenerator.cs` | Covered |
 | ExternalConfigurationStoreGenerator | `src/PatternKit.Generators/Cloud/ExternalConfigurationStoreGenerator.cs` | Covered |
 | CommandGenerator | `src/PatternKit.Generators/Command/CommandGenerator.cs` | Covered |
+| CompensatingTransactionGenerator | `src/PatternKit.Generators/CompensatingTransactions/CompensatingTransactionGenerator.cs` | Covered |
 | ComposerGenerator | `src/PatternKit.Generators/ComposerGenerator.cs` | Covered |
 | CompositeGenerator | `src/PatternKit.Generators/Composite/CompositeGenerator.cs` | Covered |
 | DataMapperGenerator | `src/PatternKit.Generators/DataMapping/DataMapperGenerator.cs` | Covered |

@@ -1009,6 +1009,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Distributed Lock / Lease"],
             ["resource lease contention", "source-generated lock factory", "DI composition"]),
         Descriptor(
+            "Checkout Compensating Transaction Pattern",
+            "src/PatternKit.Examples/CompensatingTransactionDemo/CheckoutCompensatingTransactionDemo.cs",
+            "test/PatternKit.Examples.Tests/CompensatingTransactionDemo/CheckoutCompensatingTransactionDemoTests.cs",
+            "docs/examples/checkout-compensating-transaction-pattern.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Compensating Transaction"],
+            ["reversible checkout steps", "source-generated transaction factory", "DI composition"]),
+        Descriptor(
             "Warehouse Scheduler Agent Supervisor",
             "src/PatternKit.Examples/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemo.cs",
             "test/PatternKit.Examples.Tests/SchedulerAgentSupervisorDemo/WarehouseSchedulerAgentSupervisorDemoTests.cs",

@@ -15,6 +15,7 @@ using PatternKit.Generators.Chain;
 using PatternKit.Generators.CircuitBreaker;
 using PatternKit.Generators.Cloud;
 using PatternKit.Generators.Command;
+using PatternKit.Generators.CompensatingTransactions;
 using PatternKit.Generators.Composer;
 using PatternKit.Generators.Composite;
 using PatternKit.Generators.ContextMaps;
@@ -125,6 +126,8 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(CommandHostAttribute), AttributeTargets.Class, false, false },
         { typeof(CommandCaseAttribute), AttributeTargets.Method, false, false },
         { typeof(CommandUndoAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateCompensatingTransactionAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
+        { typeof(CompensatingTransactionStepAttribute), AttributeTargets.Method, false, false },
         { typeof(CompositeComponentAttribute), AttributeTargets.Interface | AttributeTargets.Class, false, false },
         { typeof(CompositeIgnoreAttribute), AttributeTargets.Property | AttributeTargets.Method, false, false },
         { typeof(ComposerAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -434,6 +437,30 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Equal("orders-lock", distributedLock.LockName);
         ScenarioExpect.Equal(5000, distributedLock.LeaseDurationMilliseconds);
         ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDistributedLockAttribute(null!));
+    }
+
+    [Scenario("Compensating Transaction Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Compensating_Transaction_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var generator = new GenerateCompensatingTransactionAttribute
+        {
+            FactoryMethodName = "BuildCheckout",
+            TransactionName = "checkout"
+        };
+        var step = new CompensatingTransactionStepAttribute("reserve-inventory", 10)
+        {
+            Compensation = "ReleaseInventory",
+            Condition = "ShouldReserve"
+        };
+
+        ScenarioExpect.Equal("BuildCheckout", generator.FactoryMethodName);
+        ScenarioExpect.Equal("checkout", generator.TransactionName);
+        ScenarioExpect.Equal("reserve-inventory", step.Name);
+        ScenarioExpect.Equal(10, step.Order);
+        ScenarioExpect.Equal("ReleaseInventory", step.Compensation);
+        ScenarioExpect.Equal("ShouldReserve", step.Condition);
+        ScenarioExpect.Throws<ArgumentException>(() => new CompensatingTransactionStepAttribute("", 1));
     }
 
     [Scenario("Activity Tracker Attributes Expose Defaults And Configuration")]
