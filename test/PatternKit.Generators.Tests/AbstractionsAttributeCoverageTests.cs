@@ -20,6 +20,7 @@ using PatternKit.Generators.Composite;
 using PatternKit.Generators.ContextMaps;
 using PatternKit.Generators.DataMapping;
 using PatternKit.Generators.Decorator;
+using PatternKit.Generators.DistributedLocks;
 using PatternKit.Generators.DomainEvents;
 using PatternKit.Generators.DomainServices;
 using PatternKit.Generators.EventCarriedStateTransfer;
@@ -135,6 +136,7 @@ public sealed class AbstractionsAttributeCoverageTests
         { typeof(GenerateDataMapperAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DataMapperToDataAttribute), AttributeTargets.Method, false, false },
         { typeof(DataMapperToDomainAttribute), AttributeTargets.Method, false, false },
+        { typeof(GenerateDistributedLockAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(GenerateDomainEventDispatcherAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
         { typeof(DomainEventHandlerAttribute), AttributeTargets.Method, false, false },
         { typeof(GenerateDomainServiceRegistryAttribute), AttributeTargets.Class | AttributeTargets.Struct, false, false },
@@ -414,6 +416,24 @@ public sealed class AbstractionsAttributeCoverageTests
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionExternalRuleAttribute(""));
         ScenarioExpect.Throws<ArgumentException>(() => new AntiCorruptionDomainRuleAttribute(" "));
         ScenarioExpect.IsType<AntiCorruptionTranslatorAttribute>(new AntiCorruptionTranslatorAttribute());
+    }
+
+    [Scenario("Distributed Lock Attributes Expose Defaults And Configuration")]
+    [Fact]
+    public void Distributed_Lock_Attributes_Expose_Defaults_And_Configuration()
+    {
+        var distributedLock = new GenerateDistributedLockAttribute(typeof(string))
+        {
+            FactoryMethodName = "BuildLock",
+            LockName = "orders-lock",
+            LeaseDurationMilliseconds = 5000
+        };
+
+        ScenarioExpect.Equal(typeof(string), distributedLock.KeyType);
+        ScenarioExpect.Equal("BuildLock", distributedLock.FactoryMethodName);
+        ScenarioExpect.Equal("orders-lock", distributedLock.LockName);
+        ScenarioExpect.Equal(5000, distributedLock.LeaseDurationMilliseconds);
+        ScenarioExpect.Throws<ArgumentNullException>(() => new GenerateDistributedLockAttribute(null!));
     }
 
     [Scenario("Activity Tracker Attributes Expose Defaults And Configuration")]

@@ -469,3 +469,5 @@ PKPA001 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters ho
 PKPA002 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters method is missing.
 PKPA003 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters method signature is invalid.
 PKPA004 | PatternKit.Generators.PortsAndAdapters | Error | Ports and Adapters factory name is invalid.
+PKDLOCK001 | PatternKit.Generators.DistributedLocks | Error | Distributed Lock host must be partial.
+PKDLOCK002 | PatternKit.Generators.DistributedLocks | Error | Distributed Lock configuration is invalid.

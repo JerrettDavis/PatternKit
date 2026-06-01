@@ -419,6 +419,8 @@
           href: cloud/ambassador.md
         - name: Leader Election
           href: cloud/leader-election.md
+        - name: Distributed Lock / Lease
+          href: cloud/distributed-lock-lease.md
         - name: Scheduler Agent Supervisor
           href: cloud/scheduler-agent-supervisor.md
     - name: Application Architecture

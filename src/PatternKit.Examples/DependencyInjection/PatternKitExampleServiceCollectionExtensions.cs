@@ -48,6 +48,7 @@ using PatternKit.Examples.ChangeDataCaptureDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.ContextMapDemo;
 using PatternKit.Examples.DataMapperDemo;
+using PatternKit.Examples.DistributedLockDemo;
 using PatternKit.Examples.DomainEventDemo;
 using PatternKit.Examples.DomainServiceDemo;
 using PatternKit.Examples.EnterpriseFeatureSlices;
@@ -233,6 +234,7 @@ public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner R
 public sealed record CustomerProfileLazyLoadPatternExample(CustomerProfileLazyLoadService Service);
 public sealed record ProductCatalogChangeDataCaptureExample(ProductCatalogChangeDataCaptureService Service);
 public sealed record OrderEntryPortsAndAdaptersPatternExample(OrderEntryPortsAndAdaptersWorkflow Workflow);
+public sealed record OrderAllocationDistributedLockPatternExample(OrderAllocationDistributedLockDemoRunner Runner, OrderAllocationLockWorkflow Workflow);
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
@@ -360,6 +362,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddCustomerProfileLazyLoadPatternExample()
             .AddProductCatalogChangeDataCaptureExample()
             .AddOrderEntryPortsAndAdaptersPatternExample()
+            .AddOrderAllocationDistributedLockPatternExample()
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
             .AddOrderDomainEventPatternExample()
@@ -1066,6 +1069,15 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddOrderEntryPortsAndAdaptersDemo();
         services.AddSingleton<OrderEntryPortsAndAdaptersPatternExample>(sp => new(sp.GetRequiredService<OrderEntryPortsAndAdaptersWorkflow>()));
         return services.RegisterExample<OrderEntryPortsAndAdaptersPatternExample>("Order Entry Ports and Adapters", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddOrderAllocationDistributedLockPatternExample(this IServiceCollection services)
+    {
+        services.AddOrderAllocationDistributedLockDemo();
+        services.AddSingleton<OrderAllocationDistributedLockPatternExample>(sp => new(
+            sp.GetRequiredService<OrderAllocationDistributedLockDemoRunner>(),
+            sp.GetRequiredService<OrderAllocationLockWorkflow>()));
+        return services.RegisterExample<OrderAllocationDistributedLockPatternExample>("Order Allocation Distributed Lock", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderTransactionScriptPatternExample(this IServiceCollection services)

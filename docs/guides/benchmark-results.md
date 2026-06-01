@@ -151,6 +151,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Identity Map | Execution | 108.91 ns | 968 B | 94.83 ns | 968 B | Same allocation; generated was faster for scoped identity-map reuse. |
 | Leader Election | Construction | 14.28 ns | 104 B | 15.91 ns | 104 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Leader Election | Execution | 43.62 ns | 360 B | 144.37 ns | 312 B | Generated allocated about 13% less memory, while fluent was faster in this path. |
+| Distributed Lock / Lease | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Distributed Lock / Lease | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Materialized View | Construction | 140.9 ns | 1.05 KB | 147.4 ns | 1.05 KB | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Materialized View | Execution | 389.5 ns | 2.02 KB | 386.0 ns | 2.02 KB | Effectively equivalent for this scenario. |
 | Mailbox | Construction | 17.030 ns | 216 B | 29.867 ns | 360 B | Fluent was faster and allocated less for disposable mailbox construction. |
@@ -260,19 +262,19 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 119 catalog patterns and 476 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 120 catalog patterns and 480 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
 | Application Architecture | 28 | 112 |
 | Behavioral | 12 | 48 |
-| Cloud Architecture | 20 | 80 |
+| Cloud Architecture | 21 | 84 |
 | Creational | 6 | 24 |
 | Enterprise Integration | 42 | 168 |
 | Messaging Reliability | 4 | 16 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 114 generator source route results.
+The generator matrix currently publishes 115 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -341,6 +343,7 @@ The generator matrix currently publishes 114 generator source route results.
 | Cloud Architecture | Cache Stampede Protection | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Cache-Aside | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Circuit Breaker | Covered | Covered | Covered | Covered |
+| Cloud Architecture | Distributed Lock / Lease | Covered | Covered | Covered | Covered |
 | Cloud Architecture | External Configuration Store | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Gateway Aggregation | Covered | Covered | Covered | Covered |
 | Cloud Architecture | Gateway Routing | Covered | Covered | Covered | Covered |
@@ -467,6 +470,7 @@ The generator matrix currently publishes 114 generator source route results.
 | InterpreterGenerator | `src/PatternKit.Generators/Interpreter/InterpreterGenerator.cs` | Covered |
 | IteratorGenerator | `src/PatternKit.Generators/Iterator/IteratorGenerator.cs` | Covered |
 | LeaderElectionGenerator | `src/PatternKit.Generators/LeaderElection/LeaderElectionGenerator.cs` | Covered |
+| DistributedLockGenerator | `src/PatternKit.Generators/DistributedLocks/DistributedLockGenerator.cs` | Covered |
 | MaterializedViewGenerator | `src/PatternKit.Generators/MaterializedViews/MaterializedViewGenerator.cs` | Covered |
 | MementoGenerator | `src/PatternKit.Generators/MementoGenerator.cs` | Covered |
 | NullObjectGenerator | `src/PatternKit.Generators/NullObject/NullObjectGenerator.cs` | Covered |
