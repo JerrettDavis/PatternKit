@@ -139,6 +139,11 @@ PKSNG007 | PatternKit.Generators.Singleton | Error | Generic types are not suppo
 PKSNG008 | PatternKit.Generators.Singleton | Error | Nested types are not supported
 PKSNG009 | PatternKit.Generators.Singleton | Error | Invalid instance property name
 PKSNG010 | PatternKit.Generators.Singleton | Error | Abstract types not supported for Singleton pattern
+PKNO001 | PatternKit.Generators.NullObject | Error | Null Object contract must be an interface
+PKNO002 | PatternKit.Generators.NullObject | Error | Generic Null Object contracts are not supported
+PKNO003 | PatternKit.Generators.NullObject | Error | Null Object type name is invalid
+PKNO004 | PatternKit.Generators.NullObject | Error | Null Object contract member is not supported
+PKNO005 | PatternKit.Generators.NullObject | Error | Null Object type name conflicts with an existing type
 PKADP001 | PatternKit.Generators.Adapter | Error | Adapter host must be static partial
 PKADP002 | PatternKit.Generators.Adapter | Error | Target must be interface or abstract class
 PKADP003 | PatternKit.Generators.Adapter | Error | Missing mapping for target member

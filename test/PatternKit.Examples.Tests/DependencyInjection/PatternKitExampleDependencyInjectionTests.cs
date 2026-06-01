@@ -91,6 +91,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
         var showcase = provider.GetRequiredService<PatternsShowcaseExample>();
         var proxy = provider.GetRequiredService<ProxyPatternDemonstrationsExample>();
         var flyweight = provider.GetRequiredService<FlyweightGlyphCacheExample>();
+        var nullObject = provider.GetRequiredService<CustomerNotificationNullObjectExample>();
         var editor = provider.GetRequiredService<TextEditorMementoExample>();
         var eventHub = provider.GetRequiredService<ObserverEventHubExample>();
         var viewModel = provider.GetRequiredService<ReactiveViewModelExample>();
@@ -205,6 +206,7 @@ public sealed class PatternKitExampleDependencyInjectionTests(ITestOutputHelper 
             ("remote proxy returns remote data", proxy.RemoteProxy.Execute(42).Contains("42", StringComparison.Ordinal)),
             ("email proxy accepts example addresses", proxy.EmailProxy.Execute(("user@example.com", "Hello", "Body"))),
             ("flyweight renderer returns one glyph per character", flyweight.RenderSentence("hello").Count == 5),
+            ("null object notification fallback suppresses optional delivery", !nullObject.Workflow.Notify(new("C-DI", "Optional", "No channel")).Delivered),
             ("memento editor tracks inserted text", editor.Editor.State.Text == "hello"),
             ("observer event hub publishes events", received),
             ("reactive view model enables save", viewModel.ViewModel.CanSave.Value),

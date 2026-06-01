@@ -11,6 +11,7 @@ using PatternKit.Application.Timeouts;
 using PatternKit.Application.WorkflowOrchestration;
 using PatternKit.Behavioral.Chain;
 using PatternKit.Behavioral.Interpreter;
+using PatternKit.Behavioral.NullObject;
 using PatternKit.Behavioral.Strategy;
 using PatternKit.Behavioral.TypeDispatcher;
 using PatternKit.Cloud.Bulkhead;
@@ -66,6 +67,7 @@ using PatternKit.Examples.ManualTaskGateDemo;
 using PatternKit.Examples.MaterializedViewDemo;
 using PatternKit.Examples.MementoDemo;
 using PatternKit.Examples.Messaging;
+using PatternKit.Examples.NullObjectDemo;
 using PatternKit.Examples.ObjectPoolDemo;
 using PatternKit.Examples.ObserverDemo;
 using PatternKit.Examples.PatternShowcase;
@@ -234,6 +236,7 @@ public sealed record OrderMaterializedViewPatternExample(OrderMaterializedViewDe
 public sealed record PrototypeGameCharacterFactoryExample(Prototype<string, PrototypeDemo.PrototypeDemo.GameCharacter> Factory);
 public sealed record ProxyPatternDemonstrationsExample(Proxy<int, string> RemoteProxy, Proxy<(string To, string Subject, string Body), bool> EmailProxy);
 public sealed record FlyweightGlyphCacheExample(Func<string, IReadOnlyList<(FlyweightDemo.FlyweightDemo.Glyph Glyph, int X)>> RenderSentence);
+public sealed record CustomerNotificationNullObjectExample(NullObject<ICustomerNotificationChannel> Fallback, ICustomerNotificationChannel Channel, CustomerNotificationWorkflow Workflow);
 public sealed record TextEditorMementoExample(MementoDemo.MementoDemo.TextEditor Editor);
 public sealed record ObserverEventHubExample(EventHub<UserEvent> Hub);
 public sealed record ReactiveViewModelExample(ProfileViewModel ViewModel);
@@ -356,6 +359,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddPrototypeGameCharacterFactoryExample()
             .AddProxyPatternDemonstrationsExample()
             .AddFlyweightGlyphCacheExample()
+            .AddCustomerNotificationNullObjectExample()
             .AddTextEditorMementoExample()
             .AddObserverEventHubExample()
             .AddReactiveViewModelExample()
@@ -1115,6 +1119,21 @@ public static class PatternKitExampleServiceCollectionExtensions
     {
         services.AddSingleton(new FlyweightGlyphCacheExample(FlyweightDemo.FlyweightDemo.RenderSentence));
         return services.RegisterExample<FlyweightGlyphCacheExample>("Flyweight Glyph Cache", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection);
+    }
+
+    public static IServiceCollection AddCustomerNotificationNullObjectExample(this IServiceCollection services)
+    {
+        services.AddSingleton(_ => CustomerNotificationNullObjectDemo.CreateFluentFallback());
+        services.AddSingleton(sp => sp.GetRequiredService<NullObject<ICustomerNotificationChannel>>().Instance);
+        services.AddSingleton<CustomerNotificationWorkflow>();
+        services.AddSingleton<CustomerNotificationNullObjectExample>(sp => new(
+            sp.GetRequiredService<NullObject<ICustomerNotificationChannel>>(),
+            sp.GetRequiredService<ICustomerNotificationChannel>(),
+            sp.GetRequiredService<CustomerNotificationWorkflow>()));
+
+        return services.RegisterExample<CustomerNotificationNullObjectExample>(
+            "Customer Notification Null Object",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.SourceGenerator);
     }
 
     public static IServiceCollection AddTextEditorMementoExample(this IServiceCollection services)

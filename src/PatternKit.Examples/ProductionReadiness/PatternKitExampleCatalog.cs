@@ -753,6 +753,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Flyweight"],
             ["identity sharing", "case-insensitive styles", "layout reuse"]),
         Descriptor(
+            "Customer Notification Null Object",
+            "src/PatternKit.Examples/NullObjectDemo/CustomerNotificationNullObjectDemo.cs",
+            "test/PatternKit.Examples.Tests/NullObjectDemo/CustomerNotificationNullObjectDemoTests.cs",
+            "docs/examples/null-object-notification.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.SourceGenerator,
+            ["Null Object"],
+            ["optional collaborator fallback", "generated no-op contract", "DI composition"]),
+        Descriptor(
             "Text Editor Memento",
             "src/PatternKit.Examples/MementoDemo/MementoDemo.cs",
             "test/PatternKit.Examples.Tests/MementoDemo/MementoDemoTests.cs",

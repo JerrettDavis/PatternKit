@@ -128,7 +128,8 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
         "Workflow Orchestration",
         "Snapshot / Checkpoint Management",
         "Timeout Manager",
-        "Object Pool"
+        "Object Pool",
+        "Null Object"
     ];
 
     [Scenario("Catalog covers every canonical GoF pattern")]
@@ -253,6 +254,7 @@ public sealed class PatternKitPatternCatalogTests(ITestOutputHelper output) : Ti
                         "Guaranteed Delivery",
                         "Message Channel",
                         "Message Store",
+                        "Null Object",
                         "Priority Queue",
                         "Queue-Based Load Leveling",
                         "Rate Limiting",

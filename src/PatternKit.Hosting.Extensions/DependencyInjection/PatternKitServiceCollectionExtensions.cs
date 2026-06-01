@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Behavioral.NullObject;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.PriorityQueue;
@@ -190,6 +191,50 @@ public static class PatternKitServiceCollectionExtensions
                 configure?.Invoke(builder);
                 return builder.Build();
             });
+    }
+
+    public static IServiceCollection AddPatternKitNullObject<TContract>(
+        this IServiceCollection services,
+        TContract instance,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton)
+        where TContract : class
+    {
+        if (services is null)
+            throw new ArgumentNullException(nameof(services));
+        if (instance is null)
+            throw new ArgumentNullException(nameof(instance));
+
+        services.AddPatternKitService(
+            lifetime,
+            _ => NullObject<TContract>.Create(instance).Build());
+        services.Add(ServiceDescriptor.Describe(
+            typeof(TContract),
+            provider => provider.GetRequiredService<NullObject<TContract>>().Instance,
+            lifetime));
+
+        return services;
+    }
+
+    public static IServiceCollection AddPatternKitNullObject<TContract>(
+        this IServiceCollection services,
+        Func<IServiceProvider, TContract> factory,
+        ServiceLifetime lifetime = ServiceLifetime.Singleton)
+        where TContract : class
+    {
+        if (services is null)
+            throw new ArgumentNullException(nameof(services));
+        if (factory is null)
+            throw new ArgumentNullException(nameof(factory));
+
+        services.AddPatternKitService(
+            lifetime,
+            provider => NullObject<TContract>.Create(factory(provider)).Build());
+        services.Add(ServiceDescriptor.Describe(
+            typeof(TContract),
+            provider => provider.GetRequiredService<NullObject<TContract>>().Instance,
+            lifetime));
+
+        return services;
     }
 
     private static IServiceCollection AddPatternKitService<TService>(
