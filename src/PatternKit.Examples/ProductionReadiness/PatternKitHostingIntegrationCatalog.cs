@@ -59,7 +59,8 @@ public sealed class PatternKitHostingIntegrationCatalog : IPatternKitHostingInte
             ["Bulkhead"] = "AddPatternKitBulkheadPolicy<TResult>",
             ["Rate Limiting"] = "AddPatternKitRateLimitPolicy<TResult>",
             ["Queue-Based Load Leveling"] = "AddPatternKitQueueLoadLevelingPolicy<TResult>",
-            ["Priority Queue"] = "AddPatternKitPriorityQueue<TItem, TPriority>"
+            ["Priority Queue"] = "AddPatternKitPriorityQueue<TItem, TPriority>",
+            ["Null Object"] = "AddPatternKitNullObject<TContract>"
         };
 
     private static readonly Lazy<IReadOnlyList<PatternHostingIntegrationDescriptor>> LazyIntegrations =

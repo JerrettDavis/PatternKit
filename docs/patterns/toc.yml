@@ -72,6 +72,8 @@
           href: behavioral/memento/real-world-examples.md
         - name: Memento
           href: behavioral/memento/memento.md
+    - name: Null Object
+      href: behavioral/null-object/index.md
     - name: Observer
       href: behavioral/observer/index.md
       items:

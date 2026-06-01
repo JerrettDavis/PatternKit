@@ -51,6 +51,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Order Projection Eventual Consistency Monitor**
   A Generic Host importable monitor with fluent and source-generated routes for source/target watermark convergence. See [Order Projection Eventual Consistency Monitor](order-projection-eventual-consistency-monitor.md).
 
+* **Customer Notification Null Object**
+  A Generic Host importable notification fallback with fluent and source-generated routes, `IServiceCollection` registration, and deterministic no-op behavior for optional collaborators. See [Customer Notification Null Object](null-object-notification.md).
+
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
 

@@ -55,12 +55,37 @@ jobs:
       - name: Test with coverage
         timeout-minutes: 45
         run: |
-          dotnet test PatternKit.slnx \
+          dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=core-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=generators-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=hosting-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=examples-test-results" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
       - name: Install ReportGenerator
@@ -171,12 +196,37 @@ jobs:
       - name: Test with coverage (Release)
         timeout-minutes: 60
         run: |
-          dotnet test PatternKit.slnx \
+          dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
             --no-build \
             -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=core-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=generators-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=hosting-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
+            --configuration Release \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=examples-test-results" \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
 

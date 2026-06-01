@@ -29,6 +29,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Timeout Manager | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregate Root | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Null Object | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Null Object | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Aggregator | Construction | 14.562 ns | 168 B | 15.235 ns | 168 B | Same allocation; fluent was slightly faster in this microbenchmark. |
 | Aggregator | Execution | 188.000 ns | 1,088 B | 200.564 ns | 1,088 B | Same allocation; fluent was faster for order line aggregation. |
 | Ambassador | Construction | 55.42 ns | 448 B | 48.03 ns | 360 B | Generated reduced construction time and allocation in this microbenchmark. |
@@ -250,19 +252,19 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 115 catalog patterns and 460 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 9 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 115 catalog patterns and 460 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 10 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
 | Application Architecture | 26 | 104 |
-| Behavioral | 11 | 44 |
+| Behavioral | 12 | 48 |
 | Cloud Architecture | 20 | 80 |
 | Creational | 6 | 24 |
 | Enterprise Integration | 41 | 164 |
 | Messaging Reliability | 3 | 12 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 109 generator source route results.
+The generator matrix currently publishes 110 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -273,6 +275,7 @@ The generator matrix currently publishes 109 generator source route results.
 | Guaranteed Delivery | `IServiceCollection` | `AddPatternKitGuaranteedDelivery<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Message Channel | `IServiceCollection` | `AddPatternKitMessageChannel<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Message Store | `IServiceCollection` | `AddPatternKitMessageStore<TPayload>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
+| Null Object | `IServiceCollection` | `AddPatternKitNullObject<TContract>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Priority Queue | `IServiceCollection` | `AddPatternKitPriorityQueue<TItem, TPriority>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Queue-Based Load Leveling | `IServiceCollection` | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
 | Rate Limiting | `IServiceCollection` | `AddPatternKitRateLimitPolicy<TResult>` | `src/PatternKit.Hosting.Extensions/DependencyInjection/PatternKitServiceCollectionExtensions.cs` | `test/PatternKit.Hosting.Extensions.Tests/DependencyInjection/PatternKitServiceCollectionExtensionsTests.cs` | `docs/guides/hosting-extensions.md` |
@@ -314,6 +317,7 @@ The generator matrix currently publishes 109 generator source route results.
 | Behavioral | Iterator | Covered | Covered | Covered | Covered |
 | Behavioral | Mediator | Covered | Covered | Covered | Covered |
 | Behavioral | Memento | Covered | Covered | Covered | Covered |
+| Behavioral | Null Object | Covered | Covered | Covered | Covered |
 | Behavioral | Observer | Covered | Covered | Covered | Covered |
 | Behavioral | State | Covered | Covered | Covered | Covered |
 | Behavioral | Strategy | Covered | Covered | Covered | Covered |
@@ -449,6 +453,7 @@ The generator matrix currently publishes 109 generator source route results.
 | LeaderElectionGenerator | `src/PatternKit.Generators/LeaderElection/LeaderElectionGenerator.cs` | Covered |
 | MaterializedViewGenerator | `src/PatternKit.Generators/MaterializedViews/MaterializedViewGenerator.cs` | Covered |
 | MementoGenerator | `src/PatternKit.Generators/MementoGenerator.cs` | Covered |
+| NullObjectGenerator | `src/PatternKit.Generators/NullObject/NullObjectGenerator.cs` | Covered |
 | BackplaneTopologyGenerator | `src/PatternKit.Generators/Messaging/BackplaneTopologyGenerator.cs` | Covered |
 | ChannelAdapterGenerator | `src/PatternKit.Generators/Messaging/ChannelAdapterGenerator.cs` | Covered |
 | ChannelPurgerGenerator | `src/PatternKit.Generators/Messaging/ChannelPurgerGenerator.cs` | Covered |

@@ -118,6 +118,9 @@
 - name: Memento
   href: memento.md
 
+- name: Null Object
+  href: null-object.md
+
 - name: Messaging Generators
   href: messaging.md
 

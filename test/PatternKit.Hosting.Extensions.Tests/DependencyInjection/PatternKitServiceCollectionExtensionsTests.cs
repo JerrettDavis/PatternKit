@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Behavioral.NullObject;
 using PatternKit.Cloud.Bulkhead;
 using PatternKit.Cloud.CircuitBreaker;
 using PatternKit.Cloud.PriorityQueue;
@@ -146,7 +147,9 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                 var services = new ServiceCollection();
                 services
                     .AddPatternKitMessageChannel<OrderCommand>(lifetime: ServiceLifetime.Scoped)
-                    .AddPatternKitRetryPolicy<ServiceReply>(lifetime: ServiceLifetime.Transient);
+                    .AddPatternKitRetryPolicy<ServiceReply>(lifetime: ServiceLifetime.Transient)
+                    .AddPatternKitNullObject<INotificationSink>(new SilentNotificationSink(), ServiceLifetime.Singleton)
+                    .AddPatternKitNullObject<IStatusSink>(_ => new SilentStatusSink(), ServiceLifetime.Singleton);
 
                 return services.BuildServiceProvider(validateScopes: true);
             })
@@ -161,8 +164,12 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                     var channelB = scopeB.ServiceProvider.GetRequiredService<MessageChannel<OrderCommand>>();
                     var retryA = provider.GetRequiredService<RetryPolicy<ServiceReply>>();
                     var retryB = provider.GetRequiredService<RetryPolicy<ServiceReply>>();
+                    var nullObject = provider.GetRequiredService<NullObject<INotificationSink>>();
+                    var sink = provider.GetRequiredService<INotificationSink>();
+                    var statusNullObject = provider.GetRequiredService<NullObject<IStatusSink>>();
+                    var statusSink = provider.GetRequiredService<IStatusSink>();
 
-                    return new LifetimeRegistrationResult(channelA1, channelA2, channelB, retryA, retryB);
+                    return new LifetimeRegistrationResult(channelA1, channelA2, channelB, retryA, retryB, nullObject, sink, statusNullObject, statusSink);
                 }
             })
             .Then("scoped registrations reuse a scope and transient registrations create new policies", result =>
@@ -170,6 +177,10 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                 ScenarioExpect.Same(result.ChannelA1, result.ChannelA2);
                 ScenarioExpect.NotSame(result.ChannelA1, result.ChannelB);
                 ScenarioExpect.NotSame(result.RetryA, result.RetryB);
+                ScenarioExpect.Same(result.NullObject.Instance, result.Sink);
+                ScenarioExpect.False(result.NullObject.Instance.Send("C-1", "optional"));
+                ScenarioExpect.Same(result.StatusNullObject.Instance, result.StatusSink);
+                ScenarioExpect.Equal("suppressed", result.StatusSink.Status);
             })
             .AssertPassed();
 
@@ -182,12 +193,27 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
                     () => inputs.MissingServices!.AddPatternKitMessageChannel<OrderCommand>()),
                 ScenarioExpect.Throws<ArgumentNullException>(
                     () => inputs.Services.AddPatternKitPriorityQueue<WorkItem, int>(null!)),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.MissingServices!.AddPatternKitNullObject<INotificationSink>(new SilentNotificationSink())),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.MissingServices!.AddPatternKitNullObject<INotificationSink>(_ => new SilentNotificationSink())),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.Services.AddPatternKitNullObject<INotificationSink>((INotificationSink)null!)),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.Services.AddPatternKitNullObject<INotificationSink>((Func<IServiceProvider, INotificationSink>)null!)),
+                ScenarioExpect.Throws<ArgumentNullException>(
+                    () => inputs.Services.AddPatternKitNullObject<INotificationSink>(_ => null!).BuildServiceProvider(validateScopes: true).GetRequiredService<NullObject<INotificationSink>>()),
                 ScenarioExpect.Throws<ArgumentOutOfRangeException>(
                     () => inputs.Services.AddPatternKitRetryPolicy<ServiceReply>(lifetime: (ServiceLifetime)99))))
             .Then("the extensions reject invalid registrations explicitly", results =>
             {
                 ScenarioExpect.Equal("services", results.MissingServicesException.ParamName);
                 ScenarioExpect.Equal("prioritySelector", results.PrioritySelectorException.ParamName);
+                ScenarioExpect.Equal("services", results.NullObjectInstanceMissingServicesException.ParamName);
+                ScenarioExpect.Equal("services", results.NullObjectFactoryMissingServicesException.ParamName);
+                ScenarioExpect.Equal("instance", results.NullObjectInstanceException.ParamName);
+                ScenarioExpect.Equal("factory", results.NullObjectFactoryException.ParamName);
+                ScenarioExpect.Equal("instance", results.NullObjectFactoryResultException.ParamName);
                 ScenarioExpect.Equal("lifetime", results.InvalidLifetimeException.ParamName);
             })
             .AssertPassed();
@@ -195,11 +221,36 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
     private sealed record OrderCommand(string OrderId, decimal Total);
     private sealed record ServiceReply(bool Available);
     private sealed record WorkItem(string Id, int Priority);
+    private interface INotificationSink
+    {
+        bool Send(string recipient, string body);
+    }
+
+    private sealed class SilentNotificationSink : INotificationSink
+    {
+        public bool Send(string recipient, string body) => false;
+    }
+
+    private interface IStatusSink
+    {
+        string Status { get; }
+    }
+
+    private sealed class SilentStatusSink : IStatusSink
+    {
+        public string Status => "suppressed";
+    }
+
     private sealed record InvalidRegistrationInputs(IServiceCollection? MissingServices, IServiceCollection Services);
 
     private sealed record InvalidRegistrationResults(
         ArgumentNullException MissingServicesException,
         ArgumentNullException PrioritySelectorException,
+        ArgumentNullException NullObjectInstanceMissingServicesException,
+        ArgumentNullException NullObjectFactoryMissingServicesException,
+        ArgumentNullException NullObjectInstanceException,
+        ArgumentNullException NullObjectFactoryException,
+        ArgumentNullException NullObjectFactoryResultException,
         ArgumentOutOfRangeException InvalidLifetimeException);
 
     private sealed record MessagingRegistrationResult(
@@ -229,7 +280,11 @@ public sealed class PatternKitServiceCollectionExtensionsTests(ITestOutputHelper
         MessageChannel<OrderCommand> ChannelA2,
         MessageChannel<OrderCommand> ChannelB,
         RetryPolicy<ServiceReply> RetryA,
-        RetryPolicy<ServiceReply> RetryB);
+        RetryPolicy<ServiceReply> RetryB,
+        NullObject<INotificationSink> NullObject,
+        INotificationSink Sink,
+        NullObject<IStatusSink> StatusNullObject,
+        IStatusSink StatusSink);
 
     private static async Task<MessagingRegistrationResult> ResolveMessagingRegistrationsAsync(ServiceProvider provider)
     {

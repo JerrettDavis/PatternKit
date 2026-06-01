@@ -83,6 +83,18 @@ public sealed record ServiceReply(bool Available);
 public sealed record InventoryWork(string Sku, int Priority);
 ```
 
+Register null-object fallbacks for optional collaborators:
+
+```csharp
+using Microsoft.Extensions.DependencyInjection;
+using PatternKit.Hosting.DependencyInjection;
+
+var services = new ServiceCollection();
+
+services.AddPatternKitNullObject<INotificationChannel>(
+    NullNotificationChannel.Instance);
+```
+
 All helpers accept a `ServiceLifetime`; singleton is the default because most PatternKit runtime primitives hold useful state such as queues, windows, counters, or circuit state.
 
 ```csharp
@@ -106,6 +118,7 @@ Every catalog pattern is importable through the production example catalog. The 
 | Rate Limiting | `AddPatternKitRateLimitPolicy<TResult>` | Register per-key rate windows. |
 | Queue-Based Load Leveling | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | Register queue-backed worker policies. |
 | Priority Queue | `AddPatternKitPriorityQueue<TItem, TPriority>` | Register priority-ordered work queues. |
+| Null Object | `AddPatternKitNullObject<TContract>` | Register deterministic no-op fallback collaborators. |
 
 The hosting integration catalog in `PatternKit.Examples.ProductionReadiness` audits every catalog pattern against this reusable surface and the example-level `AddPatternKitExamples()` import path. BenchmarkDotNet coverage includes a dedicated `HostingIntegration` matrix route for every reusable registration above.
 

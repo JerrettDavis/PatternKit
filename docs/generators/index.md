@@ -56,6 +56,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Interpreter**](interpreter.md) | DSL rule factories for terminal and non-terminal expressions | `[GenerateInterpreter]` |
 | [**Iterator**](iterator.md) | Enumerable/async-enumerable iteration helpers | `[Iterator]` |
 | [**Memento**](memento.md) | Immutable snapshots with optional undo/redo history | `[Memento]` |
+| [**Null Object**](null-object.md) | Deterministic no-op implementations for optional contracts | `[GenerateNullObject]` |
 | [**Observer**](observer.md) | Event hubs and observer dispatch | `[ObserverHub]` |
 | [**State Machine**](state-machine.md) | Deterministic finite state machines | `[StateMachine]` |
 | [**Strategy**](strategy.md) | Predicate-based dispatch with fluent builder | `[GenerateStrategy]` |
