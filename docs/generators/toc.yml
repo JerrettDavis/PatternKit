@@ -31,6 +31,9 @@
 - name: Backpressure
   href: backpressure.md
 
+- name: Change Data Capture
+  href: change-data-capture.md
+
 - name: Cache-Aside
   href: cache-aside.md
 

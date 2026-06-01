@@ -59,6 +59,8 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
 | Read-Through / Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Read-Through / Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Change Data Capture | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Change Data Capture | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Read-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Read-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
@@ -256,7 +258,7 @@ The latest measured timings below were captured on Windows 11, Intel Core i9-149
 
 ## Coverage Matrix Summary
 
-The coverage matrix currently publishes 117 catalog patterns and 468 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
+The coverage matrix currently publishes 118 catalog patterns and 472 pattern route results. Each pattern has four BenchmarkDotNet routes: fluent construction, fluent execution, source-generated construction, and source-generated execution. The reusable hosting integration matrix publishes 12 reusable hosting integration route results for package-level `IServiceCollection` registrations.
 
 | Category | Patterns | Published route results |
 | --- | ---: | ---: |
@@ -264,11 +266,11 @@ The coverage matrix currently publishes 117 catalog patterns and 468 pattern rou
 | Behavioral | 12 | 48 |
 | Cloud Architecture | 20 | 80 |
 | Creational | 6 | 24 |
-| Enterprise Integration | 41 | 164 |
+| Enterprise Integration | 42 | 168 |
 | Messaging Reliability | 4 | 16 |
 | Structural | 7 | 28 |
 
-The generator matrix currently publishes 112 generator source route results.
+The generator matrix currently publishes 113 generator source route results.
 
 ## Hosting Integration Matrix Results
 
@@ -358,6 +360,7 @@ The generator matrix currently publishes 112 generator source route results.
 | Creational | Singleton | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Aggregator | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Canonical Data Model | Covered | Covered | Covered | Covered |
+| Enterprise Integration | Change Data Capture | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Channel Adapter | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Channel Purger | Covered | Covered | Covered | Covered |
 | Enterprise Integration | Invalid Message Channel | Covered | Covered | Covered | Covered |
@@ -466,6 +469,7 @@ The generator matrix currently publishes 112 generator source route results.
 | NullObjectGenerator | `src/PatternKit.Generators/NullObject/NullObjectGenerator.cs` | Covered |
 | BackplaneTopologyGenerator | `src/PatternKit.Generators/Messaging/BackplaneTopologyGenerator.cs` | Covered |
 | ChannelAdapterGenerator | `src/PatternKit.Generators/Messaging/ChannelAdapterGenerator.cs` | Covered |
+| ChangeDataCaptureGenerator | `src/PatternKit.Generators/ChangeDataCapture/ChangeDataCaptureGenerator.cs` | Covered |
 | ChannelPurgerGenerator | `src/PatternKit.Generators/Messaging/ChannelPurgerGenerator.cs` | Covered |
 | InvalidMessageChannelGenerator | `src/PatternKit.Generators/Messaging/InvalidMessageChannelGenerator.cs` | Covered |
 | ClaimCheckGenerator | `src/PatternKit.Generators/Messaging/ClaimCheckGenerator.cs` | Covered |

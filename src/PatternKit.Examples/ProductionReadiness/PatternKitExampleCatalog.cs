@@ -601,6 +601,14 @@ public sealed class PatternKitExampleCatalog : IPatternKitExampleCatalog
             ["Lazy Load"],
             ["deferred profile relationship", "source-generated lazy-load factory", "DI composition"]),
         Descriptor(
+            "Product Catalog Change Data Capture",
+            "src/PatternKit.Examples/ChangeDataCaptureDemo/ProductCatalogChangeDataCaptureDemo.cs",
+            "test/PatternKit.Examples.Tests/ChangeDataCaptureDemo/ProductCatalogChangeDataCaptureDemoTests.cs",
+            "docs/examples/product-catalog-change-data-capture.md",
+            ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost,
+            ["Change Data Capture"],
+            ["ordered mutation capture", "source-generated CDC pipeline factory", "DI composition"]),
+        Descriptor(
             "Order Transaction Script Pattern",
             "src/PatternKit.Examples/TransactionScriptDemo/OrderTransactionScriptDemo.cs",
             "test/PatternKit.Examples.Tests/TransactionScriptDemo/OrderTransactionScriptDemoTests.cs",

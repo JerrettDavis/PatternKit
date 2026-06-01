@@ -473,7 +473,7 @@ var cachedRemoteProxy = Proxy<int, string>.Create(id => remoteProxy.Execute(id))
 ---
 
 ## Patterns Table
-PatternKit currently tracks 117 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
+PatternKit currently tracks 118 production-readiness patterns. Each catalog pattern is represented in tests, documentation, real-world examples, IoC integration, and the BenchmarkDotNet coverage matrix.
 
 | Category | Count | Patterns |
 | --- | ---: | --- |
@@ -481,7 +481,7 @@ PatternKit currently tracks 117 production-readiness patterns. Each catalog patt
 | Behavioral | 12 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Null Object, Observer, State, Strategy, Template Method, Visitor |
 | Cloud Architecture | 20 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
 | Creational | 6 | Abstract Factory, Builder, Factory Method, Object Pool, Prototype, Singleton |
-| Enterprise Integration | 41 | Aggregator, Canonical Data Model, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content Enricher, Content-Based Router, Control Bus, Correlation Identifier, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Guaranteed Delivery, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Expiration, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
+| Enterprise Integration | 42 | Aggregator, Canonical Data Model, Change Data Capture, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content Enricher, Content-Based Router, Control Bus, Correlation Identifier, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Guaranteed Delivery, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Expiration, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
 | Messaging Reliability | 4 | Backpressure, Idempotent Receiver, Inbox, Outbox |
 | Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
 
@@ -535,6 +535,8 @@ BenchmarkDotNet guidance is documented in [docs/guides/benchmarks.md](docs/guide
 | Cache-Aside | Execution | 216.50 ns | 1,048 B | 208.60 ns | 1,048 B | Same allocation; generated was slightly faster for the miss-then-hit workflow. |
 | Read-Through / Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Read-Through / Write-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Change Data Capture | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
+| Change Data Capture | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix; publish measured values after the next benchmark refresh. |
 | Read-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Read-Through Cache | Execution | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
 | Write-Through Cache | Construction | Pending | Pending | Pending | Pending | Covered by the BenchmarkDotNet matrix through the read/write-through cache route. |
