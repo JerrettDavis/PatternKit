@@ -371,6 +371,8 @@
           href: messaging/saga.md
         - name: Mailbox
           href: messaging/mailbox.md
+        - name: Change Data Capture
+          href: messaging/change-data-capture.md
         - name: Backpressure
           href: messaging/backpressure.md
         - name: Idempotent Receiver, Inbox, and Outbox

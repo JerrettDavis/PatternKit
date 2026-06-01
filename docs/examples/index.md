@@ -60,6 +60,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Customer Profile Lazy Load**
   A Generic Host importable deferred profile lookup with fluent and source-generated routes, `IServiceCollection` registration, TTL caching, and invalidation. See [Customer Profile Lazy Load](customer-profile-lazy-load.md).
 
+* **Product Catalog Change Data Capture**
+  A Generic Host importable mutation capture workflow with fluent and source-generated routes, ordered pending records, and post-commit publication. See [Product Catalog Change Data Capture](product-catalog-change-data-capture.md).
+
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
 

@@ -125,6 +125,7 @@ PatternKit includes a Roslyn incremental generator package (`PatternKit.Generato
 | [**Saga**](messaging.md#generated-saga) | Typed process-manager transition factories | `[GenerateSaga]` |
 | [**Mailbox**](messaging.md#generated-mailbox) | Serialized in-process inbox factories | `[GenerateMailbox]` |
 | [**Backpressure**](backpressure.md) | Admission-control policy factories for saturated work boundaries | `[GenerateBackpressurePolicy]` |
+| [**Change Data Capture**](change-data-capture.md) | Ordered mutation capture pipeline factories | `[GenerateChangeDataCapture]` |
 | [**Reliability Pipeline**](messaging.md#generated-reliability-pipeline) | Idempotent receiver, inbox, and outbox factories | `[GenerateReliabilityPipeline]` |
 | [**Backplane Topology**](messaging.md#generated-backplane-topology) | Request/reply routes and publish/subscribe endpoint topology | `[GenerateBackplaneTopology]` |
 
@@ -289,6 +290,10 @@ public static partial class OrderMailbox { }
 // Backpressure - generated admission-control policy
 [GenerateBackpressurePolicy(typeof(CheckoutAdmission), Capacity = 8, Mode = "Wait", WaitTimeoutMilliseconds = 50)]
 public static partial class CheckoutBackpressurePolicy { }
+
+// Change data capture - generated mutation capture pipeline
+[GenerateChangeDataCapture(typeof(ProductMutation), typeof(ProductChanged), MapperMethodName = "Map")]
+public static partial class ProductCatalogCdc { }
 
 // Reliability pipeline - generated idempotent receiver, inbox, and outbox factories
 [GenerateReliabilityPipeline(typeof(AcceptOrder), typeof(string), typeof(OrderAccepted))]

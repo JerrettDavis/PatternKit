@@ -458,6 +458,10 @@ PKBP001 | PatternKit.Generators.Backpressure | Error | Backpressure policy host 
 PKBP002 | PatternKit.Generators.Backpressure | Error | Backpressure policy configuration is invalid.
 PKBP003 | PatternKit.Generators.Backpressure | Error | Backpressure factory method name is invalid.
 PKBP004 | PatternKit.Generators.Backpressure | Error | Backpressure mode is invalid.
+PKCDC001 | PatternKit.Generators.ChangeDataCapture | Error | Change Data Capture host must be partial.
+PKCDC002 | PatternKit.Generators.ChangeDataCapture | Error | Change Data Capture member names must be valid identifiers.
+PKCDC003 | PatternKit.Generators.ChangeDataCapture | Error | Change Data Capture mutation and event types are required.
+PKCDC004 | PatternKit.Generators.ChangeDataCapture | Error | Change Data Capture containing type must be partial.
 PKLL001 | PatternKit.Generators.LazyLoading | Error | Lazy load host must be partial.
 PKLL002 | PatternKit.Generators.LazyLoading | Error | Lazy load configuration is invalid.
 PKLL003 | PatternKit.Generators.LazyLoading | Error | Lazy load member name is invalid.

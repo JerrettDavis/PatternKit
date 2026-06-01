@@ -44,6 +44,7 @@ using PatternKit.Examples.CacheStampedeProtectionDemo;
 using PatternKit.Examples.CanonicalDataModelDemo;
 using PatternKit.Examples.Chain;
 using PatternKit.Examples.Chain.ConfigDriven;
+using PatternKit.Examples.ChangeDataCaptureDemo;
 using PatternKit.Examples.CircuitBreakerDemo;
 using PatternKit.Examples.ContextMapDemo;
 using PatternKit.Examples.DataMapperDemo;
@@ -229,6 +230,7 @@ public sealed record CheckoutUnitOfWorkPatternExample(CheckoutUnitOfWorkDemoRunn
 public sealed record OrderDataMapperPatternExample(OrderDataMapperDemoRunner Runner, OrderDataMapperWorkflow Workflow);
 public sealed record OrderIdentityMapPatternExample(OrderIdentityMapDemoRunner Runner);
 public sealed record CustomerProfileLazyLoadPatternExample(CustomerProfileLazyLoadService Service);
+public sealed record ProductCatalogChangeDataCaptureExample(ProductCatalogChangeDataCaptureService Service);
 public sealed record OrderTransactionScriptPatternExample(OrderTransactionScriptDemoRunner Runner);
 public sealed record CustomerServiceLayerPatternExample(CustomerServiceLayerDemoRunner Runner);
 public sealed record OrderDomainEventPatternExample(OrderDomainEventDemoRunner Runner);
@@ -354,6 +356,7 @@ public static class PatternKitExampleServiceCollectionExtensions
             .AddOrderDataMapperPatternExample()
             .AddOrderIdentityMapPatternExample()
             .AddCustomerProfileLazyLoadPatternExample()
+            .AddProductCatalogChangeDataCaptureExample()
             .AddOrderTransactionScriptPatternExample()
             .AddCustomerServiceLayerPatternExample()
             .AddOrderDomainEventPatternExample()
@@ -1046,6 +1049,13 @@ public static class PatternKitExampleServiceCollectionExtensions
         services.AddCustomerProfileLazyLoadDemo();
         services.AddSingleton<CustomerProfileLazyLoadPatternExample>(sp => new(sp.GetRequiredService<CustomerProfileLazyLoadService>()));
         return services.RegisterExample<CustomerProfileLazyLoadPatternExample>("Customer Profile Lazy Load", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
+    }
+
+    public static IServiceCollection AddProductCatalogChangeDataCaptureExample(this IServiceCollection services)
+    {
+        services.AddProductCatalogChangeDataCaptureDemo();
+        services.AddSingleton<ProductCatalogChangeDataCaptureExample>(sp => new(sp.GetRequiredService<ProductCatalogChangeDataCaptureService>()));
+        return services.RegisterExample<ProductCatalogChangeDataCaptureExample>("Product Catalog Change Data Capture", ExampleIntegrationSurface.LibraryOnly | ExampleIntegrationSurface.SourceGenerator | ExampleIntegrationSurface.DependencyInjection | ExampleIntegrationSurface.GenericHost);
     }
 
     public static IServiceCollection AddOrderTransactionScriptPatternExample(this IServiceCollection services)
