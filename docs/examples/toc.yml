@@ -208,6 +208,9 @@
 - name: Order Identity Map Pattern
   href: order-identity-map-pattern.md
 
+- name: Customer Profile Lazy Load
+  href: customer-profile-lazy-load.md
+
 - name: Order Transaction Script Pattern
   href: order-transaction-script-pattern.md
 

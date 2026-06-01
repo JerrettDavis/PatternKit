@@ -71,6 +71,10 @@ services
             .WithCapacity(8)
             .WithMode(BackpressureMode.Wait)
             .WithWaitTimeout(TimeSpan.FromMilliseconds(50)))
+    .AddPatternKitLazyLoad<ServiceReply>(
+        (_, _) => new ValueTask<ServiceReply>(new ServiceReply(true)),
+        "inventory-lazy",
+        lazy => lazy.WithTimeToLive(TimeSpan.FromMinutes(5)))
     .AddPatternKitRateLimitPolicy<ServiceReply>(
         "inventory-rate-limit",
         rateLimit => rateLimit
@@ -122,6 +126,7 @@ Every catalog pattern is importable through the production example catalog. The 
 | Circuit Breaker | `AddPatternKitCircuitBreakerPolicy<TResult>` | Register named circuit breakers with shared state. |
 | Bulkhead | `AddPatternKitBulkheadPolicy<TResult>` | Register concurrency and queue isolation policies. |
 | Backpressure | `AddPatternKitBackpressurePolicy<TResult>` | Register admission gates for saturated work boundaries. |
+| Lazy Load | `AddPatternKitLazyLoad<TValue>` | Register deferred value loaders with cache, TTL, and invalidation support. |
 | Rate Limiting | `AddPatternKitRateLimitPolicy<TResult>` | Register per-key rate windows. |
 | Queue-Based Load Leveling | `AddPatternKitQueueLoadLevelingPolicy<TResult>` | Register queue-backed worker policies. |
 | Priority Queue | `AddPatternKitPriorityQueue<TItem, TPriority>` | Register priority-ordered work queues. |

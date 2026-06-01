@@ -435,6 +435,8 @@
           href: application/data-mapper.md
         - name: Identity Map
           href: application/identity-map.md
+        - name: Lazy Load
+          href: application/lazy-load.md
         - name: Transaction Script
           href: application/transaction-script.md
         - name: Service Layer

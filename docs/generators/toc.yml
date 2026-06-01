@@ -103,6 +103,9 @@
 - name: Identity Map
   href: identity-map.md
 
+- name: Lazy Load
+  href: lazy-load.md
+
 - name: Materialized View
   href: materialized-view.md
 

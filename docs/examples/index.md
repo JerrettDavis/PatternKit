@@ -57,6 +57,9 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Checkout Backpressure**
   A Generic Host importable checkout admission gate with fluent and source-generated routes, `IServiceCollection` registration, and explicit saturation behavior. See [Checkout Backpressure](checkout-backpressure.md).
 
+* **Customer Profile Lazy Load**
+  A Generic Host importable deferred profile lookup with fluent and source-generated routes, `IServiceCollection` registration, TTL caching, and invalidation. See [Customer Profile Lazy Load](customer-profile-lazy-load.md).
+
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
 
