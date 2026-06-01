@@ -95,17 +95,6 @@ jobs:
             TestResults/**/*.trx
           check_name: Test Results
 
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6
-        if: always()
-        with:
-          files: ./TestResults/**/coverage.opencover.xml
-          flags: unittests
-          name: pr-${{ github.event.pull_request.number }}
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Build Documentation
         run: |
           dotnet tool update -g docfx

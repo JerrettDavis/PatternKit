@@ -90,7 +90,7 @@ ValueTask<TOut> StepNameAsync(TIn input, Func<TIn, ValueTask<TOut>> next, Cancel
 
 - `input`: The pipeline input (not `in` for async)
 - `next`: Async delegate to call the next step
-- `ct`: CancellationToken for cooperative cancellation
+- `ct`: Optional CancellationToken for cooperative cancellation. Async steps may omit it when they do not need cancellation.
 
 ## Terminal Method Signature
 
@@ -106,6 +106,8 @@ TOut TerminalName(in TIn input)
 ValueTask<TOut> TerminalNameAsync(TIn input, CancellationToken ct)
 ```
 
+Async terminals may omit the `CancellationToken` parameter when they do not need cancellation.
+
 ## Attributes
 
 ### `[Composer]`
@@ -116,7 +118,7 @@ Main attribute for marking pipeline host types.
 |---|---|---|---|
 | `InvokeMethodName` | `string` | `"Invoke"` | Name of generated sync method |
 | `InvokeAsyncMethodName` | `string` | `"InvokeAsync"` | Name of generated async method |
-| `GenerateAsync` | `bool` | Inferred when omitted | Explicit async control |
+| `GenerateAsync` | `bool` | Inferred by generator when the named property is omitted | Explicit async control |
 | `ForceAsync` | `bool` | `false` | Force async generation even if all steps are sync |
 | `WrapOrder` | `ComposerWrapOrder` | `OuterFirst` | Determines wrapping order |
 
@@ -206,7 +208,7 @@ public ValueTask<string> InvokeAsync(string input, CancellationToken ct = defaul
 | **PKCOM006** | Error | Invalid step method signature |
 | **PKCOM007** | Error | Invalid terminal method signature |
 | **PKCOM008** | Error | Async step detected but async generation disabled |
-| **PKCOM009** | Warning | Async method missing CancellationToken parameter |
+| **PKCOM009** | Warning | Async method declares a final extra parameter with the wrong type |
 
 ## Best Practices
 

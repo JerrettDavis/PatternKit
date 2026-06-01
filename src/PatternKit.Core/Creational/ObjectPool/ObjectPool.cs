@@ -8,6 +8,7 @@ namespace PatternKit.Creational.ObjectPool;
 public sealed class ObjectPool<T> : IDisposable
 {
     private readonly ConcurrentQueue<T> _items = new();
+    private readonly object _gate = new();
     private readonly Func<T> _factory;
     private readonly Action<T>? _onRent;
     private readonly Action<T>? _onReturn;
@@ -34,17 +35,38 @@ public sealed class ObjectPool<T> : IDisposable
     /// <summary>Rents an item from the pool. Dispose the returned lease to return the item.</summary>
     public ObjectPoolLease<T> Rent()
     {
-        ThrowIfDisposed();
-
         T value;
-        if (_items.TryDequeue(out var pooled))
+        var hasValue = false;
+        lock (_gate)
         {
-            Interlocked.Decrement(ref _retained);
-            value = pooled;
+            ThrowIfDisposed();
+
+            if (_items.TryDequeue(out var pooled))
+            {
+                Interlocked.Decrement(ref _retained);
+                value = pooled;
+                hasValue = true;
+            }
+            else
+            {
+                value = default!;
+            }
         }
-        else
-        {
+
+        if (!hasValue)
             value = _factory();
+
+        var disposeAfterRent = false;
+        lock (_gate)
+        {
+            if (_disposed)
+                disposeAfterRent = true;
+        }
+
+        if (disposeAfterRent)
+        {
+            DisposeIfNeeded(value);
+            throw new ObjectDisposedException(nameof(ObjectPool<T>));
         }
 
         _onRent?.Invoke(value);
@@ -53,44 +75,82 @@ public sealed class ObjectPool<T> : IDisposable
 
     internal void Return(T value)
     {
-        if (_disposed)
+        var disposeImmediately = false;
+        lock (_gate)
+        {
+            disposeImmediately = _disposed;
+        }
+
+        if (disposeImmediately)
         {
             DisposeIfNeeded(value);
             return;
         }
 
-        _onReturn?.Invoke(value);
-        if (_shouldReturn is not null && !_shouldReturn(value))
+        try
+        {
+            _onReturn?.Invoke(value);
+            if (_shouldReturn is not null && !_shouldReturn(value))
+            {
+                DisposeIfNeeded(value);
+                return;
+            }
+        }
+        catch
         {
             DisposeIfNeeded(value);
-            return;
+            throw;
         }
 
-        var retained = Interlocked.Increment(ref _retained);
-        if (retained <= _maxRetained)
+        var dispose = false;
+        lock (_gate)
         {
-            _items.Enqueue(value);
-            return;
+            if (_disposed)
+            {
+                dispose = true;
+            }
+            else
+            {
+                var retained = Interlocked.Increment(ref _retained);
+                if (retained <= _maxRetained)
+                {
+                    _items.Enqueue(value);
+                    return;
+                }
+
+                Interlocked.Decrement(ref _retained);
+                dispose = true;
+            }
         }
 
-        Interlocked.Decrement(ref _retained);
-        DisposeIfNeeded(value);
+        if (dispose)
+            DisposeIfNeeded(value);
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        _disposed = true;
-        while (_items.TryDequeue(out var value))
+        var drained = new List<T>();
+        lock (_gate)
         {
-            Interlocked.Decrement(ref _retained);
-            DisposeIfNeeded(value);
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            while (_items.TryDequeue(out var value))
+            {
+                Interlocked.Decrement(ref _retained);
+                drained.Add(value);
+            }
         }
+
+        foreach (var value in drained)
+            DisposeIfNeeded(value);
     }
 
     private void ThrowIfDisposed()
     {
-        if (_disposed)
+        if (Volatile.Read(ref _disposed))
             throw new ObjectDisposedException(nameof(ObjectPool<T>));
     }
 

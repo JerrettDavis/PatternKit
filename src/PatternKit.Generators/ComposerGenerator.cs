@@ -90,8 +90,8 @@ public sealed class ComposerGenerator : IIncrementalGenerator
 
     private static readonly DiagnosticDescriptor MissingCancellationTokenDescriptor = new(
         id: DiagIdMissingCancellationToken,
-        title: "CancellationToken parameter required",
-        messageFormat: "Method '{0}' is async but missing CancellationToken parameter. Async methods should have a CancellationToken parameter.",
+        title: "CancellationToken parameter is invalid",
+        messageFormat: "Method '{0}' is async and declares a final extra parameter, but it is not System.Threading.CancellationToken",
         category: "PatternKit.Generators.Composer",
         defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
