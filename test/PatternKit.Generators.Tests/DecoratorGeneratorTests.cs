@@ -343,6 +343,39 @@ public class DecoratorGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateDecoratorForInterface PreservesFloatingPointDefaults")]
+    [Fact]
+    public void GenerateDecoratorForInterface_PreservesFloatingPointDefaults()
+    {
+        const string source = """
+            using PatternKit.Generators.Decorator;
+
+            namespace TestNamespace;
+
+            [GenerateDecorator]
+            public interface IScoring
+            {
+                double Normalize(double score = double.NaN, float weight = float.PositiveInfinity);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(GenerateDecoratorForInterface_PreservesFloatingPointDefaults));
+        var gen = new DecoratorGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        var generatedSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName == "TestNamespace_IScoring.Decorator.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("double score = double.NaN", generatedSource);
+        ScenarioExpect.Contains("float weight = float.PositiveInfinity", generatedSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("GenerateDecoratorForInterface DeterministicOrdering")]
     [Fact]
     public void GenerateDecoratorForInterface_DeterministicOrdering()

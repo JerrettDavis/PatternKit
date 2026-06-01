@@ -229,6 +229,7 @@ public sealed class CompositeGenerator : IIncrementalGenerator
         component.GetMembers()
             .OfType<IPropertySymbol>()
             .Where(p => !p.IsStatic && !p.IsIndexer && p.GetMethod is not null && !HasIgnore(p))
+            .Where(p => component.TypeKind != TypeKind.Class || p.IsAbstract || p.IsVirtual || (p.IsOverride && !p.IsSealed))
             .OrderBy(p => p.Name, StringComparer.Ordinal);
 
     private static bool IsPartial(SyntaxNode node) =>

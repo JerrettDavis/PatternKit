@@ -217,6 +217,36 @@ public class MementoGeneratorTests
         ScenarioExpect.DoesNotContain("InternalId", mementoSource);
     }
 
+    [Scenario("RecordFallbackConstructorExcludesCopyConstructor")]
+    [Fact]
+    public void RecordFallbackConstructorExcludesCopyConstructor()
+    {
+        const string source = """
+            using PatternKit.Generators;
+
+            namespace TestNamespace;
+
+            [Memento]
+            public sealed partial record class EditorState(string Text, [property: MementoIgnore] string Secret);
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(RecordFallbackConstructorExcludesCopyConstructor));
+        var gen = new MementoGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.DoesNotContain(r.Diagnostics, d => d.Severity == DiagnosticSeverity.Error));
+        var mementoSource = result.Results
+            .SelectMany(r => r.GeneratedSources)
+            .First(gs => gs.HintName.Contains("Memento.g.cs"))
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("new global::TestNamespace.EditorState(default!, default!)", mementoSource);
+        ScenarioExpect.DoesNotContain("new global::TestNamespace.EditorState(default!)", mementoSource);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("ExplicitInclusionMode")]
     [Fact]
     public void ExplicitInclusionMode()

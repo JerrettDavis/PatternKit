@@ -63,7 +63,16 @@ public sealed class ActivityTracker
     }
 
     public ActivityGateState GetGateState()
-        => new(Name, IsBlocked, ActiveCount, Snapshot());
+    {
+        lock (_gate)
+        {
+            var activities = _activities.Values
+                .OrderBy(static activity => activity.StartedAt)
+                .ThenBy(static activity => activity.Id, StringComparer.Ordinal)
+                .ToArray();
+            return new(Name, activities.Length > 0, activities.Length, activities);
+        }
+    }
 
     public static Builder Create(string name = "activity-tracker") => new(name);
 

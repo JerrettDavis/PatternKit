@@ -92,6 +92,37 @@ public class CompositeGeneratorTests
         ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AbstractClassCompositeSkipsConcreteNonVirtualProperties")]
+    [Fact]
+    public void AbstractClassCompositeSkipsConcreteNonVirtualProperties()
+    {
+        const string source = """
+            using PatternKit.Generators.Composite;
+
+            namespace TestNamespace;
+
+            [CompositeComponent]
+            public abstract partial class CatalogNode
+            {
+                public string Sku { get; } = "";
+
+                public abstract string Name { get; }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AbstractClassCompositeSkipsConcreteNonVirtualProperties));
+        var gen = new CompositeGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        var sourceText = ScenarioExpect.Single(result.Results.SelectMany(r => r.GeneratedSources)).SourceText.ToString();
+        ScenarioExpect.Contains("public abstract override string Name { get; }", sourceText);
+        ScenarioExpect.DoesNotContain("Sku", sourceText);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
     [Scenario("ReportsDiagnosticWhenComponentIsNotPartial")]
     [Fact]
     public void ReportsDiagnosticWhenComponentIsNotPartial()

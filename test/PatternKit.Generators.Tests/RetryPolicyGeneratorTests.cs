@@ -246,7 +246,7 @@ public sealed class RetryPolicyGeneratorTests
 
             namespace Demo;
 
-            public partial class Outer
+            public partial class Outer<T> where T : class, new()
             {
                 [GenerateRetryPolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
                 private partial class PrivateRetryHost;
@@ -264,14 +264,16 @@ public sealed class RetryPolicyGeneratorTests
 
         var comp = CreateCompilation(source, nameof(GeneratesRetryPolicySourceForNestedAccessibilityVariants));
         var gen = new RetryPolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
         var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("public partial class Outer<T> where T : class, new()", generatedText);
         ScenarioExpect.Contains("private partial class PrivateRetryHost", generatedText);
         ScenarioExpect.Contains("protected partial class ProtectedRetryHost", generatedText);
         ScenarioExpect.Contains("protected internal partial class ProtectedInternalRetryHost", generatedText);
         ScenarioExpect.Contains("private protected partial class PrivateProtectedRetryHost", generatedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

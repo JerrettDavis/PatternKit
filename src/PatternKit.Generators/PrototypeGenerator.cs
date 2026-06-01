@@ -531,9 +531,10 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (type.IsValueType)
             return true;
 
-        // Check for known immutable collections (basic check)
-        var typeName = type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        if (typeName.Contains("System.Collections.Immutable.", StringComparison.Ordinal))
+        // Check for known immutable collections.
+        var namespaceName = type.ContainingNamespace.ToDisplayString();
+        if (namespaceName == "System.Collections.Immutable" ||
+            namespaceName.StartsWith("System.Collections.Immutable.", StringComparison.Ordinal))
             return true;
 
         // Conservative: assume mutable

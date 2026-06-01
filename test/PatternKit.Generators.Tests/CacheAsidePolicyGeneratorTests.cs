@@ -190,7 +190,7 @@ public sealed class CacheAsidePolicyGeneratorTests
 
             namespace Demo;
 
-            public partial class Outer
+            public partial class Outer<T> where T : class, new()
             {
                 [GenerateCacheAsidePolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
                 private partial class PrivateCacheAsideHost;
@@ -208,14 +208,16 @@ public sealed class CacheAsidePolicyGeneratorTests
 
         var comp = CreateCompilation(source, nameof(GeneratesCacheAsidePolicySourceForNestedAccessibilityVariants));
         var gen = new CacheAsidePolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
         var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("public partial class Outer<T> where T : class, new()", generatedText);
         ScenarioExpect.Contains("private partial class PrivateCacheAsideHost", generatedText);
         ScenarioExpect.Contains("protected partial class ProtectedCacheAsideHost", generatedText);
         ScenarioExpect.Contains("protected internal partial class ProtectedInternalCacheAsideHost", generatedText);
         ScenarioExpect.Contains("private protected partial class PrivateProtectedCacheAsideHost", generatedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

@@ -55,28 +55,53 @@ public sealed class MessageChannel<TPayload>
     }
 
     public IReadOnlyList<Message<TPayload>> Drain(Func<Message<TPayload>, bool>? predicate = null)
+        => DrainWithState(predicate).Removed;
+
+    internal MessageChannelDrainResult<TPayload> DrainWithState(Func<Message<TPayload>, bool>? predicate = null)
     {
-        var removed = new List<Message<TPayload>>();
+        Message<TPayload>[] snapshot;
+
+        lock (_gate)
+            snapshot = _messages.ToArray();
+
+        var removed = predicate is null
+            ? snapshot
+            : snapshot.Where(predicate).ToArray();
+        if (removed.Length == 0)
+            return new MessageChannelDrainResult<TPayload>([], Count);
+
+        var removedCounts = removed
+            .GroupBy(static message => message)
+            .ToDictionary(static group => group.Key, static group => group.Count());
+        var actualRemoved = new List<Message<TPayload>>(removed.Length);
+        var retained = new List<Message<TPayload>>();
 
         lock (_gate)
         {
-            var messages = _messages.ToArray();
-            var retained = new List<Message<TPayload>>(messages.Length);
-
-            foreach (var message in messages)
+            while (_messages.Count > 0)
             {
-                if (predicate is null || predicate(message))
-                    removed.Add(message);
+                var message = _messages.Dequeue();
+                if (removedCounts.TryGetValue(message, out var remainingRemovals))
+                {
+                    actualRemoved.Add(message);
+                    if (remainingRemovals == 1)
+                        removedCounts.Remove(message);
+                    else
+                        removedCounts[message] = remainingRemovals - 1;
+                }
                 else
+                {
                     retained.Add(message);
+                }
             }
 
+            var remainingCount = retained.Count;
             _messages.Clear();
             foreach (var message in retained)
                 _messages.Enqueue(message);
-        }
 
-        return removed;
+            return new MessageChannelDrainResult<TPayload>(actualRemoved, remainingCount);
+        }
     }
 
     public IReadOnlyList<Message<TPayload>> Snapshot()
@@ -300,11 +325,11 @@ public sealed class ChannelPurger<TPayload>
 
     public ChannelPurgeResult<TPayload> Purge()
     {
-        var purged = _channel.Drain(_predicate);
-        foreach (var message in purged)
+        var result = _channel.DrainWithState(_predicate);
+        foreach (var message in result.Removed)
             _audit?.Invoke(new(Name, _channel.Name, message));
 
-        return new(Name, _channel.Name, purged.Count, _channel.Count, purged);
+        return new(Name, _channel.Name, result.Removed.Count, result.RemainingCount, result.Removed);
     }
 
     public static Builder Create(string name = "channel-purger") => new(name);
@@ -383,6 +408,16 @@ public sealed class ChannelPurgeResult<TPayload>
     public int RemainingCount { get; }
 
     public IReadOnlyList<Message<TPayload>> PurgedMessages { get; }
+}
+
+internal sealed class MessageChannelDrainResult<TPayload>
+{
+    public MessageChannelDrainResult(IReadOnlyList<Message<TPayload>> removed, int remainingCount)
+        => (Removed, RemainingCount) = (removed, remainingCount);
+
+    public IReadOnlyList<Message<TPayload>> Removed { get; }
+
+    public int RemainingCount { get; }
 }
 
 public sealed class InvalidMessageChannel<TPayload>

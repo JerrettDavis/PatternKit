@@ -245,7 +245,7 @@ public sealed class CircuitBreakerPolicyGeneratorTests
 
             namespace Demo;
 
-            public partial class Outer
+            public partial class Outer<T> where T : class, new()
             {
                 [GenerateCircuitBreakerPolicy(typeof(string), FactoryMethodName = "CreatePrivate")]
                 private partial class PrivateCircuitBreakerHost;
@@ -263,14 +263,16 @@ public sealed class CircuitBreakerPolicyGeneratorTests
 
         var comp = CreateCompilation(source, nameof(GeneratesCircuitBreakerPolicySourceForNestedAccessibilityVariants));
         var gen = new CircuitBreakerPolicyGenerator();
-        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         ScenarioExpect.All(run.Results, result => ScenarioExpect.Empty(result.Diagnostics));
         var generatedText = string.Join("\n", run.Results.SelectMany(result => result.GeneratedSources).Select(source => source.SourceText.ToString()));
+        ScenarioExpect.Contains("public partial class Outer<T> where T : class, new()", generatedText);
         ScenarioExpect.Contains("private partial class PrivateCircuitBreakerHost", generatedText);
         ScenarioExpect.Contains("protected partial class ProtectedCircuitBreakerHost", generatedText);
         ScenarioExpect.Contains("protected internal partial class ProtectedInternalCircuitBreakerHost", generatedText);
         ScenarioExpect.Contains("private protected partial class PrivateProtectedCircuitBreakerHost", generatedText);
+        ScenarioExpect.True(updated.Emit(Stream.Null).Success, string.Join("\n", updated.GetDiagnostics()));
     }
 
     private static CSharpCompilation CreateCompilation(string source, string assemblyName)

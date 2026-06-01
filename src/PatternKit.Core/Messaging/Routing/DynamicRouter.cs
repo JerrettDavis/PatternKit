@@ -21,7 +21,7 @@ public sealed class DynamicRouter<TPayload, TResult>
         => (_routes, _default) = (routes, @default);
 
     /// <summary>Current ordered route names.</summary>
-    public IReadOnlyList<string> RouteNames => _routes.Select(static route => route.Name).ToArray();
+    public IReadOnlyList<string> RouteNames => Volatile.Read(ref _routes).Select(static route => route.Name).ToArray();
 
     /// <summary>Registers or replaces a route in the runtime route table.</summary>
     public DynamicRouter<TPayload, TResult> Register(string name, int order, RoutePredicate predicate, RouteHandler handler)
@@ -38,12 +38,13 @@ public sealed class DynamicRouter<TPayload, TResult>
         var entry = new RouteEntry(name, order, predicate, handler);
         lock (_gate)
         {
-            _routes = _routes
+            var next = _routes
                 .Where(route => !string.Equals(route.Name, name, StringComparison.Ordinal))
                 .Append(entry)
                 .OrderBy(static route => route.Order)
                 .ThenBy(static route => route.Name, StringComparer.Ordinal)
                 .ToArray();
+            Volatile.Write(ref _routes, next);
         }
 
         return this;
@@ -57,11 +58,12 @@ public sealed class DynamicRouter<TPayload, TResult>
 
         lock (_gate)
         {
-            var next = _routes.Where(route => !string.Equals(route.Name, name, StringComparison.Ordinal)).ToArray();
-            if (next.Length == _routes.Length)
+            var snapshot = Volatile.Read(ref _routes);
+            var next = snapshot.Where(route => !string.Equals(route.Name, name, StringComparison.Ordinal)).ToArray();
+            if (next.Length == snapshot.Length)
                 return false;
 
-            _routes = next;
+            Volatile.Write(ref _routes, next);
             return true;
         }
     }
@@ -73,7 +75,7 @@ public sealed class DynamicRouter<TPayload, TResult>
             throw new ArgumentNullException(nameof(message));
 
         var effectiveContext = context ?? MessageContext.From(message);
-        var snapshot = _routes;
+        var snapshot = Volatile.Read(ref _routes);
         foreach (var route in snapshot)
             if (route.Predicate(message, effectiveContext))
                 return route.Handler(message, effectiveContext);
