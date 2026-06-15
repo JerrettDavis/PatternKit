@@ -10,11 +10,11 @@
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Direct",
-        "requested": "[10.0.8, )",
-        "resolved": "10.0.8",
-        "contentHash": "daf62xHIrq8pnE709hgaZZN9tSam9TGGepWe1+bE6V3GEuVwJiMs6ib+38lfMCyAJAHiX0vapxBhsuMSV7U+cg==",
+        "requested": "[10.0.9, )",
+        "resolved": "10.0.9",
+        "contentHash": "NijozhERJDIaJ4k5TSMy1jOi0cSC2HfkvRD/Sl+kGSSKgVbFnF4GxgtMN/MrzHB8D1JxIrD4xSer9Blh9v3axQ==",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.9"
         }
       },
       "Microsoft.NET.Test.Sdk": {
@@ -29,11 +29,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.22, )",
-        "resolved": "0.19.22",
-        "contentHash": "5zVTp1NbKu+n0b78tzo0epmuj9Cpk41C4k61K/y2xZwQWrDVrDEsKaF1Tm2RBcSt+FDp8vZx2zxER1pNAha62w==",
+        "requested": "[0.19.23, )",
+        "resolved": "0.19.23",
+        "contentHash": "PKCr1nRDZYZMT591ch9Ma7f4lQmpypDInQYljesnPyCrhqlN7MmDd+lEDwtqRFGwmoMNSfstt02Bq6g0vlsW/w==",
         "dependencies": {
-          "TinyBDD": "0.19.22",
+          "TinyBDD": "0.19.23",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -137,27 +137,27 @@
       "patternkit.hosting.extensions": {
         "type": "Project",
         "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.8, )",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "[10.0.9, )",
           "PatternKit.Core": "[1.0.0, )"
         }
       },
       "Microsoft.Extensions.DependencyInjection.Abstractions": {
         "type": "CentralTransitive",
-        "requested": "[10.0.8, )",
-        "resolved": "10.0.8",
-        "contentHash": "21nbDV60SRPWGIivsyl6lqBeEJNG1sginhhfWgRrr3Ais7aQ12To25OAHQxgoiJkjqy1aQ6RxpZBGYuTi7Ge6A=="
+        "requested": "[10.0.9, )",
+        "resolved": "10.0.9",
+        "contentHash": "g41l/30G3K4B/d/L8kjux0+30e27c8D0FVQ/PFCpbekgfDpj9mnDhieP67EqXWvl1EWNeZh2rpR4F5B/jcDOHA=="
       },
       "System.Collections.Immutable": {
         "type": "CentralTransitive",
-        "requested": "[10.0.8, )",
+        "requested": "[10.0.9, )",
         "resolved": "8.0.0",
         "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.22, )",
-        "resolved": "0.19.22",
-        "contentHash": "hCXrPDPSX+apWspnq6l0yI0/yekJFP5TAuKUUp4tNQNC4sBQHaaBno1xeI9AjvNKgyQC1cZPIBDZurd/XEuP/A==",
+        "requested": "[0.19.23, )",
+        "resolved": "0.19.23",
+        "contentHash": "yeDpSBrvMTP5b35gxiyzTa9vOq/4jsy9ZvoTRCf5fj7YaQC2C6jK8O6tb1ilLW4bMErvcx1vc44P+cWcWz8fCw==",
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "10.0.8",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
