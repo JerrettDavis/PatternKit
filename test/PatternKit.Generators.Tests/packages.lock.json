@@ -36,9 +36,9 @@
       },
       "TinyBDD": {
         "type": "Direct",
-        "requested": "[0.19.23, )",
-        "resolved": "0.19.23",
-        "contentHash": "yeDpSBrvMTP5b35gxiyzTa9vOq/4jsy9ZvoTRCf5fj7YaQC2C6jK8O6tb1ilLW4bMErvcx1vc44P+cWcWz8fCw==",
+        "requested": "[0.19.26, )",
+        "resolved": "0.19.26",
+        "contentHash": "tlMW5NDIC6ciY3/g3nsUF9bAPe9g0ljy4Nme2xHWGY0yN6VumB77UOR94n3eIhhaSqpJY8YpdEKFIS/JUSWHLQ==",
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "10.0.8",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
@@ -46,11 +46,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.23, )",
-        "resolved": "0.19.23",
-        "contentHash": "PKCr1nRDZYZMT591ch9Ma7f4lQmpypDInQYljesnPyCrhqlN7MmDd+lEDwtqRFGwmoMNSfstt02Bq6g0vlsW/w==",
+        "requested": "[0.19.26, )",
+        "resolved": "0.19.26",
+        "contentHash": "3z/b2nwcyoQWvlD9j2hjcJCvo/tJle0loFBPWvWUdZ95baQeA/eO6bhh93q/oWbLKM1MlaBGbJbsv3Kia2WWHw==",
         "dependencies": {
-          "TinyBDD": "0.19.23",
+          "TinyBDD": "0.19.26",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -365,7 +365,7 @@
       "patternkit.examples": {
         "type": "Project",
         "dependencies": {
-          "JetBrains.Annotations": "[2025.2.4, )",
+          "JetBrains.Annotations": "[2026.2.0, )",
           "Microsoft.Extensions.Configuration": "[10.0.9, )",
           "Microsoft.Extensions.Configuration.Abstractions": "[10.0.9, )",
           "Microsoft.Extensions.Configuration.Binder": "[10.0.9, )",
@@ -391,9 +391,9 @@
       },
       "JetBrains.Annotations": {
         "type": "CentralTransitive",
-        "requested": "[2025.2.4, )",
-        "resolved": "2025.2.4",
-        "contentHash": "TwbgxAkXxY+vNEhNVx/QXjJ4vqxmepOjsgRvvImQPbHkHMMb4W+ahL3laMsxXKtNT7iMy+E1B3xkqao2hf1n3A=="
+        "requested": "[2026.2.0, )",
+        "resolved": "2026.2.0",
+        "contentHash": "drvAEaI7Xf4wU6dx4UTB9MoZWXZlraaQ0qoeThPQ411FxNhId7QdUTukIC9I8aUHP0ycAaGwZNKqSvfOZQvUlg=="
       },
       "Microsoft.CodeAnalysis.Analyzers": {
         "type": "CentralTransitive",
