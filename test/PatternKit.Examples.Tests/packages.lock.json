@@ -64,9 +64,9 @@
       },
       "RabbitMQ.Client": {
         "type": "Direct",
-        "requested": "[7.2.1, )",
-        "resolved": "7.2.1",
-        "contentHash": "YKXEfg9fVQiTKgZlvIhAfPSFaamEgi8DsQmisCH0IAsU4FYLrtoguDrDj6JtJVGUt40QPnBLRH6fTQcAC4qsOg==",
+        "requested": "[7.2.2, )",
+        "resolved": "7.2.2",
+        "contentHash": "k4b6RnTXpLbsF96V93ooNYxgPMnoA2tEm24B6AXNJr1mG8wwNYdA1XJtgU66L5xqeGyveS7SJriRzlX3cbqQNA==",
         "dependencies": {
           "System.IO.Pipelines": "8.0.0",
           "System.Threading.RateLimiting": "8.0.0"
@@ -102,11 +102,11 @@
       },
       "TinyBDD.Xunit": {
         "type": "Direct",
-        "requested": "[0.19.31, )",
-        "resolved": "0.19.31",
-        "contentHash": "PNkUiaUF/EafnQlalUI3ODDdNmH6qalcUaHIx+GvCFUYLBqrm++4WKmg6266WxlJIZ0UO5RpCrpmQG0iTlcomw==",
+        "requested": "[0.19.32, )",
+        "resolved": "0.19.32",
+        "contentHash": "8ZCFfbiuOFbk5UtXz0lGewC/8XZ1p6dh3lUtt5WgeEmsF60MdJk/y8T1LxU8euoG5mxqZKe2pSSQ3EamTRugrQ==",
         "dependencies": {
-          "TinyBDD": "0.19.31",
+          "TinyBDD": "0.19.32",
           "xunit.abstractions": "2.0.3",
           "xunit.extensibility.core": "2.9.3"
         }
@@ -608,9 +608,9 @@
       },
       "TinyBDD": {
         "type": "CentralTransitive",
-        "requested": "[0.19.31, )",
-        "resolved": "0.19.31",
-        "contentHash": "kuYL/KtD22/MQLenIKpGHYICVc+/X1BFn13tpGMNqfDDSnUEiq8rlAfHLznkB7k4qehV0xWQYA3mekhT0Fhwgw==",
+        "requested": "[0.19.32, )",
+        "resolved": "0.19.32",
+        "contentHash": "0G/CYyvD7s9r3RZQxN1adtPsiuoEZ4/sJ0QpuWovWlv1TQ2Z4lDNBVQO+uMaZLhnIMiP+nIdNJUR1AbqEHAH4w==",
         "dependencies": {
           "Microsoft.Extensions.DependencyInjection": "10.0.8",
           "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.8"
