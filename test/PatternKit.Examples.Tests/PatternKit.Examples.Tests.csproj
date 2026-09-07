@@ -24,6 +24,7 @@
         <PackageReference Include="System.Collections.Immutable" />
         <PackageReference Include="Testcontainers" />
         <PackageReference Include="Testcontainers.RabbitMq" />
+        <PackageReference Include="TinyBDD" />
         <PackageReference Include="TinyBDD.Xunit" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.extensibility.core" />
