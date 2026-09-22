@@ -80,21 +80,27 @@ public sealed class ProductCatalogStampedeProtectionDemoRunner(ProductCatalogSta
         ProductCatalogStampedeProtectionService service,
         ProductAvailabilityRequest request)
     {
-        using var startBarrier = new Barrier(participantCount: 3);
-        var first = WaitThenLoadAsync(startBarrier, service, request);
-        var second = WaitThenLoadAsync(startBarrier, service, request);
+        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var firstReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = WaitThenLoadAsync(start.Task, firstReady, service, request);
+        var second = WaitThenLoadAsync(start.Task, secondReady, service, request);
 
-        startBarrier.SignalAndWait();
+        var allReady = Task.WhenAll(firstReady.Task, secondReady.Task);
+        var anyCompleted = Task.WhenAny(first, second);
+        await Task.WhenAny(allReady, anyCompleted).ConfigureAwait(false);
+        start.SetResult();
         return await Task.WhenAll(first, second).ConfigureAwait(false);
     }
 
     private static async Task<ProductAvailabilitySummary> WaitThenLoadAsync(
-        Barrier startBarrier,
+        Task start,
+        TaskCompletionSource ready,
         ProductCatalogStampedeProtectionService service,
         ProductAvailabilityRequest request)
     {
-        await Task.Yield();
-        startBarrier.SignalAndWait();
+        ready.SetResult();
+        await start.ConfigureAwait(false);
         return await service.GetAvailabilityAsync(request).ConfigureAwait(false);
     }
 }
