@@ -81,18 +81,25 @@ public sealed class ProductCatalogStampedeProtectionDemoRunner(ProductCatalogSta
         ProductAvailabilityRequest request)
     {
         var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var first = WaitThenLoadAsync(start.Task, service, request);
-        var second = WaitThenLoadAsync(start.Task, service, request);
+        var firstReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var secondReady = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = WaitThenLoadAsync(start.Task, firstReady, service, request);
+        var second = WaitThenLoadAsync(start.Task, secondReady, service, request);
 
+        var allReady = Task.WhenAll(firstReady.Task, secondReady.Task);
+        var anyCompleted = Task.WhenAny(first, second);
+        await Task.WhenAny(allReady, anyCompleted).ConfigureAwait(false);
         start.SetResult();
         return await Task.WhenAll(first, second).ConfigureAwait(false);
     }
 
     private static async Task<ProductAvailabilitySummary> WaitThenLoadAsync(
         Task start,
+        TaskCompletionSource ready,
         ProductCatalogStampedeProtectionService service,
         ProductAvailabilityRequest request)
     {
+        ready.SetResult();
         await start.ConfigureAwait(false);
         return await service.GetAvailabilityAsync(request).ConfigureAwait(false);
     }
