@@ -80,20 +80,21 @@ public sealed class ProductCatalogStampedeProtectionDemoRunner(ProductCatalogSta
         ProductCatalogStampedeProtectionService service,
         ProductAvailabilityRequest request)
     {
-        var start = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var first = WaitThenLoadAsync(start.Task, service, request);
-        var second = WaitThenLoadAsync(start.Task, service, request);
+        using var startBarrier = new Barrier(participantCount: 3);
+        var first = WaitThenLoadAsync(startBarrier, service, request);
+        var second = WaitThenLoadAsync(startBarrier, service, request);
 
-        start.SetResult();
+        startBarrier.SignalAndWait();
         return await Task.WhenAll(first, second).ConfigureAwait(false);
     }
 
     private static async Task<ProductAvailabilitySummary> WaitThenLoadAsync(
-        Task start,
+        Barrier startBarrier,
         ProductCatalogStampedeProtectionService service,
         ProductAvailabilityRequest request)
     {
-        await start.ConfigureAwait(false);
+        await Task.Yield();
+        startBarrier.SignalAndWait();
         return await service.GetAvailabilityAsync(request).ConfigureAwait(false);
     }
 }
