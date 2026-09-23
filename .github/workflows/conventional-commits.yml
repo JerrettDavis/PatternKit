@@ -28,19 +28,9 @@ jobs:
               failures.push(`PR title: ${title}`);
             }
 
-            const commits = await github.paginate(github.rest.pulls.listCommits, {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              per_page: 100,
-            });
-
-            for (const commit of commits) {
-              const subject = commit.commit.message.split('\n')[0];
-              if (!allowed.test(subject) && !allowedSpecial.test(subject)) {
-                failures.push(`${commit.sha.substring(0, 7)}: ${subject}`);
-              }
-            }
+            // Only the PR title is validated. Linting every intermediate commit too broke
+            // automated PRs whose fixup commits (e.g. from Copilot's CI-failure auto-fix)
+            // aren't conventional themselves, even though the PR title is compliant.
 
             if (failures.length > 0) {
               core.setFailed([
