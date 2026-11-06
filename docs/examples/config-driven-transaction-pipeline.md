@@ -7,7 +7,7 @@ This demo layers a small configuration model over the same primitives used in th
 
 * **Action chains** for branchless *discounts → tax* and *rounding*
 * **Tender handling** via a first-match router (see the mediated pipeline doc)
-* **DI registration** that composes a single immutable [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline) at startup
+* **DI registration** that composes a single immutable `PatternKit.Examples.Chain.TransactionPipeline` at startup
 
 ---
 
@@ -56,7 +56,7 @@ var (result, ctx) = pipe.Run(new TransactionContext {
 
 ### Configuration model
 
-[xref\:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions](xref:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions) drives ordering:
+`PatternKit.Examples.Chain.ConfigDriven.PipelineOptions` drives ordering:
 
 * `DiscountRules`: keys of discount rules to apply **in order**
 * `Rounding`: keys of rounding strategies to apply **in order**
@@ -68,24 +68,24 @@ Unknown keys are **ignored** (we map by key and skip missing entries).
 
 **Discount rules** (keys):
 
-* `discount:cash-2pc` → [xref\:PatternKit.Examples.Chain.ConfigDriven.Cash2Pct](xref:PatternKit.Examples.Chain.ConfigDriven.Cash2Pct)
+* `discount:cash-2pc` → `PatternKit.Examples.Chain.ConfigDriven.Cash2Pct`
   First tender is cash → 2% off `Subtotal`
-* `discount:loyalty-5pc` → [xref\:PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct](xref:PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct)
+* `discount:loyalty-5pc` → `PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct`
   Loyalty present → 5% off `Subtotal`
-* `discount:bundle-1off` → [xref\:PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach](xref:PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach)
+* `discount:bundle-1off` → `PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach`
   Any `BundleKey` with total `Qty ≥ 2` → \$1 off per item in those bundles
 
 **Rounding** (keys):
 
-* `round:charity` → [xref\:PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp](xref:PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp)
+* `round:charity` → `PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp`
   If any `CHARITY:*` SKU is present → round up to next dollar
-* `round:nickel-cash-only` → [xref\:PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly](xref:PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly)
+* `round:nickel-cash-only` → `PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly`
   Cash-only transactions → round to nearest \$0.05 (logs “skipped (not cash-only)” otherwise)
 
 **Tender handlers** (DI-registered):
 
-* [xref\:PatternKit.Examples.Chain.ConfigDriven.CashTender](xref:PatternKit.Examples.Chain.ConfigDriven.CashTender) (`tender:cash`)
-* [xref\:PatternKit.Examples.Chain.ConfigDriven.CardTender](xref:PatternKit.Examples.Chain.ConfigDriven.CardTender) (`tender:card`)
+* `PatternKit.Examples.Chain.ConfigDriven.CashTender` (`tender:cash`)
+* `PatternKit.Examples.Chain.ConfigDriven.CardTender` (`tender:card`)
 
 > The router itself is assembled by the mediated pipeline pieces; we simply **supply handlers via DI** and the builder wires them into the tender stage.
 
@@ -95,7 +95,7 @@ Unknown keys are **ignored** (we map by key and skip missing entries).
 
 ### Discounts & tax (config-driven)
 
-[xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenDiscountsAndTax\*](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenDiscountsAndTax*):
+`PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenDiscountsAndTax\*`:
 
 * Recomputes `Subtotal`
 * Iterates `opts.Value.DiscountRules` and applies each rule that exists in the DI map
@@ -107,7 +107,7 @@ b.AddConfigDrivenDiscountsAndTax(opts, discountRules);
 
 ### Rounding (config-driven)
 
-[xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenRounding\*](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenRounding*):
+`PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions.AddConfigDrivenRounding\*`:
 
 * Iterates `opts.Value.Rounding` and calls each strategy in order
 * Each strategy decides to apply or log “skipped”
@@ -119,16 +119,16 @@ b.AddConfigDrivenRounding(opts, rounding);
 
 ### DI registration
 
-[xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline\*](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline*):
+`PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline\*`:
 
-* Binds `Payment:Pipeline` to [xref\:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions](xref:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions)
+* Binds `Payment:Pipeline` to `PatternKit.Examples.Chain.ConfigDriven.PipelineOptions`
 * Registers:
 
-    * Infra: [xref\:PatternKit.Examples.Chain.IDeviceBus](xref:PatternKit.Examples.Chain.IDeviceBus), [xref\:PatternKit.Examples.Chain.CardProcessors](xref:PatternKit.Examples.Chain.CardProcessors)
+    * Infra: `PatternKit.Examples.Chain.IDeviceBus`, `PatternKit.Examples.Chain.CardProcessors`
     * Discounts: `Cash2Pct`, `Loyalty5Pct`, `Bundle1OffEach`
     * Rounding: `CharityRoundUp`, `NickelCashOnly`
     * Tenders: `CashTender`, `CardTender`
-* Builds a shared [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline):
+* Builds a shared `PatternKit.Examples.Chain.TransactionPipeline`:
 
 ```csharp
 TransactionPipelineBuilder.New()
@@ -142,7 +142,7 @@ TransactionPipelineBuilder.New()
     .Build();
 ```
 
-Consumers receive a thin wrapper: [xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline) with `Run(ctx)`.
+Consumers receive a thin wrapper: `PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline` with `Run(ctx)`.
 
 ---
 
@@ -231,7 +231,7 @@ The same pattern holds for `IRoundingStrategy` and `ITenderHandler`.
   Inside `AddConfigDrivenDiscountsAndTax` we compute tax at **8.75%**. Swap this with your own calculator if needed.
 
 * **Thread safety?**
-  The composed [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline) is immutable and safe for concurrent use. Builders are not thread-safe.
+  The composed `PatternKit.Examples.Chain.TransactionPipeline` is immutable and safe for concurrent use. Builders are not thread-safe.
 
 * **Observability**
   Every rule/strategy logs its work to `ctx.Log` using concise, human-readable entries suitable for unit tests and diagnostics.
@@ -248,20 +248,20 @@ The same pattern holds for `IRoundingStrategy` and `ITenderHandler`.
 
 * Composition
 
-    * [xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions)
-    * [xref\:PatternKit.Examples.Chain.TransactionPipelineBuilder](xref:PatternKit.Examples.Chain.TransactionPipelineBuilder)
-    * [xref\:PatternKit.Examples.Chain.TransactionPipeline](xref:PatternKit.Examples.Chain.TransactionPipeline)
+    * `PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineBuilderExtensions`
+    * `PatternKit.Examples.Chain.TransactionPipelineBuilder`
+    * `PatternKit.Examples.Chain.TransactionPipeline`
 * Config & DI
 
-    * [xref\:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions](xref:PatternKit.Examples.Chain.ConfigDriven.PipelineOptions)
-    * [xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline\*](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline*)
-    * [xref\:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline](xref:PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline)
+    * `PatternKit.Examples.Chain.ConfigDriven.PipelineOptions`
+    * `PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.AddPaymentPipeline\*`
+    * `PatternKit.Examples.Chain.ConfigDriven.ConfigDrivenPipelineDemo.PaymentPipeline`
 * Strategies
 
-    * Discounts: [xref\:PatternKit.Examples.Chain.ConfigDriven.Cash2Pct](xref:PatternKit.Examples.Chain.ConfigDriven.Cash2Pct), [xref\:PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct](xref:PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct), [xref\:PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach](xref:PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach)
-    * Rounding: [xref\:PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp](xref:PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp), [xref\:PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly](xref:PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly)
-    * Tenders: [xref\:PatternKit.Examples.Chain.ConfigDriven.CashTender](xref:PatternKit.Examples.Chain.ConfigDriven.CashTender), [xref\:PatternKit.Examples.Chain.ConfigDriven.CardTender](xref:PatternKit.Examples.Chain.ConfigDriven.CardTender)
+    * Discounts: `PatternKit.Examples.Chain.ConfigDriven.Cash2Pct`, `PatternKit.Examples.Chain.ConfigDriven.Loyalty5Pct`, `PatternKit.Examples.Chain.ConfigDriven.Bundle1OffEach`
+    * Rounding: `PatternKit.Examples.Chain.ConfigDriven.CharityRoundUp`, `PatternKit.Examples.Chain.ConfigDriven.NickelCashOnly`
+    * Tenders: `PatternKit.Examples.Chain.ConfigDriven.CashTender`, `PatternKit.Examples.Chain.ConfigDriven.CardTender`
 * Domain
 
-    * [xref\:PatternKit.Examples.Chain.TransactionContext](xref:PatternKit.Examples.Chain.TransactionContext), [xref\:PatternKit.Examples.Chain.TxResult](xref:PatternKit.Examples.Chain.TxResult),
-      [xref\:PatternKit.Examples.Chain.Tender](xref:PatternKit.Examples.Chain.Tender), [xref\:PatternKit.Examples.Chain.LineItem](xref:PatternKit.Examples.Chain.LineItem), [xref\:PatternKit.Examples.Chain.Customer](xref:PatternKit.Examples.Chain.Customer)
+    * `PatternKit.Examples.Chain.TransactionContext`, `PatternKit.Examples.Chain.TxResult`,
+      `PatternKit.Examples.Chain.Tender`, `PatternKit.Examples.Chain.LineItem`, `PatternKit.Examples.Chain.Customer`

@@ -175,6 +175,34 @@ public class CoercerTests(ITestOutputHelper output) : TinyBddXunitBase(output)
             .AssertPassed();
     }
 
+    [Scenario("Static convenience coercer covers direct casts, misses, and conversion failures")]
+    [Fact]
+    public async Task StaticConvenience_CoversDirectMissAndFailurePaths()
+    {
+        await Given("mixed source values", () => new object?[]
+            {
+                123,
+                new object(),
+                Json("true"),
+                Json("\"not-a-number\""),
+                "not-a-number"
+            })
+            .When("coercing with static convenience APIs", values => new
+            {
+                Direct = Coercer<int>.Coerce<int>(values[0]),
+                UnsupportedString = Coercer<string>.From(values[1]),
+                BoolFromWrongShape = Coercer<bool>.From(values[3]),
+                BoolFromJson = Coercer<bool>.Coerce<bool>(values[2]),
+                FailedInt = Coercer<int>.From(values[4])
+            })
+            .Then("direct casts succeed", result => result.Direct == 123)
+            .And("unsupported sources return defaults", result => result.UnsupportedString is null)
+            .And("json handlers reject wrong shapes", result => result.BoolFromWrongShape == default)
+            .And("json bools still coerce", result => result.BoolFromJson)
+            .And("convertible failures are swallowed", result => result.FailedInt == default)
+            .AssertPassed();
+    }
+
     // ---------- Ordering correctness ----------
     [Scenario("Ordering: FromJsonNumberInt runs before ConvertibleFallback for ints")]
     [Fact]

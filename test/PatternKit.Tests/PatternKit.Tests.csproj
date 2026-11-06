@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
@@ -10,21 +10,22 @@
              CS0618: Tests intentionally use obsolete APIs to verify backward compatibility
              xUnit1031: Some tests intentionally use sync-over-async for specific testing scenarios
              xUnit2002: NotNull on value types (analyzer false positive in some generator tests) -->
-        <NoWarn>$(NoWarn);TBDD010;CS0618;xUnit1031;xUnit2002</NoWarn>
+        <NoWarn>$(NoWarn);TBDD010;CS0618;CS8600;CS8602;xUnit1031;xUnit2002</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.4">
+        <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-        <PackageReference Include="System.Collections.Immutable" Version="10.0.3" />
-        <PackageReference Include="System.Linq.Async" Version="7.0.0" />
-        <PackageReference Include="TinyBDD.Xunit" Version="0.19.6" />
-        <PackageReference Include="xunit" Version="2.9.3" />
-        <PackageReference Include="xunit.extensibility.core" Version="2.9.3" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="System.Collections.Immutable" />
+        <PackageReference Include="System.Linq.Async" />
+        <PackageReference Include="TinyBDD" />
+        <PackageReference Include="TinyBDD.Xunit" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.extensibility.core" />
+        <PackageReference Include="xunit.runner.visualstudio">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -37,6 +38,10 @@
     <ItemGroup>
         <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
         <ProjectReference Include="..\..\src\PatternKit.Examples\PatternKit.Examples.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
     </ItemGroup>
 
     <ItemGroup>

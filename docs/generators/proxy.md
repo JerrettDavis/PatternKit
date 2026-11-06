@@ -232,7 +232,7 @@ Main attribute for marking interfaces or abstract classes for proxy generation.
 |----------|------|---------|-------------|
 | `ProxyTypeName` | `string?` | `{ContractName}Proxy` | Name of the generated proxy class |
 | `InterceptorMode` | `ProxyInterceptorMode` | `Single` | Interceptor support mode |
-| `GenerateAsync` | `bool?` | Auto-detected | Generate async interceptor methods |
+| `GenerateAsync` | `bool` | Auto-detected when omitted | Generate async interceptor methods |
 | `ForceAsync` | `bool` | `false` | Force async even if no async members detected |
 | `Exceptions` | `ProxyExceptionPolicy` | `Rethrow` | Exception handling policy |
 
@@ -832,7 +832,7 @@ public partial interface IUserService { }
 - [Decorator Generator](decorator.md) - For wrapping objects with additional behavior
 - [Facade Generator](facade.md) - For simplifying complex subsystems
 - [Factory Generators](factory-method.md) - For object creation patterns
-- [Examples](../examples/) - Real-world usage examples
+- [Examples](../examples/index.md) - Real-world usage examples
 
 ## Feedback
 

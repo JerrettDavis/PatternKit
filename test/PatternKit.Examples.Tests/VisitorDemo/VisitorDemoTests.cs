@@ -1,70 +1,78 @@
 using PatternKit.Examples.VisitorDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.VisitorDemoTests;
 
 public sealed class TenderRecordTests
 {
+    [Scenario("Cash Record Works")]
     [Fact]
     public void Cash_Record_Works()
     {
         var cash = new Cash(10.50m);
 
-        Assert.Equal(10.50m, cash.Value);
-        Assert.Equal(10.50m, cash.Amount);
+        ScenarioExpect.Equal(10.50m, cash.Value);
+        ScenarioExpect.Equal(10.50m, cash.Amount);
     }
 
+    [Scenario("Card Record Works")]
     [Fact]
     public void Card_Record_Works()
     {
         var card = new Card("VISA", "4242", 25.75m);
 
-        Assert.Equal("VISA", card.Brand);
-        Assert.Equal("4242", card.Last4);
-        Assert.Equal(25.75m, card.Value);
-        Assert.Equal(25.75m, card.Amount);
+        ScenarioExpect.Equal("VISA", card.Brand);
+        ScenarioExpect.Equal("4242", card.Last4);
+        ScenarioExpect.Equal(25.75m, card.Value);
+        ScenarioExpect.Equal(25.75m, card.Amount);
     }
 
+    [Scenario("GiftCard Record Works")]
     [Fact]
     public void GiftCard_Record_Works()
     {
         var gift = new GiftCard("GFT-123", 15.00m);
 
-        Assert.Equal("GFT-123", gift.Code);
-        Assert.Equal(15.00m, gift.Value);
-        Assert.Equal(15.00m, gift.Amount);
+        ScenarioExpect.Equal("GFT-123", gift.Code);
+        ScenarioExpect.Equal(15.00m, gift.Value);
+        ScenarioExpect.Equal(15.00m, gift.Amount);
     }
 
+    [Scenario("StoreCredit Record Works")]
     [Fact]
     public void StoreCredit_Record_Works()
     {
         var credit = new StoreCredit("CUST-456", 5.25m);
 
-        Assert.Equal("CUST-456", credit.CustomerId);
-        Assert.Equal(5.25m, credit.Value);
-        Assert.Equal(5.25m, credit.Amount);
+        ScenarioExpect.Equal("CUST-456", credit.CustomerId);
+        ScenarioExpect.Equal(5.25m, credit.Value);
+        ScenarioExpect.Equal(5.25m, credit.Amount);
     }
 
+    [Scenario("Unknown Record Works")]
     [Fact]
     public void Unknown_Record_Works()
     {
         var unknown = new Unknown("PromoVoucher", 2.00m);
 
-        Assert.Equal("PromoVoucher", unknown.Description);
-        Assert.Equal(2.00m, unknown.Value);
-        Assert.Equal(2.00m, unknown.Amount);
+        ScenarioExpect.Equal("PromoVoucher", unknown.Description);
+        ScenarioExpect.Equal(2.00m, unknown.Value);
+        ScenarioExpect.Equal(2.00m, unknown.Amount);
     }
 }
 
 public sealed class ReceiptRenderingTests
 {
+    [Scenario("CreateRenderer Returns NonNull")]
     [Fact]
     public void CreateRenderer_Returns_NonNull()
     {
         var renderer = ReceiptRendering.CreateRenderer();
 
-        Assert.NotNull(renderer);
+        ScenarioExpect.NotNull(renderer);
     }
 
+    [Scenario("Renderer Formats Cash")]
     [Fact]
     public void Renderer_Formats_Cash()
     {
@@ -73,10 +81,11 @@ public sealed class ReceiptRenderingTests
 
         var line = renderer.Dispatch(cash);
 
-        Assert.Contains("Cash", line);
-        Assert.Contains("10.00", line);
+        ScenarioExpect.Contains("Cash", line);
+        ScenarioExpect.Contains("10.00", line);
     }
 
+    [Scenario("Renderer Formats Card")]
     [Fact]
     public void Renderer_Formats_Card()
     {
@@ -85,11 +94,12 @@ public sealed class ReceiptRenderingTests
 
         var line = renderer.Dispatch(card);
 
-        Assert.Contains("VISA", line);
-        Assert.Contains("4242", line);
-        Assert.Contains("15.75", line);
+        ScenarioExpect.Contains("VISA", line);
+        ScenarioExpect.Contains("4242", line);
+        ScenarioExpect.Contains("15.75", line);
     }
 
+    [Scenario("Renderer Formats GiftCard")]
     [Fact]
     public void Renderer_Formats_GiftCard()
     {
@@ -98,11 +108,12 @@ public sealed class ReceiptRenderingTests
 
         var line = renderer.Dispatch(gift);
 
-        Assert.Contains("GiftCard", line);
-        Assert.Contains("GFT-001", line);
-        Assert.Contains("5.00", line);
+        ScenarioExpect.Contains("GiftCard", line);
+        ScenarioExpect.Contains("GFT-001", line);
+        ScenarioExpect.Contains("5.00", line);
     }
 
+    [Scenario("Renderer Formats StoreCredit")]
     [Fact]
     public void Renderer_Formats_StoreCredit()
     {
@@ -111,11 +122,12 @@ public sealed class ReceiptRenderingTests
 
         var line = renderer.Dispatch(credit);
 
-        Assert.Contains("StoreCredit", line);
-        Assert.Contains("C123", line);
-        Assert.Contains("3.25", line);
+        ScenarioExpect.Contains("StoreCredit", line);
+        ScenarioExpect.Contains("C123", line);
+        ScenarioExpect.Contains("3.25", line);
     }
 
+    [Scenario("Renderer Formats Unknown With Default")]
     [Fact]
     public void Renderer_Formats_Unknown_With_Default()
     {
@@ -124,13 +136,14 @@ public sealed class ReceiptRenderingTests
 
         var line = renderer.Dispatch(unknown);
 
-        Assert.Contains("Other", line);
-        Assert.Contains("2.00", line);
+        ScenarioExpect.Contains("Other", line);
+        ScenarioExpect.Contains("2.00", line);
     }
 }
 
 public sealed class CountersHandlerTests
 {
+    [Scenario("Cash Increments CashCount")]
     [Fact]
     public void Cash_Increments_CashCount()
     {
@@ -138,10 +151,11 @@ public sealed class CountersHandlerTests
 
         handler.Cash(new Cash(10.00m));
 
-        Assert.Equal(1, handler.CashCount);
-        Assert.Equal(10.00m, handler.Total);
+        ScenarioExpect.Equal(1, handler.CashCount);
+        ScenarioExpect.Equal(10.00m, handler.Total);
     }
 
+    [Scenario("Card Increments CardCount")]
     [Fact]
     public void Card_Increments_CardCount()
     {
@@ -149,10 +163,11 @@ public sealed class CountersHandlerTests
 
         handler.Card(new Card("MC", "1234", 20.00m));
 
-        Assert.Equal(1, handler.CardCount);
-        Assert.Equal(20.00m, handler.Total);
+        ScenarioExpect.Equal(1, handler.CardCount);
+        ScenarioExpect.Equal(20.00m, handler.Total);
     }
 
+    [Scenario("Gift Increments GiftCount")]
     [Fact]
     public void Gift_Increments_GiftCount()
     {
@@ -160,10 +175,11 @@ public sealed class CountersHandlerTests
 
         handler.Gift(new GiftCard("G-001", 5.00m));
 
-        Assert.Equal(1, handler.GiftCount);
-        Assert.Equal(5.00m, handler.Total);
+        ScenarioExpect.Equal(1, handler.GiftCount);
+        ScenarioExpect.Equal(5.00m, handler.Total);
     }
 
+    [Scenario("Credit Increments CreditCount")]
     [Fact]
     public void Credit_Increments_CreditCount()
     {
@@ -171,10 +187,11 @@ public sealed class CountersHandlerTests
 
         handler.Credit(new StoreCredit("C-001", 3.00m));
 
-        Assert.Equal(1, handler.CreditCount);
-        Assert.Equal(3.00m, handler.Total);
+        ScenarioExpect.Equal(1, handler.CreditCount);
+        ScenarioExpect.Equal(3.00m, handler.Total);
     }
 
+    [Scenario("Fallback Increments FallbackCount")]
     [Fact]
     public void Fallback_Increments_FallbackCount()
     {
@@ -183,10 +200,11 @@ public sealed class CountersHandlerTests
 
         handler.Fallback(unknown);
 
-        Assert.Equal(1, handler.FallbackCount);
-        Assert.Equal(1.50m, handler.Total);
+        ScenarioExpect.Equal(1, handler.FallbackCount);
+        ScenarioExpect.Equal(1.50m, handler.Total);
     }
 
+    [Scenario("Multiple Tenders Accumulate Correctly")]
     [Fact]
     public void Multiple_Tenders_Accumulate_Correctly()
     {
@@ -197,26 +215,28 @@ public sealed class CountersHandlerTests
         handler.Card(new Card("VISA", "1111", 20.00m));
         handler.Gift(new GiftCard("G1", 7.50m));
 
-        Assert.Equal(2, handler.CashCount);
-        Assert.Equal(1, handler.CardCount);
-        Assert.Equal(1, handler.GiftCount);
-        Assert.Equal(0, handler.CreditCount);
-        Assert.Equal(0, handler.FallbackCount);
-        Assert.Equal(42.50m, handler.Total);
+        ScenarioExpect.Equal(2, handler.CashCount);
+        ScenarioExpect.Equal(1, handler.CardCount);
+        ScenarioExpect.Equal(1, handler.GiftCount);
+        ScenarioExpect.Equal(0, handler.CreditCount);
+        ScenarioExpect.Equal(0, handler.FallbackCount);
+        ScenarioExpect.Equal(42.50m, handler.Total);
     }
 }
 
 public sealed class RoutingTests
 {
+    [Scenario("CreateRouter Returns NonNull")]
     [Fact]
     public void CreateRouter_Returns_NonNull()
     {
         var handler = new CountersHandler();
         var router = Routing.CreateRouter(handler);
 
-        Assert.NotNull(router);
+        ScenarioExpect.NotNull(router);
     }
 
+    [Scenario("Router Dispatches Cash")]
     [Fact]
     public void Router_Dispatches_Cash()
     {
@@ -225,9 +245,10 @@ public sealed class RoutingTests
 
         router.Dispatch(new Cash(10.00m));
 
-        Assert.Equal(1, handler.CashCount);
+        ScenarioExpect.Equal(1, handler.CashCount);
     }
 
+    [Scenario("Router Dispatches Card")]
     [Fact]
     public void Router_Dispatches_Card()
     {
@@ -236,9 +257,10 @@ public sealed class RoutingTests
 
         router.Dispatch(new Card("AMEX", "0000", 50.00m));
 
-        Assert.Equal(1, handler.CardCount);
+        ScenarioExpect.Equal(1, handler.CardCount);
     }
 
+    [Scenario("Router Dispatches GiftCard")]
     [Fact]
     public void Router_Dispatches_GiftCard()
     {
@@ -247,9 +269,10 @@ public sealed class RoutingTests
 
         router.Dispatch(new GiftCard("G2", 25.00m));
 
-        Assert.Equal(1, handler.GiftCount);
+        ScenarioExpect.Equal(1, handler.GiftCount);
     }
 
+    [Scenario("Router Dispatches StoreCredit")]
     [Fact]
     public void Router_Dispatches_StoreCredit()
     {
@@ -258,9 +281,10 @@ public sealed class RoutingTests
 
         router.Dispatch(new StoreCredit("C2", 15.00m));
 
-        Assert.Equal(1, handler.CreditCount);
+        ScenarioExpect.Equal(1, handler.CreditCount);
     }
 
+    [Scenario("Router Dispatches Unknown To Fallback")]
     [Fact]
     public void Router_Dispatches_Unknown_To_Fallback()
     {
@@ -269,9 +293,10 @@ public sealed class RoutingTests
 
         router.Dispatch(new Unknown("External", 5.00m));
 
-        Assert.Equal(1, handler.FallbackCount);
+        ScenarioExpect.Equal(1, handler.FallbackCount);
     }
 
+    [Scenario("Router Dispatches Multiple Tenders")]
     [Fact]
     public void Router_Dispatches_Multiple_Tenders()
     {
@@ -291,49 +316,52 @@ public sealed class RoutingTests
             router.Dispatch(t);
         }
 
-        Assert.Equal(1, handler.CashCount);
-        Assert.Equal(1, handler.CardCount);
-        Assert.Equal(1, handler.GiftCount);
-        Assert.Equal(1, handler.CreditCount);
-        Assert.Equal(1, handler.FallbackCount);
-        Assert.Equal(36.00m, handler.Total);
+        ScenarioExpect.Equal(1, handler.CashCount);
+        ScenarioExpect.Equal(1, handler.CardCount);
+        ScenarioExpect.Equal(1, handler.GiftCount);
+        ScenarioExpect.Equal(1, handler.CreditCount);
+        ScenarioExpect.Equal(1, handler.FallbackCount);
+        ScenarioExpect.Equal(36.00m, handler.Total);
     }
 }
 
 public sealed class DemoTests
 {
+    [Scenario("Run Returns Receipt And Counters")]
     [Fact]
     public void Run_Returns_Receipt_And_Counters()
     {
         var (receipt, counters) = Demo.Run();
 
-        Assert.NotNull(receipt);
-        Assert.NotNull(counters);
-        Assert.Equal(5, receipt.Length);
+        ScenarioExpect.NotNull(receipt);
+        ScenarioExpect.NotNull(counters);
+        ScenarioExpect.Equal(5, receipt.Length);
     }
 
+    [Scenario("Run Counters Match Expected")]
     [Fact]
     public void Run_Counters_Match_Expected()
     {
         var (_, counters) = Demo.Run();
 
-        Assert.Equal(1, counters.CashCount);
-        Assert.Equal(1, counters.CardCount);
-        Assert.Equal(1, counters.GiftCount);
-        Assert.Equal(1, counters.CreditCount);
-        Assert.Equal(1, counters.FallbackCount);
-        Assert.Equal(36.00m, counters.Total);
+        ScenarioExpect.Equal(1, counters.CashCount);
+        ScenarioExpect.Equal(1, counters.CardCount);
+        ScenarioExpect.Equal(1, counters.GiftCount);
+        ScenarioExpect.Equal(1, counters.CreditCount);
+        ScenarioExpect.Equal(1, counters.FallbackCount);
+        ScenarioExpect.Equal(36.00m, counters.Total);
     }
 
+    [Scenario("Run Receipt Contains All Tender Types")]
     [Fact]
     public void Run_Receipt_Contains_All_Tender_Types()
     {
         var (receipt, _) = Demo.Run();
 
-        Assert.Contains(receipt, r => r.Contains("Cash"));
-        Assert.Contains(receipt, r => r.Contains("VISA"));
-        Assert.Contains(receipt, r => r.Contains("GiftCard"));
-        Assert.Contains(receipt, r => r.Contains("StoreCredit"));
-        Assert.Contains(receipt, r => r.Contains("Other"));
+        ScenarioExpect.Contains(receipt, r => r.Contains("Cash"));
+        ScenarioExpect.Contains(receipt, r => r.Contains("VISA"));
+        ScenarioExpect.Contains(receipt, r => r.Contains("GiftCard"));
+        ScenarioExpect.Contains(receipt, r => r.Contains("StoreCredit"));
+        ScenarioExpect.Contains(receipt, r => r.Contains("Other"));
     }
 }

@@ -1,6 +1,102 @@
 # Messaging Patterns
 
-This section covers messaging and event-driven patterns in PatternKit, with a focus on the **Mediator pattern**.
+This section covers messaging and event-driven patterns in PatternKit.
+
+## Message Envelope and Context
+
+`Message<TPayload>`, `MessageHeaders`, and `MessageContext` provide shared in-process metadata for enterprise integration patterns. They carry correlation IDs, causation IDs, idempotency keys, content types, reply addresses, timestamps, cancellation, and execution-scoped items without pretending to be a broker or durable queue.
+
+[Learn More](message-envelope.md)
+
+## Enterprise Message Routing
+
+Content router, recipient list, splitter, and aggregator primitives model common Enterprise Integration Patterns for deterministic in-process workflows.
+
+[Learn More](message-routing.md)
+
+## Routing Slip
+
+Runtime and source-generated routing slip factories execute named message itineraries in order and record progress in message headers.
+
+[Learn More](routing-slip.md)
+
+## Saga / Process Manager
+
+Runtime and source-generated process managers coordinate typed message transitions over explicit saga state.
+
+[Learn More](saga.md)
+
+## Mailbox
+
+Bounded or unbounded in-process inboxes serialize async message handling through a single consumer, with explicit backpressure, error, lifecycle, and diagnostics policies.
+
+[Learn More](mailbox.md)
+
+## Event-Driven Consumer
+
+Push-based consumers handle messages when a broker callback, background service, webhook, in-memory bus, or application event source delivers them.
+
+[Learn More](event-driven-consumer.md)
+
+## Durable Subscriber
+
+Durable subscribers catch up from a message store and checkpoint the last successfully handled sequence per subscriber.
+
+[Learn More](durable-subscriber.md)
+
+## Message Bus
+
+Typed message buses publish messages to named topic subscribers backed by PatternKit message channels, with fluent and source-generated topology paths.
+
+[Learn More](message-bus.md)
+
+## Channel Adapter
+
+Channel adapters translate external transport DTOs into PatternKit message channels and translate outbound channel messages back to the transport shape.
+
+[Learn More](channel-adapter.md)
+
+## Channel Purger
+
+Channel purgers remove stale or operationally obsolete messages from PatternKit message channels with optional predicates and audit hooks.
+
+[Learn More](channel-purger.md)
+
+## Messaging Gateway
+
+Messaging gateways expose typed request/response methods while hiding message envelope and channel plumbing from application services.
+
+[Learn More](messaging-gateway.md)
+
+## Service Activator
+
+Service activators invoke application service operations from typed messages while preserving message context and response envelopes.
+
+[Learn More](service-activator.md)
+
+## Event-Carried State Transfer
+
+Event-carried state transfer publishes enough state in an event for subscribers to update local read models without calling back into the source service.
+
+[Learn More](event-carried-state-transfer.md)
+
+## Event Notification
+
+Event notification publishes compact event signals with keys, correlation IDs, and metadata when subscribers do not need a full state payload.
+
+[Learn More](event-notification.md)
+
+## Idempotent Receiver, Inbox, and Outbox
+
+Idempotency and handoff helpers compose message handlers with pluggable stores, inbox boundaries, and outbox records without claiming broker durability or exactly-once delivery.
+
+[Learn More](reliability.md)
+
+## Enterprise Integration Source Generators
+
+Generated content routers, routing slips, and sagas remove repetitive factory registration while preserving explicit opt-in and compile-time diagnostics.
+
+[Learn More](enterprise-generators.md)
 
 ## Mediator (Source Generated)
 
@@ -50,13 +146,20 @@ var result = await dispatcher.Send<CreateUser, UserCreated>(
 ### Documentation
 
 - [Full Documentation](dispatcher.md)
-- [Simple Examples](../../src/PatternKit.Examples/Messaging/DispatcherExample.cs)
-- **[Comprehensive Production Demo](../../src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs)** - DI integration, CQRS, behaviors, real-world domain
+- `src/PatternKit.Examples/Messaging/DispatcherExample.cs`
+- `src/PatternKit.Examples/MediatorComprehensiveDemo/ComprehensiveDemo.cs` - DI integration, CQRS, behaviors, real-world domain
 
 ### Related Patterns
 
 The Source-Generated Mediator complements other PatternKit patterns:
 
+- **[Message Envelope and Context](message-envelope.md)** - Shared metadata for routers, routing slips, sagas, mailboxes, and idempotent receivers
+- **[Enterprise Message Routing](message-routing.md)** - Content-based router, recipient list, splitter, and aggregator primitives
+- **[Routing Slip](routing-slip.md)** - Ordered message itineraries with fluent runtime and source-generated factories
+- **[Saga / Process Manager](saga.md)** - Typed message transitions over explicit long-running process state
+- **[Mailbox](mailbox.md)** - Serialized in-process inbox with bounded backpressure and shutdown behavior
+- **[Idempotent Receiver, Inbox, and Outbox](reliability.md)** - Pluggable idempotency and handoff helpers for at-least-once processing
+- **[Enterprise Integration Source Generators](enterprise-generators.md)** - Generated content-router, routing-slip, and saga factories with diagnostics
 - **[Runtime Mediator](../behavioral/mediator/index.md)** - Pre-built mediator with PatternKit runtime (use for application code)
 - **Observer** - For reactive event handling and pub/sub
 - **Command** - For encapsulating requests as objects
@@ -79,3 +182,9 @@ Consider alternatives when:
 - ❌ You need dynamic handler discovery at runtime
 - ❌ Your handlers come from plugins/dynamic assemblies
 - ❌ You need complex routing logic (use message broker)
+
+## Invalid Message Channel
+
+`InvalidMessageChannel<TPayload>` routes messages that fail validation to a dedicated invalid-message channel with reason metadata and original headers preserved.
+
+See [Invalid Message Channel](invalid-message-channel.md).

@@ -1,4 +1,5 @@
 using PatternKit.Examples.Chain;
+using PatternKit.Examples.Chain.ConfigDriven;
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
@@ -7,15 +8,17 @@ namespace PatternKit.Examples.Tests.Chain;
 
 public sealed class CashTenderStrategyTests
 {
+    [Scenario("Kind Is Cash")]
     [Fact]
     public void Kind_Is_Cash()
     {
         var devices = new DeviceBus();
         var strategy = new CashTenderStrategy(devices);
 
-        Assert.Equal(PaymentKind.Cash, strategy.Kind);
+        ScenarioExpect.Equal(PaymentKind.Cash, strategy.Kind);
     }
 
+    [Scenario("TryApply Applies Payment")]
     [Fact]
     public void TryApply_Applies_Payment()
     {
@@ -26,10 +29,11 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Equal(10m, ctx.CashChange);
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Equal(10m, ctx.CashChange);
     }
 
+    [Scenario("TryApply Exact Payment No Change")]
     [Fact]
     public void TryApply_Exact_Payment_No_Change()
     {
@@ -40,10 +44,11 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Null(ctx.CashChange);
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Null(ctx.CashChange);
     }
 
+    [Scenario("TryApply Returns Null When NoDue")]
     [Fact]
     public void TryApply_Returns_Null_When_NoDue()
     {
@@ -55,7 +60,7 @@ public sealed class CashTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
     private static TransactionContext CreateContext(decimal price)
@@ -72,6 +77,7 @@ public sealed class CashTenderStrategyTests
 
 public sealed class CardTenderStrategyTests
 {
+    [Scenario("Kind Is Card")]
     [Fact]
     public void Kind_Is_Card()
     {
@@ -81,9 +87,10 @@ public sealed class CardTenderStrategyTests
         });
         var strategy = new CardTenderStrategy(processors);
 
-        Assert.Equal(PaymentKind.Card, strategy.Kind);
+        ScenarioExpect.Equal(PaymentKind.Card, strategy.Kind);
     }
 
+    [Scenario("TryApply Authorizes And Captures")]
     [Fact]
     public void TryApply_Authorizes_And_Captures()
     {
@@ -98,10 +105,11 @@ public sealed class CardTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result); // success
-        Assert.Contains(ctx.Log, l => l.Contains("captured"));
+        ScenarioExpect.Null(result); // success
+        ScenarioExpect.Contains(ctx.Log, l => l.Contains("captured"));
     }
 
+    [Scenario("TryApply Returns Null When NoDue")]
     [Fact]
     public void TryApply_Returns_Null_When_NoDue()
     {
@@ -116,7 +124,7 @@ public sealed class CardTenderStrategyTests
 
         var result = strategy.TryApply(ctx, tender);
 
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
     private static TransactionContext CreateContext(decimal price)
@@ -133,6 +141,7 @@ public sealed class CardTenderStrategyTests
 
 public sealed class NoopCharityTrackerTests
 {
+    [Scenario("Track Does Not Throw")]
     [Fact]
     public void Track_Does_Not_Throw()
     {
@@ -144,14 +153,16 @@ public sealed class NoopCharityTrackerTests
 
 public sealed class CharityRoundUpRuleTests
 {
+    [Scenario("Reason Is Set")]
     [Fact]
     public void Reason_Is_Set()
     {
         var rule = new CharityRoundUpRule(new NoopCharityTracker());
 
-        Assert.Equal("charity round-up", rule.Reason);
+        ScenarioExpect.Equal("charity round-up", rule.Reason);
     }
 
+    [Scenario("ShouldApply Returns True When CharitySku Present")]
     [Fact]
     public void ShouldApply_Returns_True_When_CharitySku_Present()
     {
@@ -162,9 +173,10 @@ public sealed class CharityRoundUpRuleTests
             Items = [new LineItem("CHARITY:UNICEF", 1m, 1)]
         };
 
-        Assert.True(rule.ShouldApply(ctx));
+        ScenarioExpect.True(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False When No CharitySku")]
     [Fact]
     public void ShouldApply_Returns_False_When_No_CharitySku()
     {
@@ -175,9 +187,10 @@ public sealed class CharityRoundUpRuleTests
             Items = [new LineItem("REGULAR", 10m, 1)]
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ComputeDelta Rounds Up To Dollar")]
     [Fact]
     public void ComputeDelta_Rounds_Up_To_Dollar()
     {
@@ -191,20 +204,22 @@ public sealed class CharityRoundUpRuleTests
 
         var delta = rule.ComputeDelta(ctx);
 
-        Assert.Equal(0.75m, delta); // 10.25 -> 11.00
+        ScenarioExpect.Equal(0.75m, delta); // 10.25 -> 11.00
     }
 }
 
 public sealed class NickelCashOnlyRuleTests
 {
+    [Scenario("Reason Is Set")]
     [Fact]
     public void Reason_Is_Set()
     {
         var rule = new NickelCashOnlyRule();
 
-        Assert.Equal("nickel (cash-only)", rule.Reason);
+        ScenarioExpect.Equal("nickel (cash-only)", rule.Reason);
     }
 
+    [Scenario("ShouldApply Returns True For Cash With NickelSku")]
     [Fact]
     public void ShouldApply_Returns_True_For_Cash_With_NickelSku()
     {
@@ -216,9 +231,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Cash)
         };
 
-        Assert.True(rule.ShouldApply(ctx));
+        ScenarioExpect.True(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False For Card")]
     [Fact]
     public void ShouldApply_Returns_False_For_Card()
     {
@@ -230,9 +246,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Card)
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ShouldApply Returns False Without NickelSku")]
     [Fact]
     public void ShouldApply_Returns_False_Without_NickelSku()
     {
@@ -244,9 +261,10 @@ public sealed class NickelCashOnlyRuleTests
             Tender = new Tender(PaymentKind.Cash)
         };
 
-        Assert.False(rule.ShouldApply(ctx));
+        ScenarioExpect.False(rule.ShouldApply(ctx));
     }
 
+    [Scenario("ComputeDelta Rounds To Nearest Nickel")]
     [Fact]
     public void ComputeDelta_Rounds_To_Nearest_Nickel()
     {
@@ -260,7 +278,172 @@ public sealed class NickelCashOnlyRuleTests
 
         var delta = rule.ComputeDelta(ctx);
 
-        Assert.Equal(0.02m, delta); // 10.03 -> 10.05
+        ScenarioExpect.Equal(0.02m, delta); // 10.03 -> 10.05
+    }
+}
+
+public sealed class MediatedTransactionPipelineCoverageTests
+{
+    [Scenario("Transaction pipeline builder fluent hooks cover custom stages rules and coupon discounts")]
+    [Fact]
+    public void TransactionPipelineBuilder_FluentHooks_Cover_CustomStagesRulesAndCouponDiscounts()
+    {
+        var couponContext = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items =
+            [
+                new LineItem("MFG", 10m, Qty: 2, ManufacturerCoupon: 1m),
+                new LineItem("HOUSE", 5m, Qty: 1, InHouseCoupon: 0.50m),
+            ]
+        };
+        var couponPipeline = TransactionPipelineBuilder.New()
+            .WithRoundingRules()
+            .AddDiscountsAndTax()
+            .Build();
+
+        var couponResult = couponPipeline.Run(couponContext);
+
+        ScenarioExpect.True(couponResult.Result.Ok);
+        ScenarioExpect.Contains(couponResult.Ctx.Log, entry => entry.StartsWith("discount: manufacturer coupons", StringComparison.Ordinal));
+        ScenarioExpect.Contains(couponResult.Ctx.Log, entry => entry.StartsWith("discount: in-house coupons", StringComparison.Ordinal));
+
+        var customContext = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("STOP", 1m)]
+        };
+        var customPipeline = TransactionPipelineBuilder.New()
+            .AddStage(ctx =>
+            {
+                ctx.Result = TxResult.Fail("custom", "custom stop");
+                return false;
+            })
+            .Build();
+
+        var customResult = customPipeline.Run(customContext);
+
+        ScenarioExpect.False(customResult.Result.Ok);
+        ScenarioExpect.Equal("custom", customResult.Result.Code);
+    }
+
+    [Scenario("Transaction pipeline builder preauth blocks empty baskets")]
+    [Fact]
+    public void TransactionPipelineBuilder_Preauth_Blocks_EmptyBaskets()
+    {
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = []
+        };
+        var pipeline = TransactionPipelineBuilder.New()
+            .AddPreauth()
+            .Build();
+
+        var result = pipeline.Run(context);
+
+        ScenarioExpect.False(result.Result.Ok);
+        ScenarioExpect.Equal("empty", result.Result.Code);
+        ScenarioExpect.True(result.Ctx.Log.Contains("preauth: empty basket"));
+    }
+
+    [Scenario("Card tender handlers surface authorization and capture failures")]
+    [Fact]
+    public void CardTenderHandlers_Surface_AuthorizationAndCaptureFailures()
+    {
+        var authProcessor = new ConfigurableProcessor(
+            TxResult.Fail("declined", "declined"),
+            TxResult.Success("capture"));
+        var captureProcessor = new ConfigurableProcessor(
+            TxResult.Success("auth"),
+            TxResult.Fail("capture-failed", "capture failed"));
+        var authContext = CreateContext(20m);
+        var captureContext = CreateContext(20m);
+
+        var configAuthTender = new CardTender(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = authProcessor
+        }));
+        var configCaptureTender = new CardTender(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = captureProcessor
+        }));
+        var strategyAuthTender = new CardTenderStrategy(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = authProcessor
+        }));
+        var strategyCaptureTender = new CardTenderStrategy(new CardProcessors(new()
+        {
+            [CardVendor.Unknown] = captureProcessor
+        }));
+
+        var tender = new Tender(PaymentKind.Card, Vendor: CardVendor.Unknown);
+        var configAuthResult = configAuthTender.Handle(authContext, tender);
+        var configCaptureResult = configCaptureTender.Handle(captureContext, tender);
+        var strategyAuthResult = strategyAuthTender.TryApply(CreateContext(20m), tender);
+        var strategyCaptureResult = strategyCaptureTender.TryApply(CreateContext(20m), tender);
+
+        ScenarioExpect.Equal("tender:card", configAuthTender.Key);
+        ScenarioExpect.False(configAuthResult.Ok);
+        ScenarioExpect.Equal("declined", configAuthResult.Code);
+        ScenarioExpect.True(authContext.Log.Contains("auth: declined (declined)"));
+        ScenarioExpect.False(configCaptureResult.Ok);
+        ScenarioExpect.Equal("capture-failed", configCaptureResult.Code);
+        ScenarioExpect.True(captureContext.Log.Contains("auth: capture failed"));
+        ScenarioExpect.NotNull(strategyAuthResult);
+        ScenarioExpect.Equal("declined", strategyAuthResult!.Value.Code);
+        ScenarioExpect.NotNull(strategyCaptureResult);
+        ScenarioExpect.Equal("capture-failed", strategyCaptureResult!.Value.Code);
+    }
+
+    [Scenario("Charity round up rule notifies tracker when applied")]
+    [Fact]
+    public void CharityRoundUpRule_NotifiesTracker_WhenApplied()
+    {
+        var tracker = new RecordingCharityTracker();
+        var rule = new CharityRoundUpRule(tracker);
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("CHARITY:KidsFund", 10.25m)]
+        };
+        context.RecomputeSubtotal();
+
+        RoundingPipeline.Apply(context, [rule]);
+
+        ScenarioExpect.Equal("KidsFund", tracker.Charity);
+        ScenarioExpect.Equal(0.75m, tracker.Delta);
+        ScenarioExpect.Contains(context.Log, entry => entry.StartsWith("charity: KidsFund notified", StringComparison.Ordinal));
+    }
+
+    private static TransactionContext CreateContext(decimal price)
+    {
+        var context = new TransactionContext
+        {
+            Customer = new Customer(null, 30),
+            Items = [new LineItem("CARD", price)]
+        };
+        context.RecomputeSubtotal();
+        return context;
+    }
+
+    private sealed class ConfigurableProcessor(TxResult authorization, TxResult capture) : ICardProcessor
+    {
+        public TxResult Authorize(TransactionContext ctx) => authorization;
+
+        public TxResult Capture(TransactionContext ctx) => capture;
+    }
+
+    private sealed class RecordingCharityTracker : ICharityTracker
+    {
+        public string? Charity { get; private set; }
+        public decimal Delta { get; private set; }
+
+        public void Track(string charity, Guid transactionId, decimal delta, decimal newTotal)
+        {
+            Charity = charity;
+            Delta = delta;
+        }
     }
 }
 

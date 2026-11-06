@@ -465,6 +465,6 @@ public partial class MyWorkflow
 
 ## See Also
 
-- [API Reference](../api/PatternKit.Generators.Template.html)
+- [API Reference](../api/index.md)
 - [Examples](examples.md)
 - [Troubleshooting](troubleshooting.md)

@@ -99,6 +99,7 @@ public sealed class AdapterEdgeCaseTests
         public int Age { get; set; }
     }
 
+    [Scenario("TryAdapt Exception In Seed Returns False")]
     [Fact]
     public void TryAdapt_Exception_In_Seed_Returns_False()
     {
@@ -108,11 +109,12 @@ public sealed class AdapterEdgeCaseTests
 
         var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
 
-        Assert.False(ok);
-        Assert.Null(dest);
-        Assert.Equal("Seed failed", error);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Null(dest);
+        ScenarioExpect.Equal("Seed failed", error);
     }
 
+    [Scenario("TryAdapt Exception In Map Returns False")]
     [Fact]
     public void TryAdapt_Exception_In_Map_Returns_False()
     {
@@ -123,11 +125,12 @@ public sealed class AdapterEdgeCaseTests
 
         var ok = adapter.TryAdapt(new Source("A", "B", 30), out var dest, out var error);
 
-        Assert.False(ok);
-        Assert.Null(dest);
-        Assert.Equal("Map failed", error);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.Null(dest);
+        ScenarioExpect.Equal("Map failed", error);
     }
 
+    [Scenario("TryAdapt Success NoValidators")]
     [Fact]
     public void TryAdapt_Success_NoValidators()
     {
@@ -138,12 +141,13 @@ public sealed class AdapterEdgeCaseTests
 
         var ok = adapter.TryAdapt(new Source("Ada", "L", 30), out var dest, out var error);
 
-        Assert.True(ok);
-        Assert.NotNull(dest);
-        Assert.Equal("Ada", dest.FullName);
-        Assert.Null(error);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.NotNull(dest);
+        ScenarioExpect.Equal("Ada", dest.FullName);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("Adapt NoMaps NoValidators Works")]
     [Fact]
     public void Adapt_NoMaps_NoValidators_Works()
     {
@@ -153,21 +157,23 @@ public sealed class AdapterEdgeCaseTests
 
         var result = adapter.Adapt(new Source("X", "Y", 42));
 
-        Assert.Equal(42, result.Age);
-        Assert.Null(result.FullName);
+        ScenarioExpect.Equal(42, result.Age);
+        ScenarioExpect.Null(result.FullName);
     }
 
+    [Scenario("Builder Null Seed Throws")]
     [Fact]
     public void Builder_Null_Seed_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Adapter<Source, Dest>.Create((Adapter<Source, Dest>.Seed)null!));
     }
 
+    [Scenario("Builder Null SeedFrom Throws")]
     [Fact]
     public void Builder_Null_SeedFrom_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             Adapter<Source, Dest>.Create((Adapter<Source, Dest>.SeedFrom)null!));
     }
 }
@@ -186,6 +192,7 @@ public sealed class AsyncAdapterTests
         public List<string> Log { get; } = [];
     }
 
+    [Scenario("AsyncAdapter Basic Adapt")]
     [Fact]
     public async Task AsyncAdapter_Basic_Adapt()
     {
@@ -200,10 +207,11 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("Ada", "Lovelace", 30));
 
-        Assert.Equal("Ada Lovelace", result.FullName);
-        Assert.Equal(30, result.Age);
+        ScenarioExpect.Equal("Ada Lovelace", result.FullName);
+        ScenarioExpect.Equal(30, result.Age);
     }
 
+    [Scenario("AsyncAdapter Async Seed")]
     [Fact]
     public async Task AsyncAdapter_Async_Seed()
     {
@@ -218,10 +226,11 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("Test", "User", 25));
 
-        Assert.Contains("async-seed", result.Log);
-        Assert.Equal("Test", result.FullName);
+        ScenarioExpect.Contains("async-seed", result.Log);
+        ScenarioExpect.Equal("Test", result.FullName);
     }
 
+    [Scenario("AsyncAdapter SeedFrom Uses Input")]
     [Fact]
     public async Task AsyncAdapter_SeedFrom_Uses_Input()
     {
@@ -232,10 +241,11 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("X", "Y", 42));
 
-        Assert.Equal(42, result.Age);
-        Assert.Equal("X", result.FullName);
+        ScenarioExpect.Equal(42, result.Age);
+        ScenarioExpect.Equal("X", result.FullName);
     }
 
+    [Scenario("AsyncAdapter Async SeedFrom")]
     [Fact]
     public async Task AsyncAdapter_Async_SeedFrom()
     {
@@ -250,10 +260,11 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("X", "Y", 10));
 
-        Assert.Equal(20, result.Age);
-        Assert.Equal("X", result.FullName);
+        ScenarioExpect.Equal(20, result.Age);
+        ScenarioExpect.Equal("X", result.FullName);
     }
 
+    [Scenario("AsyncAdapter Async Map Step")]
     [Fact]
     public async Task AsyncAdapter_Async_Map_Step()
     {
@@ -268,9 +279,10 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("Ada", "Lovelace", 30));
 
-        Assert.Equal("Ada Lovelace", result.FullName);
+        ScenarioExpect.Equal("Ada Lovelace", result.FullName);
     }
 
+    [Scenario("AsyncAdapter Require Validation Passes")]
     [Fact]
     public async Task AsyncAdapter_Require_Validation_Passes()
     {
@@ -282,9 +294,10 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("A", "B", 30));
 
-        Assert.Equal(30, result.Age);
+        ScenarioExpect.Equal(30, result.Age);
     }
 
+    [Scenario("AsyncAdapter Require Validation Fails")]
     [Fact]
     public async Task AsyncAdapter_Require_Validation_Fails()
     {
@@ -294,12 +307,13 @@ public sealed class AsyncAdapterTests
             .Require((src, dest) => dest.Age > 0 ? null : "Age must be positive")
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => adapter.AdaptAsync(new Source("A", "B", -1)).AsTask());
 
-        Assert.Equal("Age must be positive", ex.Message);
+        ScenarioExpect.Equal("Age must be positive", ex.Message);
     }
 
+    [Scenario("AsyncAdapter Async Require Validation")]
     [Fact]
     public async Task AsyncAdapter_Async_Require_Validation()
     {
@@ -313,12 +327,13 @@ public sealed class AsyncAdapterTests
             })
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => adapter.AdaptAsync(new Source("A", "B", -5)).AsTask());
 
-        Assert.Equal("Age must be positive", ex.Message);
+        ScenarioExpect.Equal("Age must be positive", ex.Message);
     }
 
+    [Scenario("AsyncAdapter TryAdapt Returns Success")]
     [Fact]
     public async Task AsyncAdapter_TryAdapt_Returns_Success()
     {
@@ -329,12 +344,13 @@ public sealed class AsyncAdapterTests
 
         var (success, result, error) = await adapter.TryAdaptAsync(new Source("Ada", "L", 30));
 
-        Assert.True(success);
-        Assert.NotNull(result);
-        Assert.Equal("Ada", result.FullName);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.NotNull(result);
+        ScenarioExpect.Equal("Ada", result.FullName);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncAdapter TryAdapt Returns Validation Error")]
     [Fact]
     public async Task AsyncAdapter_TryAdapt_Returns_Validation_Error()
     {
@@ -346,11 +362,12 @@ public sealed class AsyncAdapterTests
 
         var (success, result, error) = await adapter.TryAdaptAsync(new Source("A", "B", -1));
 
-        Assert.False(success);
-        Assert.Null(result);
-        Assert.Equal("Age must be positive", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
+        ScenarioExpect.Equal("Age must be positive", error);
     }
 
+    [Scenario("AsyncAdapter TryAdapt Catches Exception")]
     [Fact]
     public async Task AsyncAdapter_TryAdapt_Catches_Exception()
     {
@@ -361,11 +378,12 @@ public sealed class AsyncAdapterTests
 
         var (success, result, error) = await adapter.TryAdaptAsync(new Source("A", "B", 30));
 
-        Assert.False(success);
-        Assert.Null(result);
-        Assert.Equal("Map failed", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(result);
+        ScenarioExpect.Equal("Map failed", error);
     }
 
+    [Scenario("AsyncAdapter Multiple Maps In Order")]
     [Fact]
     public async Task AsyncAdapter_Multiple_Maps_In_Order()
     {
@@ -378,16 +396,17 @@ public sealed class AsyncAdapterTests
 
         var result = await adapter.AdaptAsync(new Source("A", "B", 30));
 
-        Assert.Equal(3, result.Log.Count);
-        Assert.Equal("map1", result.Log[0]);
-        Assert.Equal("map2", result.Log[1]);
-        Assert.Equal("map3", result.Log[2]);
+        ScenarioExpect.Equal(3, result.Log.Count);
+        ScenarioExpect.Equal("map1", result.Log[0]);
+        ScenarioExpect.Equal("map2", result.Log[1]);
+        ScenarioExpect.Equal("map3", result.Log[2]);
     }
 
+    [Scenario("AsyncAdapter Seed Null Throws")]
     [Fact]
     public void AsyncAdapter_Seed_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncAdapter<Source, Dest>.Create((AsyncAdapter<Source, Dest>.Seed)null!));
     }
 }

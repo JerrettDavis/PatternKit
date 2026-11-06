@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.Template;
+using TinyBDD;
 
 namespace PatternKit.Tests.Behavioral.Template;
 
@@ -6,6 +7,7 @@ public sealed class AsyncTemplateTests
 {
     #region AsyncTemplate<TIn, TOut> Tests
 
+    [Scenario("AsyncTemplate Executes Steps In Order")]
     [Fact]
     public async Task AsyncTemplate_Executes_Steps_In_Order()
     {
@@ -29,12 +31,13 @@ public sealed class AsyncTemplateTests
 
         var result = await template.ExecuteAsync(5);
 
-        Assert.Equal("5", result);
-        Assert.Equal("before-5", log[0]);
-        Assert.Equal("step", log[1]);
-        Assert.Equal("after-5->5", log[2]);
+        ScenarioExpect.Equal("5", result);
+        ScenarioExpect.Equal("before-5", log[0]);
+        ScenarioExpect.Equal("step", log[1]);
+        ScenarioExpect.Equal("after-5->5", log[2]);
     }
 
+    [Scenario("AsyncTemplate Multiple Before Steps")]
     [Fact]
     public async Task AsyncTemplate_Multiple_Before_Steps()
     {
@@ -46,10 +49,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Equal("before-1", log[0]);
-        Assert.Equal("before-2", log[1]);
+        ScenarioExpect.Equal("before-1", log[0]);
+        ScenarioExpect.Equal("before-2", log[1]);
     }
 
+    [Scenario("AsyncTemplate Multiple After Steps")]
     [Fact]
     public async Task AsyncTemplate_Multiple_After_Steps()
     {
@@ -61,10 +65,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Equal("after-1", log[0]);
-        Assert.Equal("after-2", log[1]);
+        ScenarioExpect.Equal("after-1", log[0]);
+        ScenarioExpect.Equal("after-2", log[1]);
     }
 
+    [Scenario("AsyncTemplate TryExecute Returns Success")]
     [Fact]
     public async Task AsyncTemplate_TryExecute_Returns_Success()
     {
@@ -73,11 +78,12 @@ public sealed class AsyncTemplateTests
 
         var (success, result, error) = await template.TryExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.Equal(10, result);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(10, result);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncTemplate TryExecute Catches Exception")]
     [Fact]
     public async Task AsyncTemplate_TryExecute_Catches_Exception()
     {
@@ -89,11 +95,12 @@ public sealed class AsyncTemplateTests
 
         var (success, result, error) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Equal(default, result);
-        Assert.Equal("test", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, result);
+        ScenarioExpect.Equal("test", error);
     }
 
+    [Scenario("AsyncTemplate Async Before")]
     [Fact]
     public async Task AsyncTemplate_Async_Before()
     {
@@ -108,10 +115,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("async-before", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-before", log[0]);
     }
 
+    [Scenario("AsyncTemplate Async After")]
     [Fact]
     public async Task AsyncTemplate_Async_After()
     {
@@ -126,10 +134,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("async-after", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-after", log[0]);
     }
 
+    [Scenario("AsyncTemplate OnError Handler")]
     [Fact]
     public async Task AsyncTemplate_OnError_Handler()
     {
@@ -143,11 +152,12 @@ public sealed class AsyncTemplateTests
 
         var (success, _, _) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Single(log);
-        Assert.Contains("error", log[0]);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Contains("error", log[0]);
     }
 
+    [Scenario("AsyncTemplate Synchronized")]
     [Fact]
     public async Task AsyncTemplate_Synchronized()
     {
@@ -165,13 +175,14 @@ public sealed class AsyncTemplateTests
         var tasks = Enumerable.Range(0, 5).Select(_ => template.ExecuteAsync(0)).ToArray();
         await Task.WhenAll(tasks);
 
-        Assert.Equal(5, count);
+        ScenarioExpect.Equal(5, count);
     }
 
     #endregion
 
     #region AsyncActionTemplate<TIn> Tests
 
+    [Scenario("AsyncActionTemplate Executes")]
     [Fact]
     public async Task AsyncActionTemplate_Executes()
     {
@@ -185,9 +196,10 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionTemplate Steps In Order")]
     [Fact]
     public async Task AsyncActionTemplate_Steps_In_Order()
     {
@@ -203,11 +215,12 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Equal("before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("after", log[2]);
+        ScenarioExpect.Equal("before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("after", log[2]);
     }
 
+    [Scenario("AsyncActionTemplate TryExecute Returns Success")]
     [Fact]
     public async Task AsyncActionTemplate_TryExecute_Returns_Success()
     {
@@ -221,11 +234,12 @@ public sealed class AsyncTemplateTests
 
         var (success, error) = await template.TryExecuteAsync(5);
 
-        Assert.True(success);
-        Assert.True(executed);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.True(executed);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncActionTemplate TryExecute Catches Exception")]
     [Fact]
     public async Task AsyncActionTemplate_TryExecute_Catches_Exception()
     {
@@ -237,10 +251,11 @@ public sealed class AsyncTemplateTests
 
         var (success, error) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Equal("test", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("test", error);
     }
 
+    [Scenario("AsyncActionTemplate Multiple Before")]
     [Fact]
     public async Task AsyncActionTemplate_Multiple_Before()
     {
@@ -252,10 +267,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Equal("before-1", log[0]);
-        Assert.Equal("before-2", log[1]);
+        ScenarioExpect.Equal("before-1", log[0]);
+        ScenarioExpect.Equal("before-2", log[1]);
     }
 
+    [Scenario("AsyncActionTemplate Multiple After")]
     [Fact]
     public async Task AsyncActionTemplate_Multiple_After()
     {
@@ -267,10 +283,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Equal("after-1", log[0]);
-        Assert.Equal("after-2", log[1]);
+        ScenarioExpect.Equal("after-1", log[0]);
+        ScenarioExpect.Equal("after-2", log[1]);
     }
 
+    [Scenario("AsyncActionTemplate Synchronized")]
     [Fact]
     public async Task AsyncActionTemplate_Synchronized()
     {
@@ -287,9 +304,10 @@ public sealed class AsyncTemplateTests
         var tasks = Enumerable.Range(0, 5).Select(_ => template.ExecuteAsync(0)).ToArray();
         await Task.WhenAll(tasks);
 
-        Assert.Equal(5, count);
+        ScenarioExpect.Equal(5, count);
     }
 
+    [Scenario("AsyncActionTemplate Async Before")]
     [Fact]
     public async Task AsyncActionTemplate_Async_Before()
     {
@@ -304,10 +322,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("async-before", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-before", log[0]);
     }
 
+    [Scenario("AsyncActionTemplate Async After")]
     [Fact]
     public async Task AsyncActionTemplate_Async_After()
     {
@@ -322,10 +341,11 @@ public sealed class AsyncTemplateTests
 
         await template.ExecuteAsync(5);
 
-        Assert.Single(log);
-        Assert.Equal("async-after", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-after", log[0]);
     }
 
+    [Scenario("AsyncActionTemplate OnError Sync Handler")]
     [Fact]
     public async Task AsyncActionTemplate_OnError_Sync_Handler()
     {
@@ -339,11 +359,12 @@ public sealed class AsyncTemplateTests
 
         var (success, error) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Single(log);
-        Assert.Contains("error", log[0]);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Contains("error", log[0]);
     }
 
+    [Scenario("AsyncActionTemplate OnError Async Handler")]
     [Fact]
     public async Task AsyncActionTemplate_OnError_Async_Handler()
     {
@@ -361,11 +382,12 @@ public sealed class AsyncTemplateTests
 
         var (success, error) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Single(log);
-        Assert.Contains("async-error", log[0]);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Contains("async-error", log[0]);
     }
 
+    [Scenario("AsyncActionTemplate OnError Handler Throws IsSwallowed")]
     [Fact]
     public async Task AsyncActionTemplate_OnError_Handler_Throws_IsSwallowed()
     {
@@ -380,16 +402,17 @@ public sealed class AsyncTemplateTests
 
         var (success, error) = await template.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Equal("original", error);
-        Assert.Single(log);
-        Assert.Equal("second handler", log[0]);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("original", error);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("second handler", log[0]);
     }
 
     #endregion
 
     #region ActionTemplate<TIn> Tests
 
+    [Scenario("ActionTemplate Executes")]
     [Fact]
     public void ActionTemplate_Executes()
     {
@@ -399,9 +422,10 @@ public sealed class AsyncTemplateTests
 
         template.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionTemplate Steps In Order")]
     [Fact]
     public void ActionTemplate_Steps_In_Order()
     {
@@ -413,11 +437,12 @@ public sealed class AsyncTemplateTests
 
         template.Execute(5);
 
-        Assert.Equal("before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("after", log[2]);
+        ScenarioExpect.Equal("before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("after", log[2]);
     }
 
+    [Scenario("ActionTemplate TryExecute Returns Success")]
     [Fact]
     public void ActionTemplate_TryExecute_Returns_Success()
     {
@@ -427,11 +452,12 @@ public sealed class AsyncTemplateTests
 
         var success = template.TryExecute(5, out var error);
 
-        Assert.True(success);
-        Assert.True(executed);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.True(executed);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("ActionTemplate TryExecute Catches Exception")]
     [Fact]
     public void ActionTemplate_TryExecute_Catches_Exception()
     {
@@ -443,10 +469,11 @@ public sealed class AsyncTemplateTests
 
         var success = template.TryExecute(5, out var error);
 
-        Assert.False(success);
-        Assert.Equal("test", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("test", error);
     }
 
+    [Scenario("ActionTemplate Multiple Before")]
     [Fact]
     public void ActionTemplate_Multiple_Before()
     {
@@ -458,10 +485,11 @@ public sealed class AsyncTemplateTests
 
         template.Execute(5);
 
-        Assert.Contains("before-1", log);
-        Assert.Contains("before-2", log);
+        ScenarioExpect.Contains("before-1", log);
+        ScenarioExpect.Contains("before-2", log);
     }
 
+    [Scenario("ActionTemplate Multiple After")]
     [Fact]
     public void ActionTemplate_Multiple_After()
     {
@@ -473,10 +501,11 @@ public sealed class AsyncTemplateTests
 
         template.Execute(5);
 
-        Assert.Contains("after-1", log);
-        Assert.Contains("after-2", log);
+        ScenarioExpect.Contains("after-1", log);
+        ScenarioExpect.Contains("after-2", log);
     }
 
+    [Scenario("ActionTemplate Synchronized")]
     [Fact]
     public void ActionTemplate_Synchronized()
     {
@@ -492,7 +521,7 @@ public sealed class AsyncTemplateTests
 
         Parallel.For(0, 5, _ => template.Execute(0));
 
-        Assert.Equal(5, count);
+        ScenarioExpect.Equal(5, count);
     }
 
     #endregion
@@ -504,6 +533,7 @@ public sealed class AsyncTemplateTests
         protected override int Step(int context) => context * 2;
     }
 
+    [Scenario("TemplateMethod Executes")]
     [Fact]
     public void TemplateMethod_Executes()
     {
@@ -511,7 +541,7 @@ public sealed class AsyncTemplateTests
 
         var result = template.Execute(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
     private sealed class TemplateWithHooks : TemplateMethod<int, int>
@@ -527,6 +557,7 @@ public sealed class AsyncTemplateTests
         protected override void OnAfter(int context, int result) => Log.Add("after");
     }
 
+    [Scenario("TemplateMethod Hooks Execute In Order")]
     [Fact]
     public void TemplateMethod_Hooks_Execute_In_Order()
     {
@@ -534,34 +565,37 @@ public sealed class AsyncTemplateTests
 
         var result = template.Execute(5);
 
-        Assert.Equal(10, result);
-        Assert.Equal("before", template.Log[0]);
-        Assert.Equal("step", template.Log[1]);
-        Assert.Equal("after", template.Log[2]);
+        ScenarioExpect.Equal(10, result);
+        ScenarioExpect.Equal("before", template.Log[0]);
+        ScenarioExpect.Equal("step", template.Log[1]);
+        ScenarioExpect.Equal("after", template.Log[2]);
     }
 
     #endregion
 
     #region Null Argument Tests
 
+    [Scenario("AsyncTemplate Core Null Throws")]
     [Fact]
     public void AsyncTemplate_Core_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncTemplate<int, int>.Create(null!));
     }
 
+    [Scenario("AsyncActionTemplate Core Null Throws")]
     [Fact]
     public void AsyncActionTemplate_Core_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionTemplate<int>.Create(null!));
     }
 
+    [Scenario("ActionTemplate Core Null Throws")]
     [Fact]
     public void ActionTemplate_Core_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionTemplate<int>.Create(null!));
     }
 

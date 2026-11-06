@@ -499,7 +499,7 @@ var proxy = Proxy<Request, Response>.Create(ProcessRequest)
 
 - [Decorator Pattern](../decorator/index.md) — Enhance objects with new responsibilities
 - [Adapter Pattern](../adapter/fluent-adapter.md) — Convert interfaces
-- [Facade Pattern](../facade/facade.md) — Simplify complex subsystems
+- [Facade Pattern](../facade/index.md) — Simplify complex subsystems
 - [Examples: Proxy Demonstrations](~/examples/proxy-demo.md) — Complete working examples
 
 ---

@@ -144,6 +144,7 @@ public sealed class FactoryTests(ITestOutputHelper output) : TinyBddXunitBase(ou
 
 public sealed class FactoryBuilderTests
 {
+    [Scenario("TryCreate ValidKey ReturnsTrue")]
     [Fact]
     public void TryCreate_ValidKey_ReturnsTrue()
     {
@@ -154,10 +155,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("one", out var value);
 
-        Assert.True(success);
-        Assert.Equal(1, value);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(1, value);
     }
 
+    [Scenario("TryCreate MissingKey WithDefault ReturnsTrue")]
     [Fact]
     public void TryCreate_MissingKey_WithDefault_ReturnsTrue()
     {
@@ -168,10 +170,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("unknown", out var value);
 
-        Assert.True(success);
-        Assert.Equal(-1, value);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(-1, value);
     }
 
+    [Scenario("TryCreate MissingKey NoDefault ReturnsFalse")]
     [Fact]
     public void TryCreate_MissingKey_NoDefault_ReturnsFalse()
     {
@@ -181,10 +184,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("unknown", out var value);
 
-        Assert.False(success);
-        Assert.Equal(default, value);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, value);
     }
 
+    [Scenario("Create MultipleKeys AllWork")]
     [Fact]
     public void Create_MultipleKeys_AllWork()
     {
@@ -194,11 +198,12 @@ public sealed class FactoryBuilderTests
             .Map(3, () => "three")
             .Build();
 
-        Assert.Equal("one", factory.Create(1));
-        Assert.Equal("two", factory.Create(2));
-        Assert.Equal("three", factory.Create(3));
+        ScenarioExpect.Equal("one", factory.Create(1));
+        ScenarioExpect.Equal("two", factory.Create(2));
+        ScenarioExpect.Equal("three", factory.Create(3));
     }
 
+    [Scenario("Create EnumKey Works")]
     [Fact]
     public void Create_EnumKey_Works()
     {
@@ -208,11 +213,12 @@ public sealed class FactoryBuilderTests
             .Default(() => "Mid week")
             .Build();
 
-        Assert.Equal("Start of week", factory.Create(DayOfWeek.Monday));
-        Assert.Equal("End of week", factory.Create(DayOfWeek.Friday));
-        Assert.Equal("Mid week", factory.Create(DayOfWeek.Wednesday));
+        ScenarioExpect.Equal("Start of week", factory.Create(DayOfWeek.Monday));
+        ScenarioExpect.Equal("End of week", factory.Create(DayOfWeek.Friday));
+        ScenarioExpect.Equal("Mid week", factory.Create(DayOfWeek.Wednesday));
     }
 
+    [Scenario("Default CalledMultipleTimes LastWins")]
     [Fact]
     public void Default_CalledMultipleTimes_LastWins()
     {
@@ -222,9 +228,10 @@ public sealed class FactoryBuilderTests
             .Default(() => "third")
             .Build();
 
-        Assert.Equal("third", factory.Create("unknown"));
+        ScenarioExpect.Equal("third", factory.Create("unknown"));
     }
 
+    [Scenario("Factory WithInput ValidKey UsesMapping")]
     [Fact]
     public void Factory_WithInput_ValidKey_UsesMapping()
     {
@@ -234,9 +241,10 @@ public sealed class FactoryBuilderTests
 
         var result = factory.Create("repeat", 5);
 
-        Assert.Equal("xxxxx", result);
+        ScenarioExpect.Equal("xxxxx", result);
     }
 
+    [Scenario("Factory WithInput TryCreate ValidKey")]
     [Fact]
     public void Factory_WithInput_TryCreate_ValidKey()
     {
@@ -247,10 +255,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("triple", 10, out var value);
 
-        Assert.True(success);
-        Assert.Equal(30, value);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(30, value);
     }
 
+    [Scenario("Factory WithInput TryCreate MissingKey WithDefault")]
     [Fact]
     public void Factory_WithInput_TryCreate_MissingKey_WithDefault()
     {
@@ -261,10 +270,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("noop", 42, out var value);
 
-        Assert.True(success);
-        Assert.Equal(42, value);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(42, value);
     }
 
+    [Scenario("Factory WithInput Comparer Works")]
     [Fact]
     public void Factory_WithInput_Comparer_Works()
     {
@@ -274,9 +284,10 @@ public sealed class FactoryBuilderTests
 
         var result = factory.Create("MULTIPLY", 5);
 
-        Assert.Equal(50, result);
+        ScenarioExpect.Equal(50, result);
     }
 
+    [Scenario("Factory WithInput MultipleBuilds Independent")]
     [Fact]
     public void Factory_WithInput_MultipleBuilds_Independent()
     {
@@ -287,10 +298,11 @@ public sealed class FactoryBuilderTests
         builder.Map("add", (in int x) => x + 10);
         var f2 = builder.Build();
 
-        Assert.Equal(6, f1.Create("add", 5));
-        Assert.Equal(15, f2.Create("add", 5));
+        ScenarioExpect.Equal(6, f1.Create("add", 5));
+        ScenarioExpect.Equal(15, f2.Create("add", 5));
     }
 
+    [Scenario("Factory CreatorReturnsNull Works")]
     [Fact]
     public void Factory_CreatorReturnsNull_Works()
     {
@@ -300,9 +312,10 @@ public sealed class FactoryBuilderTests
 
         var result = factory.Create("null");
 
-        Assert.Null(result);
+        ScenarioExpect.Null(result);
     }
 
+    [Scenario("Factory WithComplexOutput Works")]
     [Fact]
     public void Factory_WithComplexOutput_Works()
     {
@@ -314,22 +327,24 @@ public sealed class FactoryBuilderTests
         var widget = factory.Create("widget");
         var gadget = factory.Create("gadget");
 
-        Assert.Equal("Widget", widget.Name);
-        Assert.Equal(10.0m, widget.Price);
-        Assert.Equal("Gadget", gadget.Name);
-        Assert.Equal(25.0m, gadget.Price);
+        ScenarioExpect.Equal("Widget", widget.Name);
+        ScenarioExpect.Equal(10.0m, widget.Price);
+        ScenarioExpect.Equal("Gadget", gadget.Name);
+        ScenarioExpect.Equal(25.0m, gadget.Price);
     }
 
     private record TestProduct(string Name, decimal Price);
 
+    [Scenario("Factory EmptyFactory Create Throws")]
     [Fact]
     public void Factory_EmptyFactory_Create_Throws()
     {
         var factory = Factory<string, string>.Create().Build();
 
-        Assert.Throws<InvalidOperationException>(() => factory.Create("any"));
+        ScenarioExpect.Throws<InvalidOperationException>(() => factory.Create("any"));
     }
 
+    [Scenario("Factory EmptyFactory TryCreate ReturnsFalse")]
     [Fact]
     public void Factory_EmptyFactory_TryCreate_ReturnsFalse()
     {
@@ -337,18 +352,20 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("any", out var value);
 
-        Assert.False(success);
-        Assert.Null(value);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Null(value);
     }
 
+    [Scenario("Factory WithInput EmptyFactory Create Throws")]
     [Fact]
     public void Factory_WithInput_EmptyFactory_Create_Throws()
     {
         var factory = Factory<string, int, int>.Create().Build();
 
-        Assert.Throws<InvalidOperationException>(() => factory.Create("any", 1));
+        ScenarioExpect.Throws<InvalidOperationException>(() => factory.Create("any", 1));
     }
 
+    [Scenario("Factory WithInput EmptyFactory TryCreate ReturnsFalse")]
     [Fact]
     public void Factory_WithInput_EmptyFactory_TryCreate_ReturnsFalse()
     {
@@ -356,10 +373,11 @@ public sealed class FactoryBuilderTests
 
         var success = factory.TryCreate("any", 1, out var value);
 
-        Assert.False(success);
-        Assert.Equal(default, value);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, value);
     }
 
+    [Scenario("Factory IntKey Works")]
     [Fact]
     public void Factory_IntKey_Works()
     {
@@ -369,11 +387,12 @@ public sealed class FactoryBuilderTests
             .Default(() => "unknown")
             .Build();
 
-        Assert.Equal("one", factory.Create(1));
-        Assert.Equal("two", factory.Create(2));
-        Assert.Equal("unknown", factory.Create(999));
+        ScenarioExpect.Equal("one", factory.Create(1));
+        ScenarioExpect.Equal("two", factory.Create(2));
+        ScenarioExpect.Equal("unknown", factory.Create(999));
     }
 
+    [Scenario("Factory NullComparer UsesDefault")]
     [Fact]
     public void Factory_NullComparer_UsesDefault()
     {
@@ -381,9 +400,10 @@ public sealed class FactoryBuilderTests
             .Map("test", () => "value")
             .Build();
 
-        Assert.Equal("value", factory.Create("test"));
+        ScenarioExpect.Equal("value", factory.Create("test"));
     }
 
+    [Scenario("Factory WithInput NullComparer UsesDefault")]
     [Fact]
     public void Factory_WithInput_NullComparer_UsesDefault()
     {
@@ -391,7 +411,7 @@ public sealed class FactoryBuilderTests
             .Map("double", (in int x) => x * 2)
             .Build();
 
-        Assert.Equal(20, factory.Create("double", 10));
+        ScenarioExpect.Equal(20, factory.Create("double", 10));
     }
 }
 

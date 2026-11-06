@@ -339,6 +339,7 @@ public sealed class InterpreterTests(ITestOutputHelper output) : TinyBddXunitBas
 
 public sealed class ActionInterpreterTests
 {
+    [Scenario("ActionInterpreter Terminal Executes")]
     [Fact]
     public void ActionInterpreter_Terminal_Executes()
     {
@@ -349,10 +350,11 @@ public sealed class ActionInterpreterTests
 
         interpreter.Interpret(Terminal("log", "hello"));
 
-        Assert.Single(log);
-        Assert.Equal("hello", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("hello", log[0]);
     }
 
+    [Scenario("ActionInterpreter Terminal WithContext")]
     [Fact]
     public void ActionInterpreter_Terminal_WithContext()
     {
@@ -363,10 +365,11 @@ public sealed class ActionInterpreterTests
 
         interpreter.Interpret(Terminal("log", "hello"), "PREFIX");
 
-        Assert.Single(log);
-        Assert.Equal("PREFIX: hello", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("PREFIX: hello", log[0]);
     }
 
+    [Scenario("ActionInterpreter Sequence ExecutesInOrder")]
     [Fact]
     public void ActionInterpreter_Sequence_ExecutesInOrder()
     {
@@ -382,12 +385,13 @@ public sealed class ActionInterpreterTests
             Terminal("log", "third"));
         interpreter.Interpret(expr);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("first", log[0]);
-        Assert.Equal("second", log[1]);
-        Assert.Equal("third", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("first", log[0]);
+        ScenarioExpect.Equal("second", log[1]);
+        ScenarioExpect.Equal("third", log[2]);
     }
 
+    [Scenario("ActionInterpreter Parallel ExecutesAll")]
     [Fact]
     public void ActionInterpreter_Parallel_ExecutesAll()
     {
@@ -402,11 +406,12 @@ public sealed class ActionInterpreterTests
             Terminal("log", "b"));
         interpreter.Interpret(expr);
 
-        Assert.Equal(2, log.Count);
-        Assert.Contains("a", log);
-        Assert.Contains("b", log);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Contains("a", log);
+        ScenarioExpect.Contains("b", log);
     }
 
+    [Scenario("ActionInterpreter Conditional ThenBranch")]
     [Fact]
     public void ActionInterpreter_Conditional_ThenBranch()
     {
@@ -422,10 +427,11 @@ public sealed class ActionInterpreterTests
             Terminal("log", "else"));
         interpreter.Interpret(expr, true);
 
-        Assert.Single(log);
-        Assert.Equal("then", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("then", log[0]);
     }
 
+    [Scenario("ActionInterpreter Conditional ElseBranch")]
     [Fact]
     public void ActionInterpreter_Conditional_ElseBranch()
     {
@@ -441,10 +447,11 @@ public sealed class ActionInterpreterTests
             Terminal("log", "else"));
         interpreter.Interpret(expr, false);
 
-        Assert.Single(log);
-        Assert.Equal("else", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("else", log[0]);
     }
 
+    [Scenario("ActionInterpreter Conditional NoElseBranch")]
     [Fact]
     public void ActionInterpreter_Conditional_NoElseBranch()
     {
@@ -459,9 +466,10 @@ public sealed class ActionInterpreterTests
             Terminal("log", "then"));
         interpreter.Interpret(expr, false);
 
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
     }
 
+    [Scenario("ActionInterpreter Conditional ThrowsWithTooFewChildren")]
     [Fact]
     public void ActionInterpreter_Conditional_ThrowsWithTooFewChildren()
     {
@@ -472,10 +480,11 @@ public sealed class ActionInterpreterTests
 
         var expr = NonTerminal("if", Terminal("log", "only-one"));
 
-        var ex = Assert.Throws<InvalidOperationException>(() => interpreter.Interpret(expr, true));
-        Assert.Contains("at least 2 children", ex.Message);
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() => interpreter.Interpret(expr, true));
+        ScenarioExpect.Contains("at least 2 children", ex.Message);
     }
 
+    [Scenario("ActionInterpreter NonTerminal WithContext")]
     [Fact]
     public void ActionInterpreter_NonTerminal_WithContext()
     {
@@ -494,12 +503,13 @@ public sealed class ActionInterpreterTests
             Terminal("log", "inner"));
         interpreter.Interpret(expr, "CTX");
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("start-CTX", log[0]);
-        Assert.Equal("inner", log[1]);
-        Assert.Equal("end-CTX", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("start-CTX", log[0]);
+        ScenarioExpect.Equal("inner", log[1]);
+        ScenarioExpect.Equal("end-CTX", log[2]);
     }
 
+    [Scenario("ActionInterpreter NonTerminal WithoutContext")]
     [Fact]
     public void ActionInterpreter_NonTerminal_WithoutContext()
     {
@@ -517,9 +527,10 @@ public sealed class ActionInterpreterTests
         var expr = NonTerminal("wrap", Terminal("log", "inner"));
         interpreter.Interpret(expr);
 
-        Assert.Equal(3, log.Count);
+        ScenarioExpect.Equal(3, log.Count);
     }
 
+    [Scenario("ActionInterpreter ThrowsForUnknownTerminal")]
     [Fact]
     public void ActionInterpreter_ThrowsForUnknownTerminal()
     {
@@ -527,11 +538,12 @@ public sealed class ActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() =>
             interpreter.Interpret(Terminal("unknown", "value")));
-        Assert.Contains("No terminal handler", ex.Message);
+        ScenarioExpect.Contains("No terminal handler", ex.Message);
     }
 
+    [Scenario("ActionInterpreter ThrowsForUnknownNonTerminal")]
     [Fact]
     public void ActionInterpreter_ThrowsForUnknownNonTerminal()
     {
@@ -539,11 +551,12 @@ public sealed class ActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() =>
             interpreter.Interpret(NonTerminal("unknown", Terminal("log", "value"))));
-        Assert.Contains("No non-terminal handler", ex.Message);
+        ScenarioExpect.Contains("No non-terminal handler", ex.Message);
     }
 
+    [Scenario("ActionInterpreter TryInterpret Success")]
     [Fact]
     public void ActionInterpreter_TryInterpret_Success()
     {
@@ -554,11 +567,12 @@ public sealed class ActionInterpreterTests
 
         var ok = interpreter.TryInterpret(Terminal("log", "test"), null!, out var error);
 
-        Assert.True(ok);
-        Assert.Null(error);
-        Assert.Single(log);
+        ScenarioExpect.True(ok);
+        ScenarioExpect.Null(error);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("ActionInterpreter TryInterpret Failure")]
     [Fact]
     public void ActionInterpreter_TryInterpret_Failure()
     {
@@ -568,11 +582,12 @@ public sealed class ActionInterpreterTests
 
         var ok = interpreter.TryInterpret(Terminal("unknown", "value"), null!, out var error);
 
-        Assert.False(ok);
-        Assert.NotNull(error);
-        Assert.Contains("No terminal handler", error);
+        ScenarioExpect.False(ok);
+        ScenarioExpect.NotNull(error);
+        ScenarioExpect.Contains("No terminal handler", error);
     }
 
+    [Scenario("ActionInterpreter HasTerminal")]
     [Fact]
     public void ActionInterpreter_HasTerminal()
     {
@@ -580,10 +595,11 @@ public sealed class ActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        Assert.True(interpreter.HasTerminal("log"));
-        Assert.False(interpreter.HasTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasTerminal("log"));
+        ScenarioExpect.False(interpreter.HasTerminal("unknown"));
     }
 
+    [Scenario("ActionInterpreter HasNonTerminal")]
     [Fact]
     public void ActionInterpreter_HasNonTerminal()
     {
@@ -591,10 +607,11 @@ public sealed class ActionInterpreterTests
             .Sequence("seq")
             .Build();
 
-        Assert.True(interpreter.HasNonTerminal("seq"));
-        Assert.False(interpreter.HasNonTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasNonTerminal("seq"));
+        ScenarioExpect.False(interpreter.HasNonTerminal("unknown"));
     }
 
+    [Scenario("ActionInterpreter InterpretWithDefaultContext")]
     [Fact]
     public void ActionInterpreter_InterpretWithDefaultContext()
     {
@@ -605,9 +622,10 @@ public sealed class ActionInterpreterTests
 
         interpreter.Interpret(Terminal("log", "test"));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("ActionInterpreter NestedNonTerminals")]
     [Fact]
     public void ActionInterpreter_NestedNonTerminals()
     {
@@ -624,10 +642,10 @@ public sealed class ActionInterpreterTests
             Terminal("log", "c"));
         interpreter.Interpret(expr);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("a", log[0]);
-        Assert.Equal("b", log[1]);
-        Assert.Equal("c", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("a", log[0]);
+        ScenarioExpect.Equal("b", log[1]);
+        ScenarioExpect.Equal("c", log[2]);
     }
 }
 
@@ -637,6 +655,7 @@ public sealed class ActionInterpreterTests
 
 public sealed class AsyncInterpreterTests
 {
+    [Scenario("AsyncInterpreter Terminal Evaluates")]
     [Fact]
     public async Task AsyncInterpreter_Terminal_Evaluates()
     {
@@ -646,9 +665,10 @@ public sealed class AsyncInterpreterTests
 
         var result = await interpreter.InterpretAsync(Terminal("number", "42"));
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("AsyncInterpreter Terminal WithContext")]
     [Fact]
     public async Task AsyncInterpreter_Terminal_WithContext()
     {
@@ -659,9 +679,10 @@ public sealed class AsyncInterpreterTests
         var ctx = new Dictionary<string, int> { ["x"] = 100 };
         var result = await interpreter.InterpretAsync(Terminal("var", "x"), ctx);
 
-        Assert.Equal(100, result);
+        ScenarioExpect.Equal(100, result);
     }
 
+    [Scenario("AsyncInterpreter Terminal Async")]
     [Fact]
     public async Task AsyncInterpreter_Terminal_Async()
     {
@@ -675,9 +696,10 @@ public sealed class AsyncInterpreterTests
 
         var result = await interpreter.InterpretAsync(Terminal("number", "42"));
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("AsyncInterpreter Terminal AsyncWithContext")]
     [Fact]
     public async Task AsyncInterpreter_Terminal_AsyncWithContext()
     {
@@ -691,9 +713,10 @@ public sealed class AsyncInterpreterTests
 
         var result = await interpreter.InterpretAsync(Terminal("number", "10"), 5);
 
-        Assert.Equal(50, result);
+        ScenarioExpect.Equal(50, result);
     }
 
+    [Scenario("AsyncInterpreter Binary Evaluates")]
     [Fact]
     public async Task AsyncInterpreter_Binary_Evaluates()
     {
@@ -707,9 +730,10 @@ public sealed class AsyncInterpreterTests
             Terminal("number", "20"));
         var result = await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(30, result);
+        ScenarioExpect.Equal(30, result);
     }
 
+    [Scenario("AsyncInterpreter Binary ThrowsWithWrongOperandCount")]
     [Fact]
     public async Task AsyncInterpreter_Binary_ThrowsWithWrongOperandCount()
     {
@@ -720,11 +744,12 @@ public sealed class AsyncInterpreterTests
 
         var expr = NonTerminal("add", Terminal("number", "10"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(expr).AsTask());
-        Assert.Contains("exactly 2 operands", ex.Message);
+        ScenarioExpect.Contains("exactly 2 operands", ex.Message);
     }
 
+    [Scenario("AsyncInterpreter Unary Evaluates")]
     [Fact]
     public async Task AsyncInterpreter_Unary_Evaluates()
     {
@@ -736,9 +761,10 @@ public sealed class AsyncInterpreterTests
         var expr = NonTerminal("neg", Terminal("number", "10"));
         var result = await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(-10, result);
+        ScenarioExpect.Equal(-10, result);
     }
 
+    [Scenario("AsyncInterpreter Unary ThrowsWithWrongOperandCount")]
     [Fact]
     public async Task AsyncInterpreter_Unary_ThrowsWithWrongOperandCount()
     {
@@ -751,11 +777,12 @@ public sealed class AsyncInterpreterTests
             Terminal("number", "10"),
             Terminal("number", "20"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(expr).AsTask());
-        Assert.Contains("exactly 1 operand", ex.Message);
+        ScenarioExpect.Contains("exactly 1 operand", ex.Message);
     }
 
+    [Scenario("AsyncInterpreter NonTerminal WithContext")]
     [Fact]
     public async Task AsyncInterpreter_NonTerminal_WithContext()
     {
@@ -770,9 +797,10 @@ public sealed class AsyncInterpreterTests
             Terminal("number", "3"));
         var result = await interpreter.InterpretAsync(expr, 10);
 
-        Assert.Equal(60, result); // (1+2+3) * 10
+        ScenarioExpect.Equal(60, result); // (1+2+3) * 10
     }
 
+    [Scenario("AsyncInterpreter NonTerminal WithoutContext")]
     [Fact]
     public async Task AsyncInterpreter_NonTerminal_WithoutContext()
     {
@@ -787,9 +815,10 @@ public sealed class AsyncInterpreterTests
             Terminal("number", "3"));
         var result = await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(6, result);
+        ScenarioExpect.Equal(6, result);
     }
 
+    [Scenario("AsyncInterpreter NonTerminal Async")]
     [Fact]
     public async Task AsyncInterpreter_NonTerminal_Async()
     {
@@ -805,9 +834,10 @@ public sealed class AsyncInterpreterTests
         var expr = NonTerminal("sum", Terminal("number", "10"), Terminal("number", "20"));
         var result = await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(30, result);
+        ScenarioExpect.Equal(30, result);
     }
 
+    [Scenario("AsyncInterpreter TryInterpret Success")]
     [Fact]
     public async Task AsyncInterpreter_TryInterpret_Success()
     {
@@ -817,10 +847,11 @@ public sealed class AsyncInterpreterTests
 
         var (success, result) = await interpreter.TryInterpretAsync(Terminal("number", "42"), null!);
 
-        Assert.True(success);
-        Assert.Equal(42, result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("AsyncInterpreter TryInterpret Failure")]
     [Fact]
     public async Task AsyncInterpreter_TryInterpret_Failure()
     {
@@ -830,10 +861,11 @@ public sealed class AsyncInterpreterTests
 
         var (success, result) = await interpreter.TryInterpretAsync(Terminal("unknown", "value"), null!);
 
-        Assert.False(success);
-        Assert.Equal(default, result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, result);
     }
 
+    [Scenario("AsyncInterpreter HasTerminal")]
     [Fact]
     public async Task AsyncInterpreter_HasTerminal()
     {
@@ -841,10 +873,11 @@ public sealed class AsyncInterpreterTests
             .Terminal("number", token => int.Parse(token))
             .Build();
 
-        Assert.True(interpreter.HasTerminal("number"));
-        Assert.False(interpreter.HasTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasTerminal("number"));
+        ScenarioExpect.False(interpreter.HasTerminal("unknown"));
     }
 
+    [Scenario("AsyncInterpreter HasNonTerminal")]
     [Fact]
     public async Task AsyncInterpreter_HasNonTerminal()
     {
@@ -852,10 +885,11 @@ public sealed class AsyncInterpreterTests
             .Binary("add", (l, r) => l + r)
             .Build();
 
-        Assert.True(interpreter.HasNonTerminal("add"));
-        Assert.False(interpreter.HasNonTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasNonTerminal("add"));
+        ScenarioExpect.False(interpreter.HasNonTerminal("unknown"));
     }
 
+    [Scenario("AsyncInterpreter ThrowsForUnknownTerminal")]
     [Fact]
     public async Task AsyncInterpreter_ThrowsForUnknownTerminal()
     {
@@ -863,11 +897,12 @@ public sealed class AsyncInterpreterTests
             .Terminal("number", token => int.Parse(token))
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(Terminal("unknown", "value")).AsTask());
-        Assert.Contains("No terminal handler", ex.Message);
+        ScenarioExpect.Contains("No terminal handler", ex.Message);
     }
 
+    [Scenario("AsyncInterpreter ThrowsForUnknownNonTerminal")]
     [Fact]
     public async Task AsyncInterpreter_ThrowsForUnknownNonTerminal()
     {
@@ -875,11 +910,12 @@ public sealed class AsyncInterpreterTests
             .Terminal("number", token => int.Parse(token))
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(NonTerminal("unknown", Terminal("number", "1"))).AsTask());
-        Assert.Contains("No non-terminal handler", ex.Message);
+        ScenarioExpect.Contains("No non-terminal handler", ex.Message);
     }
 
+    [Scenario("AsyncInterpreter NestedExpressions")]
     [Fact]
     public async Task AsyncInterpreter_NestedExpressions()
     {
@@ -895,7 +931,7 @@ public sealed class AsyncInterpreterTests
             NonTerminal("add", Terminal("number", "3"), Terminal("number", "4")));
         var result = await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(21, result);
+        ScenarioExpect.Equal(21, result);
     }
 }
 
@@ -905,6 +941,7 @@ public sealed class AsyncInterpreterTests
 
 public sealed class AsyncActionInterpreterTests
 {
+    [Scenario("AsyncActionInterpreter Terminal Executes")]
     [Fact]
     public async Task AsyncActionInterpreter_Terminal_Executes()
     {
@@ -915,10 +952,11 @@ public sealed class AsyncActionInterpreterTests
 
         await interpreter.InterpretAsync(Terminal("log", "hello"));
 
-        Assert.Single(log);
-        Assert.Equal("hello", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("hello", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Terminal WithContext")]
     [Fact]
     public async Task AsyncActionInterpreter_Terminal_WithContext()
     {
@@ -929,10 +967,11 @@ public sealed class AsyncActionInterpreterTests
 
         await interpreter.InterpretAsync(Terminal("log", "hello"), "PREFIX");
 
-        Assert.Single(log);
-        Assert.Equal("PREFIX: hello", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("PREFIX: hello", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Terminal Async")]
     [Fact]
     public async Task AsyncActionInterpreter_Terminal_Async()
     {
@@ -947,9 +986,10 @@ public sealed class AsyncActionInterpreterTests
 
         await interpreter.InterpretAsync(Terminal("log", "hello"));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("AsyncActionInterpreter Terminal AsyncWithContext")]
     [Fact]
     public async Task AsyncActionInterpreter_Terminal_AsyncWithContext()
     {
@@ -964,10 +1004,11 @@ public sealed class AsyncActionInterpreterTests
 
         await interpreter.InterpretAsync(Terminal("log", "hello"), "PREFIX");
 
-        Assert.Single(log);
-        Assert.Equal("PREFIX: hello", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("PREFIX: hello", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Sequence ExecutesInOrder")]
     [Fact]
     public async Task AsyncActionInterpreter_Sequence_ExecutesInOrder()
     {
@@ -983,12 +1024,13 @@ public sealed class AsyncActionInterpreterTests
             Terminal("log", "third"));
         await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("first", log[0]);
-        Assert.Equal("second", log[1]);
-        Assert.Equal("third", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("first", log[0]);
+        ScenarioExpect.Equal("second", log[1]);
+        ScenarioExpect.Equal("third", log[2]);
     }
 
+    [Scenario("AsyncActionInterpreter Parallel ExecutesAll")]
     [Fact]
     public async Task AsyncActionInterpreter_Parallel_ExecutesAll()
     {
@@ -1003,11 +1045,12 @@ public sealed class AsyncActionInterpreterTests
             Terminal("log", "b"));
         await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(2, log.Count);
-        Assert.Contains("a", log);
-        Assert.Contains("b", log);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Contains("a", log);
+        ScenarioExpect.Contains("b", log);
     }
 
+    [Scenario("AsyncActionInterpreter Conditional ThenBranch")]
     [Fact]
     public async Task AsyncActionInterpreter_Conditional_ThenBranch()
     {
@@ -1023,10 +1066,11 @@ public sealed class AsyncActionInterpreterTests
             Terminal("log", "else"));
         await interpreter.InterpretAsync(expr, true);
 
-        Assert.Single(log);
-        Assert.Equal("then", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("then", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Conditional ElseBranch")]
     [Fact]
     public async Task AsyncActionInterpreter_Conditional_ElseBranch()
     {
@@ -1042,10 +1086,11 @@ public sealed class AsyncActionInterpreterTests
             Terminal("log", "else"));
         await interpreter.InterpretAsync(expr, false);
 
-        Assert.Single(log);
-        Assert.Equal("else", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("else", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Conditional Async")]
     [Fact]
     public async Task AsyncActionInterpreter_Conditional_Async()
     {
@@ -1065,10 +1110,11 @@ public sealed class AsyncActionInterpreterTests
             Terminal("log", "else"));
         await interpreter.InterpretAsync(expr, true);
 
-        Assert.Single(log);
-        Assert.Equal("then", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("then", log[0]);
     }
 
+    [Scenario("AsyncActionInterpreter Conditional ThrowsWithTooFewChildren")]
     [Fact]
     public async Task AsyncActionInterpreter_Conditional_ThrowsWithTooFewChildren()
     {
@@ -1079,11 +1125,12 @@ public sealed class AsyncActionInterpreterTests
 
         var expr = NonTerminal("if", Terminal("log", "only-one"));
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(expr, true).AsTask());
-        Assert.Contains("at least 2 children", ex.Message);
+        ScenarioExpect.Contains("at least 2 children", ex.Message);
     }
 
+    [Scenario("AsyncActionInterpreter NonTerminal WithContext")]
     [Fact]
     public async Task AsyncActionInterpreter_NonTerminal_WithContext()
     {
@@ -1101,12 +1148,13 @@ public sealed class AsyncActionInterpreterTests
         var expr = NonTerminal("wrap", Terminal("log", "inner"));
         await interpreter.InterpretAsync(expr, "CTX");
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("start-CTX", log[0]);
-        Assert.Equal("inner", log[1]);
-        Assert.Equal("end-CTX", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("start-CTX", log[0]);
+        ScenarioExpect.Equal("inner", log[1]);
+        ScenarioExpect.Equal("end-CTX", log[2]);
     }
 
+    [Scenario("AsyncActionInterpreter NonTerminal WithoutContext")]
     [Fact]
     public async Task AsyncActionInterpreter_NonTerminal_WithoutContext()
     {
@@ -1124,9 +1172,10 @@ public sealed class AsyncActionInterpreterTests
         var expr = NonTerminal("wrap", Terminal("log", "inner"));
         await interpreter.InterpretAsync(expr);
 
-        Assert.Equal(3, log.Count);
+        ScenarioExpect.Equal(3, log.Count);
     }
 
+    [Scenario("AsyncActionInterpreter TryInterpret Success")]
     [Fact]
     public async Task AsyncActionInterpreter_TryInterpret_Success()
     {
@@ -1137,11 +1186,12 @@ public sealed class AsyncActionInterpreterTests
 
         var (success, error) = await interpreter.TryInterpretAsync(Terminal("log", "test"), null!);
 
-        Assert.True(success);
-        Assert.Null(error);
-        Assert.Single(log);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Null(error);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("AsyncActionInterpreter TryInterpret Failure")]
     [Fact]
     public async Task AsyncActionInterpreter_TryInterpret_Failure()
     {
@@ -1151,11 +1201,12 @@ public sealed class AsyncActionInterpreterTests
 
         var (success, error) = await interpreter.TryInterpretAsync(Terminal("unknown", "value"), null!);
 
-        Assert.False(success);
-        Assert.NotNull(error);
-        Assert.Contains("No terminal handler", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.NotNull(error);
+        ScenarioExpect.Contains("No terminal handler", error);
     }
 
+    [Scenario("AsyncActionInterpreter HasTerminal")]
     [Fact]
     public async Task AsyncActionInterpreter_HasTerminal()
     {
@@ -1163,10 +1214,11 @@ public sealed class AsyncActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        Assert.True(interpreter.HasTerminal("log"));
-        Assert.False(interpreter.HasTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasTerminal("log"));
+        ScenarioExpect.False(interpreter.HasTerminal("unknown"));
     }
 
+    [Scenario("AsyncActionInterpreter HasNonTerminal")]
     [Fact]
     public async Task AsyncActionInterpreter_HasNonTerminal()
     {
@@ -1174,10 +1226,11 @@ public sealed class AsyncActionInterpreterTests
             .Sequence("seq")
             .Build();
 
-        Assert.True(interpreter.HasNonTerminal("seq"));
-        Assert.False(interpreter.HasNonTerminal("unknown"));
+        ScenarioExpect.True(interpreter.HasNonTerminal("seq"));
+        ScenarioExpect.False(interpreter.HasNonTerminal("unknown"));
     }
 
+    [Scenario("AsyncActionInterpreter ThrowsForUnknownTerminal")]
     [Fact]
     public async Task AsyncActionInterpreter_ThrowsForUnknownTerminal()
     {
@@ -1185,11 +1238,12 @@ public sealed class AsyncActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(Terminal("unknown", "value")).AsTask());
-        Assert.Contains("No terminal handler", ex.Message);
+        ScenarioExpect.Contains("No terminal handler", ex.Message);
     }
 
+    [Scenario("AsyncActionInterpreter ThrowsForUnknownNonTerminal")]
     [Fact]
     public async Task AsyncActionInterpreter_ThrowsForUnknownNonTerminal()
     {
@@ -1197,11 +1251,12 @@ public sealed class AsyncActionInterpreterTests
             .Terminal("log", msg => { })
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(NonTerminal("unknown", Terminal("log", "value"))).AsTask());
-        Assert.Contains("No non-terminal handler", ex.Message);
+        ScenarioExpect.Contains("No non-terminal handler", ex.Message);
     }
 
+    [Scenario("AsyncActionInterpreter InterpretWithoutContext")]
     [Fact]
     public async Task AsyncActionInterpreter_InterpretWithoutContext()
     {
@@ -1212,9 +1267,10 @@ public sealed class AsyncActionInterpreterTests
 
         await interpreter.InterpretAsync(Terminal("log", "test"));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("AsyncActionInterpreter ThrowsForUnknownExpressionType")]
     [Fact]
     public async Task AsyncActionInterpreter_ThrowsForUnknownExpressionType()
     {
@@ -1225,9 +1281,9 @@ public sealed class AsyncActionInterpreterTests
         // Create a custom expression type
         var customExpr = new CustomExpression();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             interpreter.InterpretAsync(customExpr).AsTask());
-        Assert.Contains("Unknown expression type", ex.Message);
+        ScenarioExpect.Contains("Unknown expression type", ex.Message);
     }
 
     private class CustomExpression : IExpression
@@ -1242,17 +1298,19 @@ public sealed class AsyncActionInterpreterTests
 
 public sealed class ExpressionExtensionsTests
 {
+    [Scenario("Terminal CreatesTerminalExpression")]
     [Fact]
     public void Terminal_CreatesTerminalExpression()
     {
         var expr = Terminal("number", "42");
 
-        Assert.IsType<TerminalExpression>(expr);
+        ScenarioExpect.IsType<TerminalExpression>(expr);
         var terminal = (TerminalExpression)expr;
-        Assert.Equal("number", terminal.Type);
-        Assert.Equal("42", terminal.Value);
+        ScenarioExpect.Equal("number", terminal.Type);
+        ScenarioExpect.Equal("42", terminal.Value);
     }
 
+    [Scenario("NonTerminal CreatesNonTerminalExpression")]
     [Fact]
     public void NonTerminal_CreatesNonTerminalExpression()
     {
@@ -1260,72 +1318,78 @@ public sealed class ExpressionExtensionsTests
             Terminal("number", "1"),
             Terminal("number", "2"));
 
-        Assert.IsType<NonTerminalExpression>(expr);
+        ScenarioExpect.IsType<NonTerminalExpression>(expr);
         var nonTerminal = (NonTerminalExpression)expr;
-        Assert.Equal("add", nonTerminal.Type);
-        Assert.Equal(2, nonTerminal.Children.Length);
+        ScenarioExpect.Equal("add", nonTerminal.Type);
+        ScenarioExpect.Equal(2, nonTerminal.Children.Length);
     }
 
+    [Scenario("Number CreatesNumberTerminal")]
     [Fact]
     public void Number_CreatesNumberTerminal()
     {
         var expr = Number(42.5);
 
-        Assert.IsType<TerminalExpression>(expr);
+        ScenarioExpect.IsType<TerminalExpression>(expr);
         var terminal = (TerminalExpression)expr;
-        Assert.Equal("number", terminal.Type);
-        Assert.Equal("42.5", terminal.Value);
+        ScenarioExpect.Equal("number", terminal.Type);
+        ScenarioExpect.Equal("42.5", terminal.Value);
     }
 
+    [Scenario("String CreatesStringTerminal")]
     [Fact]
     public void String_CreatesStringTerminal()
     {
         var expr = ExpressionExtensions.String("hello");
 
-        Assert.IsType<TerminalExpression>(expr);
+        ScenarioExpect.IsType<TerminalExpression>(expr);
         var terminal = (TerminalExpression)expr;
-        Assert.Equal("string", terminal.Type);
-        Assert.Equal("hello", terminal.Value);
+        ScenarioExpect.Equal("string", terminal.Type);
+        ScenarioExpect.Equal("hello", terminal.Value);
     }
 
+    [Scenario("Identifier CreatesIdentifierTerminal")]
     [Fact]
     public void Identifier_CreatesIdentifierTerminal()
     {
         var expr = Identifier("x");
 
-        Assert.IsType<TerminalExpression>(expr);
+        ScenarioExpect.IsType<TerminalExpression>(expr);
         var terminal = (TerminalExpression)expr;
-        Assert.Equal("identifier", terminal.Type);
-        Assert.Equal("x", terminal.Value);
+        ScenarioExpect.Equal("identifier", terminal.Type);
+        ScenarioExpect.Equal("x", terminal.Value);
     }
 
+    [Scenario("Boolean CreatesBooleanTerminal")]
     [Fact]
     public void Boolean_CreatesBooleanTerminal()
     {
         var trueExpr = Boolean(true);
         var falseExpr = Boolean(false);
 
-        Assert.IsType<TerminalExpression>(trueExpr);
-        Assert.IsType<TerminalExpression>(falseExpr);
+        ScenarioExpect.IsType<TerminalExpression>(trueExpr);
+        ScenarioExpect.IsType<TerminalExpression>(falseExpr);
 
         var trueTerminal = (TerminalExpression)trueExpr;
         var falseTerminal = (TerminalExpression)falseExpr;
 
-        Assert.Equal("boolean", trueTerminal.Type);
-        Assert.Equal("true", trueTerminal.Value);
-        Assert.Equal("boolean", falseTerminal.Type);
-        Assert.Equal("false", falseTerminal.Value);
+        ScenarioExpect.Equal("boolean", trueTerminal.Type);
+        ScenarioExpect.Equal("true", trueTerminal.Value);
+        ScenarioExpect.Equal("boolean", falseTerminal.Type);
+        ScenarioExpect.Equal("false", falseTerminal.Value);
     }
 
+    [Scenario("TerminalExpression Properties")]
     [Fact]
     public void TerminalExpression_Properties()
     {
         var expr = new TerminalExpression("type", "value");
 
-        Assert.Equal("type", expr.Type);
-        Assert.Equal("value", expr.Value);
+        ScenarioExpect.Equal("type", expr.Type);
+        ScenarioExpect.Equal("value", expr.Value);
     }
 
+    [Scenario("NonTerminalExpression Properties")]
     [Fact]
     public void NonTerminalExpression_Properties()
     {
@@ -1333,21 +1397,23 @@ public sealed class ExpressionExtensionsTests
         var child2 = Terminal("b", "2");
         var expr = new NonTerminalExpression("type", child1, child2);
 
-        Assert.Equal("type", expr.Type);
-        Assert.Equal(2, expr.Children.Length);
-        Assert.Same(child1, expr.Children[0]);
-        Assert.Same(child2, expr.Children[1]);
+        ScenarioExpect.Equal("type", expr.Type);
+        ScenarioExpect.Equal(2, expr.Children.Length);
+        ScenarioExpect.Same(child1, expr.Children[0]);
+        ScenarioExpect.Same(child2, expr.Children[1]);
     }
 
+    [Scenario("NonTerminalExpression EmptyChildren")]
     [Fact]
     public void NonTerminalExpression_EmptyChildren()
     {
         var expr = new NonTerminalExpression("empty");
 
-        Assert.Equal("empty", expr.Type);
-        Assert.Empty(expr.Children);
+        ScenarioExpect.Equal("empty", expr.Type);
+        ScenarioExpect.Empty(expr.Children);
     }
 
+    [Scenario("InterpretWithExtensions ArithmeticExample")]
     [Fact]
     public void InterpretWithExtensions_ArithmeticExample()
     {
@@ -1366,9 +1432,10 @@ public sealed class ExpressionExtensionsTests
 
         var result = interpreter.Interpret(expr);
 
-        Assert.Equal(16, result); // 10 + (2 * 3)
+        ScenarioExpect.Equal(16, result); // 10 + (2 * 3)
     }
 
+    [Scenario("InterpretWithExtensions BooleanExample")]
     [Fact]
     public void InterpretWithExtensions_BooleanExample()
     {
@@ -1384,7 +1451,7 @@ public sealed class ExpressionExtensionsTests
 
         var result = interpreter.Interpret(expr);
 
-        Assert.True(result);
+        ScenarioExpect.True(result);
     }
 }
 

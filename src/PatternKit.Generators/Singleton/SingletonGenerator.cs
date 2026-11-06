@@ -1,7 +1,7 @@
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
 
 namespace PatternKit.Generators.Singleton;
 
@@ -91,7 +91,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private static readonly DiagnosticDescriptor InvalidPropertyNameDescriptor = new(
         id: DiagIdInvalidPropertyName,
         title: "Invalid instance property name",
-        messageFormat: "The instance property name '{0}' is not a valid C# identifier.",
+        messageFormat: "The instance property name '{0}' is not a valid C# identifier",
         category: "PatternKit.Generators.Singleton",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -312,7 +312,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
     private static bool HasNameConflict(INamedTypeSymbol typeSymbol, string propertyName)
     {
         // Normalize verbatim identifiers by stripping leading @
-        var normalizedName = propertyName.StartsWith("@") ? propertyName.Substring(1) : propertyName;
+        var normalizedName = propertyName.StartsWith("@", StringComparison.Ordinal) ? propertyName.Substring(1) : propertyName;
 
         // Check for existing members with the same name in declared members
         if (typeSymbol.GetMembers(normalizedName).Length > 0)

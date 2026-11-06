@@ -1,0 +1,112 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{cs,csx}]
+indent_style = space
+indent_size = 4
+tab_width = 4
+
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = false
+
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_indent_case_contents = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+csharp_space_after_cast = false
+csharp_style_namespace_declarations = file_scoped:suggestion
+csharp_style_prefer_method_group_conversion = true:suggestion
+csharp_style_prefer_primary_constructors = true:suggestion
+csharp_style_prefer_readonly_struct = true:suggestion
+csharp_style_prefer_readonly_struct_member = true:suggestion
+
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
+dotnet_style_predefined_type_for_member_access = true:suggestion
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_explicit_tuple_names = true:suggestion
+dotnet_style_prefer_inferred_tuple_names = true:suggestion
+dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_prefer_conditional_expression_over_assignment = true:suggestion
+dotnet_style_prefer_conditional_expression_over_return = true:suggestion
+
+# Recommended .NET analyzers are enabled for production package projects.
+# These path-scoped suppressions are the current production API baseline; tighten
+# them by rule family as tracked cleanup work resolves each category.
+[src/PatternKit.Core/**/*.cs]
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1001.severity = none
+dotnet_diagnostic.CA1018.severity = none
+dotnet_diagnostic.CA1068.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1510.severity = none
+dotnet_diagnostic.CA1512.severity = none
+dotnet_diagnostic.CA1513.severity = none
+dotnet_diagnostic.CA1710.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+dotnet_diagnostic.CA2012.severity = none
+dotnet_diagnostic.CA2016.severity = none
+dotnet_diagnostic.CA2208.severity = none
+
+[src/PatternKit.Generators/**/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1834.severity = none
+dotnet_diagnostic.CA1852.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+
+[src/PatternKit.Generators/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1805.severity = none
+dotnet_diagnostic.CA1822.severity = none
+dotnet_diagnostic.CA1834.severity = none
+dotnet_diagnostic.CA1852.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1860.severity = none
+
+[src/PatternKit.Generators.Abstractions/**/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1805.severity = none
+
+[src/PatternKit.Generators.Abstractions/*.cs]
+dotnet_diagnostic.CA1720.severity = none
+dotnet_diagnostic.CA1805.severity = none
+
+[src/PatternKit.Hosting.Extensions/**/*.cs]
+dotnet_diagnostic.CA1510.severity = none
+dotnet_diagnostic.CA2263.severity = none
+
+[*.{json,yml,yaml,md}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

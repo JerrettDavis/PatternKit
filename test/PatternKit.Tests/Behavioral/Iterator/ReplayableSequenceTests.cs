@@ -191,15 +191,17 @@ public sealed class ReplayableSequenceTests(ITestOutputHelper output) : TinyBddX
 
 public sealed class ReplayableSequenceBuilderTests
 {
+    [Scenario("Lookahead NegativeOffset Throws")]
     [Fact]
     public void Lookahead_NegativeOffset_Throws()
     {
         var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
         var cursor = seq.GetCursor();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Lookahead(-1));
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() => cursor.Lookahead(-1));
     }
 
+    [Scenario("Lookahead BeyondSequence ReturnsNone")]
     [Fact]
     public void Lookahead_BeyondSequence_ReturnsNone()
     {
@@ -208,9 +210,10 @@ public sealed class ReplayableSequenceBuilderTests
 
         var option = cursor.Lookahead(10); // way beyond end
 
-        Assert.False(option.HasValue);
+        ScenarioExpect.False(option.HasValue);
     }
 
+    [Scenario("Peek EmptySequence ReturnsFalse")]
     [Fact]
     public void Peek_EmptySequence_ReturnsFalse()
     {
@@ -219,10 +222,11 @@ public sealed class ReplayableSequenceBuilderTests
 
         var found = cursor.Peek(out var value);
 
-        Assert.False(found);
-        Assert.Equal(default, value);
+        ScenarioExpect.False(found);
+        ScenarioExpect.Equal(default, value);
     }
 
+    [Scenario("TryNext EmptySequence ReturnsFalse")]
     [Fact]
     public void TryNext_EmptySequence_ReturnsFalse()
     {
@@ -231,11 +235,12 @@ public sealed class ReplayableSequenceBuilderTests
 
         var found = cursor.TryNext(out var value, out var next);
 
-        Assert.False(found);
-        Assert.Equal(default, value);
-        Assert.Equal(0, next.Position);
+        ScenarioExpect.False(found);
+        ScenarioExpect.Equal(default, value);
+        ScenarioExpect.Equal(0, next.Position);
     }
 
+    [Scenario("AsEnumerable FromNonZeroPosition")]
     [Fact]
     public void AsEnumerable_FromNonZeroPosition()
     {
@@ -246,9 +251,10 @@ public sealed class ReplayableSequenceBuilderTests
 
         var remaining = cursor.AsEnumerable().ToList();
 
-        Assert.Equal(new[] { 3, 4, 5 }, remaining);
+        ScenarioExpect.Equal(new[] { 3, 4, 5 }, remaining);
     }
 
+    [Scenario("Fork PreservesPosition")]
     [Fact]
     public void Fork_PreservesPosition()
     {
@@ -259,28 +265,31 @@ public sealed class ReplayableSequenceBuilderTests
 
         var fork = cursor.Fork();
 
-        Assert.Equal(cursor.Position, fork.Position);
-        Assert.Equal(2, fork.Position);
+        ScenarioExpect.Equal(cursor.Position, fork.Position);
+        ScenarioExpect.Equal(2, fork.Position);
     }
 
+    [Scenario("Batch ZeroSize Throws")]
     [Fact]
     public void Batch_ZeroSize_Throws()
     {
         var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
         var cursor = seq.GetCursor();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(0).ToList());
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(0).ToList());
     }
 
+    [Scenario("Batch NegativeSize Throws")]
     [Fact]
     public void Batch_NegativeSize_Throws()
     {
         var seq = ReplayableSequence<int>.From(Enumerable.Range(1, 5));
         var cursor = seq.GetCursor();
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(-1).ToList());
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() => cursor.Batch(-1).ToList());
     }
 
+    [Scenario("Batch EmptySequence YieldsNothing")]
     [Fact]
     public void Batch_EmptySequence_YieldsNothing()
     {
@@ -289,9 +298,10 @@ public sealed class ReplayableSequenceBuilderTests
 
         var batches = cursor.Batch(3).ToList();
 
-        Assert.Empty(batches);
+        ScenarioExpect.Empty(batches);
     }
 
+    [Scenario("Batch ExactMultiple NoPartial")]
     [Fact]
     public void Batch_ExactMultiple_NoPartial()
     {
@@ -300,11 +310,12 @@ public sealed class ReplayableSequenceBuilderTests
 
         var batches = cursor.Batch(3).ToList();
 
-        Assert.Equal(2, batches.Count);
-        Assert.Equal(new[] { 1, 2, 3 }, batches[0]);
-        Assert.Equal(new[] { 4, 5, 6 }, batches[1]);
+        ScenarioExpect.Equal(2, batches.Count);
+        ScenarioExpect.Equal(new[] { 1, 2, 3 }, batches[0]);
+        ScenarioExpect.Equal(new[] { 4, 5, 6 }, batches[1]);
     }
 
+    [Scenario("ConcurrentCursors ShareBuffer")]
     [Fact]
     public void ConcurrentCursors_ShareBuffer()
     {
@@ -324,11 +335,12 @@ public sealed class ReplayableSequenceBuilderTests
 
         foreach (var result in results)
         {
-            Assert.Equal(100, result.Count);
-            Assert.Equal(Enumerable.Range(1, 100), result);
+            ScenarioExpect.Equal(100, result.Count);
+            ScenarioExpect.Equal(Enumerable.Range(1, 100), result);
         }
     }
 
+    [Scenario("MultipleForks IndependentPositions")]
     [Fact]
     public void MultipleForks_IndependentPositions()
     {
@@ -347,12 +359,13 @@ public sealed class ReplayableSequenceBuilderTests
         c2.TryNext(out _, out c2);
         c2.TryNext(out _, out c2);
 
-        Assert.Equal(2, c1.Position);
-        Assert.Equal(5, c2.Position);
-        Assert.Equal(2, c3.Position);
+        ScenarioExpect.Equal(2, c1.Position);
+        ScenarioExpect.Equal(5, c2.Position);
+        ScenarioExpect.Equal(2, c3.Position);
     }
 
 #if !NETSTANDARD2_0
+    [Scenario("AsAsyncEnumerable YieldsAllElements")]
     [Fact]
     public async Task AsAsyncEnumerable_YieldsAllElements()
     {
@@ -362,9 +375,10 @@ public sealed class ReplayableSequenceBuilderTests
         await foreach (var v in seq.AsAsyncEnumerable())
             list.Add(v);
 
-        Assert.Equal(new[] { 1, 2, 3, 4, 5 }, list);
+        ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, list);
     }
 
+    [Scenario("AsAsyncEnumerable RespectsToken")]
     [Fact]
     public async Task AsAsyncEnumerable_RespectsToken()
     {
@@ -372,7 +386,7 @@ public sealed class ReplayableSequenceBuilderTests
         using var cts = new CancellationTokenSource();
         var list = new List<int>();
 
-        var ex = await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        var ex = await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
         {
             await foreach (var v in seq.AsAsyncEnumerable(cts.Token))
             {
@@ -381,7 +395,7 @@ public sealed class ReplayableSequenceBuilderTests
             }
         });
 
-        Assert.Equal(5, list.Count);
+        ScenarioExpect.Equal(5, list.Count);
     }
 #endif
 }

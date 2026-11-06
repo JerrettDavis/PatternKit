@@ -1,8 +1,8 @@
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using PatternKit.Generators.Decorator;
-using System.Text;
 
 namespace PatternKit.Generators;
 
@@ -200,7 +200,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
         // Determine default base type name
         var baseName = contractSymbol.Name;
-        if (baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
+        if (baseName.StartsWith("I", StringComparison.Ordinal) && baseName.Length > 1 && char.IsUpper(baseName[1]))
         {
             // Interface with I prefix: IStorage -> StorageDecoratorBase
             baseName = baseName.Substring(1);
@@ -596,8 +596,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
         var returnType = method.ReturnType;
         var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
-               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
+        return typeName.StartsWith("global::System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               typeName.StartsWith("global::System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool CanTypeAcceptNull(ITypeSymbol type)
@@ -660,8 +660,39 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
             return $"({enumType.ToDisplayString(TypeFormat)}){param.ExplicitDefaultValue}";
         }
 
-        // Use Roslyn's culture-invariant literal formatting for all other types
-        return Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(param.ExplicitDefaultValue, quoteStrings: true, useHexadecimalNumbers: false);
+        var value = param.ExplicitDefaultValue;
+        return value switch
+        {
+            float f => FormatSingleDefault(f),
+            double d => FormatDoubleDefault(d),
+            decimal m => m.ToString(System.Globalization.CultureInfo.InvariantCulture) + "m",
+            _ => Microsoft.CodeAnalysis.CSharp.SymbolDisplay.FormatPrimitive(value, quoteStrings: true, useHexadecimalNumbers: false)
+                ?? "default"
+        };
+    }
+
+    private static string FormatSingleDefault(float value)
+    {
+        if (float.IsNaN(value))
+            return "float.NaN";
+        if (float.IsPositiveInfinity(value))
+            return "float.PositiveInfinity";
+        if (float.IsNegativeInfinity(value))
+            return "float.NegativeInfinity";
+
+        return value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "f";
+    }
+
+    private static string FormatDoubleDefault(double value)
+    {
+        if (double.IsNaN(value))
+            return "double.NaN";
+        if (double.IsPositiveInfinity(value))
+            return "double.PositiveInfinity";
+        if (double.IsNegativeInfinity(value))
+            return "double.NegativeInfinity";
+
+        return value.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "d";
     }
 
     private static bool HasAttribute(ISymbol symbol, string attributeName)

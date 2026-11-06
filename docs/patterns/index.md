@@ -80,14 +80,14 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ### Interpreter
 
-- **[Behavioral.Interpreter.Interpreter](behavioral/interpreter/interpreter.md)**
+- **[Behavioral.Interpreter](behavioral/interpreter/index.md)**
   Parse and evaluate domain-specific languages with composable expression trees.
 
 ---
 
 ## Creational (Builder)
 
-- **[Creational.AbstractFactory](creational/abstractfactory/abstractfactory.md)**
+- **[Creational.AbstractFactory](creational/abstract-factory/index.md)**
   Family-aware factory that produces related objects with consistent themes.
 
 - **[Creational.Builder.BranchBuilder](creational/builder/branchbuilder.md)**
@@ -104,6 +104,9 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 - **[Creational.Factory](creational/factory/factory.md)**
   Key → creator mapping with optional default; immutable and allocation-light.
+
+- **[Creational.ObjectPool](creational/object-pool/index.md)**
+  Bounded, lease-based reuse for expensive resettable resources.
 
 - **[Creational.Prototype](creational/prototype/prototype.md)**
   Clone-and-tweak via fluent builders and keyed registries.
@@ -139,7 +142,31 @@ If you’re looking for end-to-end, production-shaped demos, check the **Example
 
 ## Additional Patterns
 
-- **[TypeDispatcher](additional/type-dispatcher/type-dispatcher.md)**
+- **[Messaging](messaging/README.md)**
+  In-process messaging primitives and source-generated dispatchers for application flows that are not durable broker responsibilities.
+
+- **[Message Envelope and Context](messaging/message-envelope.md)**
+  Immutable payload envelopes, headers, and execution context for enterprise integration patterns.
+
+- **[Enterprise Message Routing](messaging/message-routing.md)**
+  Content router, recipient list, splitter, and aggregator primitives for deterministic in-process flows.
+
+- **[Routing Slip](messaging/routing-slip.md)**
+  Runtime and source-generated ordered itineraries that record message progress in headers.
+
+- **[Saga / Process Manager](messaging/saga.md)**
+  Runtime and source-generated process managers for typed message transitions over explicit state.
+
+- **[Mailbox](messaging/mailbox.md)**
+  Serialized in-process inboxes with bounded backpressure, error policy, and shutdown behavior.
+
+- **[Idempotent Receiver, Inbox, and Outbox](messaging/reliability.md)**
+  Pluggable idempotency stores, inbox boundaries, and outbox records for at-least-once message handling.
+
+- **[Enterprise Integration Source Generators](messaging/enterprise-generators.md)**
+  Compile-time generated content-router, routing-slip, and saga factories with explicit diagnostics.
+
+- **[TypeDispatcher](behavioral/type-dispatcher/index.md)**
   Type-safe runtime dispatch that routes objects to handlers based on their concrete type.
 
 ---

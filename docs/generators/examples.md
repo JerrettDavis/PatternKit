@@ -1,6 +1,8 @@
-# Generator Examples (DI + Orchestration)
+# Generator Examples
 
-Three production-flavored samples live in `src/PatternKit.Examples/Generators` to show the factory and builder generators in action with `IServiceCollection` and `Host`.
+Production-flavored samples live in `src/PatternKit.Examples` to show generator output in realistic application shapes: DI module registration, application builders, subsystem facades, service proxies, observers, mementos, state machines, strategies, visitors, template workflows, singletons, adapters, and messaging factories.
+
+See [Source Generator Application Suite](../examples/source-generator-application-suite.md) for the full source/test map.
 
 ## 1) ServiceModules with FactoryMethod
 
@@ -99,8 +101,25 @@ var app = await CorporateApplicationDemo.CreateBuilder()
 
 The demo wires observability, messaging, background jobs, async secret loading, and startup tasks before emitting a ready-to-run `CorporateApp` instance.
 
-## Where to find the code
+## Additional Generator Examples
+
+| Generator | Example source | Tests |
+| --- | --- | --- |
+| Adapter | `src/PatternKit.Examples/AdapterGeneratorDemo` | `test/PatternKit.Examples.Tests/AdapterGeneratorDemo` |
+| Facade | `src/PatternKit.Examples/Generators/Facade` | `test/PatternKit.Examples.Tests/Generators/FacadeSpecsTests.cs` |
+| Memento | `src/PatternKit.Examples/Generators/Memento` | `test/PatternKit.Examples.Tests/Generators/MementoGeneratorExamplesTests.cs` |
+| Observer | `src/PatternKit.Examples/ObserverGeneratorDemo` | `test/PatternKit.Examples.Tests/ObserverGeneratorDemo` |
+| Proxy | `src/PatternKit.Examples/ProxyGeneratorDemo` | `test/PatternKit.Examples.Tests/ProxyGeneratorDemo` |
+| Singleton | `src/PatternKit.Examples/SingletonGeneratorDemo` | `test/PatternKit.Examples.Tests/SingletonGeneratorDemo` |
+| State Machine | `src/PatternKit.Examples/Generators/State` | `test/PatternKit.Examples.Tests/Generators/StateGeneratorExamplesTests.cs` |
+| Strategy | `src/PatternKit.Examples/Generators/Strategies` | `test/PatternKit.Examples.Tests/Generators/StrategySpecsTests.cs` |
+| Template Method | `src/PatternKit.Examples/TemplateMethodGeneratorDemo` | `test/PatternKit.Examples.Tests/TemplateMethodGeneratorDemo` |
+| Visitor | `src/PatternKit.Examples/Generators/Visitors` | `test/PatternKit.Examples.Tests/Generators/VisitorGeneratorExamplesTests.cs` |
+| Messaging | `src/PatternKit.Examples/Messaging` | `test/PatternKit.Examples.Tests/Messaging` |
+
+## Where to Find the Code
 
 - `src/PatternKit.Examples/Generators/FactoryGeneratorExamples.cs`
-- `src/PatternKit.Examples/Generators/CorporateApplicationBuilderDemo.cs`
-- Project references `PatternKit.Generators` as an analyzer so the factories/builders are generated at build time.
+- `src/PatternKit.Examples/Generators/Builders/CorporateApplicationBuilderDemo`
+- `src/PatternKit.Examples/Messaging`
+- Project references `PatternKit.Generators` as an analyzer so generated APIs are emitted at build time.

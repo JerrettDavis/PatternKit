@@ -1,8 +1,89 @@
 - name: Generators Overview
   href: index.md
 
+- name: Abstract Factory
+  href: abstract-factory.md
+
+- name: Adapter
+  href: adapter.md
+
+- name: Anti-Corruption Layer
+  href: anti-corruption-layer.md
+
+- name: Activity Tracker
+  href: activity-tracker.md
+
+- name: Aggregate Root
+  href: aggregate-root.md
+
+- name: Audit Log
+  href: audit-log.md
+
 - name: Builder
   href: builder.md
+
+- name: Bridge
+  href: bridge.md
+
+- name: Bulkhead
+  href: bulkhead.md
+
+- name: Backpressure
+  href: backpressure.md
+
+- name: Change Data Capture
+  href: change-data-capture.md
+
+- name: Cache-Aside
+  href: cache-aside.md
+
+- name: Cache Stampede Protection
+  href: cache-stampede-protection.md
+
+- name: Read-Through / Write-Through Cache
+  href: read-write-through-cache.md
+
+- name: Canonical Data Model
+  href: canonical-data-model.md
+
+- name: Event-Carried State Transfer
+  href: event-carried-state-transfer.md
+
+- name: Event Notification
+  href: event-notification.md
+
+- name: Chain
+  href: chain.md
+
+- name: Command
+  href: command.md
+
+- name: Composer
+  href: composer.md
+
+- name: Composite
+  href: composite.md
+
+- name: Decorator
+  href: decorator.md
+
+- name: Data Mapper
+  href: data-mapper.md
+
+- name: Domain Event
+  href: domain-event.md
+
+- name: Domain Service
+  href: domain-service.md
+
+- name: Event Sourcing
+  href: event-sourcing.md
+
+- name: Feature Toggle
+  href: feature-toggle.md
+
+- name: Dispatcher
+  href: dispatcher.md
 
 - name: Facade
   href: facade.md
@@ -13,17 +94,232 @@
 - name: Factory Method
   href: factory-method.md
 
+- name: Flyweight
+  href: flyweight.md
+
+- name: Health Endpoint Monitoring
+  href: health-endpoint-monitoring.md
+
+- name: Interpreter
+  href: interpreter.md
+
+- name: Identity Map
+  href: identity-map.md
+
+- name: Lazy Load
+  href: lazy-load.md
+
+- name: Materialized View
+  href: materialized-view.md
+
+- name: Manual Task Gate
+  href: manual-task-gate.md
+
+- name: Object Pool
+  href: object-pool.md
+
+- name: Workflow Orchestration
+  href: workflow-orchestration.md
+
+- name: Iterator
+  href: iterator.md
+
+- name: Memento
+  href: memento.md
+
+- name: Null Object
+  href: null-object.md
+
+- name: Messaging Generators
+  href: messaging.md
+
+- name: Message Channel
+  href: message-channel.md
+
+- name: Message Bus
+  href: message-bus.md
+
+- name: Messaging Bridge
+  href: messaging-bridge.md
+
+- name: Correlation Identifier
+  href: correlation-identifier.md
+
+- name: Message History
+  href: message-history.md
+
+- name: Channel Purger
+  href: channel-purger.md
+
+- name: Invalid Message Channel
+  href: invalid-message-channel.md
+
+- name: Polling Consumer
+  href: polling-consumer.md
+
+- name: Event-Driven Consumer
+  href: event-driven-consumer.md
+
+- name: Durable Subscriber
+  href: durable-subscriber.md
+
+- name: Dynamic Router
+  href: dynamic-router.md
+
+- name: Channel Adapter
+  href: channel-adapter.md
+
+- name: Messaging Gateway
+  href: messaging-gateway.md
+
+- name: Service Activator
+  href: service-activator.md
+
+- name: Message Translator
+  href: message-translator.md
+
+- name: Content Enricher
+  href: content-enricher.md
+
+- name: Claim Check
+  href: claim-check.md
+
+- name: Message Filter
+  href: message-filter.md
+
+- name: Message Expiration
+  href: message-expiration.md
+
+- name: Guaranteed Delivery
+  href: guaranteed-delivery.md
+
+- name: Message Store
+  href: message-store.md
+
+- name: Wire Tap
+  href: wire-tap.md
+
+- name: Control Bus
+  href: control-bus.md
+
+- name: Scatter-Gather
+  href: scatter-gather.md
+
+- name: Resequencer
+  href: resequencer.md
+
+- name: Competing Consumers
+  href: competing-consumers.md
+
+- name: Pipes and Filters
+  href: pipes-and-filters.md
+
+- name: Dead Letter Channel
+  href: dead-letter-channel.md
+
 - name: Prototype
   href: prototype.md
 
 - name: Proxy
   href: proxy.md
 
+- name: Rate Limiting
+  href: rate-limiting.md
+
+- name: External Configuration Store
+  href: external-configuration-store.md
+
+- name: Gateway Aggregation
+  href: gateway-aggregation.md
+
+- name: Gateway Routing
+  href: gateway-routing.md
+
+- name: Strangler Fig
+  href: strangler-fig.md
+
+- name: Sidecar
+  href: sidecar.md
+
+- name: Backends for Frontends
+  href: backends-for-frontends.md
+
+- name: Ambassador
+  href: ambassador.md
+
+- name: Leader Election
+  href: leader-election.md
+
+- name: Distributed Lock
+  href: distributed-lock.md
+
+- name: Scheduler Agent Supervisor
+  href: scheduler-agent-supervisor.md
+
+- name: Queue Load Leveling
+  href: queue-load-leveling.md
+
+- name: Priority Queue
+  href: priority-queue.md
+
+- name: Repository
+  href: repository.md
+
+- name: Retry
+  href: retry.md
+
+- name: Circuit Breaker
+  href: circuit-breaker.md
+- name: Singleton
+  href: singleton.md
+
+- name: Specification
+  href: specification.md
+
+- name: Value Object
+  href: value-object.md
+
+- name: Bounded Context
+  href: bounded-context.md
+
+- name: Context Map
+  href: context-map.md
+
 - name: State Machine
   href: state-machine.md
 
+- name: Table Data Gateway
+  href: table-data-gateway.md
+
+- name: Timeout Manager
+  href: timeout-manager.md
+
+- name: Snapshot / Checkpoint Management
+  href: snapshot-checkpoint-management.md
+
+- name: Eventual Consistency Monitor
+  href: eventual-consistency-monitor.md
+
+- name: Strategy
+  href: strategy.md
+
 - name: Template Method
   href: template-method-generator.md
+
+- name: Unit of Work
+  href: unit-of-work.md
+
+- name: Compensating Transaction
+  href: compensating-transaction.md
+
+- name: Transaction Script
+  href: transaction-script.md
+
+- name: Service Layer
+  href: service-layer.md
+
+- name: Ports and Adapters
+  href: ports-and-adapters.md
 
 - name: Visitor Generator
   href: visitor-generator.md

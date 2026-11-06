@@ -177,22 +177,25 @@ public sealed class MementoTests(ITestOutputHelper output) : TinyBddXunitBase(ou
 
 public sealed class MementoBuilderTests
 {
+    [Scenario("CanUndo Empty ReturnsFalse")]
     [Fact]
     public void CanUndo_Empty_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
-        Assert.False(h.CanUndo);
+        ScenarioExpect.False(h.CanUndo);
     }
 
+    [Scenario("CanUndo SingleSnapshot ReturnsFalse")]
     [Fact]
     public void CanUndo_SingleSnapshot_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var s = 1;
         h.Save(in s);
-        Assert.False(h.CanUndo);
+        ScenarioExpect.False(h.CanUndo);
     }
 
+    [Scenario("CanUndo MultipleSnapshots ReturnsTrue")]
     [Fact]
     public void CanUndo_MultipleSnapshots_ReturnsTrue()
     {
@@ -201,25 +204,28 @@ public sealed class MementoBuilderTests
         h.Save(in s);
         s = 2;
         h.Save(in s);
-        Assert.True(h.CanUndo);
+        ScenarioExpect.True(h.CanUndo);
     }
 
+    [Scenario("CanRedo Empty ReturnsFalse")]
     [Fact]
     public void CanRedo_Empty_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
-        Assert.False(h.CanRedo);
+        ScenarioExpect.False(h.CanRedo);
     }
 
+    [Scenario("CanRedo AtEnd ReturnsFalse")]
     [Fact]
     public void CanRedo_AtEnd_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var s = 1;
         h.Save(in s);
-        Assert.False(h.CanRedo);
+        ScenarioExpect.False(h.CanRedo);
     }
 
+    [Scenario("CanRedo AfterUndo ReturnsTrue")]
     [Fact]
     public void CanRedo_AfterUndo_ReturnsTrue()
     {
@@ -229,19 +235,21 @@ public sealed class MementoBuilderTests
         s = 2;
         h.Save(in s);
         h.Undo(ref s);
-        Assert.True(h.CanRedo);
+        ScenarioExpect.True(h.CanRedo);
     }
 
+    [Scenario("Undo Empty ReturnsFalse")]
     [Fact]
     public void Undo_Empty_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var s = 42;
         var result = h.Undo(ref s);
-        Assert.False(result);
-        Assert.Equal(42, s);
+        ScenarioExpect.False(result);
+        ScenarioExpect.Equal(42, s);
     }
 
+    [Scenario("Undo SingleSnapshot ReturnsFalse")]
     [Fact]
     public void Undo_SingleSnapshot_ReturnsFalse()
     {
@@ -249,19 +257,21 @@ public sealed class MementoBuilderTests
         var s = 1;
         h.Save(in s);
         var result = h.Undo(ref s);
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("Redo Empty ReturnsFalse")]
     [Fact]
     public void Redo_Empty_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var s = 42;
         var result = h.Redo(ref s);
-        Assert.False(result);
-        Assert.Equal(42, s);
+        ScenarioExpect.False(result);
+        ScenarioExpect.Equal(42, s);
     }
 
+    [Scenario("Redo AtEnd ReturnsFalse")]
     [Fact]
     public void Redo_AtEnd_ReturnsFalse()
     {
@@ -269,18 +279,20 @@ public sealed class MementoBuilderTests
         var s = 1;
         h.Save(in s);
         var result = h.Redo(ref s);
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("TryGetCurrent Empty ReturnsFalse")]
     [Fact]
     public void TryGetCurrent_Empty_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var result = h.TryGetCurrent(out var snapshot);
-        Assert.False(result);
-        Assert.Equal(default, snapshot);
+        ScenarioExpect.False(result);
+        ScenarioExpect.Equal(default, snapshot);
     }
 
+    [Scenario("TryGetCurrent WithSnapshot ReturnsTrue")]
     [Fact]
     public void TryGetCurrent_WithSnapshot_ReturnsTrue()
     {
@@ -288,42 +300,47 @@ public sealed class MementoBuilderTests
         var s = 42;
         h.Save(in s, tag: "test");
         var result = h.TryGetCurrent(out var snapshot);
-        Assert.True(result);
-        Assert.Equal(42, snapshot.State);
-        Assert.Equal("test", snapshot.Tag);
+        ScenarioExpect.True(result);
+        ScenarioExpect.Equal(42, snapshot.State);
+        ScenarioExpect.Equal("test", snapshot.Tag);
     }
 
+    [Scenario("CurrentVersion Empty ReturnsZero")]
     [Fact]
     public void CurrentVersion_Empty_ReturnsZero()
     {
         var h = Memento<int>.Create().Build();
-        Assert.Equal(0, h.CurrentVersion);
+        ScenarioExpect.Equal(0, h.CurrentVersion);
     }
 
+    [Scenario("Count Empty ReturnsZero")]
     [Fact]
     public void Count_Empty_ReturnsZero()
     {
         var h = Memento<int>.Create().Build();
-        Assert.Equal(0, h.Count);
+        ScenarioExpect.Equal(0, h.Count);
     }
 
+    [Scenario("Capacity NegativeValue Throws")]
     [Fact]
     public void Capacity_NegativeValue_Throws()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        ScenarioExpect.Throws<ArgumentOutOfRangeException>(() =>
             Memento<int>.Create().Capacity(-1));
     }
 
+    [Scenario("Restore EmptyHistory ReturnsFalse")]
     [Fact]
     public void Restore_EmptyHistory_ReturnsFalse()
     {
         var h = Memento<int>.Create().Build();
         var s = 42;
         var result = h.Restore(1, ref s);
-        Assert.False(result);
-        Assert.Equal(42, s);
+        ScenarioExpect.False(result);
+        ScenarioExpect.Equal(42, s);
     }
 
+    [Scenario("History ReturnsImmutableCopy")]
     [Fact]
     public void History_ReturnsImmutableCopy()
     {
@@ -336,11 +353,12 @@ public sealed class MementoBuilderTests
         var history1 = h.History;
         var history2 = h.History;
 
-        Assert.NotSame(history1, history2);
-        Assert.Equal(2, history1.Count);
-        Assert.Equal(2, history2.Count);
+        ScenarioExpect.NotSame(history1, history2);
+        ScenarioExpect.Equal(2, history1.Count);
+        ScenarioExpect.Equal(2, history2.Count);
     }
 
+    [Scenario("ApplyWith CustomApplier")]
     [Fact]
     public void ApplyWith_CustomApplier()
     {
@@ -359,10 +377,11 @@ public sealed class MementoBuilderTests
         h.Save(in s);
         h.Undo(ref s);
 
-        Assert.Contains("apply:1", log);
-        Assert.Equal(1, s);
+        ScenarioExpect.Contains("apply:1", log);
+        ScenarioExpect.Equal(1, s);
     }
 
+    [Scenario("DefaultCloner ShallowCopies")]
     [Fact]
     public void DefaultCloner_ShallowCopies()
     {
@@ -371,9 +390,10 @@ public sealed class MementoBuilderTests
         var s = 42;
         h.Save(in s);
         h.TryGetCurrent(out var snap);
-        Assert.Equal(42, snap.State);
+        ScenarioExpect.Equal(42, snap.State);
     }
 
+    [Scenario("Snapshot HasTag Property")]
     [Fact]
     public void Snapshot_HasTag_Property()
     {
@@ -384,10 +404,11 @@ public sealed class MementoBuilderTests
         h.Save(in s); // no tag
 
         var history = h.History;
-        Assert.True(history[0].HasTag);
-        Assert.False(history[1].HasTag);
+        ScenarioExpect.True(history[0].HasTag);
+        ScenarioExpect.False(history[1].HasTag);
     }
 
+    [Scenario("Snapshot TimestampUtc IsSet")]
     [Fact]
     public void Snapshot_TimestampUtc_IsSet()
     {
@@ -398,10 +419,11 @@ public sealed class MementoBuilderTests
         var after = DateTime.UtcNow;
 
         h.TryGetCurrent(out var snap);
-        Assert.True(snap.TimestampUtc >= before);
-        Assert.True(snap.TimestampUtc <= after);
+        ScenarioExpect.True(snap.TimestampUtc >= before);
+        ScenarioExpect.True(snap.TimestampUtc <= after);
     }
 
+    [Scenario("MultipleUndo ReturnsToFirstState")]
     [Fact]
     public void MultipleUndo_ReturnsToFirstState()
     {
@@ -415,16 +437,17 @@ public sealed class MementoBuilderTests
         s = 3;
         h.Save(in s); // v4
 
-        Assert.True(h.Undo(ref s));
-        Assert.Equal(2, s);
-        Assert.True(h.Undo(ref s));
-        Assert.Equal(1, s);
-        Assert.True(h.Undo(ref s));
-        Assert.Equal(0, s);
-        Assert.False(h.Undo(ref s));
-        Assert.Equal(0, s);
+        ScenarioExpect.True(h.Undo(ref s));
+        ScenarioExpect.Equal(2, s);
+        ScenarioExpect.True(h.Undo(ref s));
+        ScenarioExpect.Equal(1, s);
+        ScenarioExpect.True(h.Undo(ref s));
+        ScenarioExpect.Equal(0, s);
+        ScenarioExpect.False(h.Undo(ref s));
+        ScenarioExpect.Equal(0, s);
     }
 
+    [Scenario("MultipleRedo ReturnsToLastState")]
     [Fact]
     public void MultipleRedo_ReturnsToLastState()
     {
@@ -439,13 +462,14 @@ public sealed class MementoBuilderTests
         h.Undo(ref s);
         h.Undo(ref s);
 
-        Assert.True(h.Redo(ref s));
-        Assert.Equal(1, s);
-        Assert.True(h.Redo(ref s));
-        Assert.Equal(2, s);
-        Assert.False(h.Redo(ref s));
+        ScenarioExpect.True(h.Redo(ref s));
+        ScenarioExpect.Equal(1, s);
+        ScenarioExpect.True(h.Redo(ref s));
+        ScenarioExpect.Equal(2, s);
+        ScenarioExpect.False(h.Redo(ref s));
     }
 
+    [Scenario("SaveAfterUndo TruncatesForwardHistory")]
     [Fact]
     public void SaveAfterUndo_TruncatesForwardHistory()
     {
@@ -458,13 +482,13 @@ public sealed class MementoBuilderTests
         h.Save(in s); // v3
 
         h.Undo(ref s); // cursor at v2
-        Assert.Equal(1, s);
+        ScenarioExpect.Equal(1, s);
 
         s = 10;
         h.Save(in s); // v4, should truncate v3
 
-        Assert.Equal(3, h.Count);
-        Assert.False(h.CanRedo);
+        ScenarioExpect.Equal(3, h.Count);
+        ScenarioExpect.False(h.CanRedo);
     }
 }
 

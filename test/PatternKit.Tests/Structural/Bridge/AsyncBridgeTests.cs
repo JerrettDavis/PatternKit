@@ -1,4 +1,5 @@
 using PatternKit.Structural.Bridge;
+using TinyBDD;
 
 namespace PatternKit.Tests.Structural.Bridge;
 
@@ -6,6 +7,7 @@ public sealed class AsyncBridgeTests
 {
     #region AsyncBridge<TIn, TOut, TImpl> Tests
 
+    [Scenario("AsyncBridge Executes With Provider")]
     [Fact]
     public async Task AsyncBridge_Executes_With_Provider()
     {
@@ -15,9 +17,10 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync("hello");
 
-        Assert.Equal("hello-42", result);
+        ScenarioExpect.Equal("hello-42", result);
     }
 
+    [Scenario("AsyncBridge Async Provider Works")]
     [Fact]
     public async Task AsyncBridge_Async_Provider_Works()
     {
@@ -31,9 +34,10 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync("test");
 
-        Assert.Equal("test-100", result);
+        ScenarioExpect.Equal("test-100", result);
     }
 
+    [Scenario("AsyncBridge Async Operation Works")]
     [Fact]
     public async Task AsyncBridge_Async_Operation_Works()
     {
@@ -47,9 +51,10 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncBridge TryExecute Returns Success")]
     [Fact]
     public async Task AsyncBridge_TryExecute_Returns_Success()
     {
@@ -59,11 +64,12 @@ public sealed class AsyncBridgeTests
 
         var (success, result, error) = await bridge.TryExecuteAsync("hello");
 
-        Assert.True(success);
-        Assert.Equal("hello-42", result);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("hello-42", result);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncBridge TryExecute Catches Exception")]
     [Fact]
     public async Task AsyncBridge_TryExecute_Catches_Exception()
     {
@@ -73,11 +79,12 @@ public sealed class AsyncBridgeTests
 
         var (success, result, error) = await bridge.TryExecuteAsync(5);
 
-        Assert.False(success);
-        Assert.Equal(default, result);
-        Assert.Equal("test error", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, result);
+        ScenarioExpect.Equal("test error", error);
     }
 
+    [Scenario("AsyncBridge Before Hook Executes")]
     [Fact]
     public async Task AsyncBridge_Before_Hook_Executes()
     {
@@ -93,10 +100,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Equal("before-test-42", log[0]);
-        Assert.Equal("operation", log[1]);
+        ScenarioExpect.Equal("before-test-42", log[0]);
+        ScenarioExpect.Equal("operation", log[1]);
     }
 
+    [Scenario("AsyncBridge After Hook Executes")]
     [Fact]
     public async Task AsyncBridge_After_Hook_Executes()
     {
@@ -116,11 +124,12 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync("test");
 
-        Assert.Equal("operation", log[0]);
-        Assert.Equal("after-test-42", log[1]);
-        Assert.Equal("test-42-modified", result);
+        ScenarioExpect.Equal("operation", log[0]);
+        ScenarioExpect.Equal("after-test-42", log[1]);
+        ScenarioExpect.Equal("test-42-modified", result);
     }
 
+    [Scenario("AsyncBridge Require Validation Passes")]
     [Fact]
     public async Task AsyncBridge_Require_Validation_Passes()
     {
@@ -131,9 +140,10 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncBridge Require Validation Fails")]
     [Fact]
     public async Task AsyncBridge_Require_Validation_Fails()
     {
@@ -142,12 +152,13 @@ public sealed class AsyncBridgeTests
             .Require((input, impl) => input > 0 ? null : "Input must be positive")
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => bridge.ExecuteAsync(-5).AsTask());
 
-        Assert.Equal("Input must be positive", ex.Message);
+        ScenarioExpect.Equal("Input must be positive", ex.Message);
     }
 
+    [Scenario("AsyncBridge RequireResult Validation Passes")]
     [Fact]
     public async Task AsyncBridge_RequireResult_Validation_Passes()
     {
@@ -158,9 +169,10 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncBridge RequireResult Validation Fails")]
     [Fact]
     public async Task AsyncBridge_RequireResult_Validation_Fails()
     {
@@ -169,12 +181,13 @@ public sealed class AsyncBridgeTests
             .RequireResult((input, impl, result) => result > 0 ? null : "Result must be positive")
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => bridge.ExecuteAsync(-5).AsTask());
 
-        Assert.Equal("Result must be positive", ex.Message);
+        ScenarioExpect.Equal("Result must be positive", ex.Message);
     }
 
+    [Scenario("AsyncBridge ProviderFrom Depends On Input")]
     [Fact]
     public async Task AsyncBridge_ProviderFrom_Depends_On_Input()
     {
@@ -185,13 +198,14 @@ public sealed class AsyncBridgeTests
 
         var result = await bridge.ExecuteAsync(5);
 
-        Assert.Equal(55, result); // 5 + (5*10)
+        ScenarioExpect.Equal(55, result); // 5 + (5*10)
     }
 
+    [Scenario("AsyncBridge Build Throws Without Operation")]
     [Fact]
     public void AsyncBridge_Build_Throws_Without_Operation()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncBridge<int, int, int>.Create(() => 1).Build());
     }
 
@@ -199,6 +213,7 @@ public sealed class AsyncBridgeTests
 
     #region ActionBridge<TIn, TImpl> Tests
 
+    [Scenario("ActionBridge Executes")]
     [Fact]
     public void ActionBridge_Executes()
     {
@@ -209,10 +224,11 @@ public sealed class AsyncBridgeTests
 
         bridge.Execute("hello");
 
-        Assert.Single(log);
-        Assert.Equal("hello-42", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("hello-42", log[0]);
     }
 
+    [Scenario("ActionBridge Before Hook Executes")]
     [Fact]
     public void ActionBridge_Before_Hook_Executes()
     {
@@ -224,10 +240,11 @@ public sealed class AsyncBridgeTests
 
         bridge.Execute("test");
 
-        Assert.Equal("before-test", log[0]);
-        Assert.Equal("operation", log[1]);
+        ScenarioExpect.Equal("before-test", log[0]);
+        ScenarioExpect.Equal("operation", log[1]);
     }
 
+    [Scenario("ActionBridge After Hook Executes")]
     [Fact]
     public void ActionBridge_After_Hook_Executes()
     {
@@ -239,10 +256,11 @@ public sealed class AsyncBridgeTests
 
         bridge.Execute("test");
 
-        Assert.Equal("operation", log[0]);
-        Assert.Equal("after-test", log[1]);
+        ScenarioExpect.Equal("operation", log[0]);
+        ScenarioExpect.Equal("after-test", log[1]);
     }
 
+    [Scenario("ActionBridge TryExecute Returns Success")]
     [Fact]
     public void ActionBridge_TryExecute_Returns_Success()
     {
@@ -253,11 +271,12 @@ public sealed class AsyncBridgeTests
 
         var success = bridge.TryExecute("hello", out var error);
 
-        Assert.True(success);
-        Assert.True(executed);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.True(executed);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("ActionBridge TryExecute Catches Exception")]
     [Fact]
     public void ActionBridge_TryExecute_Catches_Exception()
     {
@@ -267,10 +286,11 @@ public sealed class AsyncBridgeTests
 
         var success = bridge.TryExecute("hello", out var error);
 
-        Assert.False(success);
-        Assert.Equal("test error", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("test error", error);
     }
 
+    [Scenario("ActionBridge Require Validation Passes")]
     [Fact]
     public void ActionBridge_Require_Validation_Passes()
     {
@@ -282,9 +302,10 @@ public sealed class AsyncBridgeTests
 
         bridge.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionBridge Require Validation Fails")]
     [Fact]
     public void ActionBridge_Require_Validation_Fails()
     {
@@ -293,18 +314,20 @@ public sealed class AsyncBridgeTests
             .Require((in input, impl) => input > 0 ? null : "Input must be positive")
             .Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => bridge.Execute(-5));
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() => bridge.Execute(-5));
 
-        Assert.Equal("Input must be positive", ex.Message);
+        ScenarioExpect.Equal("Input must be positive", ex.Message);
     }
 
+    [Scenario("ActionBridge Build Throws Without Operation")]
     [Fact]
     public void ActionBridge_Build_Throws_Without_Operation()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             ActionBridge<int, int>.Create(() => 1).Build());
     }
 
+    [Scenario("ActionBridge ProviderFrom Depends On Input")]
     [Fact]
     public void ActionBridge_ProviderFrom_Depends_On_Input()
     {
@@ -315,13 +338,14 @@ public sealed class AsyncBridgeTests
 
         bridge.Execute(5);
 
-        Assert.Equal(50, capturedImpl);
+        ScenarioExpect.Equal(50, capturedImpl);
     }
 
     #endregion
 
     #region AsyncActionBridge<TIn, TImpl> Tests
 
+    [Scenario("AsyncActionBridge Executes")]
     [Fact]
     public async Task AsyncActionBridge_Executes()
     {
@@ -332,10 +356,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("hello");
 
-        Assert.Single(log);
-        Assert.Equal("hello-42", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("hello-42", log[0]);
     }
 
+    [Scenario("AsyncActionBridge Async Provider Works")]
     [Fact]
     public async Task AsyncActionBridge_Async_Provider_Works()
     {
@@ -350,10 +375,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Single(log);
-        Assert.Equal("test-100", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("test-100", log[0]);
     }
 
+    [Scenario("AsyncActionBridge Sync Operation")]
     [Fact]
     public async Task AsyncActionBridge_Sync_Operation()
     {
@@ -364,10 +390,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Single(log);
-        Assert.Equal("sync-test-42", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("sync-test-42", log[0]);
     }
 
+    [Scenario("AsyncActionBridge Before Hook Executes")]
     [Fact]
     public async Task AsyncActionBridge_Before_Hook_Executes()
     {
@@ -379,10 +406,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Equal("before-test", log[0]);
-        Assert.Equal("operation", log[1]);
+        ScenarioExpect.Equal("before-test", log[0]);
+        ScenarioExpect.Equal("operation", log[1]);
     }
 
+    [Scenario("AsyncActionBridge Before Sync Hook")]
     [Fact]
     public async Task AsyncActionBridge_Before_Sync_Hook()
     {
@@ -394,10 +422,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Equal("sync-before", log[0]);
-        Assert.Equal("operation", log[1]);
+        ScenarioExpect.Equal("sync-before", log[0]);
+        ScenarioExpect.Equal("operation", log[1]);
     }
 
+    [Scenario("AsyncActionBridge After Hook Executes")]
     [Fact]
     public async Task AsyncActionBridge_After_Hook_Executes()
     {
@@ -409,10 +438,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Equal("operation", log[0]);
-        Assert.Equal("after-test", log[1]);
+        ScenarioExpect.Equal("operation", log[0]);
+        ScenarioExpect.Equal("after-test", log[1]);
     }
 
+    [Scenario("AsyncActionBridge After Sync Hook")]
     [Fact]
     public async Task AsyncActionBridge_After_Sync_Hook()
     {
@@ -424,10 +454,11 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync("test");
 
-        Assert.Equal("operation", log[0]);
-        Assert.Equal("sync-after", log[1]);
+        ScenarioExpect.Equal("operation", log[0]);
+        ScenarioExpect.Equal("sync-after", log[1]);
     }
 
+    [Scenario("AsyncActionBridge TryExecute Returns Success")]
     [Fact]
     public async Task AsyncActionBridge_TryExecute_Returns_Success()
     {
@@ -438,11 +469,12 @@ public sealed class AsyncBridgeTests
 
         var (success, error) = await bridge.TryExecuteAsync("hello");
 
-        Assert.True(success);
-        Assert.True(executed);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.True(executed);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("AsyncActionBridge TryExecute Catches Exception")]
     [Fact]
     public async Task AsyncActionBridge_TryExecute_Catches_Exception()
     {
@@ -452,10 +484,11 @@ public sealed class AsyncBridgeTests
 
         var (success, error) = await bridge.TryExecuteAsync("hello");
 
-        Assert.False(success);
-        Assert.Equal("test error", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("test error", error);
     }
 
+    [Scenario("AsyncActionBridge Require Validation Passes")]
     [Fact]
     public async Task AsyncActionBridge_Require_Validation_Passes()
     {
@@ -467,9 +500,10 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionBridge Require Validation Fails")]
     [Fact]
     public async Task AsyncActionBridge_Require_Validation_Fails()
     {
@@ -478,12 +512,13 @@ public sealed class AsyncBridgeTests
             .Require(async (input, impl, ct) => input > 0 ? null : "Input must be positive")
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => bridge.ExecuteAsync(-5).AsTask());
 
-        Assert.Equal("Input must be positive", ex.Message);
+        ScenarioExpect.Equal("Input must be positive", ex.Message);
     }
 
+    [Scenario("AsyncActionBridge Require Sync Validation")]
     [Fact]
     public async Task AsyncActionBridge_Require_Sync_Validation()
     {
@@ -492,12 +527,13 @@ public sealed class AsyncBridgeTests
             .Require((input, impl) => input > 0 ? null : "Sync validation failed")
             .Build();
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+        var ex = await ScenarioExpect.ThrowsAsync<InvalidOperationException>(
             () => bridge.ExecuteAsync(-5).AsTask());
 
-        Assert.Equal("Sync validation failed", ex.Message);
+        ScenarioExpect.Equal("Sync validation failed", ex.Message);
     }
 
+    [Scenario("AsyncActionBridge TryExecute Returns Validation Error")]
     [Fact]
     public async Task AsyncActionBridge_TryExecute_Returns_Validation_Error()
     {
@@ -508,10 +544,11 @@ public sealed class AsyncBridgeTests
 
         var (success, error) = await bridge.TryExecuteAsync(-5);
 
-        Assert.False(success);
-        Assert.Equal("Input must be positive", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("Input must be positive", error);
     }
 
+    [Scenario("AsyncActionBridge ProviderFrom Depends On Input")]
     [Fact]
     public async Task AsyncActionBridge_ProviderFrom_Depends_On_Input()
     {
@@ -523,13 +560,14 @@ public sealed class AsyncBridgeTests
 
         await bridge.ExecuteAsync(5);
 
-        Assert.Equal(50, capturedImpl);
+        ScenarioExpect.Equal(50, capturedImpl);
     }
 
+    [Scenario("AsyncActionBridge Build Throws Without Operation")]
     [Fact]
     public void AsyncActionBridge_Build_Throws_Without_Operation()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionBridge<int, int>.Create(() => 1).Build());
     }
 
@@ -537,17 +575,19 @@ public sealed class AsyncBridgeTests
 
     #region Null Argument Tests
 
+    [Scenario("AsyncBridge Provider Null Throws")]
     [Fact]
     public void AsyncBridge_Provider_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncBridge<int, int, int>.Create((AsyncBridge<int, int, int>.Provider)null!));
     }
 
+    [Scenario("ActionBridge Provider Null Throws")]
     [Fact]
     public void ActionBridge_Provider_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionBridge<int, int>.Create((ActionBridge<int, int>.Provider)null!));
     }
 

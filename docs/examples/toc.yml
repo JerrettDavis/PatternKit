@@ -1,42 +1,60 @@
 - name: Examples & Demos
   href: index.md
 
+- name: Production-Ready Example Integrations
+  href: production-ready-integrations.md
+
+- name: Dashboard Activity Tracker
+  href: dashboard-activity-tracker.md
+
+- name: Order Approval Manual Task Gate
+  href: order-approval-manual-task-gate.md
+
+- name: Order Reservation Timeout Manager
+  href: order-reservation-timeout-manager.md
+
+- name: Fulfillment Workflow Orchestration
+  href: fulfillment-workflow-orchestration.md
+
+- name: Order Replay Snapshot Checkpoint Management
+  href: order-replay-snapshot-checkpoint.md
+
+- name: Order Projection Eventual Consistency Monitor
+  href: order-projection-eventual-consistency-monitor.md
+
+- name: Customer Notification Null Object
+  href: null-object-notification.md
+
+- name: Spreadsheet Formula Object Pool
+  href: spreadsheet-formula-object-pool.md
+
 - name: Auth & Logging with `ActionChain<HttpRequest>`
   href: auth-logging-chain.md
-
-- name: Cache Manager
-  href: cache-manager.md
 
 - name: Strategy-Based Data Coercion
   href: coercer.md
 
-- name: Content Management System
-  href: content-management-system.md
-  
 - name: Composed, Preference-Aware Notification Strategy (Email/SMS/Push/IM)
   href: composed-notification-strategy.md
-  
-- name: Mediated Transaction Pipeline 
+
+- name: Mediated Transaction Pipeline
   href: mediated-transaction-pipeline.md
-  
+
 - name: Configuration-Driven Transaction Pipeline
   href: config-driven-transaction-pipeline.md
 
-- name: Game AI System
-  href: game-ai-system.md
+- name: Enterprise Feature Slices with .NET DI
+  href: enterprise-feature-slices.md
 
 - name: Minimal Web Request Router
   href: mini-router.md
-  
-- name: Payment Processing
-  href: payment-processing.md
 
 - name: Payment Processor — Fluent Decorator Pattern for Point of Sale
   href: payment-processor-decorator.md
 
 - name: POS App State Singleton
   href: pos-app-state-singleton.md
-  
+
 - name: Pricing Calculator (Async Sources, Loyalty, Rounding)
   href: pricing-calculator.md
 
@@ -52,15 +70,192 @@
 - name: Visitor — Message Router (Background Worker)
   href: message-router-visitor.md
 
+- name: Inventory Message Channel
+  href: inventory-message-channel.md
+
+- name: Inventory Channel Purger
+  href: inventory-channel-purger.md
+
+- name: Order Invalid Message Channel
+  href: order-invalid-message-channel.md
+
+- name: Warehouse Polling Consumer
+  href: warehouse-polling-consumer.md
+
+- name: Order Event-Driven Consumer
+  href: order-event-driven-consumer.md
+
+- name: ERP Channel Adapter
+  href: erp-channel-adapter.md
+
+- name: Payment Messaging Gateway
+  href: payment-messaging-gateway.md
+
+- name: Inventory Service Activator
+  href: inventory-service-activator.md
+
 - name: Patterns Showcase — Integrated Order Processing
   href: patterns-showcase.md
 
+- name: Source Generator Application Suite
+  href: source-generator-application-suite.md
+
+- name: Enterprise Messaging Workflow Suite
+  href: enterprise-messaging-workflows.md
+
+- name: Generated Message Envelope
+  href: generated-message-envelope.md
+
+- name: Generated Message Translator
+  href: generated-message-translator.md
+
+- name: Customer Profile Content Enricher
+  href: customer-profile-content-enricher.md
+
+- name: Order Canonical Data Model
+  href: order-canonical-data-model.md
+
+- name: Inventory Event-Carried State Transfer
+  href: inventory-event-carried-state-transfer.md
+
+- name: Order Event Notification
+  href: order-event-notification.md
+
+- name: Generated Claim Check
+  href: generated-claim-check.md
+
+- name: Generated Dead Letter Channel
+  href: generated-dead-letter-channel.md
+
+- name: Generated Recipient List
+  href: generated-recipient-list.md
+
+- name: Generated Splitter and Aggregator
+  href: generated-splitter-aggregator.md
+
+- name: Order Message Filter
+  href: order-message-filter.md
+
+- name: Order Message Expiration
+  href: order-message-expiration.md
+
+- name: Shipment Guaranteed Delivery
+  href: shipment-guaranteed-delivery.md
+
+- name: Order Message Store
+  href: order-message-store.md
+
+- name: Order Durable Subscriber
+  href: order-durable-subscriber.md
+
+- name: Order Dynamic Router
+  href: order-dynamic-router.md
+
+- name: Partner Order Messaging Bridge
+  href: partner-order-messaging-bridge.md
+
+- name: Order Correlation Identifier
+  href: order-correlation-identifier.md
+
+- name: Order Message History
+  href: order-message-history.md
+
+- name: Order Wire Tap
+  href: order-wire-tap.md
+
+- name: Fulfillment Control Bus
+  href: fulfillment-control-bus.md
+
+- name: Supplier Quote Scatter-Gather
+  href: supplier-quote-scatter-gather.md
+
+- name: Shipment Resequencer
+  href: shipment-resequencer.md
+
+- name: Fulfillment Competing Consumers
+  href: fulfillment-competing-consumers.md
+
+- name: Fulfillment Pipes and Filters
+  href: fulfillment-pipes-and-filters.md
+
+- name: Fulfillment Health Endpoint Monitoring
+  href: fulfillment-health-endpoint-monitoring.md
+
+- name: CQRS Dispatcher
+  href: cqrs-dispatcher.md
+
+- name: Loan Approval Specifications
+  href: loan-approval-specifications.md
+
+- name: Order Aggregate Root Pattern
+  href: order-aggregate-root-pattern.md
+
+- name: Shipping Domain Service Pattern
+  href: shipping-domain-service-pattern.md
+
+- name: Order Value Object Pattern
+  href: order-value-object-pattern.md
+
+- name: Order Repository Pattern
+  href: order-repository-pattern.md
+
+- name: Checkout Unit of Work Pattern
+  href: checkout-unit-of-work-pattern.md
+
+- name: Order Data Mapper Pattern
+  href: order-data-mapper-pattern.md
+
+- name: Order Identity Map Pattern
+  href: order-identity-map-pattern.md
+
+- name: Customer Profile Lazy Load
+  href: customer-profile-lazy-load.md
+
+- name: Product Catalog Change Data Capture
+  href: product-catalog-change-data-capture.md
+
+- name: Order Transaction Script Pattern
+  href: order-transaction-script-pattern.md
+
+- name: Customer Service Layer Pattern
+  href: customer-service-layer-pattern.md
+
+- name: Order Domain Event Pattern
+  href: order-domain-event-pattern.md
+
+- name: Order Table Data Gateway Pattern
+  href: order-table-data-gateway-pattern.md
+
+- name: Order Event Sourcing Pattern
+  href: order-event-sourcing-pattern.md
+
+- name: Checkout Feature Toggle Pattern
+  href: checkout-feature-toggle-pattern.md
+
+- name: Order Audit Log Pattern
+  href: order-audit-log-pattern.md
+
+- name: Order Materialized View Pattern
+  href: order-materialized-view-pattern.md
+
+- name: Generated Mailbox
+  href: generated-mailbox.md
+
+- name: Generated Reliability Pipeline
+  href: generated-reliability-pipeline.md
+
+- name: Resilient Checkout and Collaborating Mailboxes
+  href: resilient-checkout-and-mailboxes.md
+
+- name: Messaging Backplane Facade
+  href: messaging-backplane-facade.md
+
 - name: Prototype — Game Character Factory with Clone Registry
   href: prototype-demo.md
-  
+
 - name: Proxy Pattern Demonstrations — Virtual, Protection, Caching, Logging, Mocking, Remote
   href: proxy-demo.md
-  
+
 - name: Flyweight Glyph Cache & Style Sharing
   href: flyweight-glyph-cache.md
 
@@ -85,5 +280,77 @@
 - name: Template Method (Async)
   href: template-method-async-demo.md
 
-- name: Task Scheduler
-  href: task-scheduler.md
+- name: Legacy Order Anti-Corruption Layer
+  href: legacy-order-anti-corruption-layer.md
+
+- name: Inventory Retry Policy
+  href: inventory-retry-policy.md
+
+- name: Fulfillment Circuit Breaker
+  href: fulfillment-circuit-breaker.md
+
+- name: Shipping Bulkhead
+  href: shipping-bulkhead.md
+
+- name: Checkout Backpressure
+  href: checkout-backpressure.md
+
+- name: Fulfillment Queue Load Leveling
+  href: fulfillment-queue-load-leveling.md
+
+- name: Fulfillment Priority Queue
+  href: fulfillment-priority-queue.md
+
+- name: Product Catalog Cache-Aside
+  href: product-catalog-cache-aside.md
+
+- name: Product Catalog Cache Stampede Protection
+  href: product-catalog-cache-stampede-protection.md
+
+- name: Order Entry Ports and Adapters
+  href: order-entry-ports-and-adapters.md
+
+- name: Product Catalog Read-Through and Write-Through Cache
+  href: product-catalog-read-write-through-cache.md
+
+- name: Product Search Rate Limiting
+  href: product-search-rate-limiting.md
+
+- name: Tenant External Configuration Store
+  href: tenant-external-configuration-store.md
+
+- name: Customer Dashboard Gateway Aggregation
+  href: customer-dashboard-gateway-aggregation.md
+
+- name: Product Gateway Routing
+  href: product-gateway-routing.md
+
+- name: Checkout Strangler Fig Migration
+  href: checkout-strangler-fig.md
+
+- name: Order Telemetry Sidecar
+  href: order-telemetry-sidecar.md
+
+- name: Commerce Backends for Frontends
+  href: commerce-backends-for-frontends.md
+
+- name: Inventory Ambassador
+  href: inventory-ambassador.md
+
+- name: Warehouse Leader Election
+  href: warehouse-leader-election.md
+
+- name: Order Allocation Distributed Lock
+  href: order-allocation-distributed-lock.md
+
+- name: Checkout Compensating Transaction
+  href: checkout-compensating-transaction-pattern.md
+
+- name: Warehouse Scheduler Agent Supervisor
+  href: warehouse-scheduler-agent-supervisor.md
+
+- name: Fulfillment Bounded Context Pattern
+  href: fulfillment-bounded-context-pattern.md
+
+- name: Commerce Context Map Pattern
+  href: commerce-context-map-pattern.md

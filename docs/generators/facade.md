@@ -252,7 +252,7 @@ public static OrderResult PlaceOrder(
 
 ### E-Commerce Billing Facade
 
-See: [BillingFacadeExample.cs](../../src/PatternKit.Examples/Generators/Facade/BillingFacadeExample.cs)
+See: `src/PatternKit.Examples/Generators/Facade/BillingFacadeExample.cs`
 
 Demonstrates:
 - Multi-subsystem coordination (tax, invoice, payment, notifications)
@@ -261,7 +261,7 @@ Demonstrates:
 
 ### Shipping Management Facade
 
-See: [ShippingFacadeExample.cs](../../src/PatternKit.Examples/Generators/Facade/ShippingFacadeExample.cs)
+See: `src/PatternKit.Examples/Generators/Facade/ShippingFacadeExample.cs`
 
 Demonstrates:
 - Rate calculation coordination
@@ -309,5 +309,5 @@ public static partial class MyHost { }
 ## See Also
 
 - [Builder Generator](builder.md)
-- [Strategy Generator](../patterns/strategy.md)
+- [Strategy Generator](strategy.md)
 - [Visitor Generator](visitor-generator.md)

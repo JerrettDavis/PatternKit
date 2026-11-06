@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.TypeDispatcher;
+using TinyBDD;
 
 namespace PatternKit.Tests.Behavioral.TypeDispatcher;
 
@@ -11,6 +12,7 @@ public sealed class ActionTypeDispatcherTests
 
     #region ActionTypeDispatcher<TBase> Tests
 
+    [Scenario("ActionTypeDispatcher Dispatches To Correct Handler")]
     [Fact]
     public void ActionTypeDispatcher_Dispatches_To_Correct_Handler()
     {
@@ -23,10 +25,11 @@ public sealed class ActionTypeDispatcherTests
         dispatcher.Dispatch(new Circle { Radius = 5 });
         dispatcher.Dispatch(new Rectangle { Width = 3, Height = 4 });
 
-        Assert.Equal("circle-5", log[0]);
-        Assert.Equal("rect-3x4", log[1]);
+        ScenarioExpect.Equal("circle-5", log[0]);
+        ScenarioExpect.Equal("rect-3x4", log[1]);
     }
 
+    [Scenario("ActionTypeDispatcher Default Handler")]
     [Fact]
     public void ActionTypeDispatcher_Default_Handler()
     {
@@ -38,10 +41,11 @@ public sealed class ActionTypeDispatcherTests
 
         dispatcher.Dispatch(new Triangle());
 
-        Assert.Single(log);
-        Assert.Equal("default-Triangle", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default-Triangle", log[0]);
     }
 
+    [Scenario("ActionTypeDispatcher TryDispatch Returns True")]
     [Fact]
     public void ActionTypeDispatcher_TryDispatch_Returns_True()
     {
@@ -52,10 +56,11 @@ public sealed class ActionTypeDispatcherTests
 
         var result = dispatcher.TryDispatch(new Circle { Radius = 5 });
 
-        Assert.True(result);
-        Assert.Single(log);
+        ScenarioExpect.True(result);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("ActionTypeDispatcher TryDispatch Returns False When No Handler")]
     [Fact]
     public void ActionTypeDispatcher_TryDispatch_Returns_False_When_No_Handler()
     {
@@ -65,9 +70,10 @@ public sealed class ActionTypeDispatcherTests
 
         var result = dispatcher.TryDispatch(new Triangle());
 
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("ActionTypeDispatcher Throws When No Handler")]
     [Fact]
     public void ActionTypeDispatcher_Throws_When_No_Handler()
     {
@@ -75,10 +81,11 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>(c => { })
             .Build();
 
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             dispatcher.Dispatch(new Triangle()));
     }
 
+    [Scenario("ActionTypeDispatcher Registration Order Matters")]
     [Fact]
     public void ActionTypeDispatcher_Registration_Order_Matters()
     {
@@ -90,14 +97,15 @@ public sealed class ActionTypeDispatcherTests
 
         dispatcher.Dispatch(new Circle { Radius = 5 });
 
-        Assert.Single(log);
-        Assert.Equal("circle", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("circle", log[0]);
     }
 
     #endregion
 
     #region AsyncActionTypeDispatcher<TBase> Tests
 
+    [Scenario("AsyncActionTypeDispatcher Dispatches")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Dispatches()
     {
@@ -110,10 +118,11 @@ public sealed class ActionTypeDispatcherTests
         await dispatcher.DispatchAsync(new Circle { Radius = 5 });
         await dispatcher.DispatchAsync(new Rectangle { Width = 3, Height = 4 });
 
-        Assert.Equal("circle-5", log[0]);
-        Assert.Equal("rect-3x4", log[1]);
+        ScenarioExpect.Equal("circle-5", log[0]);
+        ScenarioExpect.Equal("rect-3x4", log[1]);
     }
 
+    [Scenario("AsyncActionTypeDispatcher Async Handler")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Async_Handler()
     {
@@ -128,10 +137,11 @@ public sealed class ActionTypeDispatcherTests
 
         await dispatcher.DispatchAsync(new Circle { Radius = 5 });
 
-        Assert.Single(log);
-        Assert.Equal("circle-5", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("circle-5", log[0]);
     }
 
+    [Scenario("AsyncActionTypeDispatcher Default Handler")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Default_Handler()
     {
@@ -143,10 +153,11 @@ public sealed class ActionTypeDispatcherTests
 
         await dispatcher.DispatchAsync(new Triangle());
 
-        Assert.Single(log);
-        Assert.Equal("default-Triangle", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default-Triangle", log[0]);
     }
 
+    [Scenario("AsyncActionTypeDispatcher TryDispatch Returns True")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_TryDispatch_Returns_True()
     {
@@ -157,10 +168,11 @@ public sealed class ActionTypeDispatcherTests
 
         var result = await dispatcher.TryDispatchAsync(new Circle { Radius = 5 });
 
-        Assert.True(result);
-        Assert.Single(log);
+        ScenarioExpect.True(result);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("AsyncActionTypeDispatcher TryDispatch Returns False")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_TryDispatch_Returns_False()
     {
@@ -170,9 +182,10 @@ public sealed class ActionTypeDispatcherTests
 
         var result = await dispatcher.TryDispatchAsync(new Triangle());
 
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("AsyncActionTypeDispatcher Throws When No Handler")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Throws_When_No_Handler()
     {
@@ -180,7 +193,7 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>(c => { })
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             dispatcher.DispatchAsync(new Triangle()).AsTask());
     }
 
@@ -188,6 +201,7 @@ public sealed class ActionTypeDispatcherTests
 
     #region AsyncTypeDispatcher<TBase, TResult> Tests
 
+    [Scenario("AsyncTypeDispatcher Dispatches With Result")]
     [Fact]
     public async Task AsyncTypeDispatcher_Dispatches_With_Result()
     {
@@ -200,10 +214,11 @@ public sealed class ActionTypeDispatcherTests
         var circleArea = await dispatcher.DispatchAsync(new Circle { Radius = 2 });
         var rectArea = await dispatcher.DispatchAsync(new Rectangle { Width = 3, Height = 4 });
 
-        Assert.Equal(Math.PI * 4, circleArea);
-        Assert.Equal(12, rectArea);
+        ScenarioExpect.Equal(Math.PI * 4, circleArea);
+        ScenarioExpect.Equal(12, rectArea);
     }
 
+    [Scenario("AsyncTypeDispatcher Async Handler")]
     [Fact]
     public async Task AsyncTypeDispatcher_Async_Handler()
     {
@@ -217,9 +232,10 @@ public sealed class ActionTypeDispatcherTests
 
         var result = await dispatcher.DispatchAsync(new Circle { Radius = 5 });
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncTypeDispatcher Constant Handler")]
     [Fact]
     public async Task AsyncTypeDispatcher_Constant_Handler()
     {
@@ -229,9 +245,10 @@ public sealed class ActionTypeDispatcherTests
 
         var result = await dispatcher.DispatchAsync(new Circle { Radius = 5 });
 
-        Assert.Equal(42.0, result);
+        ScenarioExpect.Equal(42.0, result);
     }
 
+    [Scenario("AsyncTypeDispatcher TryDispatch Returns Result")]
     [Fact]
     public async Task AsyncTypeDispatcher_TryDispatch_Returns_Result()
     {
@@ -241,10 +258,11 @@ public sealed class ActionTypeDispatcherTests
 
         var (success, result) = await dispatcher.TryDispatchAsync(new Circle { Radius = 5 });
 
-        Assert.True(success);
-        Assert.Equal(10, result);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncTypeDispatcher TryDispatch Returns False When No Handler")]
     [Fact]
     public async Task AsyncTypeDispatcher_TryDispatch_Returns_False_When_No_Handler()
     {
@@ -254,10 +272,11 @@ public sealed class ActionTypeDispatcherTests
 
         var (success, result) = await dispatcher.TryDispatchAsync(new Triangle());
 
-        Assert.False(success);
-        Assert.Equal(default, result);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal(default, result);
     }
 
+    [Scenario("AsyncTypeDispatcher Throws When No Handler")]
     [Fact]
     public async Task AsyncTypeDispatcher_Throws_When_No_Handler()
     {
@@ -265,10 +284,11 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>(c => c.Radius)
             .Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             dispatcher.DispatchAsync(new Triangle()).AsTask());
     }
 
+    [Scenario("AsyncTypeDispatcher Default Handler")]
     [Fact]
     public async Task AsyncTypeDispatcher_Default_Handler()
     {
@@ -279,13 +299,14 @@ public sealed class ActionTypeDispatcherTests
 
         var result = await dispatcher.DispatchAsync(new Triangle());
 
-        Assert.Equal("default-Triangle", result);
+        ScenarioExpect.Equal("default-Triangle", result);
     }
 
     #endregion
 
     #region Null Behavior Tests
 
+    [Scenario("ActionTypeDispatcher Null Handler Throws At Dispatch")]
     [Fact]
     public void ActionTypeDispatcher_Null_Handler_Throws_At_Dispatch()
     {
@@ -294,10 +315,11 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>(null!)
             .Build();
 
-        Assert.Throws<NullReferenceException>(() =>
+        ScenarioExpect.Throws<NullReferenceException>(() =>
             dispatcher.Dispatch(new Circle { Radius = 5 }));
     }
 
+    [Scenario("ActionTypeDispatcher Null Default Throws At Dispatch")]
     [Fact]
     public void ActionTypeDispatcher_Null_Default_Throws_At_Dispatch()
     {
@@ -306,10 +328,11 @@ public sealed class ActionTypeDispatcherTests
             .Default((Action<Shape>)null!)
             .Build();
 
-        Assert.Throws<NullReferenceException>(() =>
+        ScenarioExpect.Throws<NullReferenceException>(() =>
             dispatcher.Dispatch(new Triangle()));
     }
 
+    [Scenario("AsyncActionTypeDispatcher Null Handler Throws At Dispatch")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Null_Handler_Throws_At_Dispatch()
     {
@@ -317,10 +340,11 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>((Action<Circle>)null!)
             .Build();
 
-        await Assert.ThrowsAsync<NullReferenceException>(() =>
+        await ScenarioExpect.ThrowsAsync<NullReferenceException>(() =>
             dispatcher.DispatchAsync(new Circle { Radius = 5 }).AsTask());
     }
 
+    [Scenario("AsyncActionTypeDispatcher Null Default Throws At Dispatch")]
     [Fact]
     public async Task AsyncActionTypeDispatcher_Null_Default_Throws_At_Dispatch()
     {
@@ -328,10 +352,11 @@ public sealed class ActionTypeDispatcherTests
             .Default((Action<Shape>)null!)
             .Build();
 
-        await Assert.ThrowsAsync<NullReferenceException>(() =>
+        await ScenarioExpect.ThrowsAsync<NullReferenceException>(() =>
             dispatcher.DispatchAsync(new Triangle()).AsTask());
     }
 
+    [Scenario("AsyncTypeDispatcher Null Handler Throws At Dispatch")]
     [Fact]
     public async Task AsyncTypeDispatcher_Null_Handler_Throws_At_Dispatch()
     {
@@ -339,10 +364,11 @@ public sealed class ActionTypeDispatcherTests
             .On<Circle>((Func<Circle, double>)null!)
             .Build();
 
-        await Assert.ThrowsAsync<NullReferenceException>(() =>
+        await ScenarioExpect.ThrowsAsync<NullReferenceException>(() =>
             dispatcher.DispatchAsync(new Circle { Radius = 5 }).AsTask());
     }
 
+    [Scenario("AsyncTypeDispatcher Null Default Throws At Dispatch")]
     [Fact]
     public async Task AsyncTypeDispatcher_Null_Default_Throws_At_Dispatch()
     {
@@ -350,7 +376,7 @@ public sealed class ActionTypeDispatcherTests
             .Default((Func<Shape, double>)null!)
             .Build();
 
-        await Assert.ThrowsAsync<NullReferenceException>(() =>
+        await ScenarioExpect.ThrowsAsync<NullReferenceException>(() =>
             dispatcher.DispatchAsync(new Triangle()).AsTask());
     }
 

@@ -1,5 +1,5 @@
-using PatternKit.Generators.Singleton;
 using System.Collections.Concurrent;
+using PatternKit.Generators.Singleton;
 
 namespace PatternKit.Examples.SingletonGeneratorDemo;
 

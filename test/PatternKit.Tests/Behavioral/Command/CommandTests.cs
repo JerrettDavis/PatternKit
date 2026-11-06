@@ -103,13 +103,15 @@ public sealed class CommandBuilderTests
 {
     private readonly record struct Ctx(List<string> Log);
 
+    [Scenario("Command Build Without Do Throws")]
     [Fact]
     public void Command_Build_Without_Do_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             Command<Ctx>.Create().Build());
     }
 
+    [Scenario("Command HasUndo True When Configured")]
     [Fact]
     public async Task Command_HasUndo_True_When_Configured()
     {
@@ -118,9 +120,10 @@ public sealed class CommandBuilderTests
             .Undo(c => { })
             .Build();
 
-        Assert.True(cmd.HasUndo);
+        ScenarioExpect.True(cmd.HasUndo);
     }
 
+    [Scenario("Command HasUndo False When Not Configured")]
     [Fact]
     public async Task Command_HasUndo_False_When_Not_Configured()
     {
@@ -128,9 +131,10 @@ public sealed class CommandBuilderTests
             .Do(c => { })
             .Build();
 
-        Assert.False(cmd.HasUndo);
+        ScenarioExpect.False(cmd.HasUndo);
     }
 
+    [Scenario("Command TryUndo Returns False When No Undo")]
     [Fact]
     public async Task Command_TryUndo_Returns_False_When_No_Undo()
     {
@@ -141,9 +145,10 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(new List<string>());
         var result = cmd.TryUndo(in ctx, out _);
 
-        Assert.False(result);
+        ScenarioExpect.False(result);
     }
 
+    [Scenario("Command Execute With CancellationToken")]
     [Fact]
     public async Task Command_Execute_With_CancellationToken()
     {
@@ -159,10 +164,11 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await cmd.Execute(in ctx, CancellationToken.None);
 
-        Assert.Single(log);
-        Assert.Equal("executed", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("executed", log[0]);
     }
 
+    [Scenario("Command TryUndo With CancellationToken")]
     [Fact]
     public async Task Command_TryUndo_With_CancellationToken()
     {
@@ -182,10 +188,11 @@ public sealed class CommandBuilderTests
         if (cmd.TryUndo(in ctx, CancellationToken.None, out var vt))
             await vt;
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("undo", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("undo", log[1]);
     }
 
+    [Scenario("Command Sync Do Handler")]
     [Fact]
     public async Task Command_Sync_Do_Handler()
     {
@@ -197,9 +204,10 @@ public sealed class CommandBuilderTests
         var ctx = 5;
         await cmd.Execute(in ctx);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("Command Sync Undo Handler")]
     [Fact]
     public async Task Command_Sync_Undo_Handler()
     {
@@ -214,9 +222,10 @@ public sealed class CommandBuilderTests
         if (cmd.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.True(undone);
+        ScenarioExpect.True(undone);
     }
 
+    [Scenario("Command Async Do Handler")]
     [Fact]
     public async Task Command_Async_Do_Handler()
     {
@@ -237,10 +246,11 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await cmd.Execute(in ctx);
 
-        Assert.Single(log);
-        Assert.Equal("async-do", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async-do", log[0]);
     }
 
+    [Scenario("Command Async Undo Handler")]
     [Fact]
     public async Task Command_Async_Undo_Handler()
     {
@@ -264,10 +274,11 @@ public sealed class CommandBuilderTests
         if (cmd.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("async-undo", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("async-undo", log[1]);
     }
 
+    [Scenario("Macro AddIf True Includes Command")]
     [Fact]
     public async Task Macro_AddIf_True_Includes_Command()
     {
@@ -281,10 +292,11 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Single(log);
-        Assert.Equal("conditional", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("conditional", log[0]);
     }
 
+    [Scenario("Macro AddIf False Excludes Command")]
     [Fact]
     public async Task Macro_AddIf_False_Excludes_Command()
     {
@@ -298,9 +310,10 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
     }
 
+    [Scenario("Macro Empty Does Nothing")]
     [Fact]
     public async Task Macro_Empty_Does_Nothing()
     {
@@ -310,9 +323,10 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
     }
 
+    [Scenario("Macro HasUndo True")]
     [Fact]
     public async Task Macro_HasUndo_True()
     {
@@ -325,9 +339,10 @@ public sealed class CommandBuilderTests
             .Add(cmd)
             .Build();
 
-        Assert.True(macro.HasUndo);
+        ScenarioExpect.True(macro.HasUndo);
     }
 
+    [Scenario("Macro Async Commands")]
     [Fact]
     public async Task Macro_Async_Commands()
     {
@@ -366,11 +381,12 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("async-1", log[0]);
-        Assert.Equal("async-2", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("async-1", log[0]);
+        ScenarioExpect.Equal("async-2", log[1]);
     }
 
+    [Scenario("Macro Mixed Sync And Async")]
     [Fact]
     public async Task Macro_Mixed_Sync_And_Async()
     {
@@ -401,12 +417,13 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("sync", log[0]);
-        Assert.Equal("async", log[1]);
-        Assert.Equal("sync", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("sync", log[0]);
+        ScenarioExpect.Equal("async", log[1]);
+        ScenarioExpect.Equal("sync", log[2]);
     }
 
+    [Scenario("Macro Undo With Async")]
     [Fact]
     public async Task Macro_Undo_With_Async()
     {
@@ -434,10 +451,11 @@ public sealed class CommandBuilderTests
         if (macro.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("undo", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("undo", log[1]);
     }
 
+    [Scenario("Macro All Commands Without Undo")]
     [Fact]
     public async Task Macro_All_Commands_Without_Undo()
     {
@@ -457,9 +475,10 @@ public sealed class CommandBuilderTests
         if (macro.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.Equal(2, log.Count); // No undo entries added
+        ScenarioExpect.Equal(2, log.Count); // No undo entries added
     }
 
+    [Scenario("Command Execute Overload Without CancellationToken")]
     [Fact]
     public async Task Command_Execute_Overload_Without_CancellationToken()
     {
@@ -471,9 +490,10 @@ public sealed class CommandBuilderTests
         var ctx = 5;
         await cmd.Execute(in ctx); // No CancellationToken
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("Macro Do SlowPath MiddleAsync")]
     [Fact]
     public async Task Macro_Do_SlowPath_MiddleAsync()
     {
@@ -507,12 +527,13 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("sync", log[0]);
-        Assert.Equal("async", log[1]);
-        Assert.Equal("sync", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("sync", log[0]);
+        ScenarioExpect.Equal("async", log[1]);
+        ScenarioExpect.Equal("sync", log[2]);
     }
 
+    [Scenario("Macro Undo SlowPath MiddleAsync")]
     [Fact]
     public async Task Macro_Undo_SlowPath_MiddleAsync()
     {
@@ -553,12 +574,13 @@ public sealed class CommandBuilderTests
             await vt;
 
         // Undo runs in reverse order
-        Assert.Equal(3, log.Count);
-        Assert.Equal("undo:sync", log[0]);
-        Assert.Equal("undo:async", log[1]);
-        Assert.Equal("undo:sync", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("undo:sync", log[0]);
+        ScenarioExpect.Equal("undo:async", log[1]);
+        ScenarioExpect.Equal("undo:sync", log[2]);
     }
 
+    [Scenario("Macro First Command Async")]
     [Fact]
     public async Task Macro_First_Command_Async()
     {
@@ -585,10 +607,11 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Single(log);
-        Assert.Equal("async", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("async", log[0]);
     }
 
+    [Scenario("Macro Undo First Command Async")]
     [Fact]
     public async Task Macro_Undo_First_Command_Async()
     {
@@ -620,10 +643,11 @@ public sealed class CommandBuilderTests
         if (macro.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.Single(log);
-        Assert.Equal("undo", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("undo", log[0]);
     }
 
+    [Scenario("Macro Multiple Async InSequence")]
     [Fact]
     public async Task Macro_Multiple_Async_InSequence()
     {
@@ -664,22 +688,23 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx(log);
         await macro.Execute(in ctx);
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("A", log[0]);
-        Assert.Equal("B", log[1]);
-        Assert.Equal("C", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("A", log[0]);
+        ScenarioExpect.Equal("B", log[1]);
+        ScenarioExpect.Equal("C", log[2]);
 
         log.Clear();
 
         if (macro.TryUndo(in ctx, out var vt))
             await vt;
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("undo:C", log[0]);
-        Assert.Equal("undo:B", log[1]);
-        Assert.Equal("undo:A", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("undo:C", log[0]);
+        ScenarioExpect.Equal("undo:B", log[1]);
+        ScenarioExpect.Equal("undo:A", log[2]);
     }
 
+    [Scenario("Macro Undo SkipsCommands WithoutUndo InSlowPath")]
     [Fact]
     public async Task Macro_Undo_SkipsCommands_WithoutUndo_InSlowPath()
     {
@@ -717,11 +742,12 @@ public sealed class CommandBuilderTests
             await vt;
 
         // Should have 2 undos, skipping the middle command
-        Assert.Equal(2, log.Count);
-        Assert.Equal("undo:1", log[0]);
-        Assert.Equal("undo:1", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("undo:1", log[0]);
+        ScenarioExpect.Equal("undo:1", log[1]);
     }
 
+    [Scenario("Macro CancellationToken Propagates")]
     [Fact]
     public async Task Macro_CancellationToken_Propagates()
     {
@@ -742,7 +768,7 @@ public sealed class CommandBuilderTests
         var ctx = new Ctx([]);
         await macro.Execute(in ctx, cts.Token);
 
-        Assert.Equal(cts.Token, tokenReceived);
+        ScenarioExpect.Equal(cts.Token, tokenReceived);
     }
 }
 

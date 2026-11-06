@@ -1,8 +1,8 @@
 using TinyBDD;
 using TinyBDD.Xunit;
 using Xunit.Abstractions;
-using Editor = PatternKit.Examples.MementoDemo.MementoDemo.TextEditor;
 using Demo = PatternKit.Examples.MementoDemo.MementoDemo;
+using Editor = PatternKit.Examples.MementoDemo.MementoDemo.TextEditor;
 
 namespace PatternKit.Examples.Tests.MementoDemo;
 
@@ -95,5 +95,169 @@ public sealed class MementoDemoTests(ITestOutputHelper output) : TinyBddXunitBas
                         return false;
                 return true;
             })
+            .AssertPassed();
+
+    [Scenario("No-op edits, null input guards, selections, and delete-forward paths are explicit")]
+    [Fact]
+    public Task Editor_EdgeCases_AreStable()
+        => Given("an editor with text and a selection", () =>
+            {
+                var editor = new Editor();
+                editor.Insert("abcdef");
+                editor.Select(1, 3);
+                return editor;
+            })
+            .When("exercise no-op and guarded operations", ed =>
+            {
+                var versionBeforeNoOps = ed.Version;
+                var emptyInsertVersion = ed.Insert("");
+                var sameSelectionVersion = ed.Select(1, 3);
+                var negativeBackspaceVersion = ed.Backspace(0);
+                ArgumentNullException? insertNull = null;
+                ArgumentNullException? replaceNull = null;
+
+                try
+                {
+                    ed.Insert(null!);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    insertNull = ex;
+                }
+
+                try
+                {
+                    ed.ReplaceSelection(null!);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    replaceNull = ex;
+                }
+
+                return (ed, versionBeforeNoOps, emptyInsertVersion, sameSelectionVersion, negativeBackspaceVersion, insertNull, replaceNull);
+            })
+            .Then("no-op edits keep the current version", r =>
+                r.emptyInsertVersion == r.versionBeforeNoOps
+                && r.sameSelectionVersion == r.versionBeforeNoOps
+                && r.negativeBackspaceVersion == r.versionBeforeNoOps)
+            .And("null text is rejected", r => r.insertNull is not null && r.replaceNull is not null)
+            .When("delete the selection and attempt delete at end", r =>
+            {
+                var editor = r.ed;
+                editor.DeleteForward();
+                var textAfterSelectionDelete = editor.State.Text;
+                editor.MoveCaret(editor.State.Text.Length);
+                var versionAtEnd = editor.Version;
+                var endDeleteVersion = editor.DeleteForward();
+                return (editor, textAfterSelectionDelete, versionAtEnd, endDeleteVersion);
+            })
+            .Then("delete-forward removes the selected text", r => r.textAfterSelectionDelete == "aef")
+            .And("delete-forward at end is a no-op", r => r.endDeleteVersion == r.versionAtEnd)
+            .AssertPassed();
+
+    [Scenario("Batch rejects nesting and can decline commits")]
+    [Fact]
+    public Task Editor_Batch_EdgeCases_AreStable()
+        => Given("a new editor", () => new Editor())
+            .When("running non-committing and nested batches", ed =>
+            {
+                var startVersion = ed.Version;
+                var noCommitVersion = ed.Batch("no-commit", e =>
+                {
+                    e.Insert("draft");
+                    return false;
+                });
+
+                InvalidOperationException? nested = null;
+                try
+                {
+                    ed.Batch("outer", e =>
+                    {
+                        e.Batch("inner", _ => true);
+                        return true;
+                    });
+                }
+                catch (InvalidOperationException ex)
+                {
+                    nested = ex;
+                }
+
+                return (ed, startVersion, noCommitVersion, nested);
+            })
+            .Then("declined batch does not commit a new version", r => r.noCommitVersion == r.startVersion)
+            .And("nested batches are rejected", r => r.nested is not null)
+            .AssertPassed();
+
+    [Scenario("Caret movement, replacement, and delete variants cover editor state edges")]
+    [Fact]
+    public Task Editor_StateAndDeleteVariants_AreStable()
+        => Given("an editor with sample text", () =>
+            {
+                var editor = new Editor();
+                editor.Insert("abcdef");
+                return editor;
+            })
+            .When("moving outside document bounds", ed =>
+            {
+                ed.MoveCaret(-100);
+                var clampedStart = ed.State;
+                var versionAtStart = ed.Version;
+                var repeatStartVersion = ed.MoveCaret(0);
+                ed.MoveCaret(100);
+                var clampedEnd = ed.State;
+                return (ed, clampedStart, versionAtStart, repeatStartVersion, clampedEnd);
+            })
+            .Then("caret positions are clamped and repeated movement is a no-op", r =>
+                r.clampedStart.Caret == 0
+                && r.repeatStartVersion == r.versionAtStart
+                && r.clampedEnd.Caret == r.ed.State.Text.Length)
+            .When("replacing without a selection and formatting selected state", r =>
+            {
+                var editor = r.ed;
+                editor.MoveCaret(3);
+                editor.ReplaceSelection("XYZ");
+                var afterInsertReplace = editor.State;
+                editor.Select(2, 4);
+                var selected = editor.State;
+                var selectedText = selected.ToString();
+                editor.Backspace();
+                var afterSelectionBackspace = editor.State;
+                return (editor, afterInsertReplace, selected, selectedText, afterSelectionBackspace);
+            })
+            .Then("replace without selection behaves like insert", r => r.afterInsertReplace.Text == "abcXYZdef")
+            .And("selected state exposes selection range and formatted selection", r =>
+                r.selected.HasSelection
+                && r.selected.SelectionStart == 2
+                && r.selected.SelectionEnd == 6
+                && r.selectedText.Contains("Sel=[2,6)"))
+            .And("backspace deletes selected text", r => r.afterSelectionBackspace.Text == "abdef")
+            .When("using multi-character backspace and delete-forward", r =>
+            {
+                var editor = r.editor;
+                editor.MoveCaret(editor.State.Text.Length);
+                editor.Backspace(2);
+                var afterMultiBackspace = editor.State;
+                editor.MoveCaret(1);
+                editor.DeleteForward(10);
+                var afterMultiDelete = editor.State;
+                return (editor, afterMultiBackspace, afterMultiDelete);
+            })
+            .Then("multi-character backspace removes the requested prefix before the caret", r => r.afterMultiBackspace.Text == "abd")
+            .And("delete-forward clamps count to remaining text", r => r.afterMultiDelete.Text == "a")
+            .AssertPassed();
+
+    [Scenario("Undo and redo report false when no snapshot movement is available")]
+    [Fact]
+    public Task Editor_UndoRedo_NoMovement_ReturnFalse()
+        => Given("a new editor", () => new Editor())
+            .When("undo and redo are requested before edits", ed =>
+            {
+                var undo = ed.Undo();
+                var redo = ed.Redo();
+                return (ed, undo, redo, state: ed.State.ToString());
+            })
+            .Then("undo is unavailable", r => !r.undo)
+            .And("redo is unavailable", r => !r.redo)
+            .And("unselected state formatting omits a selection", r => !r.state.Contains("Sel="))
             .AssertPassed();
 }

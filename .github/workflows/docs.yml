@@ -14,29 +14,48 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
+env:
+  # Must be workflow-scoped so GitHub uses Node 24 when selecting JavaScript action runtimes.
+  # This applies to all jobs in this workflow.
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   publish-docs:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry_1.outputs.page_url || steps.deployment_retry_2.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Dotnet Setup
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 9.x
 
       - run: dotnet tool update -g docfx
-      - run: dotnet build -c Release
+      - name: Build DocFX source projects
+        run: |
+          # Keep this list in sync with docs/docfx.json metadata.src.files.
+          dotnet build src/PatternKit.Core/PatternKit.Core.csproj -c Release
+          dotnet build src/PatternKit.Generators.Abstractions/PatternKit.Generators.Abstractions.csproj -c Release
       - run: docfx metadata docs/docfx.json
       - run: docfx build docs/docfx.json
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: 'docs/_site'
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Retry Pages deployment
+        id: deployment_retry_1
+        if: ${{ !cancelled() && steps.deployment.outcome == 'failure' }}
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Retry Pages deployment again
+        id: deployment_retry_2
+        if: ${{ !cancelled() && steps.deployment_retry_1.outcome == 'failure' }}
+        uses: actions/deploy-pages@v5

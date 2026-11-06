@@ -14,16 +14,16 @@ jobs:
   pr-checks:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 75
     permissions:
       contents: read
       pull-requests: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             9.0.x
@@ -37,6 +37,9 @@ jobs:
         run: |
           dotnet restore --use-lock-file
           dotnet tool restore
+
+      - name: Verify formatting
+        run: dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 
       - name: Build (Release)
         run: dotnet build PatternKit.slnx --configuration Release --no-restore /p:ContinuousIntegrationBuild=true
@@ -50,14 +53,44 @@ jobs:
           docfx build docs/docfx.json
 
       - name: Test with coverage
-        timeout-minutes: 10
+        timeout-minutes: 45
         run: |
-          dotnet test PatternKit.slnx \
+          dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*"
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=core-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=generators-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=hosting-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=examples-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
       - name: Install ReportGenerator
         run: dotnet tool update -g dotnet-reportgenerator-globaltool
@@ -71,9 +104,9 @@ jobs:
             -targetdir:"coverage-report" \
             -reporttypes:"HtmlInline;Cobertura;TextSummary;lcov;Badges" \
             -assemblyfilters:"+PatternKit*;-*Tests*" \
-            -filefilters:"-**/*.Tests/*;-**/*Tests*/**"
+            -filefilters:"-**/*.Tests/*;-**/*Tests*/**;-**/obj/**;-**/bin/**;-**/*.g.cs"
           echo "COVERAGE_SUMMARY<<EOF" >> $GITHUB_ENV
-          cat coverage-report/Summary.txt >> $GITHUB_ENV
+          sed -n '1,60p' coverage-report/Summary.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
 
       - name: Upload coverage HTML report
@@ -83,7 +116,7 @@ jobs:
           path: coverage-report
 
       - name: Add coverage summary to PR
-        uses: marocchino/sticky-pull-request-comment@v3
+        uses: marocchino/sticky-pull-request-comment@v3.0.5
         with:
           recreate: true
           message: |
@@ -93,11 +126,11 @@ jobs:
             ```
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
-          files: |
-            **/TestResults/*/coverage.cobertura.xml
+          files: ./coverage-report/Cobertura.xml
           flags: unittests
+          disable_search: true
           fail_ci_if_error: true
           verbose: true
         env:
@@ -106,18 +139,20 @@ jobs:
   release:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 90
+    environment: production
     permissions:
       contents: write
       packages: write
+      id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             9.0.x
@@ -131,6 +166,9 @@ jobs:
         run: |
           dotnet restore --use-lock-file
           dotnet tool restore
+
+      - name: Verify formatting
+        run: dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
 
       - name: Fetch tags
         run: git fetch --prune --tags
@@ -162,15 +200,44 @@ jobs:
           /p:PackageVersion=${{ env.PACKAGE_VERSION }}
 
       - name: Test with coverage (Release)
-        timeout-minutes: 10
+        timeout-minutes: 60
         run: |
-          dotnet test PatternKit.slnx \
+          dotnet test test/PatternKit.Tests/PatternKit.Tests.csproj \
             --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
             --collect:"XPlat Code Coverage" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Include="[PatternKit*]*" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Exclude="[*Tests]*" \
-            -- RunConfiguration.TestSessionTimeout=300000
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=core-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=generators-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=hosting-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+          dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
+            --configuration Release \
+            --framework net8.0 \
+            --no-build \
+            -p:TestTfmsInParallel=false \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFilePrefix=examples-test-results" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
 
 
       - name: Pack (all packable projects)
@@ -196,7 +263,7 @@ jobs:
             ./artifacts/*.snupkg
             
       - name: Upload coverage to Codecov (Release)
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: |
             **/TestResults/*/coverage.cobertura.xml
@@ -212,15 +279,17 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          if git rev-parse "v${PACKAGE_VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${PACKAGE_VERSION} already exists. Skipping tag push."
+          TAG="v${PACKAGE_VERSION}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin. Skipping tag push."
           else
-            git tag "v${PACKAGE_VERSION}"
-            git push origin "v${PACKAGE_VERSION}"
+            git tag "${TAG}"
+            git push origin "${TAG}"
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ env.PACKAGE_VERSION }}
           name: Release v${{ env.PACKAGE_VERSION }}
@@ -229,9 +298,15 @@ jobs:
             ./artifacts/*.snupkg
           generate_release_notes: true
 
+      - name: NuGet login
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: JerrettDavis
+
       - name: Push to NuGet.org
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         run: |
           if [ -n "$NUGET_API_KEY" ]; then
             dotnet nuget push ./artifacts/*.nupkg \

@@ -3,6 +3,6 @@
   "appDomain": "ifAvailable",
   "parallelizeAssembly": false,
   "parallelizeTestCollections": true,
-  "maxParallelThreads": 0,
+  "maxParallelThreads": 4,
   "longRunningTestSeconds": 30
 }

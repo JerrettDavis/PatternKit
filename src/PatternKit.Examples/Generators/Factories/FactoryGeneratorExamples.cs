@@ -97,7 +97,7 @@ public sealed class StartWorkersStep : IOrchestratorStep
 
 public sealed class ApplicationOrchestrator(IServiceProvider services)
 {
-    private readonly OrchestratorStepFactory _factory = new();
+    private readonly OrchestratorStepFactory _factory = new(services);
     private readonly IServiceProvider _services = services;
 
     public async Task RunAsync(IEnumerable<string> steps, CancellationToken cancellationToken = default)

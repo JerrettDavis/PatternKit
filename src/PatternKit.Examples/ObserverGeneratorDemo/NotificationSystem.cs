@@ -22,7 +22,7 @@ public record NotificationResult(bool Success, string Channel, string? Error = n
 /// Observable event for notifications with async support.
 /// Demonstrates async handlers and PublishAsync.
 /// </summary>
-[Observer(typeof(Notification), 
+[Observer(typeof(Notification),
     Threading = ObserverThreadingPolicy.Locking,
     Exceptions = ObserverExceptionPolicy.Continue,
     GenerateAsync = true)]
@@ -95,7 +95,7 @@ public class NotificationSystem
     public async Task<NotificationResult> SendEmailAsync(Notification notification)
     {
         await Task.Delay(100); // Simulate network delay
-        
+
         // Simulate random failures (20% chance)
         if (_random.NextDouble() < 0.2)
         {
@@ -112,7 +112,7 @@ public class NotificationSystem
     public async Task<NotificationResult> SendSmsAsync(Notification notification)
     {
         await Task.Delay(80); // Simulate network delay
-        
+
         // High priority only
         if (notification.Priority < 2)
         {
@@ -222,9 +222,9 @@ public static class ExceptionHandlingDemo
     private static void DemoContinuePolicy()
     {
         var notification = new NotificationPublished();
-        
+
         // Handler 1: Works fine
-        notification.Subscribe(n => 
+        notification.Subscribe(n =>
             Console.WriteLine("  ✅ Handler 1: Success"));
 
         // Handler 2: Throws exception
@@ -308,13 +308,13 @@ public static class MixedHandlersDemo
 
         Console.WriteLine("Publishing with Publish (sync):");
         notification.Publish(new Notification("user", "Hello World", 1));
-        
+
         // Note: async handlers run fire-and-forget with Publish
         await Task.Delay(100); // Wait for async handlers
-        
+
         Console.WriteLine("\nPublishing with PublishAsync (awaits async handlers):");
         await notification.PublishAsync(new Notification("user", "Goodbye World", 2));
-        
+
         Console.WriteLine("\nNote: PublishAsync waits for all async handlers to complete.");
     }
 }

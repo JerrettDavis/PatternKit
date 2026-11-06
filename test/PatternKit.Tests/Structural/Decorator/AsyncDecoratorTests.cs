@@ -1,4 +1,5 @@
 using PatternKit.Structural.Decorator;
+using TinyBDD;
 
 namespace PatternKit.Tests.Structural.Decorator;
 
@@ -6,6 +7,7 @@ public sealed class AsyncDecoratorTests
 {
     #region AsyncDecorator<TIn, TOut> Tests
 
+    [Scenario("AsyncDecorator Core Executes")]
     [Fact]
     public async Task AsyncDecorator_Core_Executes()
     {
@@ -18,9 +20,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncDecorator Sync Core Executes")]
     [Fact]
     public async Task AsyncDecorator_Sync_Core_Executes()
     {
@@ -29,9 +32,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncDecorator Before Transforms Input")]
     [Fact]
     public async Task AsyncDecorator_Before_Transforms_Input()
     {
@@ -41,9 +45,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(30, result); // (5+10) * 2
+        ScenarioExpect.Equal(30, result); // (5+10) * 2
     }
 
+    [Scenario("AsyncDecorator Before Async Transforms Input")]
     [Fact]
     public async Task AsyncDecorator_Before_Async_Transforms_Input()
     {
@@ -57,9 +62,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(30, result); // (5+10) * 2
+        ScenarioExpect.Equal(30, result); // (5+10) * 2
     }
 
+    [Scenario("AsyncDecorator After Transforms Output")]
     [Fact]
     public async Task AsyncDecorator_After_Transforms_Output()
     {
@@ -69,9 +75,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(11, result); // 5*2 + 1
+        ScenarioExpect.Equal(11, result); // 5*2 + 1
     }
 
+    [Scenario("AsyncDecorator After Async Transforms Output")]
     [Fact]
     public async Task AsyncDecorator_After_Async_Transforms_Output()
     {
@@ -85,9 +92,10 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(15, result); // 5*2 + 5
+        ScenarioExpect.Equal(15, result); // 5*2 + 5
     }
 
+    [Scenario("AsyncDecorator Around Wraps Execution")]
     [Fact]
     public async Task AsyncDecorator_Around_Wraps_Execution()
     {
@@ -108,12 +116,13 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal("around-before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("around-after", log[2]);
-        Assert.Equal(11, result); // 5*2 + 1
+        ScenarioExpect.Equal("around-before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("around-after", log[2]);
+        ScenarioExpect.Equal(11, result); // 5*2 + 1
     }
 
+    [Scenario("AsyncDecorator Multiple Layers Execute In Order")]
     [Fact]
     public async Task AsyncDecorator_Multiple_Layers_Execute_In_Order()
     {
@@ -132,14 +141,15 @@ public sealed class AsyncDecoratorTests
         await decorator.ExecuteAsync(5);
 
         // Before hooks execute in order (FIFO)
-        Assert.Equal("before-1", log[0]);
-        Assert.Equal("before-2", log[1]);
-        Assert.Equal("core", log[2]);
+        ScenarioExpect.Equal("before-1", log[0]);
+        ScenarioExpect.Equal("before-2", log[1]);
+        ScenarioExpect.Equal("core", log[2]);
         // After hooks execute in reverse order (LIFO - like onion layers unwinding)
-        Assert.Equal("after-2", log[3]);
-        Assert.Equal("after-1", log[4]);
+        ScenarioExpect.Equal("after-2", log[3]);
+        ScenarioExpect.Equal("after-1", log[4]);
     }
 
+    [Scenario("AsyncDecorator No Layers Executes Core")]
     [Fact]
     public async Task AsyncDecorator_No_Layers_Executes_Core()
     {
@@ -148,13 +158,14 @@ public sealed class AsyncDecoratorTests
 
         var result = await decorator.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
     #endregion
 
     #region AsyncActionDecorator<TIn> Tests
 
+    [Scenario("AsyncActionDecorator Core Executes")]
     [Fact]
     public async Task AsyncActionDecorator_Core_Executes()
     {
@@ -168,9 +179,10 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionDecorator Before Transforms Input")]
     [Fact]
     public async Task AsyncActionDecorator_Before_Transforms_Input()
     {
@@ -185,9 +197,10 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal(15, capturedInput);
+        ScenarioExpect.Equal(15, capturedInput);
     }
 
+    [Scenario("AsyncActionDecorator Before Async Transforms Input")]
     [Fact]
     public async Task AsyncActionDecorator_Before_Async_Transforms_Input()
     {
@@ -206,9 +219,10 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal(15, capturedInput);
+        ScenarioExpect.Equal(15, capturedInput);
     }
 
+    [Scenario("AsyncActionDecorator After Executes After Core")]
     [Fact]
     public async Task AsyncActionDecorator_After_Executes_After_Core()
     {
@@ -223,10 +237,11 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal("core", log[0]);
-        Assert.Equal("after", log[1]);
+        ScenarioExpect.Equal("core", log[0]);
+        ScenarioExpect.Equal("after", log[1]);
     }
 
+    [Scenario("AsyncActionDecorator After Async Executes After Core")]
     [Fact]
     public async Task AsyncActionDecorator_After_Async_Executes_After_Core()
     {
@@ -245,10 +260,11 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal("core", log[0]);
-        Assert.Equal("after", log[1]);
+        ScenarioExpect.Equal("core", log[0]);
+        ScenarioExpect.Equal("after", log[1]);
     }
 
+    [Scenario("AsyncActionDecorator Around Wraps Execution")]
     [Fact]
     public async Task AsyncActionDecorator_Around_Wraps_Execution()
     {
@@ -268,11 +284,12 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal("around-before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("around-after", log[2]);
+        ScenarioExpect.Equal("around-before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("around-after", log[2]);
     }
 
+    [Scenario("AsyncActionDecorator Multiple Layers")]
     [Fact]
     public async Task AsyncActionDecorator_Multiple_Layers()
     {
@@ -288,15 +305,16 @@ public sealed class AsyncDecoratorTests
 
         await decorator.ExecuteAsync(5);
 
-        Assert.Equal("before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("after", log[2]);
+        ScenarioExpect.Equal("before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("after", log[2]);
     }
 
     #endregion
 
     #region ActionDecorator<TIn> Tests
 
+    [Scenario("ActionDecorator Core Executes")]
     [Fact]
     public void ActionDecorator_Core_Executes()
     {
@@ -305,9 +323,10 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionDecorator Before Transforms Input")]
     [Fact]
     public void ActionDecorator_Before_Transforms_Input()
     {
@@ -318,9 +337,10 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.Equal(15, capturedInput);
+        ScenarioExpect.Equal(15, capturedInput);
     }
 
+    [Scenario("ActionDecorator After Executes After Core")]
     [Fact]
     public void ActionDecorator_After_Executes_After_Core()
     {
@@ -331,10 +351,11 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.Equal("core", log[0]);
-        Assert.Equal("after", log[1]);
+        ScenarioExpect.Equal("core", log[0]);
+        ScenarioExpect.Equal("after", log[1]);
     }
 
+    [Scenario("ActionDecorator Around Wraps Execution")]
     [Fact]
     public void ActionDecorator_Around_Wraps_Execution()
     {
@@ -350,11 +371,12 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.Equal("around-before", log[0]);
-        Assert.Equal("core", log[1]);
-        Assert.Equal("around-after", log[2]);
+        ScenarioExpect.Equal("around-before", log[0]);
+        ScenarioExpect.Equal("core", log[1]);
+        ScenarioExpect.Equal("around-after", log[2]);
     }
 
+    [Scenario("ActionDecorator Multiple Layers")]
     [Fact]
     public void ActionDecorator_Multiple_Layers()
     {
@@ -369,14 +391,15 @@ public sealed class AsyncDecoratorTests
         decorator.Execute(5);
 
         // Before hooks execute in order (FIFO)
-        Assert.Equal("before-1", log[0]);
-        Assert.Equal("before-2", log[1]);
-        Assert.Equal("core", log[2]);
+        ScenarioExpect.Equal("before-1", log[0]);
+        ScenarioExpect.Equal("before-2", log[1]);
+        ScenarioExpect.Equal("core", log[2]);
         // After hooks execute in reverse order (LIFO - like onion layers unwinding)
-        Assert.Equal("after-2", log[3]);
-        Assert.Equal("after-1", log[4]);
+        ScenarioExpect.Equal("after-2", log[3]);
+        ScenarioExpect.Equal("after-1", log[4]);
     }
 
+    [Scenario("ActionDecorator No Layers Executes Core")]
     [Fact]
     public void ActionDecorator_No_Layers_Executes_Core()
     {
@@ -385,9 +408,10 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionDecorator Around Can Skip Core")]
     [Fact]
     public void ActionDecorator_Around_Can_Skip_Core()
     {
@@ -401,100 +425,112 @@ public sealed class AsyncDecoratorTests
 
         decorator.Execute(5);
 
-        Assert.False(coreExecuted);
+        ScenarioExpect.False(coreExecuted);
     }
 
     #endregion
 
     #region Null Argument Tests
 
+    [Scenario("AsyncDecorator Component Null Throws")]
     [Fact]
     public void AsyncDecorator_Component_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncDecorator<int, int>.Create(null!));
     }
 
+    [Scenario("AsyncDecorator Before Null Throws")]
     [Fact]
     public void AsyncDecorator_Before_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncDecorator<int, int>.Create((x, _) => new ValueTask<int>(x))
                 .Before((AsyncDecorator<int, int>.BeforeTransform)null!));
     }
 
+    [Scenario("AsyncDecorator After Null Throws")]
     [Fact]
     public void AsyncDecorator_After_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncDecorator<int, int>.Create((x, _) => new ValueTask<int>(x))
                 .After((AsyncDecorator<int, int>.AfterTransform)null!));
     }
 
+    [Scenario("AsyncDecorator Around Null Throws")]
     [Fact]
     public void AsyncDecorator_Around_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncDecorator<int, int>.Create((x, _) => new ValueTask<int>(x))
                 .Around(null!));
     }
 
+    [Scenario("AsyncActionDecorator Component Null Throws")]
     [Fact]
     public void AsyncActionDecorator_Component_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionDecorator<int>.Create(null!));
     }
 
+    [Scenario("AsyncActionDecorator Before Null Throws")]
     [Fact]
     public void AsyncActionDecorator_Before_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionDecorator<int>.Create((x, _) => default)
                 .Before((AsyncActionDecorator<int>.BeforeTransform)null!));
     }
 
+    [Scenario("AsyncActionDecorator After Null Throws")]
     [Fact]
     public void AsyncActionDecorator_After_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionDecorator<int>.Create((x, _) => default)
                 .After((AsyncActionDecorator<int>.AfterAction)null!));
     }
 
+    [Scenario("AsyncActionDecorator Around Null Throws")]
     [Fact]
     public void AsyncActionDecorator_Around_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionDecorator<int>.Create((x, _) => default)
                 .Around(null!));
     }
 
+    [Scenario("ActionDecorator Component Null Throws")]
     [Fact]
     public void ActionDecorator_Component_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionDecorator<int>.Create(null!));
     }
 
+    [Scenario("ActionDecorator Before Null Throws")]
     [Fact]
     public void ActionDecorator_Before_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionDecorator<int>.Create(x => { }).Before(null!));
     }
 
+    [Scenario("ActionDecorator After Null Throws")]
     [Fact]
     public void ActionDecorator_After_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionDecorator<int>.Create(x => { }).After(null!));
     }
 
+    [Scenario("ActionDecorator Around Null Throws")]
     [Fact]
     public void ActionDecorator_Around_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionDecorator<int>.Create(x => { }).Around(null!));
     }
 

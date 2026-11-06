@@ -28,12 +28,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Full history for GitVersion
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: |
             9.0.x
@@ -64,6 +64,9 @@ jobs:
           dotnet restore --use-lock-file
           dotnet tool restore
 
+      - name: Verify formatting
+        run: dotnet format PatternKit.slnx --verify-no-changes --verbosity minimal
+
       - name: Build solution
         run: |
           dotnet build PatternKit.slnx \
@@ -77,30 +80,20 @@ jobs:
           dotnet test PatternKit.slnx \
             --configuration Release \
             --no-build \
+            -p:TestTfmsInParallel=false \
             --verbosity normal \
-            --logger "trx;LogFileName=test-results.trx" \
+            --logger "trx" \
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
       - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+        uses: EnricoMi/publish-unit-test-result-action@v2.25.0
         if: always()
         with:
           files: |
             TestResults/**/*.trx
           check_name: Test Results
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        if: always()
-        with:
-          files: ./TestResults/**/coverage.opencover.xml
-          flags: unittests
-          name: pr-${{ github.event.pull_request.number }}
-          fail_ci_if_error: false
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Build Documentation
         run: |
@@ -117,7 +110,8 @@ jobs:
           # Package all library projects
           for project in src/PatternKit.Core \
                         src/PatternKit.Generators \
-                        src/PatternKit.Generators.Abstractions; do
+                        src/PatternKit.Generators.Abstractions \
+                        src/PatternKit.Hosting.Extensions; do
             if [ -d "$project" ]; then
               echo "  Packing $project..."
               dotnet pack "$project" \
@@ -145,7 +139,7 @@ jobs:
           retention-days: 7
 
       - name: Create PR comment
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         if: always()
         with:
           script: |

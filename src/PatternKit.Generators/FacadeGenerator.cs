@@ -1,9 +1,9 @@
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PatternKit.Generators;
 
@@ -16,6 +16,11 @@ namespace PatternKit.Generators;
 [Generator]
 public sealed class FacadeGenerator : IIncrementalGenerator
 {
+    private static readonly SymbolDisplayFormat FullyQualifiedFormat =
+        SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
+            SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions |
+            SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all types marked with [GenerateFacade]
@@ -312,7 +317,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             : contractType.ContainingNamespace.ToDisplayString();
 
         var defaultFacadeTypeName = contractType.TypeKind == TypeKind.Interface
-            ? (contractType.Name.StartsWith("I") ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
+            ? (contractType.Name.StartsWith("I", StringComparison.Ordinal) ? contractType.Name.Substring(1) + "Impl" : contractType.Name + "Impl")
             : contractType.Name + "Impl";
 
         return new FacadeInfo(
@@ -448,15 +453,15 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     private static bool IsAsyncMethod(IMethodSymbol method)
     {
         var returnType = method.ReturnType.ToDisplayString();
-        return returnType.StartsWith("System.Threading.Tasks.Task") ||
-               returnType.StartsWith("System.Threading.Tasks.ValueTask");
+        return returnType.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               returnType.StartsWith("System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool IsTaskLike(ITypeSymbol type)
     {
         var name = type.ToDisplayString();
-        return name.StartsWith("System.Threading.Tasks.Task") ||
-               name.StartsWith("System.Threading.Tasks.ValueTask");
+        return name.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               name.StartsWith("System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static ITypeSymbol UnwrapTaskType(ITypeSymbol type)
@@ -478,7 +483,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
     {
         if (method.ReturnType is INamedTypeSymbol namedType && namedType.IsGenericType && namedType.TypeArguments.Length > 0)
         {
-            return namedType.TypeArguments[0].ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return namedType.TypeArguments[0].ToDisplayString(FullyQualifiedFormat);
         }
         return "object";
     }
@@ -720,9 +725,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    /// </summary>");
 
         // Build method signature
-        var returnType = methodSymbol.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var isAsync = method.IsAsync || info.ForceAsync;
-        var asyncModifier = isAsync ? "async " : "";
+        var returnType = methodSymbol.ReturnType.ToDisplayString(FullyQualifiedFormat);
+        var isAsync = method.IsAsync;
+        var asyncModifier = isAsync && method.MappingMethod is not null ? "async " : "";
 
         // Prefer ValueTask for generated async methods
         if (isAsync && returnType == "void")
@@ -731,9 +736,11 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         }
 
         var parameters = string.Join(", ", methodSymbol.Parameters.Select(p =>
-            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"));
+            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}"));
 
-        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
+        var typeParameters = BuildTypeParameterList(methodSymbol);
+        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}{typeParameters}({parameters})");
+        AppendTypeParameterConstraints(sb, methodSymbol);
         sb.AppendLine("    {");
 
         if (method.MappingMethod is null)
@@ -749,11 +756,11 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                 {
                     // Handle async return types
                     var returnTypeStr = methodSymbol.ReturnType.ToDisplayString();
-                    if (returnTypeStr.StartsWith("System.Threading.Tasks.ValueTask<"))
+                    if (returnTypeStr.StartsWith("System.Threading.Tasks.ValueTask<", StringComparison.Ordinal))
                     {
                         sb.AppendLine($"        return System.Threading.Tasks.ValueTask.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
                     }
-                    else if (returnTypeStr.StartsWith("System.Threading.Tasks.Task<"))
+                    else if (returnTypeStr.StartsWith("System.Threading.Tasks.Task<", StringComparison.Ordinal))
                     {
                         sb.AppendLine($"        return System.Threading.Tasks.Task.FromResult<{GetAsyncReturnType(methodSymbol)}>(default!);");
                     }
@@ -784,7 +791,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var awaitKeyword = IsAsyncMethod(mapping) ? "await " : "";
             var returnKeyword = returnType == "void" || (isAsync && returnType == "System.Threading.Tasks.ValueTask") ? "" : "return ";
 
-            sb.AppendLine($"        {returnKeyword}{awaitKeyword}{mapping.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{mapping.Name}({callArgs});");
+            sb.AppendLine($"        {returnKeyword}{awaitKeyword}{mapping.ContainingType.ToDisplayString(FullyQualifiedFormat)}.{mapping.Name}({callArgs});");
         }
 
         sb.AppendLine("    }");
@@ -816,7 +823,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         foreach (var param in mappingMethod.Parameters)
         {
             // Check if it's a dependency
-            var dep = dependencies.FirstOrDefault(d => d.Type == param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            var dep = dependencies.FirstOrDefault(d => d.Type == param.Type.ToDisplayString(FullyQualifiedFormat));
             if (dep.Type is not null)
             {
                 args.Add(dep.FieldName);
@@ -862,7 +869,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
                     SymbolEqualityComparer.Default.Equals(cp.Type, param.Type)))
                     continue;
 
-                var typeStr = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var typeStr = param.Type.ToDisplayString(FullyQualifiedFormat);
 
                 if (!dependencies.ContainsKey(typeStr))
                 {
@@ -991,7 +998,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         {
             var firstMethod = group.First();
             var externalType = firstMethod.MappingMethod!.ContainingType;
-            var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var typeFullName = externalType.ToDisplayString(FullyQualifiedFormat);
             sb.AppendLine($"    private readonly {typeFullName} {group.Key};");
         }
         sb.AppendLine();
@@ -1006,9 +1013,9 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             var fieldName = g.Key;
             // Generate parameter name: if field starts with underscore, remove it; otherwise, use field name as-is
             // The parameter will be different from the field if underscore is present
-            var paramName = fieldName.StartsWith("_") ? fieldName.Substring(1) : fieldName;
+            var paramName = fieldName.StartsWith("_", StringComparison.Ordinal) ? fieldName.Substring(1) : fieldName;
             var externalType = g.First().MappingMethod!.ContainingType;
-            var typeFullName = externalType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var typeFullName = externalType.ToDisplayString(FullyQualifiedFormat);
             return $"{typeFullName} {paramName}";
         });
 
@@ -1018,7 +1025,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         // Generate constructor body with null checks
         // For fields without underscore, the parameter name matches the field name, requiring `this.` qualifier for disambiguation
         foreach (var (fieldName, paramName) in groupedByField.Select(g =>
-            (g.Key, g.Key.StartsWith("_") ? g.Key.Substring(1) : g.Key)))
+            (g.Key, g.Key.StartsWith("_", StringComparison.Ordinal) ? g.Key.Substring(1) : g.Key)))
         {
             sb.AppendLine($"        this.{fieldName} = {paramName} ?? throw new System.ArgumentNullException(nameof({paramName}));");
         }
@@ -1047,13 +1054,13 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    /// </summary>");
 
         // Build signature
-        var returnType = sym.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var returnType = sym.ReturnType.ToDisplayString(FullyQualifiedFormat);
         var typeParams = sym.TypeParameters.Length > 0
             ? $"<{string.Join(", ", sym.TypeParameters.Select(tp => tp.Name))}>"
             : "";
 
         var parameters = string.Join(", ", sym.Parameters.Select(p =>
-            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"
+            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}"
         ));
 
         sb.AppendLine($"    public {returnType} {method.ContractName}{typeParams}({parameters})");
@@ -1101,22 +1108,46 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             }
             constraints.Add(constraint);
         }
-        if (tp.HasValueTypeConstraint)
-            constraints.Add("struct");
         if (tp.HasUnmanagedTypeConstraint)
+        {
             constraints.Add("unmanaged");
+        }
+        else if (tp.HasValueTypeConstraint)
+        {
+            constraints.Add("struct");
+        }
         if (tp.HasNotNullConstraint)
             constraints.Add("notnull");
 
         foreach (var constraintType in tp.ConstraintTypes)
         {
-            constraints.Add(constraintType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            constraints.Add(constraintType.ToDisplayString(FullyQualifiedFormat));
         }
 
         if (tp.HasConstructorConstraint)
             constraints.Add("new()");
 
         return string.Join(", ", constraints);
+    }
+
+    private static string BuildTypeParameterList(IMethodSymbol method)
+    {
+        if (method.TypeParameters.Length == 0)
+            return string.Empty;
+
+        return "<" + string.Join(", ", method.TypeParameters.Select(tp => tp.Name)) + ">";
+    }
+
+    private static void AppendTypeParameterConstraints(StringBuilder sb, IMethodSymbol method)
+    {
+        foreach (var typeParameter in method.TypeParameters)
+        {
+            var constraints = BuildTypeConstraints(typeParameter);
+            if (!string.IsNullOrWhiteSpace(constraints))
+            {
+                sb.AppendLine($"        where {typeParameter.Name} : {constraints}");
+            }
+        }
     }
 
     private static void GenerateHostMethod(
@@ -1132,19 +1163,21 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    /// </summary>");
 
         // Build method signature - convert from static to instance
-        var returnType = hostMethod.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        var returnType = hostMethod.ReturnType.ToDisplayString(FullyQualifiedFormat);
         var isAsync = method.IsAsync || info.ForceAsync;
         var asyncModifier = isAsync ? "async " : "";
 
         // Skip dependency parameters, only include operation parameters
         var operationParams = hostMethod.Parameters
-            .Where(p => !dependencies.Any(d => d.Type == p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)))
+            .Where(p => !dependencies.Any(d => d.Type == p.Type.ToDisplayString(FullyQualifiedFormat)))
             .ToList();
 
         var parameters = string.Join(", ", operationParams.Select(p =>
-            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)} {p.Name}"));
+            $"{GetRefKind(p.RefKind)}{p.Type.ToDisplayString(FullyQualifiedFormat)} {p.Name}"));
 
-        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}({parameters})");
+        var typeParameters = BuildTypeParameterList(hostMethod);
+        sb.AppendLine($"    public {asyncModifier}{returnType} {method.ContractName}{typeParameters}({parameters})");
+        AppendTypeParameterConstraints(sb, hostMethod);
         sb.AppendLine("    {");
 
         // Call host method with dependencies and operation parameters
@@ -1152,7 +1185,8 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         var awaitKeyword = IsAsyncMethod(hostMethod) ? "await " : "";
         var returnKeyword = returnType == "void" ? "" : "return ";
 
-        sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}.{hostMethod.Name}({callArgs});");
+        var hostTypeArguments = BuildTypeParameterList(hostMethod);
+        sb.AppendLine($"        {returnKeyword}{awaitKeyword}{info.TargetType.ToDisplayString(FullyQualifiedFormat)}.{hostMethod.Name}{hostTypeArguments}({callArgs});");
 
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -1168,7 +1202,7 @@ public sealed class FacadeGenerator : IIncrementalGenerator
         foreach (var param in hostMethod.Parameters)
         {
             // Check if it's a dependency
-            var dep = dependencies.FirstOrDefault(d => d.Type == param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+            var dep = dependencies.FirstOrDefault(d => d.Type == param.Type.ToDisplayString(FullyQualifiedFormat));
             if (dep.Type is not null)
             {
                 args.Add(dep.FieldName);
@@ -1207,7 +1241,10 @@ public sealed class FacadeGenerator : IIncrementalGenerator
             {
                 // Heuristic: dependencies are typically the first parameters and are reference types
                 // We'll collect all unique parameter types and let the user define them properly
-                var typeStr = param.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                var typeStr = param.Type.ToDisplayString(FullyQualifiedFormat);
+
+                if (param.Type is ITypeParameterSymbol)
+                    continue;
 
                 // Skip primitive types
                 if (IsPrimitiveType(param.Type))

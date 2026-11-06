@@ -1,4 +1,5 @@
 using PatternKit.Behavioral.Visitor;
+using TinyBDD;
 
 namespace PatternKit.Tests.Behavioral.Visitor;
 
@@ -55,6 +56,7 @@ public sealed class VisitorBaseTests
 
     #endregion
 
+    [Scenario("VisitorBase Visit NumberExpr")]
     [Fact]
     public void VisitorBase_Visit_NumberExpr()
     {
@@ -63,9 +65,10 @@ public sealed class VisitorBaseTests
 
         var result = visitor.Visit(expr);
 
-        Assert.Equal(42, result);
+        ScenarioExpect.Equal(42, result);
     }
 
+    [Scenario("VisitorBase Visit AddExpr")]
     [Fact]
     public void VisitorBase_Visit_AddExpr()
     {
@@ -78,9 +81,10 @@ public sealed class VisitorBaseTests
 
         var result = visitor.Visit(expr);
 
-        Assert.Equal(30, result);
+        ScenarioExpect.Equal(30, result);
     }
 
+    [Scenario("VisitorBase Visit NestedAddExpr")]
     [Fact]
     public void VisitorBase_Visit_NestedAddExpr()
     {
@@ -97,19 +101,21 @@ public sealed class VisitorBaseTests
 
         var result = visitor.Visit(expr);
 
-        Assert.Equal(6, result);
+        ScenarioExpect.Equal(6, result);
     }
 
+    [Scenario("VisitorBase VisitDefault ThrowsNotSupported")]
     [Fact]
     public void VisitorBase_VisitDefault_ThrowsNotSupported()
     {
         var visitor = new EvaluatorVisitor();
         var unknown = new UnknownExpr();
 
-        var ex = Assert.Throws<NotSupportedException>(() => visitor.Visit(unknown));
-        Assert.Contains("UnknownExpr", ex.Message);
+        var ex = ScenarioExpect.Throws<NotSupportedException>(() => visitor.Visit(unknown));
+        ScenarioExpect.Contains("UnknownExpr", ex.Message);
     }
 
+    [Scenario("VisitorBase VisitDefault Override ReturnsCustomValue")]
     [Fact]
     public void VisitorBase_VisitDefault_Override_ReturnsCustomValue()
     {
@@ -118,7 +124,7 @@ public sealed class VisitorBaseTests
 
         var result = visitor.Visit(unknown);
 
-        Assert.Equal(-1, result);
+        ScenarioExpect.Equal(-1, result);
     }
 }
 
@@ -190,6 +196,7 @@ public sealed class ActionVisitorBaseTests
 
     #endregion
 
+    [Scenario("ActionVisitorBase Visit TextNode")]
     [Fact]
     public void ActionVisitorBase_Visit_TextNode()
     {
@@ -198,10 +205,11 @@ public sealed class ActionVisitorBaseTests
 
         visitor.Visit(node);
 
-        Assert.Single(visitor.Output);
-        Assert.Equal("Hello", visitor.Output[0]);
+        ScenarioExpect.Single(visitor.Output);
+        ScenarioExpect.Equal("Hello", visitor.Output[0]);
     }
 
+    [Scenario("ActionVisitorBase Visit ContainerNode")]
     [Fact]
     public void ActionVisitorBase_Visit_ContainerNode()
     {
@@ -217,19 +225,21 @@ public sealed class ActionVisitorBaseTests
 
         visitor.Visit(node);
 
-        Assert.Equal(new[] { "[", "A", "B", "]" }, visitor.Output);
+        ScenarioExpect.Equal(new[] { "[", "A", "B", "]" }, visitor.Output);
     }
 
+    [Scenario("ActionVisitorBase VisitDefault ThrowsNotSupported")]
     [Fact]
     public void ActionVisitorBase_VisitDefault_ThrowsNotSupported()
     {
         var visitor = new PrintVisitor();
         var unknown = new UnknownNode();
 
-        var ex = Assert.Throws<NotSupportedException>(() => visitor.Visit(unknown));
-        Assert.Contains("UnknownNode", ex.Message);
+        var ex = ScenarioExpect.Throws<NotSupportedException>(() => visitor.Visit(unknown));
+        ScenarioExpect.Contains("UnknownNode", ex.Message);
     }
 
+    [Scenario("ActionVisitorBase VisitDefault Override HandlesUnknown")]
     [Fact]
     public void ActionVisitorBase_VisitDefault_Override_HandlesUnknown()
     {
@@ -238,8 +248,8 @@ public sealed class ActionVisitorBaseTests
 
         visitor.Visit(unknown);
 
-        Assert.Single(visitor.Output);
-        Assert.Equal("unknown", visitor.Output[0]);
+        ScenarioExpect.Single(visitor.Output);
+        ScenarioExpect.Equal("unknown", visitor.Output[0]);
     }
 }
 

@@ -73,10 +73,10 @@ public sealed class GenerateProxyAttribute : Attribute
 
     /// <summary>
     /// Gets or sets whether async interceptor hooks should be generated.
-    /// If not specified, async support is inferred from the contract
+    /// When this named property is omitted, async hook generation is inferred from the contract
     /// (enabled if any member returns Task/ValueTask or has a CancellationToken parameter).
     /// </summary>
-    public bool? GenerateAsync { get; set; }
+    public bool GenerateAsync { get; set; }
 
     /// <summary>
     /// Gets or sets whether to force async interceptor hooks even if no async members are detected.

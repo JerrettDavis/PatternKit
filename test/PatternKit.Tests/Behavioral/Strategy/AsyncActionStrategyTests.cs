@@ -152,6 +152,7 @@ public sealed class AsyncActionStrategyTests(ITestOutputHelper output) : TinyBdd
 
 public sealed class AsyncActionStrategyBuilderTests
 {
+    [Scenario("TryExecuteAsync WithDefault ReturnsTrue")]
     [Fact]
     public async Task TryExecuteAsync_WithDefault_ReturnsTrue()
     {
@@ -163,10 +164,11 @@ public sealed class AsyncActionStrategyBuilderTests
 
         var result = await strategy.TryExecuteAsync(0);
 
-        Assert.True(result);
-        Assert.Contains("default", log);
+        ScenarioExpect.True(result);
+        ScenarioExpect.Contains("default", log);
     }
 
+    [Scenario("TryExecuteAsync MatchingPredicate ReturnsTrue")]
     [Fact]
     public async Task TryExecuteAsync_MatchingPredicate_ReturnsTrue()
     {
@@ -177,10 +179,11 @@ public sealed class AsyncActionStrategyBuilderTests
 
         var result = await strategy.TryExecuteAsync(5);
 
-        Assert.True(result);
-        Assert.Contains("positive", log);
+        ScenarioExpect.True(result);
+        ScenarioExpect.Contains("positive", log);
     }
 
+    [Scenario("ExecuteAsync Respects Cancellation")]
     [Fact]
     public async Task ExecuteAsync_Respects_Cancellation()
     {
@@ -198,12 +201,13 @@ public sealed class AsyncActionStrategyBuilderTests
 
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(async () =>
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(async () =>
             await strategy.ExecuteAsync(5, cts.Token));
 
-        Assert.True(started);
+        ScenarioExpect.True(started);
     }
 
+    [Scenario("SyncPredicate WithCancellationToken Works")]
     [Fact]
     public async Task SyncPredicate_WithCancellationToken_Works()
     {
@@ -221,9 +225,10 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await strategy.ExecuteAsync(5, cts.Token);
 
-        Assert.True(tokenReceived);
+        ScenarioExpect.True(tokenReceived);
     }
 
+    [Scenario("Multiple When Branches FirstMatch Wins")]
     [Fact]
     public async Task Multiple_When_Branches_FirstMatch_Wins()
     {
@@ -236,10 +241,11 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await strategy.ExecuteAsync(6); // even and div3, but even wins
 
-        Assert.Single(log);
-        Assert.Equal("even", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("even", log[0]);
     }
 
+    [Scenario("Async Handler Executes Fully")]
     [Fact]
     public async Task Async_Handler_Executes_Fully()
     {
@@ -255,9 +261,10 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await strategy.ExecuteAsync(1);
 
-        Assert.True(completed);
+        ScenarioExpect.True(completed);
     }
 
+    [Scenario("Empty Strategy WithDefault UsesDefault")]
     [Fact]
     public async Task Empty_Strategy_WithDefault_UsesDefault()
     {
@@ -268,19 +275,21 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await strategy.ExecuteAsync(42);
 
-        Assert.Single(log);
-        Assert.Equal("default", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default", log[0]);
     }
 
+    [Scenario("Empty Strategy NoDefault Throws")]
     [Fact]
     public async Task Empty_Strategy_NoDefault_Throws()
     {
         var strategy = AsyncActionStrategy<int>.Create().Build();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await ScenarioExpect.ThrowsAsync<InvalidOperationException>(() =>
             strategy.ExecuteAsync(42).AsTask());
     }
 
+    [Scenario("Sync Then Handler Works")]
     [Fact]
     public async Task Sync_Then_Handler_Works()
     {
@@ -291,9 +300,10 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await strategy.ExecuteAsync(42);
 
-        Assert.Contains("value:42", log);
+        ScenarioExpect.Contains("value:42", log);
     }
 
+    [Scenario("Multiple Strategies Independent")]
     [Fact]
     public async Task Multiple_Strategies_Independent()
     {
@@ -311,12 +321,13 @@ public sealed class AsyncActionStrategyBuilderTests
         await s1.ExecuteAsync(1);
         await s2.ExecuteAsync(1);
 
-        Assert.Single(log1);
-        Assert.Single(log2);
-        Assert.Equal("s1", log1[0]);
-        Assert.Equal("s2", log2[0]);
+        ScenarioExpect.Single(log1);
+        ScenarioExpect.Single(log2);
+        ScenarioExpect.Equal("s1", log1[0]);
+        ScenarioExpect.Equal("s2", log2[0]);
     }
 
+    [Scenario("Concurrent Execution Safe")]
     [Fact]
     public async Task Concurrent_Execution_Safe()
     {
@@ -336,7 +347,7 @@ public sealed class AsyncActionStrategyBuilderTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Equal(100, counter);
+        ScenarioExpect.Equal(100, counter);
     }
 }
 

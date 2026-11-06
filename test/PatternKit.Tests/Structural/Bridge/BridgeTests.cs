@@ -124,6 +124,7 @@ public sealed class BridgeBuilderTests
         public List<string> Log { get; } = [];
     }
 
+    [Scenario("TryExecute Success ReturnsTrue")]
     [Fact]
     public void TryExecute_Success_ReturnsTrue()
     {
@@ -134,11 +135,12 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("test"), out var output, out var error);
 
-        Assert.True(success);
-        Assert.Equal("default:test", output);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("default:test", output);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("TryExecute PreValidationFails ReturnsFalse")]
     [Fact]
     public void TryExecute_PreValidationFails_ReturnsFalse()
     {
@@ -150,10 +152,11 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job(""), out var output, out var error);
 
-        Assert.False(success);
-        Assert.Equal("data required", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("data required", error);
     }
 
+    [Scenario("TryExecute ResultValidationFails ReturnsFalse")]
     [Fact]
     public void TryExecute_ResultValidationFails_ReturnsFalse()
     {
@@ -165,10 +168,11 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("this is long data"), out var output, out var error);
 
-        Assert.False(success);
-        Assert.Equal("result too long", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("result too long", error);
     }
 
+    [Scenario("TryExecute OperationThrows ReturnsFalse")]
     [Fact]
     public void TryExecute_OperationThrows_ReturnsFalse()
     {
@@ -179,10 +183,11 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("test"), out var output, out var error);
 
-        Assert.False(success);
-        Assert.Equal("operation failed", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("operation failed", error);
     }
 
+    [Scenario("TryExecute PreHookThrows ReturnsFalse")]
     [Fact]
     public void TryExecute_PreHookThrows_ReturnsFalse()
     {
@@ -194,10 +199,11 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("test"), out var output, out var error);
 
-        Assert.False(success);
-        Assert.Equal("pre hook failed", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("pre hook failed", error);
     }
 
+    [Scenario("TryExecute PostHookThrows ReturnsFalse")]
     [Fact]
     public void TryExecute_PostHookThrows_ReturnsFalse()
     {
@@ -209,10 +215,11 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("test"), out var output, out var error);
 
-        Assert.False(success);
-        Assert.Equal("post hook failed", error);
+        ScenarioExpect.False(success);
+        ScenarioExpect.Equal("post hook failed", error);
     }
 
+    [Scenario("Multiple PreHooks ExecuteInOrder")]
     [Fact]
     public void Multiple_PreHooks_ExecuteInOrder()
     {
@@ -227,9 +234,10 @@ public sealed class BridgeBuilderTests
 
         bridge.Execute(new Job("test"));
 
-        Assert.Equal(new[] { "pre1", "pre2", "pre3" }, log);
+        ScenarioExpect.Equal(new[] { "pre1", "pre2", "pre3" }, log);
     }
 
+    [Scenario("Multiple PostHooks TransformInOrder")]
     [Fact]
     public void Multiple_PostHooks_TransformInOrder()
     {
@@ -243,9 +251,10 @@ public sealed class BridgeBuilderTests
 
         var result = bridge.Execute(new Job("test"));
 
-        Assert.Equal("(<[test]>)", result);
+        ScenarioExpect.Equal("(<[test]>)", result);
     }
 
+    [Scenario("Multiple Validators FirstFailStops")]
     [Fact]
     public void Multiple_Validators_FirstFailStops()
     {
@@ -258,12 +267,13 @@ public sealed class BridgeBuilderTests
             .Operation((in j, r) => "result")
             .Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => bridge.Execute(new Job("test")));
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() => bridge.Execute(new Job("test")));
 
-        Assert.Equal("fail at 2", ex.Message);
-        Assert.Equal(new[] { 1, 2 }, validatorCalls); // Third validator not called
+        ScenarioExpect.Equal("fail at 2", ex.Message);
+        ScenarioExpect.Equal(new[] { 1, 2 }, validatorCalls); // Third validator not called
     }
 
+    [Scenario("Multiple ResultValidators FirstFailStops")]
     [Fact]
     public void Multiple_ResultValidators_FirstFailStops()
     {
@@ -276,19 +286,21 @@ public sealed class BridgeBuilderTests
             .RequireResult((in j, _, in result) => { validatorCalls.Add(3); return null; })
             .Build();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => bridge.Execute(new Job("test")));
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() => bridge.Execute(new Job("test")));
 
-        Assert.Equal("result fail at 2", ex.Message);
-        Assert.Equal(new[] { 1, 2 }, validatorCalls);
+        ScenarioExpect.Equal("result fail at 2", ex.Message);
+        ScenarioExpect.Equal(new[] { 1, 2 }, validatorCalls);
     }
 
+    [Scenario("ProviderFrom WithNull Throws")]
     [Fact]
     public void ProviderFrom_WithNull_Throws()
     {
-        var ex = Assert.Throws<ArgumentNullException>(() =>
+        var ex = ScenarioExpect.Throws<ArgumentNullException>(() =>
             Bridge<Job, string, Renderer>.Create((Bridge<Job, string, Renderer>.ProviderFrom)null!));
     }
 
+    [Scenario("Execute ProviderFrom ReceivesInput")]
     [Fact]
     public void Execute_ProviderFrom_ReceivesInput()
     {
@@ -300,11 +312,12 @@ public sealed class BridgeBuilderTests
 
         var result = bridge.Execute(new Job("data", Format: "custom"));
 
-        Assert.NotNull(capturedImpl);
-        Assert.Equal("custom", capturedImpl!.Name);
-        Assert.Equal("custom", result);
+        ScenarioExpect.NotNull(capturedImpl);
+        ScenarioExpect.Equal("custom", capturedImpl!.Name);
+        ScenarioExpect.Equal("custom", result);
     }
 
+    [Scenario("TryExecute ProviderFrom UsesCorrectProvider")]
     [Fact]
     public void TryExecute_ProviderFrom_UsesCorrectProvider()
     {
@@ -315,9 +328,10 @@ public sealed class BridgeBuilderTests
 
         bridge.TryExecute(new Job("test", Format: "pdf"), out var output, out _);
 
-        Assert.Equal("pdf", output);
+        ScenarioExpect.Equal("pdf", output);
     }
 
+    [Scenario("TryExecute WithValidatorsButAllPass ReturnsTrue")]
     [Fact]
     public void TryExecute_WithValidatorsButAllPass_ReturnsTrue()
     {
@@ -331,11 +345,12 @@ public sealed class BridgeBuilderTests
 
         var success = bridge.TryExecute(new Job("data"), out var output, out var error);
 
-        Assert.True(success);
-        Assert.Equal("result", output);
-        Assert.Null(error);
+        ScenarioExpect.True(success);
+        ScenarioExpect.Equal("result", output);
+        ScenarioExpect.Null(error);
     }
 
+    [Scenario("TryExecute WithPostHooks AppliesTransformations")]
     [Fact]
     public void TryExecute_WithPostHooks_AppliesTransformations()
     {
@@ -347,7 +362,7 @@ public sealed class BridgeBuilderTests
 
         bridge.TryExecute(new Job("hello"), out var output, out _);
 
-        Assert.Equal("HELLO", output);
+        ScenarioExpect.Equal("HELLO", output);
     }
 }
 

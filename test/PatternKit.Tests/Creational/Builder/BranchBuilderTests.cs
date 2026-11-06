@@ -49,17 +49,17 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
             })
             .Then("should have 2 predicates and 2 handlers in registration order", p =>
             {
-                Assert.Equal(2, p.Preds.Length);
-                Assert.Equal(2, p.Handlers.Length);
+                ScenarioExpect.Equal(2, p.Preds.Length);
+                ScenarioExpect.Equal(2, p.Handlers.Length);
 
                 // Invoke to prove order: first is IsEven -> true on 2, second IsPositive -> true on 1
                 var v2 = 2; var v1 = 1;
-                Assert.True(p.Preds[0](in v2));
-                Assert.True(p.Preds[1](in v1));
+                ScenarioExpect.True(p.Preds[0](in v2));
+                ScenarioExpect.True(p.Preds[1](in v1));
 
                 // Handlers return expected labels
-                Assert.Equal("even", p.Handlers[0](in v2));
-                Assert.Equal("pos", p.Handlers[1](in v1));
+                ScenarioExpect.Equal("even", p.Handlers[0](in v2));
+                ScenarioExpect.Equal("pos", p.Handlers[1](in v1));
                 return true;
             })
             .And("HasDefault=false and Default==fallback", p =>
@@ -135,15 +135,15 @@ public sealed class BranchBuilderTests(ITestOutputHelper output) : TinyBddXunitB
             })
             .Then("P1 has 1 pair; P2 has 2 pairs", t =>
             {
-                Assert.Single(t.P1.Preds);
-                Assert.Single(t.P1.Handlers);
-                Assert.Equal(2, t.P2.Preds.Length);
-                Assert.Equal(2, t.P2.Handlers.Length);
+                ScenarioExpect.Single(t.P1.Preds);
+                ScenarioExpect.Single(t.P1.Handlers);
+                ScenarioExpect.Equal(2, t.P2.Preds.Length);
+                ScenarioExpect.Equal(2, t.P2.Handlers.Length);
 
                 // Prove P1 refers to its own array instance (not resized/mutated):
                 var v2 = 2;
-                Assert.True(t.P1.Preds[0](in v2));
-                Assert.Equal("even", t.P1.Handlers[0](in v2));
+                ScenarioExpect.True(t.P1.Preds[0](in v2));
+                ScenarioExpect.Equal("even", t.P1.Handlers[0](in v2));
                 return true;
             })
             .AssertPassed();

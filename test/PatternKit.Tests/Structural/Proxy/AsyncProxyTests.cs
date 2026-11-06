@@ -1,4 +1,5 @@
 using PatternKit.Structural.Proxy;
+using TinyBDD;
 
 namespace PatternKit.Tests.Structural.Proxy;
 
@@ -6,6 +7,7 @@ public sealed class AsyncProxyTests
 {
     #region AsyncProxy<TIn, TOut> Tests
 
+    [Scenario("AsyncProxy Direct Delegates To Subject")]
     [Fact]
     public async Task AsyncProxy_Direct_Delegates_To_Subject()
     {
@@ -17,9 +19,10 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncProxy VirtualProxy Lazy Initialization")]
     [Fact]
     public async Task AsyncProxy_VirtualProxy_Lazy_Initialization()
     {
@@ -32,14 +35,15 @@ public sealed class AsyncProxyTests
             })
             .Build();
 
-        Assert.False(initialized);
+        ScenarioExpect.False(initialized);
 
         var result = await proxy.ExecuteAsync(5);
 
-        Assert.True(initialized);
-        Assert.Equal(10, result);
+        ScenarioExpect.True(initialized);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncProxy ProtectionProxy Allows Authorized")]
     [Fact]
     public async Task AsyncProxy_ProtectionProxy_Allows_Authorized()
     {
@@ -49,9 +53,10 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
     }
 
+    [Scenario("AsyncProxy ProtectionProxy Denies Unauthorized")]
     [Fact]
     public async Task AsyncProxy_ProtectionProxy_Denies_Unauthorized()
     {
@@ -59,10 +64,11 @@ public sealed class AsyncProxyTests
             .ProtectionProxy(async (x, ct) => x > 0)
             .Build();
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await ScenarioExpect.ThrowsAsync<UnauthorizedAccessException>(() =>
             proxy.ExecuteAsync(-5).AsTask());
     }
 
+    [Scenario("AsyncProxy Before Intercepts")]
     [Fact]
     public async Task AsyncProxy_Before_Intercepts()
     {
@@ -75,10 +81,11 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal("before-5", log[0]);
-        Assert.Equal("subject", log[1]);
+        ScenarioExpect.Equal("before-5", log[0]);
+        ScenarioExpect.Equal("subject", log[1]);
     }
 
+    [Scenario("AsyncProxy After Intercepts")]
     [Fact]
     public async Task AsyncProxy_After_Intercepts()
     {
@@ -91,10 +98,11 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal("subject", log[0]);
-        Assert.Contains("after-5->10", log[1]);
+        ScenarioExpect.Equal("subject", log[0]);
+        ScenarioExpect.Contains("after-5->10", log[1]);
     }
 
+    [Scenario("AsyncProxy Intercept Modifies Behavior")]
     [Fact]
     public async Task AsyncProxy_Intercept_Modifies_Behavior()
     {
@@ -104,13 +112,14 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(-5);
 
-        Assert.Equal(0, result);
+        ScenarioExpect.Equal(0, result);
     }
 
+    [Scenario("AsyncProxy Build Throws Without Subject")]
     [Fact]
     public void AsyncProxy_Build_Throws_Without_Subject()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncProxy<int, int>.Create().Build());
     }
 
@@ -118,6 +127,7 @@ public sealed class AsyncProxyTests
 
     #region AsyncActionProxy<TIn> Tests
 
+    [Scenario("AsyncActionProxy Executes")]
     [Fact]
     public async Task AsyncActionProxy_Executes()
     {
@@ -130,9 +140,10 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionProxy VirtualProxy Lazy")]
     [Fact]
     public async Task AsyncActionProxy_VirtualProxy_Lazy()
     {
@@ -146,14 +157,15 @@ public sealed class AsyncProxyTests
             })
             .Build();
 
-        Assert.False(initialized);
+        ScenarioExpect.False(initialized);
 
         await proxy.ExecuteAsync(5);
 
-        Assert.True(initialized);
-        Assert.True(executed);
+        ScenarioExpect.True(initialized);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionProxy ProtectionProxy Allows")]
     [Fact]
     public async Task AsyncActionProxy_ProtectionProxy_Allows()
     {
@@ -164,9 +176,10 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionProxy ProtectionProxy Denies")]
     [Fact]
     public async Task AsyncActionProxy_ProtectionProxy_Denies()
     {
@@ -174,10 +187,11 @@ public sealed class AsyncProxyTests
             .ProtectionProxy(async (x, ct) => x > 0)
             .Build();
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await ScenarioExpect.ThrowsAsync<UnauthorizedAccessException>(() =>
             proxy.ExecuteAsync(-5).AsTask());
     }
 
+    [Scenario("AsyncActionProxy Before Intercepts")]
     [Fact]
     public async Task AsyncActionProxy_Before_Intercepts()
     {
@@ -188,10 +202,11 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal("before-5", log[0]);
-        Assert.Equal("subject", log[1]);
+        ScenarioExpect.Equal("before-5", log[0]);
+        ScenarioExpect.Equal("subject", log[1]);
     }
 
+    [Scenario("AsyncActionProxy After Intercepts")]
     [Fact]
     public async Task AsyncActionProxy_After_Intercepts()
     {
@@ -202,10 +217,11 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal("subject", log[0]);
-        Assert.Contains("after-5", log[1]);
+        ScenarioExpect.Equal("subject", log[0]);
+        ScenarioExpect.Contains("after-5", log[1]);
     }
 
+    [Scenario("AsyncActionProxy Intercept Can Skip")]
     [Fact]
     public async Task AsyncActionProxy_Intercept_Can_Skip()
     {
@@ -220,13 +236,14 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(-5);
 
-        Assert.False(executed);
+        ScenarioExpect.False(executed);
     }
 
+    [Scenario("AsyncActionProxy Build Throws Without Subject")]
     [Fact]
     public void AsyncActionProxy_Build_Throws_Without_Subject()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionProxy<int>.Create().Build());
     }
 
@@ -234,6 +251,7 @@ public sealed class AsyncProxyTests
 
     #region ActionProxy<TIn> Tests
 
+    [Scenario("ActionProxy Executes")]
     [Fact]
     public void ActionProxy_Executes()
     {
@@ -242,9 +260,10 @@ public sealed class AsyncProxyTests
 
         proxy.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionProxy VirtualProxy Lazy")]
     [Fact]
     public void ActionProxy_VirtualProxy_Lazy()
     {
@@ -258,14 +277,15 @@ public sealed class AsyncProxyTests
             })
             .Build();
 
-        Assert.False(initialized);
+        ScenarioExpect.False(initialized);
 
         proxy.Execute(5);
 
-        Assert.True(initialized);
-        Assert.True(executed);
+        ScenarioExpect.True(initialized);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionProxy ProtectionProxy Allows")]
     [Fact]
     public void ActionProxy_ProtectionProxy_Allows()
     {
@@ -276,9 +296,10 @@ public sealed class AsyncProxyTests
 
         proxy.Execute(5);
 
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("ActionProxy ProtectionProxy Denies")]
     [Fact]
     public void ActionProxy_ProtectionProxy_Denies()
     {
@@ -286,9 +307,10 @@ public sealed class AsyncProxyTests
             .ProtectionProxy(x => x > 0)
             .Build();
 
-        Assert.Throws<UnauthorizedAccessException>(() => proxy.Execute(-5));
+        ScenarioExpect.Throws<UnauthorizedAccessException>(() => proxy.Execute(-5));
     }
 
+    [Scenario("ActionProxy Before Intercepts")]
     [Fact]
     public void ActionProxy_Before_Intercepts()
     {
@@ -299,10 +321,11 @@ public sealed class AsyncProxyTests
 
         proxy.Execute(5);
 
-        Assert.Equal("before-5", log[0]);
-        Assert.Equal("subject", log[1]);
+        ScenarioExpect.Equal("before-5", log[0]);
+        ScenarioExpect.Equal("subject", log[1]);
     }
 
+    [Scenario("ActionProxy After Intercepts")]
     [Fact]
     public void ActionProxy_After_Intercepts()
     {
@@ -313,10 +336,11 @@ public sealed class AsyncProxyTests
 
         proxy.Execute(5);
 
-        Assert.Equal("subject", log[0]);
-        Assert.Contains("after-5", log[1]);
+        ScenarioExpect.Equal("subject", log[0]);
+        ScenarioExpect.Contains("after-5", log[1]);
     }
 
+    [Scenario("ActionProxy Intercept Can Skip")]
     [Fact]
     public void ActionProxy_Intercept_Can_Skip()
     {
@@ -331,16 +355,18 @@ public sealed class AsyncProxyTests
 
         proxy.Execute(-5);
 
-        Assert.False(executed);
+        ScenarioExpect.False(executed);
     }
 
+    [Scenario("ActionProxy Build Throws Without Subject")]
     [Fact]
     public void ActionProxy_Build_Throws_Without_Subject()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             ActionProxy<int>.Create().Build());
     }
 
+    [Scenario("ActionProxy VirtualProxy Thread Safe")]
     [Fact]
     public void ActionProxy_VirtualProxy_Thread_Safe()
     {
@@ -356,80 +382,90 @@ public sealed class AsyncProxyTests
 
         Parallel.For(0, 10, _ => proxy.Execute(5));
 
-        Assert.Equal(1, initCount);
+        ScenarioExpect.Equal(1, initCount);
     }
 
     #endregion
 
     #region Null Argument Tests
 
+    [Scenario("AsyncProxy VirtualProxy Null Throws")]
     [Fact]
     public void AsyncProxy_VirtualProxy_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncProxy<int, int>.Create().VirtualProxy((AsyncProxy<int, int>.SubjectFactory)null!));
     }
 
+    [Scenario("AsyncProxy ProtectionProxy Null Throws")]
     [Fact]
     public void AsyncProxy_ProtectionProxy_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncProxy<int, int>.Create(async (x, ct) => x).ProtectionProxy((AsyncProxy<int, int>.AccessValidator)null!));
     }
 
+    [Scenario("AsyncProxy Before Null Throws")]
     [Fact]
     public void AsyncProxy_Before_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncProxy<int, int>.Create(async (x, ct) => x).Before(null!));
     }
 
+    [Scenario("AsyncProxy After Null Throws")]
     [Fact]
     public void AsyncProxy_After_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncProxy<int, int>.Create(async (x, ct) => x).After(null!));
     }
 
+    [Scenario("AsyncProxy Intercept Null Throws")]
     [Fact]
     public void AsyncProxy_Intercept_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncProxy<int, int>.Create(async (x, ct) => x).Intercept(null!));
     }
 
+    [Scenario("ActionProxy VirtualProxy Null Throws")]
     [Fact]
     public void ActionProxy_VirtualProxy_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionProxy<int>.Create().VirtualProxy(null!));
     }
 
+    [Scenario("ActionProxy ProtectionProxy Null Throws")]
     [Fact]
     public void ActionProxy_ProtectionProxy_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionProxy<int>.Create(x => { }).ProtectionProxy(null!));
     }
 
+    [Scenario("ActionProxy Before Null Throws")]
     [Fact]
     public void ActionProxy_Before_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionProxy<int>.Create(x => { }).Before(null!));
     }
 
+    [Scenario("ActionProxy After Null Throws")]
     [Fact]
     public void ActionProxy_After_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionProxy<int>.Create(x => { }).After(null!));
     }
 
+    [Scenario("ActionProxy Intercept Null Throws")]
     [Fact]
     public void ActionProxy_Intercept_Null_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             ActionProxy<int>.Create(x => { }).Intercept(null!));
     }
 
@@ -437,6 +473,7 @@ public sealed class AsyncProxyTests
 
     #region Additional AsyncProxy Tests
 
+    [Scenario("AsyncProxy VirtualProxy Caches Subject")]
     [Fact]
     public async Task AsyncProxy_VirtualProxy_Caches_Subject()
     {
@@ -453,9 +490,10 @@ public sealed class AsyncProxyTests
         await proxy.ExecuteAsync(2);
         await proxy.ExecuteAsync(3);
 
-        Assert.Equal(1, initCount);
+        ScenarioExpect.Equal(1, initCount);
     }
 
+    [Scenario("AsyncProxy VirtualProxy Sync Factory")]
     [Fact]
     public async Task AsyncProxy_VirtualProxy_Sync_Factory()
     {
@@ -470,10 +508,11 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(10);
 
-        Assert.True(initialized);
-        Assert.Equal(30, result);
+        ScenarioExpect.True(initialized);
+        ScenarioExpect.Equal(30, result);
     }
 
+    [Scenario("AsyncProxy ProtectionProxy Sync Validator")]
     [Fact]
     public async Task AsyncProxy_ProtectionProxy_Sync_Validator()
     {
@@ -482,12 +521,13 @@ public sealed class AsyncProxyTests
             .Build();
 
         var result = await proxy.ExecuteAsync(5);
-        Assert.Equal(10, result);
+        ScenarioExpect.Equal(10, result);
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await ScenarioExpect.ThrowsAsync<UnauthorizedAccessException>(() =>
             proxy.ExecuteAsync(-1).AsTask());
     }
 
+    [Scenario("AsyncProxy Before Sync Action")]
     [Fact]
     public async Task AsyncProxy_Before_Sync_Action()
     {
@@ -498,10 +538,11 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
-        Assert.Contains("before:5", log);
+        ScenarioExpect.Equal(10, result);
+        ScenarioExpect.Contains("before:5", log);
     }
 
+    [Scenario("AsyncProxy After Sync Action")]
     [Fact]
     public async Task AsyncProxy_After_Sync_Action()
     {
@@ -512,10 +553,11 @@ public sealed class AsyncProxyTests
 
         var result = await proxy.ExecuteAsync(5);
 
-        Assert.Equal(10, result);
-        Assert.Contains("after:5=10", log);
+        ScenarioExpect.Equal(10, result);
+        ScenarioExpect.Contains("after:5=10", log);
     }
 
+    [Scenario("AsyncProxy VirtualProxy Thread Safe")]
     [Fact]
     public async Task AsyncProxy_VirtualProxy_Thread_Safe()
     {
@@ -535,42 +577,47 @@ public sealed class AsyncProxyTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Equal(1, initCount);
-        Assert.All(tasks, t => Assert.Equal(10, t.Result));
+        ScenarioExpect.Equal(1, initCount);
+        ScenarioExpect.All(tasks, t => ScenarioExpect.Equal(10, t.Result));
     }
 
+    [Scenario("AsyncProxy Intercept NoSubject Throws")]
     [Fact]
     public void AsyncProxy_Intercept_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncProxy<int, int>.Create()
                 .Intercept(async (x, ct, next) => x));
     }
 
+    [Scenario("AsyncProxy Before NoSubject Throws")]
     [Fact]
     public void AsyncProxy_Before_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncProxy<int, int>.Create()
                 .Before(async (x, ct) => { }));
     }
 
+    [Scenario("AsyncProxy After NoSubject Throws")]
     [Fact]
     public void AsyncProxy_After_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncProxy<int, int>.Create()
                 .After(async (x, r, ct) => { }));
     }
 
+    [Scenario("AsyncProxy ProtectionProxy NoSubject Throws")]
     [Fact]
     public void AsyncProxy_ProtectionProxy_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncProxy<int, int>.Create()
                 .ProtectionProxy(async (x, ct) => true));
     }
 
+    [Scenario("AsyncActionProxy VirtualProxy Sync Factory")]
     [Fact]
     public async Task AsyncActionProxy_VirtualProxy_Sync_Factory()
     {
@@ -586,10 +633,11 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.True(initialized);
-        Assert.True(executed);
+        ScenarioExpect.True(initialized);
+        ScenarioExpect.True(executed);
     }
 
+    [Scenario("AsyncActionProxy ProtectionProxy Sync Validator")]
     [Fact]
     public async Task AsyncActionProxy_ProtectionProxy_Sync_Validator()
     {
@@ -599,14 +647,15 @@ public sealed class AsyncProxyTests
             .Build();
 
         await proxy.ExecuteAsync(5);
-        Assert.True(executed);
+        ScenarioExpect.True(executed);
 
         executed = false;
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+        await ScenarioExpect.ThrowsAsync<UnauthorizedAccessException>(() =>
             proxy.ExecuteAsync(-1).AsTask());
-        Assert.False(executed);
+        ScenarioExpect.False(executed);
     }
 
+    [Scenario("AsyncActionProxy Before Sync")]
     [Fact]
     public async Task AsyncActionProxy_Before_Sync()
     {
@@ -617,11 +666,12 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("before:5", log[0]);
-        Assert.Equal("subject", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("before:5", log[0]);
+        ScenarioExpect.Equal("subject", log[1]);
     }
 
+    [Scenario("AsyncActionProxy After Sync")]
     [Fact]
     public async Task AsyncActionProxy_After_Sync()
     {
@@ -632,43 +682,48 @@ public sealed class AsyncProxyTests
 
         await proxy.ExecuteAsync(5);
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("subject", log[0]);
-        Assert.Equal("after:5", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("subject", log[0]);
+        ScenarioExpect.Equal("after:5", log[1]);
     }
 
+    [Scenario("AsyncActionProxy Intercept NoSubject Throws")]
     [Fact]
     public void AsyncActionProxy_Intercept_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionProxy<int>.Create()
                 .Intercept(async (x, ct, next) => { }));
     }
 
+    [Scenario("AsyncActionProxy Before NoSubject Throws")]
     [Fact]
     public void AsyncActionProxy_Before_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionProxy<int>.Create()
                 .Before(async (x, ct) => { }));
     }
 
+    [Scenario("AsyncActionProxy After NoSubject Throws")]
     [Fact]
     public void AsyncActionProxy_After_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionProxy<int>.Create()
                 .After(async (x, ct) => { }));
     }
 
+    [Scenario("AsyncActionProxy ProtectionProxy NoSubject Throws")]
     [Fact]
     public void AsyncActionProxy_ProtectionProxy_NoSubject_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        ScenarioExpect.Throws<InvalidOperationException>(() =>
             AsyncActionProxy<int>.Create()
                 .ProtectionProxy(async (x, ct) => true));
     }
 
+    [Scenario("AsyncActionProxy VirtualProxy Caches Subject")]
     [Fact]
     public async Task AsyncActionProxy_VirtualProxy_Caches_Subject()
     {
@@ -685,9 +740,10 @@ public sealed class AsyncProxyTests
         await proxy.ExecuteAsync(2);
         await proxy.ExecuteAsync(3);
 
-        Assert.Equal(1, initCount);
+        ScenarioExpect.Equal(1, initCount);
     }
 
+    [Scenario("AsyncActionProxy VirtualProxy Thread Safe")]
     [Fact]
     public async Task AsyncActionProxy_VirtualProxy_Thread_Safe()
     {
@@ -708,46 +764,51 @@ public sealed class AsyncProxyTests
 
         await Task.WhenAll(tasks);
 
-        Assert.Equal(1, initCount);
-        Assert.Equal(10, execCount);
+        ScenarioExpect.Equal(1, initCount);
+        ScenarioExpect.Equal(10, execCount);
     }
 
+    [Scenario("AsyncActionProxy Null VirtualProxy Throws")]
     [Fact]
     public async Task AsyncActionProxy_Null_VirtualProxy_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionProxy<int>.Create()
                 .VirtualProxy((AsyncActionProxy<int>.SubjectFactory)null!));
     }
 
+    [Scenario("AsyncActionProxy Null ProtectionProxy Throws")]
     [Fact]
     public async Task AsyncActionProxy_Null_ProtectionProxy_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionProxy<int>.Create(async (x, ct) => { })
                 .ProtectionProxy((AsyncActionProxy<int>.AccessValidator)null!));
     }
 
+    [Scenario("AsyncActionProxy Null Before Throws")]
     [Fact]
     public async Task AsyncActionProxy_Null_Before_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionProxy<int>.Create(async (x, ct) => { })
                 .Before((AsyncActionProxy<int>.ActionHook)null!));
     }
 
+    [Scenario("AsyncActionProxy Null After Throws")]
     [Fact]
     public async Task AsyncActionProxy_Null_After_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionProxy<int>.Create(async (x, ct) => { })
                 .After((AsyncActionProxy<int>.ActionHook)null!));
     }
 
+    [Scenario("AsyncActionProxy Null Intercept Throws")]
     [Fact]
     public async Task AsyncActionProxy_Null_Intercept_Throws()
     {
-        Assert.Throws<ArgumentNullException>(() =>
+        ScenarioExpect.Throws<ArgumentNullException>(() =>
             AsyncActionProxy<int>.Create(async (x, ct) => { })
                 .Intercept(null!));
     }

@@ -127,6 +127,7 @@ public sealed class StateMachineBuilderTests
     private enum S { A, B, C, D }
     private readonly record struct E(string Kind);
 
+    [Scenario("CustomComparer Works")]
     [Fact]
     public void CustomComparer_Works()
     {
@@ -144,11 +145,12 @@ public sealed class StateMachineBuilderTests
         var state = "IDLE"; // Different case
         var handled = m.TryTransition(ref state, new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal("ACTIVE", state);
-        Assert.Contains("entered", log);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal("ACTIVE", state);
+        ScenarioExpect.Contains("entered", log);
     }
 
+    [Scenario("ThenBuilder End Without Effect")]
     [Fact]
     public void ThenBuilder_End_Without_Effect()
     {
@@ -161,10 +163,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal(S.B, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.B, state);
     }
 
+    [Scenario("ThenBuilder Stay End")]
     [Fact]
     public void ThenBuilder_Stay_End()
     {
@@ -177,10 +180,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("stay"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
     }
 
+    [Scenario("ThenBuilder AsDefault Stay")]
     [Fact]
     public void ThenBuilder_AsDefault_Stay()
     {
@@ -195,11 +199,12 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
-        Assert.Equal("default", log[0]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Equal("default", log[0]);
     }
 
+    [Scenario("ThenBuilder AsDefault Permit")]
     [Fact]
     public void ThenBuilder_AsDefault_Permit()
     {
@@ -217,13 +222,14 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.C, state);
-        Assert.Equal("exit:A", log[0]);
-        Assert.Equal("default:go-to-C", log[1]);
-        Assert.Equal("enter:C", log[2]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.C, state);
+        ScenarioExpect.Equal("exit:A", log[0]);
+        ScenarioExpect.Equal("default:go-to-C", log[1]);
+        ScenarioExpect.Equal("enter:C", log[2]);
     }
 
+    [Scenario("MultipleOnEnterOnExit Hooks")]
     [Fact]
     public void MultipleOnEnterOnExit_Hooks()
     {
@@ -243,13 +249,14 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("go"));
 
-        Assert.Equal(4, log.Count);
-        Assert.Equal("exit:A:1", log[0]);
-        Assert.Equal("exit:A:2", log[1]);
-        Assert.Equal("enter:B:1", log[2]);
-        Assert.Equal("enter:B:2", log[3]);
+        ScenarioExpect.Equal(4, log.Count);
+        ScenarioExpect.Equal("exit:A:1", log[0]);
+        ScenarioExpect.Equal("exit:A:2", log[1]);
+        ScenarioExpect.Equal("enter:B:1", log[2]);
+        ScenarioExpect.Equal("enter:B:2", log[3]);
     }
 
+    [Scenario("StateBuilder Direct Access")]
     [Fact]
     public void StateBuilder_Direct_Access()
     {
@@ -270,10 +277,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("go"));
 
-        Assert.Equal(S.B, state);
-        Assert.Contains("enter:B", log);
+        ScenarioExpect.Equal(S.B, state);
+        ScenarioExpect.Contains("enter:B", log);
     }
 
+    [Scenario("UnknownState Returns False")]
     [Fact]
     public void UnknownState_Returns_False()
     {
@@ -286,10 +294,11 @@ public sealed class StateMachineBuilderTests
         var state = S.C; // Not configured
         var handled = m.TryTransition(ref state, new E("go"));
 
-        Assert.False(handled);
-        Assert.Equal(S.C, state);
+        ScenarioExpect.False(handled);
+        ScenarioExpect.Equal(S.C, state);
     }
 
+    [Scenario("Transition To Self State No Exit Enter")]
     [Fact]
     public void Transition_To_Self_State_No_Exit_Enter()
     {
@@ -306,10 +315,11 @@ public sealed class StateMachineBuilderTests
         m.TryTransition(ref state, new E("self"));
 
         // Should only run effect, not exit/enter since state stays the same
-        Assert.Single(log);
-        Assert.Equal("effect", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("effect", log[0]);
     }
 
+    [Scenario("WhenBuilder Permit Then Stay Override")]
     [Fact]
     public void WhenBuilder_Permit_Then_Stay_Override()
     {
@@ -324,10 +334,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("test"));
 
-        Assert.Equal(S.A, state); // Should stay
-        Assert.Equal("stayed", log[0]);
+        ScenarioExpect.Equal(S.A, state); // Should stay
+        ScenarioExpect.Equal("stayed", log[0]);
     }
 
+    [Scenario("Default Effect Only On Stay")]
     [Fact]
     public void Default_Effect_Only_On_Stay()
     {
@@ -343,10 +354,11 @@ public sealed class StateMachineBuilderTests
         m.TryTransition(ref state, new E("any"));
 
         // No exit should be called for stay
-        Assert.Single(log);
-        Assert.Equal("default-effect", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default-effect", log[0]);
     }
 
+    [Scenario("Null Hook Is Ignored")]
     [Fact]
     public void Null_Hook_Is_Ignored()
     {
@@ -365,10 +377,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("go"));
 
-        Assert.Equal(S.B, state);
-        Assert.Single(log);
+        ScenarioExpect.Equal(S.B, state);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("NoDefault NoMatch Returns False")]
     [Fact]
     public void NoDefault_NoMatch_Returns_False()
     {
@@ -381,9 +394,10 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("other"));
 
-        Assert.False(handled);
+        ScenarioExpect.False(handled);
     }
 
+    [Scenario("Default Permit To Unconfigured State")]
     [Fact]
     public void Default_Permit_To_Unconfigured_State()
     {
@@ -400,14 +414,15 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.D, state);
-        Assert.Equal(2, log.Count);
-        Assert.Equal("exit:A", log[0]);
-        Assert.Equal("default:go-to-D", log[1]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.D, state);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("exit:A", log[0]);
+        ScenarioExpect.Equal("default:go-to-D", log[1]);
         // No enter:D because D has no config
     }
 
+    [Scenario("Regular Transition To Unconfigured State")]
     [Fact]
     public void Regular_Transition_To_Unconfigured_State()
     {
@@ -422,11 +437,12 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("go"));
 
-        Assert.True(handled);
-        Assert.Equal(S.D, state);
-        Assert.Equal(2, log.Count);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.D, state);
+        ScenarioExpect.Equal(2, log.Count);
     }
 
+    [Scenario("Default Stay With No Effect")]
     [Fact]
     public void Default_Stay_With_No_Effect()
     {
@@ -439,10 +455,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("anything"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
     }
 
+    [Scenario("Default Permit Same State Only Effect")]
     [Fact]
     public void Default_Permit_Same_State_Only_Effect()
     {
@@ -459,12 +476,13 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         var handled = m.TryTransition(ref state, new E("x"));
 
-        Assert.True(handled);
-        Assert.Equal(S.A, state);
-        Assert.Single(log);
-        Assert.Equal("default-effect", log[0]);
+        ScenarioExpect.True(handled);
+        ScenarioExpect.Equal(S.A, state);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("default-effect", log[0]);
     }
 
+    [Scenario("Otherwise AsDefault Works")]
     [Fact]
     public void Otherwise_AsDefault_Works()
     {
@@ -481,10 +499,11 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("any"));
 
-        Assert.Equal(S.B, state);
-        Assert.Contains("enter:B", log);
+        ScenarioExpect.Equal(S.B, state);
+        ScenarioExpect.Contains("enter:B", log);
     }
 
+    [Scenario("Transition Throws For Unhandled")]
     [Fact]
     public void Transition_Throws_For_Unhandled()
     {
@@ -495,13 +514,14 @@ public sealed class StateMachineBuilderTests
             .Build();
 
         var state = S.A;
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = ScenarioExpect.Throws<InvalidOperationException>(() =>
             m.Transition(ref state, new E("nope")));
 
-        Assert.Contains("nope", ex.Message);
-        Assert.Contains("A", ex.Message);
+        ScenarioExpect.Contains("nope", ex.Message);
+        ScenarioExpect.Contains("A", ex.Message);
     }
 
+    [Scenario("NullComparer Uses Default")]
     [Fact]
     public void NullComparer_Uses_Default()
     {
@@ -515,7 +535,7 @@ public sealed class StateMachineBuilderTests
         var state = S.A;
         m.TryTransition(ref state, new E("go"));
 
-        Assert.Equal(S.B, state);
+        ScenarioExpect.Equal(S.B, state);
     }
 }
 

@@ -1,20 +1,20 @@
 # PatternKit Documentation
 
 > **Fluent Design Patterns for Modern .NET**  
-> Elegant, declarative, allocation-light implementations of classic patterns—optimized for .NET&nbsp;9.
+> Fluent APIs and incremental source generators for classic patterns in modern .NET.
 
 ---
 
 ## 🌟 Overview
 
-**PatternKit** is a library that reimagines classic [Gang of Four design patterns](https://en.wikipedia.org/wiki/Design_Patterns)
-for the modern .NET ecosystem.  
+**PatternKit** is a library that implements classic [Gang of Four design patterns](https://en.wikipedia.org/wiki/Design_Patterns)
+with fluent runtime helpers and Roslyn incremental source generators.
 
-Instead of heavyweight base classes and verbose boilerplate, PatternKit favors:
+Instead of heavyweight base classes and repeated handwritten scaffolding, PatternKit favors:
 
 - **Fluent builders** and chainable DSLs
-- **Source generators** to remove reflection and runtime cost
-- **Zero-allocation handlers** with `in` parameters for hot paths
+- **Source generators** that emit deterministic compile-time code
+- **AOT-friendly generated implementations** where pattern shape is known at design time
 - **Strong typing** and discoverable APIs
 - **Readable BDD-style tests** using [TinyBDD](https://github.com/JerrettDavis/TinyBDD)
 
@@ -26,6 +26,12 @@ Install the NuGet package:
 
 ```bash
 dotnet add package PatternKit
+```
+
+For reusable `IServiceCollection` registrations:
+
+```bash
+dotnet add package PatternKit.Hosting.Extensions
 ```
 
 ### Example: `Strategy<TIn, TOut>`
@@ -60,13 +66,19 @@ if (parser.Execute("123", out var value))
 
 ## 📚 Available Patterns
 
-PatternKit will grow to cover **Creational**, **Structural**, and **Behavioral** patterns with fluent, discoverable APIs:
+PatternKit covers 121 production-readiness patterns with fluent APIs, source-generated routes where applicable, IoC integration examples, TinyBDD coverage, and BenchmarkDotNet coverage-matrix validation:
 
-| Category       | Patterns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Creational** | [Factory](patterns/creational/factory/factory.md) • [Composer](patterns/creational/builder/composer.md) • [ChainBuilder](patterns/creational/builder/chainbuilder.md) • [BranchBuilder](patterns/creational/builder/chainbuilder.md) • [MutableBuilder](patterns/creational/builder/mutablebuilder.md) • [Prototype](patterns/creational/prototype/prototype.md) • [Singleton](patterns/creational/singleton/singleton.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| **Structural** | [Adapter](patterns/structural/adapter/fluent-adapter.md) • [Bridge](patterns/structural/bridge/bridge.md) • [Composite](patterns/structural/composite/composite.md) • [Decorator](patterns/structural/decorator/index.md) • [Facade](patterns/structural/facade/facade.md) • [Flyweight](patterns/structural/flyweight/index.md) • [Proxy](patterns/structural/proxy/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| **Behavioral** | [Strategy](patterns/behavioral/strategy/strategy.md) • [TryStrategy](patterns/behavioral/strategy/trystrategy.md) • [ActionStrategy](patterns/behavioral/strategy/actionstrategy.md) • [ActionChain](patterns/behavioral/chain/actionchain.md) • [ResultChain](patterns/behavioral/chain/resultchain.md) • [Command](patterns/behavioral/command/command.md) • [ReplayableSequence](patterns/behavioral/iterator/replayablesequence.md) • [WindowSequence](patterns/behavioral/iterator/windowsequence.md) • [Mediator](patterns/behavioral/mediator/mediator.md) • [Memento](patterns/behavioral/memento/memento.md) • [Observer](patterns/behavioral/observer/observer.md) • [AsyncObserver](patterns/behavioral/observer/asyncobserver.md) • [Visitor](patterns/behavioral/visitor/visitor.md) • [State](patterns/behavioral/state/state.md) • [Template Method](patterns/behavioral/template/template.md) |
+| Category | Count | Patterns |
+| --- | ---: | --- |
+| Application Architecture | 29 | Activity Tracker, Aggregate Root, Anti-Corruption Layer, Audit Log, Bounded Context, Context Map, CQRS, Data Mapper, Domain Event, Domain Service, Event Sourcing, Eventual Consistency Monitor, Feature Toggle, Identity Map, Lazy Load, Manual Task Gate, Materialized View, Ports and Adapters, Repository, Service Layer, Snapshot / Checkpoint Management, Specification, Table Data Gateway, Timeout Manager, Transaction Script, Unit of Work, Compensating Transaction, Value Object, Workflow Orchestration |
+| Behavioral | 12 | Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Null Object, Observer, State, Strategy, Template Method, Visitor |
+| Cloud Architecture | 21 | Ambassador, Backends for Frontends, Bulkhead, Cache-Aside, Cache Stampede Protection, Circuit Breaker, Distributed Lock / Lease, External Configuration Store, Gateway Aggregation, Gateway Routing, Health Endpoint Monitoring, Leader Election, Priority Queue, Queue-Based Load Leveling, Rate Limiting, Read-Through Cache, Retry, Scheduler Agent Supervisor, Sidecar, Strangler Fig, Write-Through Cache |
+| Creational | 6 | Abstract Factory, Builder, Factory Method, Object Pool, Prototype, Singleton |
+| Enterprise Integration | 42 | Aggregator, Canonical Data Model, Change Data Capture, Channel Adapter, Channel Purger, Claim Check, Competing Consumers, Content Enricher, Content-Based Router, Control Bus, Correlation Identifier, Dead Letter Channel, Durable Subscriber, Dynamic Router, Event Notification, Event-Carried State Transfer, Event-Driven Consumer, Guaranteed Delivery, Invalid Message Channel, Mailbox, Message Bus, Message Channel, Message Envelope, Message Expiration, Message Filter, Message History, Message Store, Message Translator, Messaging Bridge, Messaging Gateway, Pipes and Filters, Polling Consumer, Publish-Subscribe, Recipient List, Request-Reply, Resequencer, Routing Slip, Saga / Process Manager, Scatter-Gather, Service Activator, Splitter, Wire Tap |
+| Messaging Reliability | 4 | Backpressure, Idempotent Receiver, Inbox, Outbox |
+| Structural | 7 | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
+
+See [Benchmarks](guides/benchmarks.md) and [Benchmark Results](guides/benchmark-results.md) for published fluent-vs-source-generated timing, allocation snapshots, and the full pattern/generator matrix.
 
 ## 🛠️ Source Generators
 
@@ -74,9 +86,19 @@ Prefer compile-time code generation over handwritten boilerplate? See the **[Gen
 
 - **[Builder](generators/builder.md)** — Fluent object construction with validation
 - **[Factory](generators/factory-class.md)** — Keyed product creation
+- **[Adapter](generators/adapter.md)** — Interface and member adaptation
+- **[Bridge](generators/bridge.md)** — Abstraction/implementation separation
+- **[Chain](generators/chain.md)** — Request pipelines
+- **[Command](generators/command.md)** — Command wrappers and dispatch
+- **[Composite](generators/composite.md)** — Tree-shaped object models
 - **[Decorator](generators/decorator.md)** — Base classes with forwarding
 - **[Facade](generators/facade.md)** — Simplified subsystem interfaces
+- **[Flyweight](generators/flyweight.md)** — Keyed flyweight factories
+- **[Iterator](generators/iterator.md)** — Enumerable adapters
+- **[Observer](generators/observer.md)** — Event hubs and subscriptions
 - **[Proxy](generators/proxy.md)** — Access control and interception
+- **[Singleton](generators/singleton.md)** — Instance accessors
+- **[State Machine](generators/state-machine.md)** — State transitions
 - **[Composer](generators/composer.md)** — Pipeline middleware composition
 - **[Memento](generators/memento.md)** — State snapshots and undo/redo
 - **[Strategy](generators/strategy.md)** — Predicate-based dispatch
@@ -85,12 +107,12 @@ Prefer compile-time code generation over handwritten boilerplate? See the **[Gen
 
 All generators produce deterministic code with no runtime dependency on PatternKit.
 
-Each pattern will ship with:
+Each supported pattern ships with tests, API documentation, and examples where applicable.
 
 
 * **Fluent API**: readable and composable (`.When(...)`, `.Then(...)`, `.Finally(...)`)
 * **Strongly-typed handlers** using `in` parameters
-* **Performance focus** — no hidden allocations or reflection
+* **Performance focus** — explicit code paths with no reflection-based dispatch in generated implementations
 * **XML docs and examples** available in API reference
 
 ---

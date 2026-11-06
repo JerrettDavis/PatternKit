@@ -1,5 +1,5 @@
-using System.Diagnostics;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace PatternKit.Examples.ProxyGeneratorDemo.Interceptors;
 

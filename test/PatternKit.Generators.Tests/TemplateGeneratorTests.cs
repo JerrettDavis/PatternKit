@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -9,6 +10,7 @@ public class TemplateGeneratorTests
 {
     #region Basic Template Tests
 
+    [Scenario("Generates Basic Template Without Diagnostics")]
     [Fact]
     public void Generates_Basic_Template_Without_Diagnostics()
     {
@@ -44,17 +46,18 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = run.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("ImportWorkflow.Template.g.cs", names);
+        ScenarioExpect.Contains("ImportWorkflow.Template.g.cs", names);
 
         // Verify compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Generated Execute Method Compiles Successfully")]
     [Fact]
     public void Generated_Execute_Method_Compiles_Successfully()
     {
@@ -100,7 +103,7 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Get generated source
         var generatedSource = run.Results
@@ -109,20 +112,21 @@ public class TemplateGeneratorTests
             .SourceText.ToString();
 
         // Verify Execute method exists
-        Assert.Contains("public void Execute(", generatedSource);
-        Assert.Contains("Validate(ctx);", generatedSource);
-        Assert.Contains("Transform(ctx);", generatedSource);
-        Assert.Contains("Persist(ctx);", generatedSource);
+        ScenarioExpect.Contains("public void Execute(", generatedSource);
+        ScenarioExpect.Contains("Validate(ctx);", generatedSource);
+        ScenarioExpect.Contains("Transform(ctx);", generatedSource);
+        ScenarioExpect.Contains("Persist(ctx);", generatedSource);
 
         // Verify compilation succeeds
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     #endregion
 
     #region Hook Tests
 
+    [Scenario("Generates Template With BeforeAll Hook")]
     [Fact]
     public void Generates_Template_With_BeforeAll_Hook()
     {
@@ -167,10 +171,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify BeforeAll hook is called first
         var generatedSource = run.Results
@@ -178,11 +182,12 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        var onStartIndex = generatedSource.IndexOf("OnStart(ctx);");
-        var validateIndex = generatedSource.IndexOf("Validate(ctx);");
-        Assert.True(onStartIndex < validateIndex, "BeforeAll hook should be called before steps");
+        var onStartIndex = generatedSource.IndexOf("OnStart(ctx);", StringComparison.Ordinal);
+        var validateIndex = generatedSource.IndexOf("Validate(ctx);", StringComparison.Ordinal);
+        ScenarioExpect.True(onStartIndex < validateIndex, "BeforeAll hook should be called before steps");
     }
 
+    [Scenario("Generates Template With AfterAll Hook")]
     [Fact]
     public void Generates_Template_With_AfterAll_Hook()
     {
@@ -227,10 +232,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify AfterAll hook is called last
         var generatedSource = run.Results
@@ -238,11 +243,12 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        var transformIndex = generatedSource.LastIndexOf("Transform(ctx);");
-        var onCompleteIndex = generatedSource.IndexOf("OnComplete(ctx);");
-        Assert.True(transformIndex < onCompleteIndex, "AfterAll hook should be called after steps");
+        var transformIndex = generatedSource.LastIndexOf("Transform(ctx);", StringComparison.Ordinal);
+        var onCompleteIndex = generatedSource.IndexOf("OnComplete(ctx);", StringComparison.Ordinal);
+        ScenarioExpect.True(transformIndex < onCompleteIndex, "AfterAll hook should be called after steps");
     }
 
+    [Scenario("Generates Template With OnError Hook")]
     [Fact]
     public void Generates_Template_With_OnError_Hook()
     {
@@ -289,10 +295,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify OnError hook is in try-catch block
         var generatedSource = run.Results
@@ -300,16 +306,17 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        Assert.Contains("try", generatedSource);
-        Assert.Contains("catch (System.Exception ex)", generatedSource);
-        Assert.Contains("OnError(ctx, ex);", generatedSource);
-        Assert.Contains("throw;", generatedSource); // Rethrow policy
+        ScenarioExpect.Contains("try", generatedSource);
+        ScenarioExpect.Contains("catch (System.Exception ex)", generatedSource);
+        ScenarioExpect.Contains("OnError(ctx, ex);", generatedSource);
+        ScenarioExpect.Contains("throw;", generatedSource); // Rethrow policy
     }
 
     #endregion
 
     #region Async Tests
 
+    [Scenario("Generates Async Template With ValueTask")]
     [Fact]
     public void Generates_Async_Template_With_ValueTask()
     {
@@ -358,10 +365,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify ExecuteAsync method is generated
         var generatedSource = run.Results
@@ -369,12 +376,13 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        Assert.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync(", generatedSource);
-        Assert.Contains("await ValidateAsync(ctx, ct).ConfigureAwait(false);", generatedSource);
-        Assert.Contains("Transform(ctx);", generatedSource);
-        Assert.Contains("await PersistAsync(ctx, ct).ConfigureAwait(false);", generatedSource);
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync(", generatedSource);
+        ScenarioExpect.Contains("await ValidateAsync(ctx, ct).ConfigureAwait(false);", generatedSource);
+        ScenarioExpect.Contains("Transform(ctx);", generatedSource);
+        ScenarioExpect.Contains("await PersistAsync(ctx, ct).ConfigureAwait(false);", generatedSource);
     }
 
+    [Scenario("Generates Async Template With ForceAsync")]
     [Fact]
     public void Generates_Async_Template_With_ForceAsync()
     {
@@ -415,10 +423,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify ExecuteAsync method is generated even for sync steps
         var generatedSource = run.Results
@@ -426,15 +434,16 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        Assert.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync(", generatedSource);
-        Assert.Contains("Validate(ctx);", generatedSource);
-        Assert.Contains("Transform(ctx);", generatedSource);
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync(", generatedSource);
+        ScenarioExpect.Contains("Validate(ctx);", generatedSource);
+        ScenarioExpect.Contains("Transform(ctx);", generatedSource);
     }
 
     #endregion
 
     #region Type Target Tests
 
+    [Scenario("Generates Template For Struct")]
     [Fact]
     public void Generates_Template_For_Struct()
     {
@@ -466,12 +475,13 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Generates Template For Record Class")]
     [Fact]
     public void Generates_Template_For_Record_Class()
     {
@@ -503,12 +513,13 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Generates Template For Record Struct")]
     [Fact]
     public void Generates_Template_For_Record_Struct()
     {
@@ -540,16 +551,17 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     #endregion
 
     #region Diagnostic Tests
 
+    [Scenario("Reports Error When Type Not Partial")]
     [Fact]
     public void Reports_Error_When_Type_Not_Partial()
     {
@@ -576,9 +588,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP001");
     }
 
+    [Scenario("Reports Error When No Steps")]
     [Fact]
     public void Reports_Error_When_No_Steps()
     {
@@ -603,9 +616,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP002");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP002");
     }
 
+    [Scenario("Reports Error When Duplicate Step Order")]
     [Fact]
     public void Reports_Error_When_Duplicate_Step_Order()
     {
@@ -635,9 +649,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP003");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP003");
     }
 
+    [Scenario("Reports Error When Invalid Step Signature")]
     [Fact]
     public void Reports_Error_When_Invalid_Step_Signature()
     {
@@ -664,9 +679,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP004");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP004");
     }
 
+    [Scenario("Reports Warning When Async Step Missing CancellationToken")]
     [Fact]
     public void Reports_Warning_When_Async_Step_Missing_CancellationToken()
     {
@@ -697,9 +713,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP007");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP007");
     }
 
+    [Scenario("Reports Error When Invalid Hook Signature No Context")]
     [Fact]
     public void Reports_Error_When_Invalid_Hook_Signature_No_Context()
     {
@@ -729,9 +746,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP005");
     }
 
+    [Scenario("Reports Error When OnError Hook Missing Exception Parameter")]
     [Fact]
     public void Reports_Error_When_OnError_Hook_Missing_Exception_Parameter()
     {
@@ -761,9 +779,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP005");
     }
 
+    [Scenario("Reports Error When Hook Returns Invalid Type")]
     [Fact]
     public void Reports_Error_When_Hook_Returns_Invalid_Type()
     {
@@ -793,9 +812,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP005");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP005");
     }
 
+    [Scenario("Reports Error When HandleAndContinue With NonOptional Steps")]
     [Fact]
     public void Reports_Error_When_HandleAndContinue_With_NonOptional_Steps()
     {
@@ -825,9 +845,10 @@ public class TemplateGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKTMP008");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP008");
     }
 
+    [Scenario("Allows HandleAndContinue With All Optional Steps")]
     [Fact]
     public void Allows_HandleAndContinue_With_All_Optional_Steps()
     {
@@ -858,17 +879,18 @@ public class TemplateGeneratorTests
 
         // Should not have PKTMP008 diagnostic
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.DoesNotContain(diagnostics, d => d.Id == "PKTMP008");
+        ScenarioExpect.DoesNotContain(diagnostics, d => d.Id == "PKTMP008");
 
         // Should compile successfully
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
     #endregion
 
     #region Custom Method Names
 
+    [Scenario("Generates Template With Custom Method Names")]
     [Fact]
     public void Generates_Template_With_Custom_Method_Names()
     {
@@ -901,10 +923,10 @@ public class TemplateGeneratorTests
         var gen = new TemplateGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Verify custom method name is used
         var generatedSource = run.Results
@@ -912,8 +934,278 @@ public class TemplateGeneratorTests
             .First(gs => gs.HintName.Contains("ImportWorkflow"))
             .SourceText.ToString();
 
-        Assert.Contains("public void Process(", generatedSource);
-        Assert.DoesNotContain("public void Execute(", generatedSource);
+        ScenarioExpect.Contains("public void Process(", generatedSource);
+        ScenarioExpect.DoesNotContain("public void Execute(", generatedSource);
+    }
+
+    [Scenario("Generates Async Template With Mixed Sync Async Hooks And Error Rethrow")]
+    [Fact]
+    public void Generates_Async_Template_With_Mixed_Sync_Async_Hooks_And_Error_Rethrow()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public string Data { get; set; } = "";
+            }
+
+            [Template(ExecuteAsyncMethodName = "RunAsync", ErrorPolicy = TemplateErrorPolicy.Rethrow)]
+            public partial class ImportWorkflow
+            {
+                [TemplateHook(HookPoint.BeforeAll)]
+                private ValueTask OpenAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void TraceOpen(ImportContext ctx) { }
+
+                [TemplateStep(0, Name = "Validate")]
+                private ValueTask ValidateAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateStep(1, Name = "Transform")]
+                private void Transform(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private ValueTask CloseAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void TraceClose(ImportContext ctx) { }
+
+                [TemplateHook(HookPoint.OnError)]
+                private ValueTask CaptureErrorAsync(ImportContext ctx, Exception ex, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.OnError)]
+                private void TraceError(ImportContext ctx, Exception ex) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Generates_Async_Template_With_Mixed_Sync_Async_Hooks_And_Error_Rethrow));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask RunAsync", generated);
+        ScenarioExpect.Contains("await OpenAsync(ctx, ct).ConfigureAwait(false);", generated);
+        ScenarioExpect.Contains("TraceOpen(ctx);", generated);
+        ScenarioExpect.Contains("await ValidateAsync(ctx, ct).ConfigureAwait(false);", generated);
+        ScenarioExpect.Contains("Transform(ctx);", generated);
+        ScenarioExpect.Contains("await CloseAsync(ctx, ct).ConfigureAwait(false);", generated);
+        ScenarioExpect.Contains("TraceClose(ctx);", generated);
+        ScenarioExpect.Contains("await CaptureErrorAsync(ctx, ex, ct).ConfigureAwait(false);", generated);
+        ScenarioExpect.Contains("TraceError(ctx, ex);", generated);
+        ScenarioExpect.Contains("throw;", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("ForceAsync Template GeneratesAsyncPathForSynchronousSteps")]
+    [Fact]
+    public void ForceAsync_Template_GeneratesAsyncPathForSynchronousSteps()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System.Collections.Generic;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public List<string> Log { get; } = new();
+            }
+
+            [Template(GenerateAsync = true, ForceAsync = true, ErrorPolicy = TemplateErrorPolicy.HandleAndContinue)]
+            public partial class ImportWorkflow
+            {
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void Open(ImportContext ctx) => ctx.Log.Add("open");
+
+                [TemplateStep(0, Optional = true)]
+                private void Validate(ImportContext ctx) => ctx.Log.Add("validate");
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void Close(ImportContext ctx) => ctx.Log.Add("close");
+
+                [TemplateHook(HookPoint.OnError)]
+                private void CaptureError(ImportContext ctx, System.Exception ex) => ctx.Log.Add(ex.Message);
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(ForceAsync_Template_GeneratesAsyncPathForSynchronousSteps));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync", generated);
+        ScenarioExpect.Contains("Open(ctx);", generated);
+        ScenarioExpect.Contains("Validate(ctx);", generated);
+        ScenarioExpect.Contains("Close(ctx);", generated);
+        ScenarioExpect.Contains("catch (System.Exception ex)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("CancellationToken Sync Template Members AreForwardedInAsyncWrapper")]
+    [Fact]
+    public void CancellationToken_Sync_Template_Members_AreForwardedInAsyncWrapper()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System;
+            using System.Threading;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public int Count { get; set; }
+            }
+
+            [Template(ErrorPolicy = TemplateErrorPolicy.Rethrow)]
+            public partial class ImportWorkflow
+            {
+                [TemplateHook(HookPoint.BeforeAll)]
+                private void Open(ImportContext ctx, CancellationToken ct) => ctx.Count++;
+
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx, CancellationToken ct) => ctx.Count++;
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void Close(ImportContext ctx, CancellationToken ct) => ctx.Count++;
+
+                [TemplateHook(HookPoint.OnError)]
+                private void CaptureError(ImportContext ctx, Exception ex, CancellationToken ct) => ctx.Count--;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(CancellationToken_Sync_Template_Members_AreForwardedInAsyncWrapper));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("public async System.Threading.Tasks.ValueTask ExecuteAsync", generated);
+        ScenarioExpect.Contains("Open(ctx, ct);", generated);
+        ScenarioExpect.Contains("Validate(ctx, ct);", generated);
+        ScenarioExpect.Contains("Close(ctx, ct);", generated);
+        ScenarioExpect.Contains("CaptureError(ctx, ex, ct);", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("CancellationToken Async Template WithoutErrorHooks ForwardsAfterAllTokens")]
+    [Fact]
+    public void CancellationToken_Async_Template_WithoutErrorHooks_ForwardsAfterAllTokens()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+            using System.Threading;
+            using System.Threading.Tasks;
+
+            namespace PatternKit.Examples;
+
+            public sealed class ImportContext
+            {
+                public int Count { get; set; }
+            }
+
+            [Template]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate(ImportContext ctx, CancellationToken ct) => ctx.Count++;
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private ValueTask FlushAsync(ImportContext ctx, CancellationToken ct) => ValueTask.CompletedTask;
+
+                [TemplateHook(HookPoint.AfterAll)]
+                private void Close(ImportContext ctx, CancellationToken ct) => ctx.Count++;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(CancellationToken_Async_Template_WithoutErrorHooks_ForwardsAfterAllTokens));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single(gs => gs.HintName == "ImportWorkflow.Template.g.cs")
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("Validate(ctx, ct);", generated);
+        ScenarioExpect.Contains("await FlushAsync(ctx, ct).ConfigureAwait(false);", generated);
+        ScenarioExpect.Contains("Close(ctx, ct);", generated);
+        ScenarioExpect.DoesNotContain("catch (System.Exception ex)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("Reports Error When Template Step HasNoContextParameter")]
+    [Fact]
+    public void Reports_Error_When_Template_Step_HasNoContextParameter()
+    {
+        var source = """
+            using PatternKit.Generators.Template;
+
+            namespace PatternKit.Examples;
+
+            [Template]
+            public partial class ImportWorkflow
+            {
+                [TemplateStep(0)]
+                private void Validate()
+                {
+                }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            source,
+            assemblyName: nameof(Reports_Error_When_Template_Step_HasNoContextParameter));
+
+        var gen = new TemplateGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKTMP004" && d.GetMessage().Contains("Validate"));
     }
 
     #endregion

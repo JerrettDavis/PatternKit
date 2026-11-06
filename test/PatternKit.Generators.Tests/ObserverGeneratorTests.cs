@@ -1,5 +1,6 @@
-using Microsoft.CodeAnalysis;
 using System.Runtime.Loader;
+using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
@@ -18,6 +19,7 @@ public class ObserverGeneratorTests
         }
         """;
 
+    [Scenario("Generates Observer Without Diagnostics")]
     [Fact]
     public void Generates_Observer_Without_Diagnostics()
     {
@@ -29,18 +31,19 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
         // No generator diagnostics
-        Assert.All(run.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated expected file
         var sources = run.Results.SelectMany(r => r.GeneratedSources).ToArray();
-        Assert.Single(sources);
-        Assert.Contains("Observer.g.cs", sources[0].HintName);
+        ScenarioExpect.Single(sources);
+        ScenarioExpect.Contains("Observer.g.cs", sources[0].HintName);
 
         // The updated compilation should compile
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Reports Error When Type Not Partial")]
     [Fact]
     public void Reports_Error_When_Type_Not_Partial()
     {
@@ -61,9 +64,10 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
 
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKOBS001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKOBS001");
     }
 
+    [Scenario("Escaped Type Name Generates Compilable Source")]
     [Fact]
     public void Escaped_Type_Name_Generates_Compilable_Source()
     {
@@ -86,9 +90,10 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Subscribe And Publish Works")]
     [Fact]
     public void Subscribe_And_Publish_Works()
     {
@@ -119,13 +124,13 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         // Load and invoke Demo.Run
         using var pe = new MemoryStream();
         using var pdb = new MemoryStream();
         var res = updated.Emit(pe, pdb);
-        Assert.True(res.Success);
+        ScenarioExpect.True(res.Success);
 
         pe.Position = 0;
         pdb.Position = 0;
@@ -135,13 +140,13 @@ public class ObserverGeneratorTests
         {
             var asm = alc.LoadFromStream(pe, pdb);
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
-            Assert.NotNull(demoType);
+            ScenarioExpect.NotNull(demoType);
 
             var runMethod = demoType.GetMethod("Run");
-            Assert.NotNull(runMethod);
+            ScenarioExpect.NotNull(runMethod);
 
             var result = (string)runMethod.Invoke(null, null)!;
-            Assert.Equal("Handler1:23.5|Handler2:23.5", result);
+            ScenarioExpect.Equal("Handler1:23.5|Handler2:23.5", result);
         }
         finally
         {
@@ -149,6 +154,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Dispose Removes Subscription")]
     [Fact]
     public void Dispose_Removes_Subscription()
     {
@@ -182,7 +188,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -192,9 +198,9 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // After first publish: both handlers; after second: only H2
-            Assert.Equal("H1:10|H2:10|H2:20", result);
+            ScenarioExpect.Equal("H1:10|H2:10|H2:20", result);
         }
         finally
         {
@@ -202,6 +208,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Registration Order Preserved")]
     [Fact]
     public void Registration_Order_Preserved()
     {
@@ -234,7 +241,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -244,7 +251,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            Assert.Equal("ABC", result);
+            ScenarioExpect.Equal("ABC", result);
         }
         finally
         {
@@ -252,6 +259,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Async Subscribe And PublishAsync Works")]
     [Fact]
     public void Async_Subscribe_And_PublishAsync_Works()
     {
@@ -285,11 +293,11 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -299,9 +307,10 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
-            task.Wait();
+            if (!task.Wait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("Demo.Run() did not complete within 30 seconds.");
             var result = task.Result;
-            Assert.Equal("AsyncHandler:42", result);
+            ScenarioExpect.Equal("AsyncHandler:42", result);
         }
         finally
         {
@@ -309,6 +318,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Exception Policy Continue Does Not Stop Execution")]
     [Fact]
     public void Exception_Policy_Continue_Does_Not_Stop_Execution()
     {
@@ -355,7 +365,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -365,9 +375,9 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // All three handlers should execute (H1, exception, H3)
-            Assert.Equal("H1|H3", result);
+            ScenarioExpect.Equal("H1|H3", result);
         }
         finally
         {
@@ -375,6 +385,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Exception Policy Stop Throws First Exception")]
     [Fact]
     public void Exception_Policy_Stop_Throws_First_Exception()
     {
@@ -422,7 +433,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -432,7 +443,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            Assert.Equal("Oops", result);
+            ScenarioExpect.Equal("Oops", result);
         }
         finally
         {
@@ -440,6 +451,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Exception Policy Aggregate Throws AggregateException")]
     [Fact]
     public void Exception_Policy_Aggregate_Throws_AggregateException()
     {
@@ -486,7 +498,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -496,7 +508,7 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            Assert.Equal("2:Error1:Error2", result);
+            ScenarioExpect.Equal("2:Error1:Error2", result);
         }
         finally
         {
@@ -504,6 +516,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Struct Types Are Not Supported")]
     [Fact]
     public void Struct_Types_Are_Not_Supported()
     {
@@ -529,9 +542,10 @@ public class ObserverGeneratorTests
 
         // Should report PKOBS003 diagnostic for struct types
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
     }
 
+    [Scenario("Supports Record Class")]
     [Fact]
     public void Supports_Record_Class()
     {
@@ -570,9 +584,10 @@ public class ObserverGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out _, out var updated);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Record Struct Types Are Not Supported")]
     [Fact]
     public void Record_Struct_Types_Are_Not_Supported()
     {
@@ -598,9 +613,10 @@ public class ObserverGeneratorTests
 
         // Should report PKOBS003 diagnostic for record struct types
         var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKOBS003" && d.GetMessage().Contains("Struct observer types are not currently supported"));
     }
 
+    [Scenario("Mixed Sync And Async Handlers Both Invoked")]
     [Fact]
     public void Mixed_Sync_And_Async_Handlers_Both_Invoked()
     {
@@ -629,7 +645,7 @@ public class ObserverGeneratorTests
                     evt.Publish(new Temperature(10));
                     
                     // Wait deterministically for async handler to complete
-                    await tcs.Task.WaitAsync(System.TimeSpan.FromSeconds(5));
+                    await tcs.Task.WaitAsync(System.TimeSpan.FromSeconds(30));
                     
                     return string.Join("|", log);
                 }
@@ -645,7 +661,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -655,12 +671,13 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
-            task.Wait();
+            if (!task.Wait(TimeSpan.FromSeconds(30)))
+                throw new TimeoutException("Demo.Run() did not complete within 30 seconds.");
             var result = task.Result;
-            
+
             // Both handlers should have been invoked
-            Assert.Contains("Sync", result);
-            Assert.Contains("Async", result);
+            ScenarioExpect.Contains("Sync", result);
+            ScenarioExpect.Contains("Async", result);
         }
         finally
         {
@@ -668,6 +685,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Stop Policy Observes Fire And Forget Async Exceptions")]
     [Fact]
     public void Stop_Policy_Observes_Fire_And_Forget_Async_Exceptions()
     {
@@ -719,7 +737,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -730,7 +748,7 @@ public class ObserverGeneratorTests
             var runMethod = demoType!.GetMethod("Run");
             var task = (System.Threading.Tasks.Task<string>)runMethod!.Invoke(null, null)!;
             task.Wait();
-            Assert.Equal("AsyncOops", task.Result);
+            ScenarioExpect.Equal("AsyncOops", task.Result);
         }
         finally
         {
@@ -738,6 +756,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("SingleThreadedFast Threading Policy Works")]
     [Fact]
     public void SingleThreadedFast_Threading_Policy_Works()
     {
@@ -779,7 +798,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -789,8 +808,8 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
-            Assert.Equal("Handler1:23.5|Handler2:23.5", result);
+
+            ScenarioExpect.Equal("Handler1:23.5|Handler2:23.5", result);
         }
         finally
         {
@@ -798,6 +817,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Concurrent Undefined Uses Removable Concurrent Dictionary")]
     [Fact]
     public void Concurrent_Undefined_Uses_Removable_Concurrent_Dictionary()
     {
@@ -824,15 +844,16 @@ public class ObserverGeneratorTests
         var gen = new Observer.ObserverGenerator();
         _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
 
-        var generatedSource = Assert.Single(run.Results.SelectMany(r => r.GeneratedSources)).SourceText.ToString();
-        Assert.Contains("System.Collections.Concurrent.ConcurrentDictionary<int, Subscription>", generatedSource);
-        Assert.Contains("state.Subscriptions?.TryRemove(_id, out _);", generatedSource);
-        Assert.DoesNotContain("ConcurrentBag<Subscription>", generatedSource);
+        var generatedSource = ScenarioExpect.Single(run.Results.SelectMany(r => r.GeneratedSources)).SourceText.ToString();
+        ScenarioExpect.Contains("System.Collections.Concurrent.ConcurrentDictionary<int, Subscription>", generatedSource);
+        ScenarioExpect.Contains("state.Subscriptions?.TryRemove(_id, out _);", generatedSource);
+        ScenarioExpect.DoesNotContain("ConcurrentBag<Subscription>", generatedSource);
 
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("Concurrent RegistrationOrder Threading Policy Works")]
     [Fact]
     public void Concurrent_RegistrationOrder_Threading_Policy_Works()
     {
@@ -877,7 +898,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -887,9 +908,9 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // With RegistrationOrder, order should be preserved
-            Assert.Equal("Handler1:23.5|Handler2:23.5", result);
+            ScenarioExpect.Equal("Handler1:23.5|Handler2:23.5", result);
         }
         finally
         {
@@ -897,6 +918,7 @@ public class ObserverGeneratorTests
         }
     }
 
+    [Scenario("Concurrent Undefined Threading Policy Works")]
     [Fact]
     public void Concurrent_Undefined_Threading_Policy_Works()
     {
@@ -941,7 +963,7 @@ public class ObserverGeneratorTests
 
         using var pe = new MemoryStream();
         var emitResult = updated.Emit(pe);
-        Assert.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
+        ScenarioExpect.True(emitResult.Success, $"Compilation failed: {string.Join(Environment.NewLine, emitResult.Diagnostics.Where(d => d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))}");
         pe.Position = 0;
 
         var alc = new AssemblyLoadContext("ObserverTest", isCollectible: true);
@@ -951,14 +973,147 @@ public class ObserverGeneratorTests
             var demoType = asm.GetType("PatternKit.Examples.Generators.Demo");
             var runMethod = demoType!.GetMethod("Run");
             var result = (string)runMethod!.Invoke(null, null)!;
-            
+
             // With Undefined order, both handlers should still be invoked (order not guaranteed)
-            Assert.Contains("Handler1:23.5", result);
-            Assert.Contains("Handler2:23.5", result);
+            ScenarioExpect.Contains("Handler1:23.5", result);
+            ScenarioExpect.Contains("Handler2:23.5", result);
         }
         finally
         {
             alc.Unload();
         }
+    }
+
+    [Scenario("Reports Invalid Config For Generic Nested And Struct Observers")]
+    [Fact]
+    public void Reports_Invalid_Config_For_Generic_Nested_And_Struct_Observers()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            namespace Test;
+
+            public record Payload(int Value);
+
+            [Observer(typeof(Payload))]
+            public partial class GenericObserver<T>
+            {
+            }
+
+            public class Outer
+            {
+                [Observer(typeof(Payload))]
+                public partial class NestedObserver
+                {
+                }
+            }
+
+            [Observer(typeof(Payload))]
+            public partial struct StructObserver
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(Reports_Invalid_Config_For_Generic_Nested_And_Struct_Observers));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out _);
+
+        var diagnostics = run.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Equal(3, diagnostics.Count(d => d.Id == "PKOBS003"));
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("Generic observer types"));
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("Nested observer types"));
+        ScenarioExpect.Contains(diagnostics, d => d.GetMessage().Contains("Struct observer types"));
+    }
+
+    [Scenario("ForceAsync Internal Record Uses Configured Source Shape")]
+    [Fact]
+    public void ForceAsync_Internal_Record_Uses_Configured_Source_Shape()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            public record Payload(int Value);
+
+            [Observer(
+                typeof(Payload),
+                Threading = ObserverThreadingPolicy.SingleThreadedFast,
+                Exceptions = ObserverExceptionPolicy.Stop,
+                Order = ObserverOrderPolicy.Undefined,
+                GenerateAsync = false,
+                ForceAsync = true)]
+            internal partial record class DomainEvent
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(ForceAsync_Internal_Record_Uses_Configured_Source_Shape));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single()
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("internal partial record class DomainEvent", generated);
+        ScenarioExpect.Contains("PublishAsync", generated);
+        ScenarioExpect.DoesNotContain("lock (_lock)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("Invalid enum configuration falls back to observer defaults")]
+    [Fact]
+    public void Invalid_Enum_Configuration_Falls_Back_To_Observer_Defaults()
+    {
+        const string code = """
+            using PatternKit.Generators.Observer;
+
+            namespace Test;
+
+            public record Payload(int Value);
+
+            [Observer(
+                typeof(Payload),
+                Threading = (ObserverThreadingPolicy)99,
+                Exceptions = (ObserverExceptionPolicy)99,
+                Order = (ObserverOrderPolicy)99)]
+            internal partial class DomainEvent
+            {
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(
+            code,
+            assemblyName: nameof(Invalid_Enum_Configuration_Falls_Back_To_Observer_Defaults));
+
+        var gen = new Observer.ObserverGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var run, out var updated);
+
+        ScenarioExpect.All(run.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = run.Results
+            .SelectMany(r => r.GeneratedSources)
+            .Single()
+            .SourceText.ToString();
+
+        ScenarioExpect.Contains("namespace Test;", generated);
+        ScenarioExpect.Contains("internal partial class DomainEvent", generated);
+        ScenarioExpect.Contains("public readonly object Lock = new();", generated);
+        ScenarioExpect.Contains("lock (_state.Lock)", generated);
+        ScenarioExpect.Contains("OnSubscriberError(ex);", generated);
+        ScenarioExpect.DoesNotContain("System.AggregateException", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 }

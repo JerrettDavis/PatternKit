@@ -22,7 +22,7 @@ public sealed class ApiGatewayTests(ITestOutputHelper output) : TinyBddXunitBase
 
     private static MiniRouter DefaultRouter()
         => MiniRouter.Create()
-            // middleware: first match wins (side effects only — not asserted here)
+            // middleware: first match wins (side effects only — not verified here)
             .Use(
                 static (in r) => r.Headers.ContainsKey("X-Request-Id"),
                 static (in r) => Console.WriteLine($"reqid={r.Headers["X-Request-Id"]}"))

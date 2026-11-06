@@ -9,10 +9,18 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Fluent decorators** for layering functionality (tax, discounts, rounding, logging) without inheritance.
 * **Pipelines** built declaratively and tested end-to-end.
 * **Config-driven composition** (DI + `IOptions`) so ops can re-order rules without redeploys.
+* **Enterprise feature slices** wired through the standard .NET DI container with PatternKit artifacts registered as singletons.
 * **Strategy-based coercion** for turning "whatever came in" into the types you actually want.
 * **Ultra-minimal HTTP routing** to illustrate middleware vs. routes vs. negotiation.
 * **Flyweight identity sharing** to eliminate duplicate immutable objects (glyphs, styles, tokens).
 * **Snapshot history & undo/redo (Memento)** for document/editor style workflows.
+* **Source-generated application wiring** for builders, factories, facades, proxies, observers, visitors, state machines, strategies, mementos, template methods, and messaging factories.
+* **Enterprise messaging workflows** for envelopes, routers, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, and outboxes.
+* **Messaging backplane facade** for host-style setup, typed request/reply, and publish/subscribe over an application-owned transport boundary.
+* **Production-readiness catalog** for DI, generic host, and ASP.NET Core diagnostics that maps every documented example to its source, TinyBDD tests, docs page, integration surfaces, and production checks.
+* **Workflow orchestration** for explicit ordered fulfillment steps with retries, conditional gates, compensation, and execution history.
+* **Snapshot / checkpoint management** for resumable event stream replay and projection rebuilds.
+* **Eventual consistency monitoring** for projection and integration lag visibility.
 
 ## Demos in this section
 
@@ -31,19 +39,45 @@ Welcome! This section collects small, focused demos that show **how to compose b
 * **Configuration-Driven Transaction Pipeline**
   Same business shape as above, but wired via DI + `IOptions<PipelineOptions>`. Discounts/rounding/tenders are discovered and **ordered from config**, making the pipeline operationally tunable.
 
+* **Enterprise Feature Slices with .NET DI**
+  A checkout feature slice registered with `Microsoft.Extensions.DependencyInjection`, exposing a typed `IEnterpriseCheckout` facade while the container owns Flyweight, Factory, Prototype, Chain, Strategy, Decorator, Abstract Factory, Proxy, TypeDispatcher, State Machine, Memento, Observer, and Flow artifacts. See [Enterprise Feature Slices with .NET DI](enterprise-feature-slices.md).
+
+* **Fulfillment Workflow Orchestration**
+  A Generic Host importable fulfillment workflow with fluent and source-generated routes for inventory reservation, fraud review, payment capture, retries, warehouse release, and compensation. See [Fulfillment Workflow Orchestration](fulfillment-workflow-orchestration.md).
+
+* **Order Replay Snapshot Checkpoint Management**
+  A Generic Host importable replay service with fluent and source-generated checkpoint manager routes for event-sourced order rebuilds. See [Order Replay Snapshot Checkpoint Management](order-replay-snapshot-checkpoint.md).
+
+* **Order Projection Eventual Consistency Monitor**
+  A Generic Host importable monitor with fluent and source-generated routes for source/target watermark convergence. See [Order Projection Eventual Consistency Monitor](order-projection-eventual-consistency-monitor.md).
+
+* **Customer Notification Null Object**
+  A Generic Host importable notification fallback with fluent and source-generated routes, `IServiceCollection` registration, and deterministic no-op behavior for optional collaborators. See [Customer Notification Null Object](null-object-notification.md).
+
+* **Checkout Backpressure**
+  A Generic Host importable checkout admission gate with fluent and source-generated routes, `IServiceCollection` registration, and explicit saturation behavior. See [Checkout Backpressure](checkout-backpressure.md).
+
+* **Customer Profile Lazy Load**
+  A Generic Host importable deferred profile lookup with fluent and source-generated routes, `IServiceCollection` registration, TTL caching, and invalidation. See [Customer Profile Lazy Load](customer-profile-lazy-load.md).
+* **Order Entry Ports and Adapters**
+  A Generic Host importable hexagonal order-entry flow with fluent and source-generated adapter routes. See [Order Entry Ports and Adapters](order-entry-ports-and-adapters.md).
+
+* **Product Catalog Change Data Capture**
+  A Generic Host importable mutation capture workflow with fluent and source-generated routes, ordered pending records, and post-commit publication. See [Product Catalog Change Data Capture](product-catalog-change-data-capture.md).
+
 * **Minimal Web Request Router**
   A tiny "API gateway" that separates **first-match middleware** (side effects/logging/auth) from **first-match routes** and **content negotiation**. A crisp example of Strategy patterns in an HTTP-ish setting.
 
 * **Payment Processor — Fluent Decorator Pattern for Point of Sale**
   Demonstrates the **Decorator** pattern for building flexible payment processors. Shows how to layer tax calculation, promotional discounts, loyalty programs, employee benefits, and rounding strategies on a base processor—**no inheritance hierarchies**. Includes five real-world processors (simple, retail, e-commerce, cash register, birthday special) with full test coverage. Perfect for understanding decorator execution order and composition patterns.
 
-* **Flyweight Glyph Cache & Style Sharing**  
+* **Flyweight Glyph Cache & Style Sharing**
   Shows a high-volume text/glyph layout where each distinct glyph (and style) is allocated **once** and reused. Demonstrates intrinsic vs extrinsic state separation, preload of hot keys (spaces), custom key comparers (case-insensitive styles), and thread-safe lazy creation—mirroring classic Flyweight scenarios (rendering, AST token metadata, icon caches).
 
-* **Document Editing History (Memento)**  
+* **Document Editing History (Memento)**
   A simple document buffer with tagged snapshots, undo/redo, jump-to-version, and duplicate suppression illustrating the **Memento** pattern's practical shape in a UI/editor workflow.
 
-* **State Machine — Order Lifecycle**  
+* **State Machine — Order Lifecycle**
   A fluent state machine driving an order lifecycle with entry/exit hooks, transition effects, and default per‑state behavior. Shows determinism (first‑match wins), internal (Stay) vs cross‑state transitions, and log/audit side‑effects.
 
 * **Template Method Data Processor**
@@ -51,6 +85,66 @@ Welcome! This section collects small, focused demos that show **how to compose b
 
 * **Template Method Async Pipeline**
   End-to-end async pipeline (fetch → transform → store) with cancellation, optional synchronization, and error observation. Shows both subclassing (`AsyncTemplateMethod`) and fluent (`AsyncTemplate`) approaches. See [Template Method Async Demo](template-method-async-demo.md).
+
+* **Source Generator Application Suite**
+  A production-shaped generator suite covering DI module wiring, corporate host composition, generated facades, generated proxies, generated observers, generated mementos, generated state machines, generated strategies, generated visitors, generated template methods, and messaging generators. See [Source Generator Application Suite](source-generator-application-suite.md).
+
+* **Enterprise Messaging Workflow Suite**
+  End-to-end messaging examples for envelopes, content routing, recipient lists, splitters, aggregators, routing slips, sagas, mailboxes, idempotent receivers, inboxes, outboxes, and generated messaging factories. See [Enterprise Messaging Workflow Suite](enterprise-messaging-workflows.md).
+
+* **Order Event-Driven Consumer**
+  Shows fluent and source-generated push consumers side by side, with an importable `IServiceCollection` extension. See [Order Event-Driven Consumer](order-event-driven-consumer.md).
+
+* **ERP Channel Adapter**
+  Shows fluent and source-generated external DTO adapters over PatternKit message channels, with an importable `IServiceCollection` extension. See [ERP Channel Adapter](erp-channel-adapter.md).
+
+* **Payment Messaging Gateway**
+  Shows fluent and source-generated request/response gateways over PatternKit message channels, with an importable `IServiceCollection` extension. See [Payment Messaging Gateway](payment-messaging-gateway.md).
+
+* **Inventory Service Activator**
+  Shows fluent and source-generated message-to-service activation with an importable `IServiceCollection` extension. See [Inventory Service Activator](inventory-service-activator.md).
+
+* **Fulfillment Priority Queue**
+  Shows fluent and source-generated business-priority queues with an importable `IServiceCollection` extension. See [Fulfillment Priority Queue](fulfillment-priority-queue.md).
+
+* **Fulfillment Health Endpoint Monitoring**
+  Shows fluent and source-generated health checks with `IServiceCollection`, Generic Host-friendly services, and ASP.NET Core route mapping. See [Fulfillment Health Endpoint Monitoring](fulfillment-health-endpoint-monitoring.md).
+
+* **Customer Dashboard Gateway Aggregation**
+  Shows fluent and source-generated API gateway aggregation with `IServiceCollection` and ASP.NET Core endpoint mapping. See [Customer Dashboard Gateway Aggregation](customer-dashboard-gateway-aggregation.md).
+
+* **Generated Message Envelope**
+  Shows fluent and source-generated message envelope contracts side by side, with an importable `IServiceCollection` extension. See [Generated Message Envelope](generated-message-envelope.md).
+
+* **Order Canonical Data Model**
+  Shows fluent and source-generated order normalization into an application-owned canonical contract, with an importable `IServiceCollection` extension. See [Order Canonical Data Model](order-canonical-data-model.md).
+
+* **Inventory Event-Carried State Transfer**
+  Shows fluent and source-generated inventory projection events that carry enough state to update a local read model, with an importable `IServiceCollection` extension. See [Inventory Event-Carried State Transfer](inventory-event-carried-state-transfer.md).
+
+* **Order Event Notification**
+  Shows fluent and source-generated compact order notifications with correlation metadata, dispatch rules, and an importable `IServiceCollection` extension. See [Order Event Notification](order-event-notification.md).
+
+* **Generated Recipient List**
+  Shows fluent and source-generated recipient-list fan-out side by side, with an importable `IServiceCollection` extension. See [Generated Recipient List](generated-recipient-list.md).
+
+* **Generated Splitter and Aggregator**
+  Shows fluent and source-generated split/rejoin message routing side by side, with an importable `IServiceCollection` extension. See [Generated Splitter And Aggregator](generated-splitter-aggregator.md).
+
+* **Generated Mailbox**
+  Shows fluent and source-generated serialized inboxes side by side, with an importable `IServiceCollection` extension. See [Generated Mailbox](generated-mailbox.md).
+
+* **Generated Reliability Pipeline**
+  Shows fluent and source-generated idempotent receiver, inbox, and outbox composition side by side, with an importable `IServiceCollection` extension. See [Generated Reliability Pipeline](generated-reliability-pipeline.md).
+
+* **Resilient Checkout and Collaborating Mailboxes**
+  Application-shaped messaging demos: checkout route selection, routing-slip execution, command compensation, fallback routes, and service mailboxes collaborating over correlated messages. See [Resilient Checkout and Collaborating Mailboxes](resilient-checkout-and-mailboxes.md).
+
+* **Messaging Backplane Facade**
+  Demonstrates how PatternKit can sit behind a MassTransit- or MediatR-style host builder and typed client while RabbitMQ, Azure Service Bus, Postgres, MQTT, or another adapter remains infrastructure-owned. See [Messaging Backplane Facade](messaging-backplane-facade.md).
+
+* **Production-Ready Example Integrations**
+  Importable catalog and validation tooling for every documented example. Register it through `IServiceCollection`, validate it during generic host startup, or expose it through ASP.NET Core minimal API endpoints. See [Production-Ready Example Integrations](production-ready-integrations.md).
 
 ## How to run
 
@@ -86,11 +180,28 @@ dotnet test PatternKit.slnx -c Release
 * **Mini Router:** `MiniRouter` + `Demo.Run` — middleware/auth/negotiation in console output.
 * **Mediated Pipeline:** `TransactionPipelineBuilder` + `MediatedTransactionPipelineDemo.Run`.
 * **Config-Driven Pipeline:** `ConfigDrivenPipelineDemo.AddPaymentPipeline` + `PipelineOptions`.
+* **Enterprise Feature Slices:** `EnterpriseFeatureSlicesDemo.AddEnterpriseFeatureSlices` (+ `EnterpriseFeatureSlicesDemoTests`) — standard .NET DI owns PatternKit artifacts behind a typed checkout facade.
 * **Payment Processor Decorators:** `PaymentProcessor*` + related tests.
 * **Flyweight Glyph Cache:** `FlyweightDemo` (+ `FlyweightDemoTests`) — glyph width layout & style sharing.
 * **Flyweight Structural Tests:** `Structural/Flyweight/FlyweightTests.cs` — preload, concurrency, comparer, guards.
 * **Memento Document Demo:** `MementoDemo` — buffer edits with undo/redo and tags.
 * **State Machine Demo:** `OrderStateDemo` (+ `StateDemoTests`) — order lifecycle with entry/exit hooks and default behaviors.
+* **Source Generator Suite:** `src/PatternKit.Examples/Generators` (+ `PatternKit.Examples.Tests/Generators`) — generated builders, factories, facades, mementos, state machines, strategies, visitors, and host-style composition.
+* **Generator Boundary Demos:** `AdapterGeneratorDemo`, `ObserverGeneratorDemo`, `ProxyGeneratorDemo`, `SingletonGeneratorDemo`, `TemplateMethodGeneratorDemo` (+ matching tests) — generated adapters, observers, proxies, singletons, and template workflows.
+* **Enterprise Messaging:** `src/PatternKit.Examples/Messaging` (+ `PatternKit.Examples.Tests/Messaging`) — runtime and generated messaging workflows.
+* **Resilient Checkout:** `ResilientCheckoutDemo` (+ `ResilientCheckoutDemoTests`) — fallback checkout routes with compensation.
+* **Collaborating Mailboxes:** `ServiceCollaborationMailboxDemo` (+ `ServiceCollaborationMailboxDemoTests`) — inventory, payment, shipping, and notification services collaborating through serialized mailboxes.
+* **Messaging Backplane Facade:** `BackplaneFacadeDemo` (+ `BackplaneFacadeDemoTests`) — host setup, request/reply, pub/sub, outbox, idempotency, and mailbox-backed transport subscribers.
+* **Product Gateway Routing:** `ProductGatewayRoutingDemo` (+ `ProductGatewayRoutingDemoTests`) — fluent and generated downstream route dispatch with DI and ASP.NET Core mapping.
+* **Checkout Strangler Fig Migration:** `CheckoutStranglerFigDemo` (+ `CheckoutStranglerFigDemoTests`) — fluent and generated legacy-to-modern checkout routing with DI and ASP.NET Core mapping.
+* **Order Telemetry Sidecar:** `OrderTelemetrySidecarDemo` (+ `OrderTelemetrySidecarDemoTests`) — fluent and generated companion telemetry behavior with DI and ASP.NET Core mapping.
+* **Commerce Backends for Frontends:** `CommerceBackendsForFrontendsDemo` (+ `CommerceBackendsForFrontendsDemoTests`) — fluent and generated client-specific facade shaping with DI and ASP.NET Core mapping.
+* **Inventory Ambassador:** `InventoryAmbassadorDemo` (+ `InventoryAmbassadorDemoTests`) — fluent and generated outbound connectivity wrapper with DI and ASP.NET Core mapping.
+* **Warehouse Leader Election:** `WarehouseLeaderElectionDemo` (+ `WarehouseLeaderElectionDemoTests`) — fluent and generated active worker lease coordination with DI and Generic Host mapping.
+* **Order Allocation Distributed Lock:** `OrderAllocationDistributedLockDemo` (+ `OrderAllocationDistributedLockDemoTests`) — fluent and generated resource lease coordination with DI and Generic Host mapping.
+* **Checkout Compensating Transaction:** `CheckoutCompensatingTransactionDemo` (+ `CheckoutCompensatingTransactionDemoTests`) — fluent and generated reversible checkout steps with DI and Generic Host mapping.
+* **Warehouse Scheduler Agent Supervisor:** `WarehouseSchedulerAgentSupervisorDemo` (+ `WarehouseSchedulerAgentSupervisorDemoTests`) — fluent and generated scheduled worker supervision with DI and Generic Host mapping.
+* **Production-Ready Example Catalog:** `PatternKitExampleCatalog` (+ `PatternKitExampleCatalogTests`) — DI registration, generic host validation, ASP.NET Core endpoint mapping, and source/test/docs manifest checks.
 * **Tests:** `PatternKit.Examples.Tests/*` use TinyBDD scenarios that read like specs.
 
 ## Why these demos exist

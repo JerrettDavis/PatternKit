@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
@@ -9,21 +9,26 @@
              CS1591: Missing XML comment (examples don't need docs)
              CS0649: Field never assigned (used in serialization scenarios)
              TBDD010: TinyBDD optimization hints (not errors) -->
-        <NoWarn>$(NoWarn);CS1591;CS0649;TBDD010</NoWarn>
+        <NoWarn>$(NoWarn);CS1591;CS0649;CS8602;TBDD010</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.4" />
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.5" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.5" />
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.5" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
-        <PackageReference Include="System.Collections.Immutable" Version="10.0.3" />
-        <PackageReference Include="TinyBDD.Xunit" Version="0.19.6" />
-        <PackageReference Include="xunit" Version="2.9.3" />
-        <PackageReference Include="xunit.extensibility.core" Version="2.9.3" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+        <PackageReference Include="coverlet.collector" />
+        <PackageReference Include="JetBrains.Annotations" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="MQTTnet" />
+        <PackageReference Include="RabbitMQ.Client" />
+        <PackageReference Include="System.Collections.Immutable" />
+        <PackageReference Include="Testcontainers" />
+        <PackageReference Include="Testcontainers.RabbitMq" />
+        <PackageReference Include="TinyBDD" />
+        <PackageReference Include="TinyBDD.Xunit" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.extensibility.core" />
+        <PackageReference Include="xunit.runner.visualstudio">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
@@ -38,12 +43,27 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\BenchmarkRepository.cs" Link="BenchmarkCoverage\BenchmarkRepository.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\BenchmarkRoute.cs" Link="BenchmarkCoverage\BenchmarkRoute.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\GeneratorBenchmarkCoverage.cs" Link="BenchmarkCoverage\GeneratorBenchmarkCoverage.cs" />
+      <Compile Include="..\..\benchmarks\PatternKit.Benchmarks\Coverage\PatternBenchmarkCoverage.cs" Link="BenchmarkCoverage\PatternBenchmarkCoverage.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
       <Folder Include="FlyweightDemo\" />
       <Folder Include="Strategies\" />
     </ItemGroup>
 
     <ItemGroup>
         <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
 </Project>

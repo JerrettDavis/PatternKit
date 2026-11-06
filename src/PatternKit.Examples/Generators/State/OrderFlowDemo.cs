@@ -28,7 +28,7 @@ public static class OrderFlowDemo
 
         // Create an order flow instance
         var order = new OrderFlow("ORD-001", 299.99m);
-        
+
         Console.WriteLine($"Order: {order.Id}, Amount: ${order.Amount:F2}");
         Console.WriteLine($"Initial State: {order.State}\n");
 
@@ -72,7 +72,7 @@ public static class OrderFlowDemo
         Console.WriteLine("=== Cancellation Example ===\n");
 
         var order = new OrderFlow("ORD-002", 599.99m);
-        
+
         Console.WriteLine($"Order: {order.Id}, Amount: ${order.Amount:F2}");
         Console.WriteLine($"Initial State: {order.State}\n");
 
@@ -96,7 +96,7 @@ public static class OrderFlowDemo
         Console.WriteLine("=== Guard Failure Example ===\n");
 
         var order = new OrderFlow("ORD-003", -50m); // Invalid amount
-        
+
         Console.WriteLine($"Order: {order.Id}, Amount: ${order.Amount:F2}");
         Console.WriteLine($"Initial State: {order.State}\n");
 
@@ -163,7 +163,7 @@ public static class OrderFlowDemo
         {
             Console.WriteLine($"Current state: {o.State}");
             Console.WriteLine("Available actions:");
-            
+
             foreach (OrderTrigger trigger in Enum.GetValues(typeof(OrderTrigger)))
             {
                 if (o.CanFire(trigger))
@@ -221,16 +221,16 @@ public enum OrderState
 {
     /// <summary>Initial state - order is being prepared</summary>
     Draft,
-    
+
     /// <summary>Order has been submitted for processing</summary>
     Submitted,
-    
+
     /// <summary>Payment has been successfully processed</summary>
     Paid,
-    
+
     /// <summary>Order has been shipped to the customer</summary>
     Shipped,
-    
+
     /// <summary>Order was cancelled and will not be processed</summary>
     Cancelled
 }
@@ -242,13 +242,13 @@ public enum OrderTrigger
 {
     /// <summary>Submit the order for processing</summary>
     Submit,
-    
+
     /// <summary>Process payment for the order</summary>
     Pay,
-    
+
     /// <summary>Ship the order to the customer</summary>
     Ship,
-    
+
     /// <summary>Cancel the order</summary>
     Cancel
 }
@@ -268,12 +268,12 @@ public partial class OrderFlow
     /// Gets the unique identifier for this order.
     /// </summary>
     public string Id { get; }
-    
+
     /// <summary>
     /// Gets the order amount.
     /// </summary>
     public decimal Amount { get; }
-    
+
     /// <summary>
     /// Initializes a new instance of the OrderFlow state machine.
     /// </summary>
@@ -317,15 +317,15 @@ public partial class OrderFlow
     private async ValueTask OnPayAsync(CancellationToken ct)
     {
         Console.WriteLine($"   >> Transition: Processing payment for {Id}...");
-        
+
         // Simulate payment processing
         await Task.Delay(500, ct);
-        
+
         // In a real system: 
         // - Call payment gateway
         // - Update payment records
         // - Generate receipt
-        
+
         Console.WriteLine($"   >> Payment of ${Amount:F2} processed");
     }
 
@@ -466,7 +466,7 @@ public partial class DocumentWorkflow
     public string DocumentId { get; }
     public string Author { get; }
     public List<string> ReviewComments { get; } = new();
-    
+
     public DocumentWorkflow(string documentId, string author)
     {
         DocumentId = documentId;

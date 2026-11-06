@@ -72,6 +72,8 @@
           href: behavioral/memento/real-world-examples.md
         - name: Memento
           href: behavioral/memento/memento.md
+    - name: Null Object
+      href: behavioral/null-object/index.md
     - name: Observer
       href: behavioral/observer/index.md
       items:
@@ -191,6 +193,8 @@
           href: creational/factory/real-world-examples.md
         - name: Factory
           href: creational/factory/factory.md
+    - name: Object Pool
+      href: creational/object-pool/index.md
     - name: Prototype
       href: creational/prototype/index.md
       items:
@@ -292,6 +296,191 @@
 
 - name: Additional Patterns
   items:
+    - name: Messaging
+      href: messaging/README.md
+      items:
+        - name: Message Channel
+          href: messaging/message-channel.md
+        - name: Channel Purger
+          href: messaging/channel-purger.md
+        - name: Invalid Message Channel
+          href: messaging/invalid-message-channel.md
+        - name: Polling Consumer
+          href: messaging/polling-consumer.md
+        - name: Event-Driven Consumer
+          href: messaging/event-driven-consumer.md
+        - name: Durable Subscriber
+          href: messaging/durable-subscriber.md
+        - name: Dynamic Router
+          href: messaging/dynamic-router.md
+        - name: Message Bus
+          href: messaging/message-bus.md
+        - name: Messaging Bridge
+          href: messaging/messaging-bridge.md
+        - name: Correlation Identifier
+          href: messaging/correlation-identifier.md
+        - name: Message History
+          href: messaging/message-history.md
+        - name: Channel Adapter
+          href: messaging/channel-adapter.md
+        - name: Messaging Gateway
+          href: messaging/messaging-gateway.md
+        - name: Service Activator
+          href: messaging/service-activator.md
+        - name: Message Envelope and Context
+          href: messaging/message-envelope.md
+        - name: Message Translator
+          href: messaging/message-translator.md
+        - name: Content Enricher
+          href: messaging/content-enricher.md
+        - name: Canonical Data Model
+          href: messaging/canonical-data-model.md
+        - name: Event-Carried State Transfer
+          href: messaging/event-carried-state-transfer.md
+        - name: Event Notification
+          href: messaging/event-notification.md
+        - name: Claim Check
+          href: messaging/claim-check.md
+        - name: Dead Letter Channel
+          href: messaging/dead-letter-channel.md
+        - name: Message Filter
+          href: messaging/message-filter.md
+        - name: Message Expiration
+          href: messaging/message-expiration.md
+        - name: Guaranteed Delivery
+          href: messaging/guaranteed-delivery.md
+        - name: Message Store
+          href: messaging/message-store.md
+        - name: Wire Tap
+          href: messaging/wire-tap.md
+        - name: Control Bus
+          href: messaging/control-bus.md
+        - name: Scatter-Gather
+          href: messaging/scatter-gather.md
+        - name: Resequencer
+          href: messaging/resequencer.md
+        - name: Enterprise Message Routing
+          href: messaging/message-routing.md
+        - name: Competing Consumers
+          href: messaging/competing-consumers.md
+        - name: Pipes and Filters
+          href: messaging/pipes-and-filters.md
+        - name: Routing Slip
+          href: messaging/routing-slip.md
+        - name: Saga / Process Manager
+          href: messaging/saga.md
+        - name: Mailbox
+          href: messaging/mailbox.md
+        - name: Change Data Capture
+          href: messaging/change-data-capture.md
+        - name: Backpressure
+          href: messaging/backpressure.md
+        - name: Idempotent Receiver, Inbox, and Outbox
+          href: messaging/reliability.md
+        - name: Enterprise Integration Source Generators
+          href: messaging/enterprise-generators.md
+        - name: Source-Generated Dispatcher
+          href: messaging/dispatcher.md
+    - name: Cloud Architecture
+      items:
+        - name: Retry
+          href: cloud/retry.md
+        - name: Circuit Breaker
+          href: cloud/circuit-breaker.md
+        - name: Bulkhead
+          href: cloud/bulkhead.md
+        - name: Cache Stampede Protection
+          href: cloud/cache-stampede-protection.md
+        - name: Queue-Based Load Leveling
+          href: cloud/queue-load-leveling.md
+        - name: Health Endpoint Monitoring
+          href: cloud/health-endpoint-monitoring.md
+        - name: Priority Queue
+          href: cloud/priority-queue.md
+        - name: Cache-Aside
+          href: cloud/cache-aside.md
+        - name: Read-Through and Write-Through Cache
+          href: cloud/read-write-through-cache.md
+        - name: Rate Limiting
+          href: cloud/rate-limiting.md
+        - name: External Configuration Store
+          href: cloud/external-configuration-store.md
+        - name: Gateway Aggregation
+          href: cloud/gateway-aggregation.md
+        - name: Gateway Routing
+          href: cloud/gateway-routing.md
+        - name: Strangler Fig
+          href: cloud/strangler-fig.md
+        - name: Sidecar
+          href: cloud/sidecar.md
+        - name: Backends for Frontends
+          href: cloud/backends-for-frontends.md
+        - name: Ambassador
+          href: cloud/ambassador.md
+        - name: Leader Election
+          href: cloud/leader-election.md
+        - name: Distributed Lock / Lease
+          href: cloud/distributed-lock-lease.md
+        - name: Scheduler Agent Supervisor
+          href: cloud/scheduler-agent-supervisor.md
+    - name: Application Architecture
+      items:
+        - name: Aggregate Root
+          href: application/aggregate-root.md
+        - name: Anti-Corruption Layer
+          href: application/anti-corruption-layer.md
+        - name: Activity Tracker
+          href: application/activity-tracker.md
+        - name: Repository
+          href: application/repository.md
+        - name: Unit of Work
+          href: application/unit-of-work.md
+        - name: Compensating Transaction
+          href: application/compensating-transaction.md
+        - name: Data Mapper
+          href: application/data-mapper.md
+        - name: Identity Map
+          href: application/identity-map.md
+        - name: Lazy Load
+          href: application/lazy-load.md
+        - name: Ports and Adapters
+          href: application/ports-and-adapters.md
+        - name: Transaction Script
+          href: application/transaction-script.md
+        - name: Service Layer
+          href: application/service-layer.md
+        - name: Domain Event
+          href: application/domain-event.md
+        - name: Domain Service
+          href: application/domain-service.md
+        - name: Bounded Context
+          href: application/bounded-context.md
+        - name: Context Map
+          href: application/context-map.md
+        - name: Table Data Gateway
+          href: application/table-data-gateway.md
+        - name: Manual Task Gate
+          href: application/manual-task-gate.md
+        - name: Workflow Orchestration
+          href: application/workflow-orchestration.md
+        - name: Snapshot / Checkpoint Management
+          href: application/snapshot-checkpoint-management.md
+        - name: Eventual Consistency Monitor
+          href: application/eventual-consistency-monitor.md
+        - name: Timeout Manager
+          href: application/timeout-manager.md
+        - name: Event Sourcing
+          href: application/event-sourcing.md
+        - name: Feature Toggle
+          href: application/feature-toggle.md
+        - name: Audit Log
+          href: application/audit-log.md
+        - name: Materialized View
+          href: application/materialized-view.md
+        - name: Specification
+          href: application/specification.md
+        - name: Value Object
+          href: application/value-object.md
     - name: Type-Dispatcher
       href: behavioral/type-dispatcher/index.md
       items:

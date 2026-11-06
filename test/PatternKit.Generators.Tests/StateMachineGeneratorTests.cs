@@ -1,9 +1,11 @@
 using Microsoft.CodeAnalysis;
+using TinyBDD;
 
 namespace PatternKit.Generators.Tests;
 
 public class StateMachineGeneratorTests
 {
+    [Scenario("BasicStateMachine Class GeneratesCorrectly")]
     [Fact]
     public void BasicStateMachine_Class_GeneratesCorrectly()
     {
@@ -34,23 +36,24 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Confirm we generated the expected file
         var names = result.Results.SelectMany(r => r.GeneratedSources).Select(gs => gs.HintName).ToArray();
-        Assert.Contains("OrderFlow.StateMachine.g.cs", names);
+        ScenarioExpect.Contains("OrderFlow.StateMachine.g.cs", names);
 
         // Verify the generated source contains expected members
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public global::PatternKit.Examples.OrderState State { get; private set; }", generatedSource);
-        Assert.Contains("public bool CanFire(global::PatternKit.Examples.OrderTrigger trigger)", generatedSource);
-        Assert.Contains("public void Fire(global::PatternKit.Examples.OrderTrigger trigger)", generatedSource);
+        ScenarioExpect.Contains("public global::PatternKit.Examples.OrderState State { get; private set; }", generatedSource);
+        ScenarioExpect.Contains("public bool CanFire(global::PatternKit.Examples.OrderTrigger trigger)", generatedSource);
+        ScenarioExpect.Contains("public void Fire(global::PatternKit.Examples.OrderTrigger trigger)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("BasicStateMachine Struct GeneratesCorrectly")]
     [Fact]
     public void BasicStateMachine_Struct_GeneratesCorrectly()
     {
@@ -78,17 +81,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify struct keyword is used
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial struct LightSwitch", generatedSource);
+        ScenarioExpect.Contains("partial struct LightSwitch", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("BasicStateMachine RecordClass GeneratesCorrectly")]
     [Fact]
     public void BasicStateMachine_RecordClass_GeneratesCorrectly()
     {
@@ -116,17 +120,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify record class keyword is used
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial record class Door", generatedSource);
+        ScenarioExpect.Contains("partial record class Door", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("BasicStateMachine RecordStruct GeneratesCorrectly")]
     [Fact]
     public void BasicStateMachine_RecordStruct_GeneratesCorrectly()
     {
@@ -154,17 +159,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify record struct keyword is used
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("partial record struct Window", generatedSource);
+        ScenarioExpect.Contains("partial record struct Window", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AsyncStateMachine WithValueTask GeneratesCorrectly")]
     [Fact]
     public void AsyncStateMachine_WithValueTask_GeneratesCorrectly()
     {
@@ -200,18 +206,19 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify async methods are generated
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public async global::System.Threading.Tasks.ValueTask FireAsync(global::PatternKit.Examples.OrderTrigger trigger, global::System.Threading.CancellationToken cancellationToken = default)", generatedSource);
-        Assert.Contains("await OnSubmitAsync(cancellationToken)", generatedSource);
+        ScenarioExpect.Contains("public async global::System.Threading.Tasks.ValueTask FireAsync(global::PatternKit.Examples.OrderTrigger trigger, global::System.Threading.CancellationToken cancellationToken = default)", generatedSource);
+        ScenarioExpect.Contains("await OnSubmitAsync(cancellationToken)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithGuards GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithGuards_GeneratesCorrectly()
     {
@@ -245,19 +252,20 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify guards are called
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("CanSubmit()", generatedSource);
-        Assert.Contains("CanPay()", generatedSource);
-        Assert.Contains("if (!CanSubmit())", generatedSource);
+        ScenarioExpect.Contains("CanSubmit()", generatedSource);
+        ScenarioExpect.Contains("CanPay()", generatedSource);
+        ScenarioExpect.Contains("if (!CanSubmit())", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithAsyncGuards GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithAsyncGuards_GeneratesCorrectly()
     {
@@ -291,17 +299,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify async guards are called
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("await CanSubmitAsync(cancellationToken)", generatedSource);
+        ScenarioExpect.Contains("await CanSubmitAsync(cancellationToken)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithEntryHooks GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithEntryHooks_GeneratesCorrectly()
     {
@@ -335,23 +344,24 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify entry hooks are called after state update
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("OnEnterSubmitted()", generatedSource);
-        Assert.Contains("OnEnterPaid()", generatedSource);
-        
+        ScenarioExpect.Contains("OnEnterSubmitted()", generatedSource);
+        ScenarioExpect.Contains("OnEnterPaid()", generatedSource);
+
         // Verify State is updated before entry hooks
-        var submitIndex = generatedSource.IndexOf("State = global::PatternKit.Examples.OrderState.Submitted");
-        var entrySubmittedIndex = generatedSource.IndexOf("OnEnterSubmitted()");
-        Assert.True(submitIndex < entrySubmittedIndex, "State should be updated before entry hook is called");
+        var submitIndex = generatedSource.IndexOf("State = global::PatternKit.Examples.OrderState.Submitted", StringComparison.Ordinal);
+        var entrySubmittedIndex = generatedSource.IndexOf("OnEnterSubmitted()", StringComparison.Ordinal);
+        ScenarioExpect.True(submitIndex < entrySubmittedIndex, "State should be updated before entry hook is called");
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithExitHooks GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithExitHooks_GeneratesCorrectly()
     {
@@ -385,23 +395,24 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify exit hooks are called
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("OnExitDraft()", generatedSource);
-        Assert.Contains("OnExitSubmitted()", generatedSource);
+        ScenarioExpect.Contains("OnExitDraft()", generatedSource);
+        ScenarioExpect.Contains("OnExitSubmitted()", generatedSource);
 
         // Verify exit hooks are called before transition action
-        var exitIndex = generatedSource.IndexOf("OnExitDraft()");
-        var transitionIndex = generatedSource.IndexOf("OnSubmit()");
-        Assert.True(exitIndex < transitionIndex, "Exit hook should be called before transition action");
+        var exitIndex = generatedSource.IndexOf("OnExitDraft()", StringComparison.Ordinal);
+        var transitionIndex = generatedSource.IndexOf("OnSubmit()", StringComparison.Ordinal);
+        ScenarioExpect.True(exitIndex < transitionIndex, "Exit hook should be called before transition action");
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithAsyncEntryExitHooks GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithAsyncEntryExitHooks_GeneratesCorrectly()
     {
@@ -440,18 +451,19 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify async entry/exit hooks are awaited
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("await OnExitDraftAsync(cancellationToken)", generatedSource);
-        Assert.Contains("await OnEnterSubmittedAsync(cancellationToken)", generatedSource);
+        ScenarioExpect.Contains("await OnExitDraftAsync(cancellationToken)", generatedSource);
+        ScenarioExpect.Contains("await OnEnterSubmittedAsync(cancellationToken)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithInvalidTriggerPolicy Ignore GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithInvalidTriggerPolicy_Ignore_GeneratesCorrectly()
     {
@@ -476,18 +488,19 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify no exception is thrown for invalid triggers
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.DoesNotContain("throw new global::System.InvalidOperationException", generatedSource);
-        Assert.Contains("return;", generatedSource); // Should just return instead
+        ScenarioExpect.DoesNotContain("throw new global::System.InvalidOperationException", generatedSource);
+        ScenarioExpect.Contains("return;", generatedSource); // Should just return instead
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("StateMachineWithGuardFailurePolicy Ignore GeneratesCorrectly")]
     [Fact]
     public void StateMachineWithGuardFailurePolicy_Ignore_GeneratesCorrectly()
     {
@@ -515,19 +528,20 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify no exception is thrown for guard failures
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        var guardFailureIndex = generatedSource.IndexOf("if (!CanTransition())");
-        var throwIndex = generatedSource.IndexOf("throw new global::System.InvalidOperationException($\"Guard failed", guardFailureIndex);
-        Assert.True(throwIndex == -1, "Should not throw exception on guard failure with Ignore policy");
+        var guardFailureIndex = generatedSource.IndexOf("if (!CanTransition())", StringComparison.Ordinal);
+        var throwIndex = generatedSource.IndexOf("throw new global::System.InvalidOperationException($\"Guard failed", guardFailureIndex, StringComparison.Ordinal);
+        ScenarioExpect.True(throwIndex == -1, "Should not throw exception on guard failure with Ignore policy");
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("NonPartialType ReportsDiagnostic")]
     [Fact]
     public void NonPartialType_ReportsDiagnostic()
     {
@@ -553,9 +567,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST001
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST001");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST001");
     }
 
+    [Scenario("NonEnumStateType ReportsDiagnostic")]
     [Fact]
     public void NonEnumStateType_ReportsDiagnostic()
     {
@@ -579,9 +594,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST002
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST002");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST002");
     }
 
+    [Scenario("NonEnumTriggerType ReportsDiagnostic")]
     [Fact]
     public void NonEnumTriggerType_ReportsDiagnostic()
     {
@@ -605,9 +621,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST003
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST003");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST003");
     }
 
+    [Scenario("DuplicateTransition ReportsDiagnostic")]
     [Fact]
     public void DuplicateTransition_ReportsDiagnostic()
     {
@@ -636,9 +653,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST004
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST004");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST004");
     }
 
+    [Scenario("InvalidTransitionSignature ReportsDiagnostic")]
     [Fact]
     public void InvalidTransitionSignature_ReportsDiagnostic()
     {
@@ -664,9 +682,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST005
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST005");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST005");
     }
 
+    [Scenario("InvalidGuardSignature ReportsDiagnostic")]
     [Fact]
     public void InvalidGuardSignature_ReportsDiagnostic()
     {
@@ -695,9 +714,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST006
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST006");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST006");
     }
 
+    [Scenario("InvalidEntryHookSignature ReportsDiagnostic")]
     [Fact]
     public void InvalidEntryHookSignature_ReportsDiagnostic()
     {
@@ -726,9 +746,10 @@ public class StateMachineGeneratorTests
 
         // Should have diagnostic PKST007
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST007");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST007");
     }
 
+    [Scenario("CompleteOrderFlowExample GeneratesCorrectly")]
     [Fact]
     public void CompleteOrderFlowExample_GeneratesCorrectly()
     {
@@ -778,24 +799,25 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify all expected elements are generated
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("State { get; private set; }", generatedSource);
-        Assert.Contains("CanFire", generatedSource);
-        Assert.Contains("Fire(", generatedSource);
-        Assert.Contains("FireAsync(", generatedSource);
-        Assert.Contains("CanPay()", generatedSource);
-        Assert.Contains("OnExitPaid()", generatedSource);
-        Assert.Contains("OnEnterShipped()", generatedSource);
-        Assert.Contains("await OnPayAsync(cancellationToken)", generatedSource);
+        ScenarioExpect.Contains("State { get; private set; }", generatedSource);
+        ScenarioExpect.Contains("CanFire", generatedSource);
+        ScenarioExpect.Contains("Fire(", generatedSource);
+        ScenarioExpect.Contains("FireAsync(", generatedSource);
+        ScenarioExpect.Contains("CanPay()", generatedSource);
+        ScenarioExpect.Contains("OnExitPaid()", generatedSource);
+        ScenarioExpect.Contains("OnEnterShipped()", generatedSource);
+        ScenarioExpect.Contains("await OnPayAsync(cancellationToken)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("CustomMethodNames GeneratesCorrectly")]
     [Fact]
     public void CustomMethodNames_GeneratesCorrectly()
     {
@@ -823,20 +845,21 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify custom method names are used
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("public bool CanTransition", generatedSource);
-        Assert.Contains("public void Transition", generatedSource);
-        Assert.DoesNotContain("public void Fire(", generatedSource);
-        Assert.DoesNotContain("public bool CanFire", generatedSource);
+        ScenarioExpect.Contains("public bool CanTransition", generatedSource);
+        ScenarioExpect.Contains("public void Transition", generatedSource);
+        ScenarioExpect.DoesNotContain("public void Fire(", generatedSource);
+        ScenarioExpect.DoesNotContain("public bool CanFire", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenerateAsyncFalse WithAsyncMethods ReportsDiagnostic")]
     [Fact]
     public void GenerateAsyncFalse_WithAsyncMethods_ReportsDiagnostic()
     {
@@ -867,31 +890,32 @@ public class StateMachineGeneratorTests
 
         // Should have PKST008 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        
+
         // Debug: print all diagnostics
         if (diagnostics.Length == 0)
         {
             // Check if code was even generated
             var hasGeneratedCode = result.Results.Any(r => r.GeneratedSources.Length > 0);
-            Assert.True(hasGeneratedCode, "No code was generated");
-            
+            ScenarioExpect.True(hasGeneratedCode, "No code was generated");
+
             // Check compilation diagnostics
-            var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST")).ToArray();
-            Assert.True(compDiags.Length > 0, $"No PKST diagnostics found. Generated code: {result.Results[0].GeneratedSources.Length} files");
+            var compDiags = updated.GetDiagnostics().Where(d => d.Id.StartsWith("PKST", StringComparison.Ordinal)).ToArray();
+            ScenarioExpect.True(compDiags.Length > 0, $"No PKST diagnostics found. Generated code: {result.Results[0].GeneratedSources.Length} files");
         }
-        
-        Assert.Contains(diagnostics, d => d.Id == "PKST008");
+
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST008");
 
         // Verify FireAsync is NOT generated
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.DoesNotContain("FireAsync", generatedSource);
-        Assert.Contains("public void Fire", generatedSource);
+        ScenarioExpect.DoesNotContain("FireAsync", generatedSource);
+        ScenarioExpect.Contains("public void Fire", generatedSource);
 
         // And the updated compilation actually compiles (sync Fire should block on async method)
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GuardWithCancellationToken GeneratesCorrectly")]
     [Fact]
     public void GuardWithCancellationToken_GeneratesCorrectly()
     {
@@ -920,17 +944,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify guard is called with CancellationToken.None in CanFire
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("CanTransition(global::System.Threading.CancellationToken.None)", generatedSource);
+        ScenarioExpect.Contains("CanTransition(global::System.Threading.CancellationToken.None)", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("AsyncGuardInCanFire EvaluatesSynchronously")]
     [Fact]
     public void AsyncGuardInCanFire_EvaluatesSynchronously()
     {
@@ -964,17 +989,18 @@ public class StateMachineGeneratorTests
         _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
 
         // No generator diagnostics
-        Assert.All(result.Results, r => Assert.Empty(r.Diagnostics));
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
 
         // Verify async guard is evaluated synchronously with GetAwaiter().GetResult()
         var generatedSource = result.Results[0].GeneratedSources[0].SourceText.ToString();
-        Assert.Contains("CanTransitionAsync(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()", generatedSource);
+        ScenarioExpect.Contains("CanTransitionAsync(global::System.Threading.CancellationToken.None).GetAwaiter().GetResult()", generatedSource);
 
         // And the updated compilation actually compiles
         var emit = updated.Emit(Stream.Null);
-        Assert.True(emit.Success, string.Join("\n", emit.Diagnostics));
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
     }
 
+    [Scenario("GenericType ReportsDiagnostic")]
     [Fact]
     public void GenericType_ReportsDiagnostic()
     {
@@ -1000,9 +1026,10 @@ public class StateMachineGeneratorTests
 
         // Should have PKST009 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST009");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST009");
     }
 
+    [Scenario("NestedType ReportsDiagnostic")]
     [Fact]
     public void NestedType_ReportsDiagnostic()
     {
@@ -1031,6 +1058,327 @@ public class StateMachineGeneratorTests
 
         // Should have PKST010 diagnostic
         var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
-        Assert.Contains(diagnostics, d => d.Id == "PKST010");
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST010");
+    }
+
+    [Scenario("AsyncMembersWithGenerateAsyncFalse ReportsDiagnosticAndGeneratesSyncOnly")]
+    [Fact]
+    public void AsyncMembersWithGenerateAsyncFalse_ReportsDiagnosticAndGeneratesSyncOnly()
+    {
+        var source = """
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger), GenerateAsync = false, FireMethodName = "Move")]
+            public partial class Machine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private ValueTask OnTransitionAsync() => ValueTask.CompletedTask;
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(AsyncMembersWithGenerateAsyncFalse_ReportsDiagnosticAndGeneratesSyncOnly));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        var diagnostics = result.Results.SelectMany(r => r.Diagnostics).ToArray();
+        ScenarioExpect.Contains(diagnostics, d => d.Id == "PKST008");
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("void Move(", generated);
+        ScenarioExpect.DoesNotContain("FireAsync", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("InvalidTransitionGuardAndHookSignatures ReportDiagnostics")]
+    [Fact]
+    public void InvalidTransitionGuardAndHookSignatures_ReportDiagnostics()
+    {
+        var transitionSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class TransitionMachine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private int BadTransition() => 0;
+            }
+            """;
+
+        var guardSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class GuardMachine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private string BadGuard(int invalidParameter) => "";
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var hookSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class HookMachine
+            {
+                [StateEntry(State.B)]
+                private int BadEntry() => 0;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        AssertDiagnostic(transitionSource, "PKST005", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Transition");
+        AssertDiagnostic(guardSource, "PKST006", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Guard");
+        AssertDiagnostic(hookSource, "PKST007", nameof(InvalidTransitionGuardAndHookSignatures_ReportDiagnostics) + "Hook");
+
+        static void AssertDiagnostic(string source, string id, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+            ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == id);
+        }
+    }
+
+    [Scenario("ForceAsyncWithCustomNamesAndIgnorePolicies GeneratesNoOpBranches")]
+    [Fact]
+    public void ForceAsyncWithCustomNamesAndIgnorePolicies_GeneratesNoOpBranches()
+    {
+        var source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A, B }
+            public enum Trigger { T1, Unknown }
+
+            [StateMachine(
+                typeof(State),
+                typeof(Trigger),
+                FireMethodName = "Move",
+                FireAsyncMethodName = "MoveAsync",
+                CanFireMethodName = "CanMove",
+                ForceAsync = true,
+                InvalidTrigger = StateMachineInvalidTriggerPolicy.Ignore,
+                GuardFailure = StateMachineGuardFailurePolicy.Ignore)]
+            public partial struct Machine
+            {
+                [StateExit(State.A)]
+                private ValueTask LeavingAsync(CancellationToken ct) => ValueTask.CompletedTask;
+
+                [StateEntry(State.B)]
+                private ValueTask EnteringAsync(CancellationToken ct) => ValueTask.CompletedTask;
+
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private bool CanTransition() => false;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void OnTransition(CancellationToken ct) { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(ForceAsyncWithCustomNamesAndIgnorePolicies_GeneratesNoOpBranches));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("void Move(", generated);
+        ScenarioExpect.Contains("ValueTask MoveAsync", generated);
+        ScenarioExpect.Contains("bool CanMove", generated);
+        ScenarioExpect.Contains("LeavingAsync(cancellationToken).ConfigureAwait(false)", generated);
+        ScenarioExpect.Contains("EnteringAsync(cancellationToken).ConfigureAwait(false)", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("NamedHookArgumentsAndSignedEnums CoverHookCollectionBranches")]
+    [Fact]
+    public void NamedHookArgumentsAndSignedEnums_CoverHookCollectionBranches()
+    {
+        var source = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { Negative = -1, A = 0, B = 1 }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class Machine
+            {
+                [StateExit(State.A)]
+                private void Leaving() { }
+
+                [StateEntry(State.B)]
+                private void Entering() { }
+
+                [StateEntry(State.Negative)]
+                private void IgnoredNegativeEntry() { }
+
+                [StateEntry(null)]
+                private void IgnoredNullEntry() { }
+
+                [StateExit((State)99)]
+                private void IgnoredUnknownExit() { }
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var comp = RoslynTestHelpers.CreateCompilation(source, nameof(NamedHookArgumentsAndSignedEnums_CoverHookCollectionBranches));
+        var gen = new StateMachineGenerator();
+        _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+        ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+
+        var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+        ScenarioExpect.Contains("Leaving()", generated);
+        ScenarioExpect.Contains("Entering()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredNegativeEntry()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredNullEntry()", generated);
+        ScenarioExpect.DoesNotContain("IgnoredUnknownExit()", generated);
+
+        var emit = updated.Emit(Stream.Null);
+        ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+    }
+
+    [Scenario("InvalidCancellationTokenParameterSignatures ReportDiagnostics")]
+    [Fact]
+    public void InvalidCancellationTokenParameterSignatures_ReportDiagnostics()
+    {
+        var transitionSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class TransitionMachine
+            {
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void BadTransition(int invalidParameter) { }
+            }
+            """;
+
+        var guardSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class GuardMachine
+            {
+                [StateGuard(From = State.A, Trigger = Trigger.T1)]
+                private bool BadGuard(int invalidParameter) => true;
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        var hookSource = """
+            using PatternKit.Generators.State;
+            namespace PatternKit.Examples;
+            public enum State { A, B }
+            public enum Trigger { T1 }
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class HookMachine
+            {
+                [StateEntry(State.B)]
+                private void BadEntry(int invalidParameter) { }
+
+                [StateTransition(From = State.A, Trigger = Trigger.T1, To = State.B)]
+                private void Move() { }
+            }
+            """;
+
+        AssertDiagnostic(transitionSource, "PKST005", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Transition");
+        AssertDiagnostic(guardSource, "PKST006", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Guard");
+        AssertDiagnostic(hookSource, "PKST007", nameof(InvalidCancellationTokenParameterSignatures_ReportDiagnostics) + "Hook");
+
+        static void AssertDiagnostic(string source, string id, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out _);
+            ScenarioExpect.Contains(result.Results.SelectMany(r => r.Diagnostics), d => d.Id == id);
+        }
+    }
+
+    [Scenario("StateMachineWithoutTransitions EmitsInvalidTriggerPolicyBranches")]
+    [Fact]
+    public void StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches()
+    {
+        var throwingSource = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger))]
+            public partial class ThrowingMachine
+            {
+            }
+            """;
+
+        var ignoringSource = """
+            using PatternKit.Generators.State;
+
+            namespace PatternKit.Examples;
+
+            public enum State { A }
+            public enum Trigger { T1 }
+
+            [StateMachine(typeof(State), typeof(Trigger), InvalidTrigger = StateMachineInvalidTriggerPolicy.Ignore)]
+            public partial class IgnoringMachine
+            {
+            }
+            """;
+
+        var throwingGenerated = Generate(throwingSource, nameof(StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches) + "Throwing");
+        ScenarioExpect.Contains("No transitions defined for state machine.", throwingGenerated);
+
+        var ignoringGenerated = Generate(ignoringSource, nameof(StateMachineWithoutTransitions_EmitsInvalidTriggerPolicyBranches) + "Ignoring");
+        ScenarioExpect.DoesNotContain("No transitions defined for state machine.", ignoringGenerated);
+        ScenarioExpect.Contains("public void Fire", ignoringGenerated);
+
+        static string Generate(string source, string assemblyName)
+        {
+            var comp = RoslynTestHelpers.CreateCompilation(source, assemblyName);
+            var gen = new StateMachineGenerator();
+            _ = RoslynTestHelpers.Run(comp, gen, out var result, out var updated);
+
+            ScenarioExpect.All(result.Results, r => ScenarioExpect.Empty(r.Diagnostics));
+            var generated = result.Results.SelectMany(r => r.GeneratedSources).Single().SourceText.ToString();
+            var emit = updated.Emit(Stream.Null);
+            ScenarioExpect.True(emit.Success, string.Join("\n", emit.Diagnostics));
+            return generated;
+        }
     }
 }

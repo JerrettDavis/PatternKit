@@ -220,42 +220,45 @@ public sealed class AsyncObserverEdgeCaseTests
 {
     private readonly record struct Evt(int Id);
 
+    [Scenario("SubscriberCount ReflectsSubscriptions")]
     [Fact]
     public void SubscriberCount_ReflectsSubscriptions()
     {
         var observer = AsyncObserver<Evt>.Create().Build();
 
-        Assert.Equal(0, observer.SubscriberCount);
+        ScenarioExpect.Equal(0, observer.SubscriberCount);
 
         var sub1 = observer.Subscribe(_ => default);
-        Assert.Equal(1, observer.SubscriberCount);
+        ScenarioExpect.Equal(1, observer.SubscriberCount);
 
         var sub2 = observer.Subscribe(_ => default);
-        Assert.Equal(2, observer.SubscriberCount);
+        ScenarioExpect.Equal(2, observer.SubscriberCount);
 
         sub1.Dispose();
-        Assert.Equal(1, observer.SubscriberCount);
+        ScenarioExpect.Equal(1, observer.SubscriberCount);
 
         sub2.Dispose();
-        Assert.Equal(0, observer.SubscriberCount);
+        ScenarioExpect.Equal(0, observer.SubscriberCount);
     }
 
+    [Scenario("DoubleDispose IsHarmless")]
     [Fact]
     public void DoubleDispose_IsHarmless()
     {
         var observer = AsyncObserver<Evt>.Create().Build();
         var sub = observer.Subscribe(_ => default);
 
-        Assert.Equal(1, observer.SubscriberCount);
+        ScenarioExpect.Equal(1, observer.SubscriberCount);
 
         sub.Dispose();
-        Assert.Equal(0, observer.SubscriberCount);
+        ScenarioExpect.Equal(0, observer.SubscriberCount);
 
         // Second dispose should not throw or cause issues
         sub.Dispose();
-        Assert.Equal(0, observer.SubscriberCount);
+        ScenarioExpect.Equal(0, observer.SubscriberCount);
     }
 
+    [Scenario("Cancellation StopsPublish")]
     [Fact]
     public async Task Cancellation_StopsPublish()
     {
@@ -271,12 +274,13 @@ public sealed class AsyncObserverEdgeCaseTests
         var cts = new CancellationTokenSource();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
             () => observer.PublishAsync(new Evt(1), cts.Token).AsTask());
 
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
     }
 
+    [Scenario("Cancellation DuringHandlerExecution")]
     [Fact]
     public async Task Cancellation_DuringHandlerExecution()
     {
@@ -299,13 +303,14 @@ public sealed class AsyncObserverEdgeCaseTests
             return default;
         });
 
-        await Assert.ThrowsAsync<OperationCanceledException>(
+        await ScenarioExpect.ThrowsAsync<OperationCanceledException>(
             () => observer.PublishAsync(new Evt(1), cts.Token).AsTask());
 
-        Assert.Single(log);
-        Assert.Equal(1, log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal(1, log[0]);
     }
 
+    [Scenario("SyncErrorSink Adapter Works")]
     [Fact]
     public async Task SyncErrorSink_Adapter_Works()
     {
@@ -321,11 +326,12 @@ public sealed class AsyncObserverEdgeCaseTests
 
         await observer.PublishAsync(new Evt(42));
 
-        Assert.Single(errors);
-        Assert.IsType<InvalidOperationException>(errors[0]);
-        Assert.Single(log);
+        ScenarioExpect.Single(errors);
+        ScenarioExpect.IsType<InvalidOperationException>(errors[0]);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("ErrorSink Exception IsSwallowed")]
     [Fact]
     public async Task ErrorSink_Exception_IsSwallowed()
     {
@@ -341,9 +347,10 @@ public sealed class AsyncObserverEdgeCaseTests
         // Should not throw - sink errors are swallowed
         await observer.PublishAsync(new Evt(1));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("PredicateFilter FalseSkipsHandler")]
     [Fact]
     public async Task PredicateFilter_FalseSkipsHandler()
     {
@@ -355,13 +362,14 @@ public sealed class AsyncObserverEdgeCaseTests
             e => { log.Add(e.Id); return default; });
 
         await observer.PublishAsync(new Evt(5));
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
 
         await observer.PublishAsync(new Evt(15));
-        Assert.Single(log);
-        Assert.Equal(15, log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal(15, log[0]);
     }
 
+    [Scenario("NullPredicate AlwaysRuns")]
     [Fact]
     public async Task NullPredicate_AlwaysRuns()
     {
@@ -373,9 +381,10 @@ public sealed class AsyncObserverEdgeCaseTests
         await observer.PublishAsync(new Evt(1));
         await observer.PublishAsync(new Evt(2));
 
-        Assert.Equal(2, log.Count);
+        ScenarioExpect.Equal(2, log.Count);
     }
 
+    [Scenario("ConcurrentSubscribeUnsubscribe")]
     [Fact]
     public async Task ConcurrentSubscribeUnsubscribe()
     {
@@ -393,7 +402,7 @@ public sealed class AsyncObserverEdgeCaseTests
 
         await Task.WhenAll(subscribeTasks);
 
-        Assert.Equal(50, observer.SubscriberCount);
+        ScenarioExpect.Equal(50, observer.SubscriberCount);
 
         // Unsubscribe concurrently
         var unsubscribeTasks = subscriptions
@@ -402,9 +411,10 @@ public sealed class AsyncObserverEdgeCaseTests
 
         await Task.WhenAll(unsubscribeTasks);
 
-        Assert.Equal(0, observer.SubscriberCount);
+        ScenarioExpect.Equal(0, observer.SubscriberCount);
     }
 
+    [Scenario("ThrowAggregate NoErrors NoException")]
     [Fact]
     public async Task ThrowAggregate_NoErrors_NoException()
     {
@@ -417,9 +427,10 @@ public sealed class AsyncObserverEdgeCaseTests
 
         await observer.PublishAsync(new Evt(1));
 
-        Assert.Single(log);
+        ScenarioExpect.Single(log);
     }
 
+    [Scenario("EmptyObserver PublishDoesNothing")]
     [Fact]
     public async Task EmptyObserver_PublishDoesNothing()
     {
@@ -429,6 +440,7 @@ public sealed class AsyncObserverEdgeCaseTests
         // No exception, nothing happens
     }
 
+    [Scenario("Subscribe Handler Only Overload")]
     [Fact]
     public async Task Subscribe_Handler_Only_Overload()
     {
@@ -439,8 +451,8 @@ public sealed class AsyncObserverEdgeCaseTests
 
         await observer.PublishAsync(new Evt(42));
 
-        Assert.Single(log);
-        Assert.Equal(42, log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal(42, log[0]);
     }
 }
 

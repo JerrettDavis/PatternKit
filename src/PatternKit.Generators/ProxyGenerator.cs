@@ -1,7 +1,7 @@
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
 
 namespace PatternKit.Generators;
 
@@ -211,7 +211,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         // Determine default proxy type name
         var baseName = contractSymbol.Name;
-        if (baseName.StartsWith("I") && baseName.Length > 1 && char.IsUpper(baseName[1]))
+        if (baseName.StartsWith("I", StringComparison.Ordinal) && baseName.Length > 1 && char.IsUpper(baseName[1]))
         {
             // Interface with I prefix: IUserService -> UserServiceProxy
             baseName = baseName.Substring(1);
@@ -592,8 +592,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         var returnType = method.ReturnType;
         var typeName = returnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        return typeName.StartsWith("global::System.Threading.Tasks.Task") ||
-               typeName.StartsWith("global::System.Threading.Tasks.ValueTask");
+        return typeName.StartsWith("global::System.Threading.Tasks.Task", StringComparison.Ordinal) ||
+               typeName.StartsWith("global::System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
     }
 
     private static bool IsGenericAsyncReturnType(IMethodSymbol method)
@@ -615,8 +615,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
 
         return (fullName == "global::System.Threading.Tasks.Task<T>" ||
                 fullName == "global::System.Threading.Tasks.ValueTask<T>") ||
-               (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<") ||
-                originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<")));
+               (namedType.Arity > 0 && (originalTypeName.StartsWith("global::System.Threading.Tasks.Task<", StringComparison.Ordinal) ||
+                originalTypeName.StartsWith("global::System.Threading.Tasks.ValueTask<", StringComparison.Ordinal)));
     }
 
     private static bool IsCancellationToken(ITypeSymbol type)
@@ -877,18 +877,19 @@ public sealed class ProxyGenerator : IIncrementalGenerator
     private void GenerateProxyMethod(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var overrideModifier = contractInfo.IsAbstractClass ? "override " : "";
 
         // Determine if this method needs async modifier (uses interceptors with async support)
         // Note: ref-returning methods cannot be async
         bool useAsync = contractInfo.HasAsyncMembers &&
                        config.InterceptorMode != ProxyInterceptorMode.None &&
-                       (member.IsAsync || member.HasCancellationToken) &&
+                       member.IsAsync &&
                        !member.ReturnsByRef &&
                        !member.ReturnsByRefReadonly;
         var asyncModifier = useAsync ? "async " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
-        sb.Append($"    {accessibility} {asyncModifier}{member.ReturnType} {member.Name}(");
+        sb.Append($"    {accessibility} {overrideModifier}{asyncModifier}{member.ReturnType} {member.Name}(");
 
         // Generate parameters
         var paramList = string.Join(", ", member.Parameters.Select(p =>
@@ -970,6 +971,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         var interceptorCheck = config.InterceptorMode == ProxyInterceptorMode.Single
             ? "_interceptor is null"
             : "_interceptors is null || _interceptors.Count == 0";
+        var useAsync = contractInfo.HasAsyncMembers && member.IsAsync;
 
         sb.AppendLine($"        if ({interceptorCheck})");
         sb.AppendLine("        {");
@@ -995,8 +997,15 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         else
         {
             var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
-            var awaitModifier = member.IsAsync ? "await " : "";
-            sb.Append($"            return {awaitModifier}{refModifier}_inner.{member.Name}(");
+            if (useAsync && !member.IsGenericAsyncReturnType)
+            {
+                sb.Append($"            await _inner.{member.Name}(");
+            }
+            else
+            {
+                var awaitModifier = useAsync ? "await " : "";
+                sb.Append($"            return {awaitModifier}{refModifier}_inner.{member.Name}(");
+            }
             sb.Append(string.Join(", ", member.Parameters.Select(p =>
             {
                 var refKind = p.RefKind switch
@@ -1009,6 +1018,10 @@ public sealed class ProxyGenerator : IIncrementalGenerator
                 return $"{refKind}{p.Name}";
             })));
             sb.AppendLine(");");
+            if (useAsync && !member.IsGenericAsyncReturnType)
+            {
+                sb.AppendLine("            return;");
+            }
         }
 
         sb.AppendLine("        }");
@@ -1023,8 +1036,6 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         // Use async or sync based on detection and configuration
-        bool useAsync = contractInfo.HasAsyncMembers && (member.IsAsync || member.HasCancellationToken);
-
         if (useAsync)
         {
             GenerateAsyncInterceptedCall(sb, member, config, contextTypeName);
@@ -1132,6 +1143,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else // Swallow
         {
+            EmitOutParameterDefaults(sb, member, "            ");
             if (!member.IsVoid)
             {
                 sb.AppendLine("            return default!;");
@@ -1159,70 +1171,32 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine("            }");
         }
 
-        // Actual method call
-        if (member.IsVoid)
+        // For async methods, get the task and await it.
+        sb.Append($"            var __task = _inner.{member.Name}(");
+        sb.Append(string.Join(", ", member.Parameters.Select(p =>
         {
-            sb.Append($"            _inner.{member.Name}(");
-            sb.Append(string.Join(", ", member.Parameters.Select(p =>
+            var refKind = p.RefKind switch
             {
-                var refKind = p.RefKind switch
-                {
-                    RefKind.Ref => "ref ",
-                    RefKind.Out => "out ",
-                    RefKind.In => "in ",
-                    _ => ""
-                };
-                return $"{refKind}{p.Name}";
-            })));
-            sb.AppendLine(");");
-        }
-        else if (member.IsAsync)
-        {
-            // For async methods, get the task and await it  
-            sb.Append($"            var __task = _inner.{member.Name}(");
-            sb.Append(string.Join(", ", member.Parameters.Select(p =>
-            {
-                var refKind = p.RefKind switch
-                {
-                    RefKind.Ref => "ref ",
-                    RefKind.Out => "out ",
-                    RefKind.In => "in ",
-                    _ => ""
-                };
-                return $"{refKind}{p.Name}";
-            })));
-            sb.AppendLine(");");
-            sb.AppendLine("            __context.SetResult(__task);");
+                RefKind.Ref => "ref ",
+                RefKind.Out => "out ",
+                RefKind.In => "in ",
+                _ => ""
+            };
+            return $"{refKind}{p.Name}";
+        })));
+        sb.AppendLine(");");
+        sb.AppendLine("            __context.SetResult(__task);");
 
-            // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
-            if (member.IsGenericAsyncReturnType)
-            {
-                // Await and store result for later return
-                sb.AppendLine("            var __result = await __task.ConfigureAwait(false);");
-            }
-            else
-            {
-                // Task or ValueTask with no result - just await
-                sb.AppendLine("            await __task.ConfigureAwait(false);");
-            }
+        // Check if the async method returns a value (Task<T> or ValueTask<T> vs Task or ValueTask)
+        if (member.IsGenericAsyncReturnType)
+        {
+            // Await and store result for later return
+            sb.AppendLine("            var __result = await __task.ConfigureAwait(false);");
         }
         else
         {
-            var refModifier = member.ReturnsByRef || member.ReturnsByRefReadonly ? "ref " : "";
-            sb.Append($"            var __result = {refModifier}_inner.{member.Name}(");
-            sb.Append(string.Join(", ", member.Parameters.Select(p =>
-            {
-                var refKind = p.RefKind switch
-                {
-                    RefKind.Ref => "ref ",
-                    RefKind.Out => "out ",
-                    RefKind.In => "in ",
-                    _ => ""
-                };
-                return $"{refKind}{p.Name}";
-            })));
-            sb.AppendLine(");");
-            sb.AppendLine("            __context.SetResult(__result);");
+            // Task or ValueTask with no result - just await
+            sb.AppendLine("            await __task.ConfigureAwait(false);");
         }
         sb.AppendLine();
 
@@ -1239,8 +1213,8 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             sb.AppendLine("            }");
         }
 
-        // Return statement (only for non-void and for async methods with generic Task<T>/ValueTask<T>)
-        if (!member.IsVoid && (!member.IsAsync || member.IsGenericAsyncReturnType))
+        // Return statement for async methods with generic Task<T>/ValueTask<T>.
+        if (member.IsGenericAsyncReturnType)
         {
             sb.AppendLine("            return __result;");
         }
@@ -1269,21 +1243,34 @@ public sealed class ProxyGenerator : IIncrementalGenerator
         }
         else // Swallow
         {
-            if (!member.IsVoid)
+            if (member.IsGenericAsyncReturnType)
             {
                 sb.AppendLine("            return default!;");
+            }
+            else
+            {
+                sb.AppendLine("            return;");
             }
         }
 
         sb.AppendLine("        }");
     }
 
+    private static void EmitOutParameterDefaults(StringBuilder sb, MemberInfo member, string indent)
+    {
+        foreach (var parameter in member.Parameters.Where(p => p.RefKind == RefKind.Out))
+        {
+            sb.Append(indent).Append(parameter.Name).AppendLine(" = default!;");
+        }
+    }
+
     private void GenerateProxyProperty(StringBuilder sb, MemberInfo member, ContractInfo contractInfo, ProxyConfig config)
     {
         var accessibility = GetAccessibilityKeyword(member.Accessibility);
+        var overrideModifier = contractInfo.IsAbstractClass ? "override " : "";
 
         sb.AppendLine($"    /// <summary>Proxies {member.Name}.</summary>");
-        sb.Append($"    {accessibility} {member.ReturnType} {member.Name}");
+        sb.Append($"    {accessibility} {overrideModifier}{member.ReturnType} {member.Name}");
 
         if (member.HasGetter && member.HasSetter)
         {
@@ -1464,7 +1451,7 @@ public sealed class ProxyGenerator : IIncrementalGenerator
             }
             else
             {
-                propName = char.ToUpper(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
+                propName = char.ToUpperInvariant(param.Name[0]) + (param.Name.Length > 1 ? param.Name.Substring(1) : "");
 
                 // Avoid conflicts with reserved property names
                 if (usedPropNames.Contains(propName))

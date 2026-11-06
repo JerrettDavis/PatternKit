@@ -1,8 +1,8 @@
-using PatternKit.Generators.Messaging;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using PatternKit.Generators.Messaging;
 
 // NOTE: The comprehensive production demo in MediatorComprehensiveDemo/ComprehensiveDemo.cs
 // generates the dispatcher for this assembly. This file contains simple usage examples only.

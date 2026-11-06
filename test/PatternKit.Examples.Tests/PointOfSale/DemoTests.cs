@@ -1,9 +1,11 @@
 using PatternKit.Examples.PointOfSale;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.PointOfSaleDemoTests;
 
 public sealed class DemoTests
 {
+    [Scenario("Run Executes Without Errors")]
     [Fact]
     public void Run_Executes_Without_Errors()
     {
@@ -13,6 +15,7 @@ public sealed class DemoTests
 
 public sealed class DemoScenarioTests
 {
+    [Scenario("SimpleBusiness Scenario Works")]
     [Fact]
     public void SimpleBusiness_Scenario_Works()
     {
@@ -21,11 +24,12 @@ public sealed class DemoScenarioTests
 
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
-        Assert.True(receipt.TaxAmount > 0);
-        Assert.Equal("ORD-001", receipt.OrderId);
+        ScenarioExpect.NotNull(receipt);
+        ScenarioExpect.True(receipt.TaxAmount > 0);
+        ScenarioExpect.Equal("ORD-001", receipt.OrderId);
     }
 
+    [Scenario("RetailStore Scenario Works")]
     [Fact]
     public void RetailStore_Scenario_Works()
     {
@@ -34,10 +38,11 @@ public sealed class DemoScenarioTests
 
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
-        Assert.True(receipt.TaxAmount > 0);
+        ScenarioExpect.NotNull(receipt);
+        ScenarioExpect.True(receipt.TaxAmount > 0);
     }
 
+    [Scenario("Ecommerce Scenario With Promotions")]
     [Fact]
     public void Ecommerce_Scenario_With_Promotions()
     {
@@ -59,9 +64,10 @@ public sealed class DemoScenarioTests
         var processor = PaymentProcessorDemo.CreateEcommerceProcessor(promotions);
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
+        ScenarioExpect.NotNull(receipt);
     }
 
+    [Scenario("EmployeePurchase Gets Discount")]
     [Fact]
     public void EmployeePurchase_Gets_Discount()
     {
@@ -92,10 +98,11 @@ public sealed class DemoScenarioTests
         var processor = PaymentProcessorDemo.CreateCashRegisterProcessor();
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
-        Assert.True(receipt.DiscountAmount > 0); // Employee discount should apply
+        ScenarioExpect.NotNull(receipt);
+        ScenarioExpect.True(receipt.DiscountAmount > 0); // Employee discount should apply
     }
 
+    [Scenario("BirthdaySpecial Scenario")]
     [Fact]
     public void BirthdaySpecial_Scenario()
     {
@@ -128,9 +135,10 @@ public sealed class DemoScenarioTests
         var processor = PaymentProcessorDemo.CreateBirthdaySpecialProcessor(order);
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
+        ScenarioExpect.NotNull(receipt);
     }
 
+    [Scenario("InternationalStore With NickelRounding")]
     [Fact]
     public void InternationalStore_With_NickelRounding()
     {
@@ -168,7 +176,7 @@ public sealed class DemoScenarioTests
         var processor = PaymentProcessorDemo.CreateCashRegisterProcessor();
         var receipt = processor.Execute(order);
 
-        Assert.NotNull(receipt);
+        ScenarioExpect.NotNull(receipt);
     }
 
     private static PurchaseOrder CreateBasicOrder(string orderId, string customerId, string? loyaltyTier)

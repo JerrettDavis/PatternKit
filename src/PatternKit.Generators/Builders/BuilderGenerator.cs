@@ -6,8 +6,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace PatternKit.Generators.Builders;
 
-// Local copy of BuilderModel enum to avoid assembly loading issues
-internal enum BuilderModel
+internal enum BuilderModelValue
 {
     MutableInstance = 0,
     StateProjection = 1
@@ -63,7 +62,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
         var builderTypeName = ReadNamedArgument(attribute, "BuilderTypeName");
         var newMethodName = ReadNamedArgument(attribute, "NewMethodName") ?? "New";
         var buildMethodName = ReadNamedArgument(attribute, "BuildMethodName") ?? "Build";
-        var model = ReadNamedArgument(attribute, "Model", BuilderModel.MutableInstance);
+        var model = ReadNamedArgument(attribute, "Model", BuilderModelValue.MutableInstance);
         var generateBuilderMethods = ReadNamedArgument(attribute, "GenerateBuilderMethods", false);
         var forceAsync = ReadNamedArgument(attribute, "ForceAsync", false);
         var includeFields = ReadNamedArgument(attribute, "IncludeFields", false);
@@ -80,7 +79,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             return new GenerationResult(string.Empty, string.Empty, diagnostics.ToImmutable());
         }
 
-        if (model == BuilderModel.MutableInstance)
+        if (model == BuilderModelValue.MutableInstance)
         {
             return BuildMutable(symbol, builderTypeName, newMethodName, buildMethodName, generateBuilderMethods, forceAsync, includeFields, diagnostics);
         }
@@ -582,7 +581,11 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             mb.AppendLine();
             if (asyncEnabled)
             {
-                mb.Append("    public static ValueTask<").Append(returnType).Append("> BuildAsync(Func<").Append(builderTypeName).AppendLine(", ValueTask> configure)");
+                var asyncReturnType = IsValueTask(defaultProjector.ReturnType)
+                    ? returnType
+                    : $"ValueTask<{returnType}>";
+
+                mb.Append("    public static ").Append(asyncReturnType).Append(" BuildAsync(Func<").Append(builderTypeName).AppendLine(", ValueTask> configure)");
                 mb.AppendLine("    {");
                 mb.Append("        var builder = ").Append(builderTypeName).Append('.').Append(newMethodName).AppendLine("();");
                 mb.AppendLine("        var pending = configure(builder);");
@@ -600,7 +603,7 @@ public sealed class BuilderGenerator : IIncrementalGenerator
                     mb.Append("        return builder.").Append(buildMethodName).AppendLine("Async();");
                 }
                 mb.AppendLine();
-                mb.Append("        static async ValueTask<").Append(returnType).Append("> AwaitAsync(ValueTask wait, ").Append(builderTypeName).AppendLine(" b)");
+                mb.Append("        static async ").Append(asyncReturnType).Append(" AwaitAsync(ValueTask wait, ").Append(builderTypeName).AppendLine(" b)");
                 mb.AppendLine("        {");
                 mb.AppendLine("            await wait.ConfigureAwait(false);");
                 mb.Append("            return await b.").Append(buildMethodName).AppendLine("Async().ConfigureAwait(false);");
@@ -715,9 +718,8 @@ public sealed class BuilderGenerator : IIncrementalGenerator
             return false;
 
         var constructed = named.ConstructedFrom;
-        var full = constructed.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return string.Equals(full, "global::System.Threading.Tasks.ValueTask<T>", StringComparison.Ordinal) ||
-               string.Equals(full, "global::System.Threading.Tasks.ValueTask", StringComparison.Ordinal);
+        return string.Equals(constructed.Name, "ValueTask", StringComparison.Ordinal) &&
+               string.Equals(constructed.ContainingNamespace.ToDisplayString(), "System.Threading.Tasks", StringComparison.Ordinal);
 
     }
 

@@ -237,6 +237,7 @@ public sealed class ActionChainBuilderTests
 {
     private readonly record struct Ctx(List<string> Log, bool Flag = false);
 
+    [Scenario("When Do Handler Executes When True")]
     [Fact]
     public void When_Do_Handler_Executes_When_True()
     {
@@ -252,10 +253,11 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Single(log);
-        Assert.Equal("DO", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("DO", log[0]);
     }
 
+    [Scenario("When Do Handler Skipped When False")]
     [Fact]
     public void When_Do_Handler_Skipped_When_False()
     {
@@ -276,10 +278,11 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Single(log);
-        Assert.Equal("TAIL", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("TAIL", log[0]);
     }
 
+    [Scenario("When Do Handler Can ShortCircuit")]
     [Fact]
     public void When_Do_Handler_Can_ShortCircuit()
     {
@@ -300,10 +303,11 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Single(log);
-        Assert.Equal("STOP", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("STOP", log[0]);
     }
 
+    [Scenario("ThenContinue Always Calls Next")]
     [Fact]
     public void ThenContinue_Always_Calls_Next()
     {
@@ -317,11 +321,12 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("A", log[0]);
-        Assert.Equal("B", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("A", log[0]);
+        ScenarioExpect.Equal("B", log[1]);
     }
 
+    [Scenario("ThenContinue When False Still Continues")]
     [Fact]
     public void ThenContinue_When_False_Still_Continues()
     {
@@ -335,10 +340,11 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Single(log);
-        Assert.Equal("ALWAYS", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("ALWAYS", log[0]);
     }
 
+    [Scenario("Empty Chain Runs Tail")]
     [Fact]
     public void Empty_Chain_Runs_Tail()
     {
@@ -353,10 +359,11 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Single(log);
-        Assert.Equal("TAIL", log[0]);
+        ScenarioExpect.Single(log);
+        ScenarioExpect.Equal("TAIL", log[0]);
     }
 
+    [Scenario("Empty Chain No Tail Works")]
     [Fact]
     public void Empty_Chain_No_Tail_Works()
     {
@@ -366,9 +373,10 @@ public sealed class ActionChainBuilderTests
         // Should not throw
         chain.Execute(new Ctx(log));
 
-        Assert.Empty(log);
+        ScenarioExpect.Empty(log);
     }
 
+    [Scenario("Multiple Use In Order")]
     [Fact]
     public void Multiple_Use_In_Order()
     {
@@ -381,12 +389,13 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Equal(3, log.Count);
-        Assert.Equal("1", log[0]);
-        Assert.Equal("2", log[1]);
-        Assert.Equal("3", log[2]);
+        ScenarioExpect.Equal(3, log.Count);
+        ScenarioExpect.Equal("1", log[0]);
+        ScenarioExpect.Equal("2", log[1]);
+        ScenarioExpect.Equal("3", log[2]);
     }
 
+    [Scenario("Tail Can Call Next Safely")]
     [Fact]
     public void Tail_Can_Call_Next_Safely()
     {
@@ -402,11 +411,12 @@ public sealed class ActionChainBuilderTests
 
         chain.Execute(new Ctx(log));
 
-        Assert.Equal(2, log.Count);
-        Assert.Equal("TAIL", log[0]);
-        Assert.Equal("AFTER_NEXT", log[1]);
+        ScenarioExpect.Equal(2, log.Count);
+        ScenarioExpect.Equal("TAIL", log[0]);
+        ScenarioExpect.Equal("AFTER_NEXT", log[1]);
     }
 
+    [Scenario("Concurrent Execution Safe")]
     [Fact]
     public void Concurrent_Execution_Safe()
     {
@@ -425,7 +435,7 @@ public sealed class ActionChainBuilderTests
 
         Task.WaitAll(tasks);
 
-        Assert.Equal(100, counter);
+        ScenarioExpect.Equal(100, counter);
     }
 }
 

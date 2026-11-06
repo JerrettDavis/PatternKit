@@ -1,10 +1,20 @@
-- name: Getting Started
-  href: getting-started.md
-- name: Best Practices
-  href: best-practices.md
-- name: Pattern Selection Guide
-  href: pattern-selection-guide.md
-- name: Common Mistakes
-  href: common-mistakes.md
-- name: Migration Guide
-  href: migration-guide.md
+- name: Choosing Patterns
+  href: choosing-patterns.md
+- name: Pattern Coverage
+  href: pattern-coverage.md
+- name: Composing Patterns
+  href: composing-patterns.md
+- name: Hosting Extensions
+  href: hosting-extensions.md
+- name: Migrating from Traditional Patterns
+  href: migrating-from-traditional.md
+- name: Performance
+  href: performance.md
+- name: Benchmarks
+  href: benchmarks.md
+- name: Benchmark Results
+  href: benchmark-results.md
+- name: Testing
+  href: testing.md
+- name: Quality Gates
+  href: quality-gates.md

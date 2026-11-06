@@ -1,9 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Text;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace PatternKit.Generators;
 
@@ -531,9 +531,10 @@ public sealed class PrototypeGenerator : IIncrementalGenerator
         if (type.IsValueType)
             return true;
 
-        // Check for known immutable collections (basic check)
-        var typeName = type.ToDisplayString();
-        if (typeName.StartsWith("System.Collections.Immutable."))
+        // Check for known immutable collections.
+        var namespaceName = type.ContainingNamespace.ToDisplayString();
+        if (namespaceName == "System.Collections.Immutable" ||
+            namespaceName.StartsWith("System.Collections.Immutable.", StringComparison.Ordinal))
             return true;
 
         // Conservative: assume mutable

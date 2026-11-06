@@ -1,4 +1,5 @@
 using PatternKit.Examples.AdapterGeneratorDemo;
+using TinyBDD;
 
 namespace PatternKit.Examples.Tests.AdapterGeneratorDemo;
 
@@ -8,6 +9,7 @@ public class AdapterGeneratorDemoTests
     // Clock Adapter Tests
     // =========================================================================
 
+    [Scenario("ClockAdapter ImplementsIClock")]
     [Fact]
     public void ClockAdapter_ImplementsIClock()
     {
@@ -17,10 +19,11 @@ public class AdapterGeneratorDemoTests
         // Act
         IClock clock = new SystemClockAdapter(legacyClock);
 
-        // Assert - the adapter implements the interface
-        Assert.NotNull(clock);
+        // Then - the adapter implements the interface
+        ScenarioExpect.NotNull(clock);
     }
 
+    [Scenario("ClockAdapter UtcNow DelegatesToLegacyClock")]
     [Fact]
     public void ClockAdapter_UtcNow_DelegatesToLegacyClock()
     {
@@ -33,10 +36,11 @@ public class AdapterGeneratorDemoTests
         var result = clock.UtcNow;
         var after = DateTimeOffset.UtcNow;
 
-        // Assert
-        Assert.InRange(result, before, after);
+        // Then
+        ScenarioExpect.InRange(result, before, after);
     }
 
+    [Scenario("ClockAdapter LocalNow DelegatesToLegacyClock")]
     [Fact]
     public void ClockAdapter_LocalNow_DelegatesToLegacyClock()
     {
@@ -49,10 +53,11 @@ public class AdapterGeneratorDemoTests
         var result = clock.LocalNow;
         var after = DateTimeOffset.Now;
 
-        // Assert
-        Assert.InRange(result, before, after);
+        // Then
+        ScenarioExpect.InRange(result, before, after);
     }
 
+    [Scenario("ClockAdapter UnixTimestamp ReturnsValidTimestamp")]
     [Fact]
     public void ClockAdapter_UnixTimestamp_ReturnsValidTimestamp()
     {
@@ -65,10 +70,11 @@ public class AdapterGeneratorDemoTests
         var result = clock.UnixTimestamp;
         var after = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
 
-        // Assert
-        Assert.InRange(result, before, after);
+        // Then
+        ScenarioExpect.InRange(result, before, after);
     }
 
+    [Scenario("ClockAdapter DelayAsync Delays")]
     [Fact]
     public async Task ClockAdapter_DelayAsync_Delays()
     {
@@ -81,21 +87,23 @@ public class AdapterGeneratorDemoTests
         await clock.DelayAsync(TimeSpan.FromMilliseconds(100));
         sw.Stop();
 
-        // Assert - should have delayed at least 50ms (allowing for scheduler jitter on loaded CI)
-        Assert.True(sw.ElapsedMilliseconds >= 50);
+        // Then - should have delayed at least 50ms (allowing for scheduler jitter on loaded CI)
+        ScenarioExpect.True(sw.ElapsedMilliseconds >= 50);
     }
 
+    [Scenario("ClockAdapter ThrowsOnNullAdaptee")]
     [Fact]
     public void ClockAdapter_ThrowsOnNullAdaptee()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new SystemClockAdapter(null!));
+        // Act and verify
+        ScenarioExpect.Throws<ArgumentNullException>(() => new SystemClockAdapter(null!));
     }
 
     // =========================================================================
     // Payment Adapter Tests
     // =========================================================================
 
+    [Scenario("StripeAdapter ImplementsIPaymentGateway")]
     [Fact]
     public void StripeAdapter_ImplementsIPaymentGateway()
     {
@@ -105,10 +113,11 @@ public class AdapterGeneratorDemoTests
         // Act
         IPaymentGateway gateway = new StripePaymentAdapter(stripeClient);
 
-        // Assert
-        Assert.NotNull(gateway);
+        // Then
+        ScenarioExpect.NotNull(gateway);
     }
 
+    [Scenario("StripeAdapter GatewayName ReturnsStripe")]
     [Fact]
     public void StripeAdapter_GatewayName_ReturnsStripe()
     {
@@ -119,10 +128,11 @@ public class AdapterGeneratorDemoTests
         // Act
         var name = gateway.GatewayName;
 
-        // Assert
-        Assert.Equal("Stripe", name);
+        // Then
+        ScenarioExpect.Equal("Stripe", name);
     }
 
+    [Scenario("StripeAdapter ChargeAsync ReturnsSuccessfulResult")]
     [Fact]
     public async Task StripeAdapter_ChargeAsync_ReturnsSuccessfulResult()
     {
@@ -133,12 +143,13 @@ public class AdapterGeneratorDemoTests
         // Act
         var result = await gateway.ChargeAsync("tok_visa", 99.99m, "USD");
 
-        // Assert
-        Assert.True(result.Success);
-        Assert.StartsWith("ch_", result.TransactionId);
-        Assert.Null(result.ErrorMessage);
+        // Then
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.StartsWith("ch_", result.TransactionId);
+        ScenarioExpect.Null(result.ErrorMessage);
     }
 
+    [Scenario("StripeAdapter RefundAsync ReturnsSuccessfulResult")]
     [Fact]
     public async Task StripeAdapter_RefundAsync_ReturnsSuccessfulResult()
     {
@@ -149,12 +160,13 @@ public class AdapterGeneratorDemoTests
         // Act
         var result = await gateway.RefundAsync("ch_123", 50.00m);
 
-        // Assert
-        Assert.True(result.Success);
-        Assert.StartsWith("re_", result.RefundId);
-        Assert.Null(result.ErrorMessage);
+        // Then
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.StartsWith("re_", result.RefundId);
+        ScenarioExpect.Null(result.ErrorMessage);
     }
 
+    [Scenario("PayPalAdapter ImplementsIPaymentGateway")]
     [Fact]
     public void PayPalAdapter_ImplementsIPaymentGateway()
     {
@@ -164,10 +176,11 @@ public class AdapterGeneratorDemoTests
         // Act
         IPaymentGateway gateway = new PayPalPaymentAdapter(paypalService);
 
-        // Assert
-        Assert.NotNull(gateway);
+        // Then
+        ScenarioExpect.NotNull(gateway);
     }
 
+    [Scenario("PayPalAdapter GatewayName ReturnsPayPal")]
     [Fact]
     public void PayPalAdapter_GatewayName_ReturnsPayPal()
     {
@@ -178,10 +191,11 @@ public class AdapterGeneratorDemoTests
         // Act
         var name = gateway.GatewayName;
 
-        // Assert
-        Assert.Equal("PayPal", name);
+        // Then
+        ScenarioExpect.Equal("PayPal", name);
     }
 
+    [Scenario("PayPalAdapter ChargeAsync ReturnsSuccessfulResult")]
     [Fact]
     public async Task PayPalAdapter_ChargeAsync_ReturnsSuccessfulResult()
     {
@@ -192,12 +206,13 @@ public class AdapterGeneratorDemoTests
         // Act
         var result = await gateway.ChargeAsync("token_123", 149.99m, "USD");
 
-        // Assert
-        Assert.True(result.Success);
-        Assert.StartsWith("PAY-", result.TransactionId);
-        Assert.Null(result.ErrorMessage);
+        // Then
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.StartsWith("PAY-", result.TransactionId);
+        ScenarioExpect.Null(result.ErrorMessage);
     }
 
+    [Scenario("PayPalAdapter RefundAsync ReturnsSuccessfulResult")]
     [Fact]
     public async Task PayPalAdapter_RefundAsync_ReturnsSuccessfulResult()
     {
@@ -208,12 +223,13 @@ public class AdapterGeneratorDemoTests
         // Act
         var result = await gateway.RefundAsync("PAY-123", 75.00m);
 
-        // Assert
-        Assert.True(result.Success);
-        Assert.StartsWith("REF-", result.RefundId);
-        Assert.Null(result.ErrorMessage);
+        // Then
+        ScenarioExpect.True(result.Success);
+        ScenarioExpect.StartsWith("REF-", result.RefundId);
+        ScenarioExpect.Null(result.ErrorMessage);
     }
 
+    [Scenario("MultiplePaymentAdapters AreInterchangeable")]
     [Fact]
     public async Task MultiplePaymentAdapters_AreInterchangeable()
     {
@@ -225,16 +241,17 @@ public class AdapterGeneratorDemoTests
         var stripeResult = await stripeGateway.ChargeAsync("tok_1", 100m, "USD");
         var paypalResult = await paypalGateway.ChargeAsync("tok_2", 100m, "USD");
 
-        // Assert - both work through the unified interface
-        Assert.True(stripeResult.Success);
-        Assert.True(paypalResult.Success);
-        Assert.NotEqual(stripeResult.TransactionId, paypalResult.TransactionId);
+        // Then - both work through the unified interface
+        ScenarioExpect.True(stripeResult.Success);
+        ScenarioExpect.True(paypalResult.Success);
+        ScenarioExpect.NotEqual(stripeResult.TransactionId, paypalResult.TransactionId);
     }
 
     // =========================================================================
     // Logger Adapter Tests
     // =========================================================================
 
+    [Scenario("LoggerAdapter ImplementsIStructuredLogger")]
     [Fact]
     public void LoggerAdapter_ImplementsIStructuredLogger()
     {
@@ -244,10 +261,11 @@ public class AdapterGeneratorDemoTests
         // Act
         IStructuredLogger logger = new ConsoleLoggerAdapter(legacyLogger);
 
-        // Assert
-        Assert.NotNull(logger);
+        // Then
+        ScenarioExpect.NotNull(logger);
     }
 
+    [Scenario("LoggerAdapter IsEnabled RespectsMinimumLevel")]
     [Fact]
     public void LoggerAdapter_IsEnabled_RespectsMinimumLevel()
     {
@@ -255,13 +273,14 @@ public class AdapterGeneratorDemoTests
         var legacyLogger = new LegacyConsoleLogger("TEST", minimumLevel: 2);
         IStructuredLogger logger = new ConsoleLoggerAdapter(legacyLogger);
 
-        // Act & Assert
-        Assert.False(logger.IsEnabled(LogLevel.Debug));
-        Assert.False(logger.IsEnabled(LogLevel.Info));
-        Assert.True(logger.IsEnabled(LogLevel.Warning));
-        Assert.True(logger.IsEnabled(LogLevel.Error));
+        // Act and verify
+        ScenarioExpect.False(logger.IsEnabled(LogLevel.Debug));
+        ScenarioExpect.False(logger.IsEnabled(LogLevel.Info));
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Warning));
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Error));
     }
 
+    [Scenario("LoggerAdapter IsEnabled AllLevelsWhenMinimumIsDebug")]
     [Fact]
     public void LoggerAdapter_IsEnabled_AllLevelsWhenMinimumIsDebug()
     {
@@ -269,13 +288,14 @@ public class AdapterGeneratorDemoTests
         var legacyLogger = new LegacyConsoleLogger("TEST", minimumLevel: 0);
         IStructuredLogger logger = new ConsoleLoggerAdapter(legacyLogger);
 
-        // Act & Assert
-        Assert.True(logger.IsEnabled(LogLevel.Debug));
-        Assert.True(logger.IsEnabled(LogLevel.Info));
-        Assert.True(logger.IsEnabled(LogLevel.Warning));
-        Assert.True(logger.IsEnabled(LogLevel.Error));
+        // Act and verify
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Debug));
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Info));
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Warning));
+        ScenarioExpect.True(logger.IsEnabled(LogLevel.Error));
     }
 
+    [Scenario("LoggerAdapter LogMethods DoNotThrow")]
     [Fact]
     public void LoggerAdapter_LogMethods_DoNotThrow()
     {
@@ -283,7 +303,7 @@ public class AdapterGeneratorDemoTests
         var legacyLogger = new LegacyConsoleLogger("TEST");
         IStructuredLogger logger = new ConsoleLoggerAdapter(legacyLogger);
 
-        // Act & Assert - none should throw
+        // Act and verify - none should throw
         var ex = Record.Exception(() =>
         {
             logger.LogDebug("Debug message");
@@ -293,13 +313,14 @@ public class AdapterGeneratorDemoTests
             logger.LogError("Error with exception", new InvalidOperationException("Test"));
         });
 
-        Assert.Null(ex);
+        ScenarioExpect.Null(ex);
     }
 
+    [Scenario("LoggerAdapter ThrowsOnNullAdaptee")]
     [Fact]
     public void LoggerAdapter_ThrowsOnNullAdaptee()
     {
-        // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ConsoleLoggerAdapter(null!));
+        // Act and verify
+        ScenarioExpect.Throws<ArgumentNullException>(() => new ConsoleLoggerAdapter(null!));
     }
 }

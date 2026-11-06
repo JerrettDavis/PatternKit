@@ -25,6 +25,15 @@ IButton button = family.Create<IButton>();   // DarkButton
 ITextBox textBox = family.Create<ITextBox>(); // DarkTextBox
 ```
 
+For static family matrices, use the [Abstract Factory Generator](../../../generators/abstract-factory.md) to emit the same `AbstractFactory<TKey>` runtime object from attributes:
+
+```csharp
+[GenerateAbstractFactory(typeof(Theme))]
+[AbstractFactoryProduct(Theme.Light, typeof(IButton), typeof(LightButton))]
+[AbstractFactoryProduct(Theme.Dark, typeof(IButton), typeof(DarkButton))]
+public static partial class ThemeWidgets;
+```
+
 ## What It Is
 
 Abstract Factory provides a way to encapsulate a group of individual factories that have a common theme. It creates families of related or dependent objects without specifying their concrete classes.

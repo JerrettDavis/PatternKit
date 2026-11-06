@@ -56,6 +56,40 @@ public sealed class PricingDemoTests(ITestOutputHelper output) : TinyBddXunitBas
             .AssertPassed();
     }
 
+    [Scenario("Public sample runner builds defaults and executes the documented basket")]
+    [Fact]
+    public async Task RunSampleAsync_ExecutesDefaultBasket()
+    {
+        await Given("the public pricing demo sample", () => (Func<CancellationToken, ValueTask<PricingResult>>)PricingDemo.RunSampleAsync)
+            .When("running the sample", async Task<PricingResult> (run) => await run(CancellationToken.None))
+            .Then("prices were resolved from configured sources", r => r.Log.Any(l => l.StartsWith("price:SKU-APPLE:db:", StringComparison.Ordinal)))
+            .And("discounts and coupons were applied", r =>
+                r.Log.Any(l => l.StartsWith("loyalty:", StringComparison.Ordinal))
+                && r.Log.Any(l => l.StartsWith("coupon:CASHOFF1", StringComparison.Ordinal)))
+            .And("tax and rounding completed", r =>
+                r.Log.Any(l => l.StartsWith("tax:", StringComparison.Ordinal))
+                && r.Log.Any(l => l.StartsWith("round:", StringComparison.Ordinal)))
+            .AssertPassed();
+    }
+
+    [Scenario("Default pricing artifacts expose importable collaborators")]
+    [Fact]
+    public Task Default_Pricing_Artifacts_Expose_Importable_Collaborators()
+        => Given("default pricing artifacts", PricingDemo.BuildDefault)
+            .Then("all pipeline collaborators are available to importing applications", artifacts =>
+            {
+                ScenarioExpect.NotNull(artifacts.Pipeline);
+                ScenarioExpect.NotNull(artifacts.Sources);
+                ScenarioExpect.NotNull(artifacts.Db);
+                ScenarioExpect.NotNull(artifacts.Api);
+                ScenarioExpect.NotNull(artifacts.File);
+                ScenarioExpect.Equal(3, artifacts.Loyalty.Length);
+                ScenarioExpect.NotNull(artifacts.Taxes);
+                ScenarioExpect.Equal(2, artifacts.Rounding.Length);
+                ScenarioExpect.Equal(3, artifacts.PayDiscounts.Count);
+            })
+            .AssertPassed();
+
     [Scenario("Source routing: api and file sources resolve when tagged")]
     [Fact]
     public async Task SourceRouting_Api_File()

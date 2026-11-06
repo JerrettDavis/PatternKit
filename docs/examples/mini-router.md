@@ -26,13 +26,13 @@ This sample lives in `PatternKit.Examples.ApiGateway` and is intentionally tiny 
 
 ### Request/Response
 
-* [xref\:PatternKit.Examples.ApiGateway.Request](xref:PatternKit.Examples.ApiGateway.Request) is a tiny immutable input: `Method`, `Path`, `Headers`, `Body?`
-* [xref\:PatternKit.Examples.ApiGateway.Response](xref:PatternKit.Examples.ApiGateway.Response) is an immutable output: `StatusCode`, `ContentType`, `Body`
-* [xref\:PatternKit.Examples.ApiGateway.Responses](xref:PatternKit.Examples.ApiGateway.Responses) holds helpers: `Text`, `Json`, `NotFound`, `Unauthorized`
+* `PatternKit.Examples.ApiGateway.Request` is a tiny immutable input: `Method`, `Path`, `Headers`, `Body?`
+* `PatternKit.Examples.ApiGateway.Response` is an immutable output: `StatusCode`, `ContentType`, `Body`
+* `PatternKit.Examples.ApiGateway.Responses` holds helpers: `Text`, `Json`, `NotFound`, `Unauthorized`
 
 ### Router
 
-* [xref\:PatternKit.Examples.ApiGateway.MiniRouter](xref:PatternKit.Examples.ApiGateway.MiniRouter) composes three strategies:
+* `PatternKit.Examples.ApiGateway.MiniRouter` composes three strategies:
 
     * `_middleware : ActionStrategy<Request>` — **fire-and-forget** side effects (logging, metrics, auth messages)
     * `_routes : Strategy<Request, Response>` — **produce** a `Response`
@@ -250,12 +250,12 @@ await Given("negotiating router", NegotiatingRouter)
 
 ## API reference
 
-* [xref\:PatternKit.Examples.ApiGateway.MiniRouter](xref:PatternKit.Examples.ApiGateway.MiniRouter)
+* `PatternKit.Examples.ApiGateway.MiniRouter`
 
-    * [xref\:PatternKit.Examples.ApiGateway.MiniRouter.Create\*](xref:PatternKit.Examples.ApiGateway.MiniRouter.Create*)
-    * [xref\:PatternKit.Examples.ApiGateway.MiniRouter.Handle\*](xref:PatternKit.Examples.ApiGateway.MiniRouter.Handle*)
-    * [xref\:PatternKit.Examples.ApiGateway.MiniRouter.Builder](xref:PatternKit.Examples.ApiGateway.MiniRouter.Builder)
-* [xref\:PatternKit.Examples.ApiGateway.Request](xref:PatternKit.Examples.ApiGateway.Request) / [xref\:PatternKit.Examples.ApiGateway.Response](xref:PatternKit.Examples.ApiGateway.Response) / [xref\:PatternKit.Examples.ApiGateway.Responses](xref:PatternKit.Examples.ApiGateway.Responses)
+    * `PatternKit.Examples.ApiGateway.MiniRouter.Create\*`
+    * `PatternKit.Examples.ApiGateway.MiniRouter.Handle\*`
+    * `PatternKit.Examples.ApiGateway.MiniRouter.Builder`
+* `PatternKit.Examples.ApiGateway.Request` / `PatternKit.Examples.ApiGateway.Response` / `PatternKit.Examples.ApiGateway.Responses`
 * [xref\:PatternKit.Behavioral.Strategy.ActionStrategy\`1](xref:PatternKit.Behavioral.Strategy.ActionStrategy`1)
 * [xref\:PatternKit.Behavioral.Strategy.Strategy\`2](xref:PatternKit.Behavioral.Strategy.Strategy`2)
 * [xref\:PatternKit.Behavioral.Strategy.TryStrategy\`2](xref:PatternKit.Behavioral.Strategy.TryStrategy`2)

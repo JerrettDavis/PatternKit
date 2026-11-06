@@ -34,5 +34,68 @@ public sealed class ReactiveViewModelTests(ITestOutputHelper output) : TinyBddXu
             .Then("CanSave is false", c => !c.Vm.CanSave.Value)
             .AssertPassed();
     }
+
+    [Scenario("Reactive primitives suppress duplicate values, publish list changes, and stop after disposal")]
+    [Fact]
+    public async Task ReactivePrimitives_CoverListAndDisposalBranches()
+    {
+        await Given("observable primitives with subscribers", () =>
+            {
+                var propertyHub = new PropertyChangedHub();
+                var count = new ObservableVar<int>(1);
+                var list = new ObservableList<string>();
+                var properties = new List<string>();
+                var values = new List<(int Old, int New)>();
+                var changes = new List<string>();
+                var propertySub = propertyHub.Subscribe(properties.Add);
+                var valueSub = count.Subscribe((oldValue, newValue) => values.Add((oldValue, newValue)));
+                var listSub = list.Subscribe((action, item) => changes.Add($"{action}:{item}"));
+
+                return new ReactiveHarness(propertyHub, count, list, properties, values, changes, propertySub, valueSub, listSub);
+            })
+            .When("raising changes and disposing subscriptions", harness =>
+            {
+                harness.PropertyHub.Raise("Name");
+                harness.Count.Value = 1;
+                harness.Count.Value = 2;
+                harness.List.Add("alpha");
+                var removedMissing = harness.List.Remove("missing");
+                var removedExisting = harness.List.Remove("alpha");
+                var snapshot = harness.List.Snapshot();
+                var enumerated = harness.List.ToArray();
+
+                harness.PropertySubscription.Dispose();
+                harness.ValueSubscription.Dispose();
+                harness.ListSubscription.Dispose();
+
+                harness.PropertyHub.Raise("Ignored");
+                harness.Count.Value = 3;
+                harness.List.Add("beta");
+
+                return (harness, removedMissing, removedExisting, snapshot, enumerated);
+            })
+            .Then("property notifications stop after disposal", result => result.harness.Properties.SequenceEqual(["Name"]))
+            .And("duplicate observable values are suppressed", result => result.harness.Values.SequenceEqual([(1, 2)]))
+            .And("list add/remove notifications are published only for real changes", result =>
+                !result.removedMissing
+                && result.removedExisting
+                && result.harness.Changes.SequenceEqual(["add:alpha", "remove:alpha"]))
+            .And("snapshot and enumeration reflect list state at the time", result =>
+                result.snapshot.Count == 0
+                && result.enumerated.Length == 0
+                && result.harness.List.Count == 1)
+            .AssertPassed();
+    }
+
+    private sealed record ReactiveHarness(
+        PropertyChangedHub PropertyHub,
+        ObservableVar<int> Count,
+        ObservableList<string> List,
+        List<string> Properties,
+        List<(int Old, int New)> Values,
+        List<string> Changes,
+        IDisposable PropertySubscription,
+        IDisposable ValueSubscription,
+        IDisposable ListSubscription);
 }
 

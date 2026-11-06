@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <NoWarn>$(NoWarn);TBDD010;CS0618;xUnit1031;xUnit2002</NoWarn>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="TinyBDD" />
+        <PackageReference Include="TinyBDD.Xunit" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.extensibility.core" />
+        <PackageReference Include="xunit.runner.visualstudio">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\PatternKit.Core\PatternKit.Core.csproj" />
+        <ProjectReference Include="..\..\src\PatternKit.Hosting.Extensions\PatternKit.Hosting.Extensions.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="..\ScenarioExpect.cs" Link="ScenarioExpect.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+</Project>
