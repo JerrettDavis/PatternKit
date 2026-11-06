@@ -63,7 +63,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=core-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -72,7 +73,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=generators-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -81,7 +83,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=hosting-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -90,7 +93,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=examples-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
 
       - name: Install ReportGenerator
         run: dotnet tool update -g dotnet-reportgenerator-globaltool
@@ -210,7 +214,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=core-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Generators.Tests/PatternKit.Generators.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -219,7 +224,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=generators-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Hosting.Extensions.Tests/PatternKit.Hosting.Extensions.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -228,7 +234,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=hosting-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
           dotnet test test/PatternKit.Examples.Tests/PatternKit.Examples.Tests.csproj \
             --configuration Release \
             --framework net8.0 \
@@ -237,7 +244,8 @@ jobs:
             --collect:"XPlat Code Coverage" \
             --results-directory ./TestResults \
             --logger "trx;LogFilePrefix=examples-test-results" \
-            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura \
+            -- RunConfiguration.TestSessionTimeout=300000
 
 
       - name: Pack (all packable projects)
