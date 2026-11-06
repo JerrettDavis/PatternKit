@@ -23,7 +23,7 @@ jobs:
   publish-docs:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry_1.outputs.page_url || steps.deployment_retry_2.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,4 +48,14 @@ jobs:
           path: 'docs/_site'
       - name: Deploy to GitHub Pages
         id: deployment
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Retry Pages deployment
+        id: deployment_retry_1
+        if: ${{ !cancelled() && steps.deployment.outcome == 'failure' }}
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+      - name: Retry Pages deployment again
+        id: deployment_retry_2
+        if: ${{ !cancelled() && steps.deployment_retry_1.outcome == 'failure' }}
         uses: actions/deploy-pages@v5
