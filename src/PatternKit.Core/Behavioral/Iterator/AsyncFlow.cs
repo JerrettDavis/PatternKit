@@ -104,21 +104,16 @@ internal sealed class AsyncReplayBuffer<T>
         while (true)
         {
             TaskCompletionSource<bool>? waiter;
+            bool shouldProduce;
             lock (_sync)
             {
                 if (index < _buffer.Count)
                     return true;
                 if (_completed)
                     return false;
+                shouldProduce = _waiters.Count == 0;
                 waiter = new(TaskCreationOptions.RunContinuationsAsynchronously);
                 _waiters.Add(waiter);
-            }
-
-            bool shouldProduce = false;
-            lock (_sync)
-            {
-                if (_waiters.Count == 1 && !_completed)
-                    shouldProduce = true;
             }
 
             if (shouldProduce)
