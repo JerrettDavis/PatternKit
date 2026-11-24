@@ -483,22 +483,21 @@ public sealed class AsyncReplayBufferTests
     [Fact]
     public async Task SharedAsyncFlow_MultipleConcurrentWaiters()
     {
-        var shared = AsyncFlow<int>.From(SlowRangeAsync(5, 10)).Share();
-
-        // Start multiple consumers concurrently
-        var tasks = Enumerable.Range(0, 10).Select(async i =>
+        for (var iteration = 0; iteration < 20; iteration++)
         {
-            var items = new List<int>();
-            await foreach (var v in shared.Fork())
-                items.Add(v);
-            return items;
-        }).ToArray();
+            var shared = AsyncFlow<int>.From(SlowRangeAsync(5, 10)).Share();
+            var tasks = Enumerable.Range(0, 10).Select(async i =>
+            {
+                var items = new List<int>();
+                await foreach (var v in shared.Fork())
+                    items.Add(v);
+                return items;
+            }).ToArray();
 
-        var results = await Task.WhenAll(tasks);
+            var results = await Task.WhenAll(tasks).WaitAsync(TimeSpan.FromSeconds(10));
 
-        foreach (var result in results)
-        {
-            ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, result);
+            foreach (var result in results)
+                ScenarioExpect.Equal(new[] { 1, 2, 3, 4, 5 }, result);
         }
     }
 
